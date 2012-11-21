@@ -1,0 +1,15 @@
+#! /bin/bash
+if [ -z $JAVA_HOME ];
+then
+    echo "Please set JAVA_HOME to JDK 6+!"
+    exit 1
+else
+    ROOT=`dirname  "$0"`
+
+    if [ -f $JAVA_HOME/lib/tools.jar ];
+    then
+        BOOT_CLASSPATH=-Xbootclasspath/a:$JAVA_HOME/lib/tools.jar
+    fi
+
+    $JAVA_HOME/bin/java $BOOT_CLASSPATH -jar $ROOT/ga.jar "$@"
+fi
