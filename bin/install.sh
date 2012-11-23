@@ -34,6 +34,7 @@ else
 fi
 
 unzip greys.zip
+rm -rf greys.zip
 chmod +x greys/greys
 
 echo "done. enjoy yourself."
