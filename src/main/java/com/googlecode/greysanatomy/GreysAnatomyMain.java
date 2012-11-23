@@ -1,6 +1,8 @@
 package com.googlecode.greysanatomy;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -10,11 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.greysanatomy.console.network.ConsoleClient;
 import com.googlecode.greysanatomy.exception.ConsoleException;
-import com.sun.tools.attach.AgentInitializationException;
-import com.sun.tools.attach.AgentLoadException;
-import com.sun.tools.attach.AttachNotSupportedException;
-import com.sun.tools.attach.VirtualMachine;
-import com.sun.tools.attach.VirtualMachineDescriptor;
 
 /**
  * Hello world!
@@ -25,7 +22,7 @@ public class GreysAnatomyMain {
 	private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
 	public static final String JARFILE = GreysAnatomyMain.class.getProtectionDomain().getCodeSource().getLocation().getFile();
 	
-	public GreysAnatomyMain(String[] args) throws AttachNotSupportedException, IOException, AgentLoadException, AgentInitializationException, ConsoleException {
+	public GreysAnatomyMain(String[] args) throws IOException, ConsoleException, IllegalArgumentException, SecurityException, ClassNotFoundException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		
 		// 解析配置文件
 		Configer configer = parsetConfiger(args);
@@ -64,33 +61,41 @@ public class GreysAnatomyMain {
 	/**
 	 * 加载Agent
 	 * @param configer
-	 * @throws AttachNotSupportedException
 	 * @throws IOException
-	 * @throws AgentLoadException
-	 * @throws AgentInitializationException
+	 * @throws ClassNotFoundException 
+	 * @throws NoSuchMethodException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
+	 * @throws SecurityException 
+	 * @throws IllegalArgumentException 
 	 */
-	private void attachAgent(Configer configer) throws AttachNotSupportedException, IOException, AgentLoadException, AgentInitializationException {
-		VirtualMachineDescriptor attachVmd = null;
-		for( VirtualMachineDescriptor vmd : VirtualMachine.list() ) {
-			if( vmd.id().equals(""+configer.getJavaPid()) ) {
-				attachVmd = vmd;
-				break;
-			}
-		}//for
+	private void attachAgent(Configer configer) throws IOException, ClassNotFoundException, IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		
-		if( null == attachVmd ) {
+		final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+		final Class<?> vmdClass = loader.loadClass("com.sun.tools.attach.VirtualMachineDescriptor");
+		final Class<?> vmClass = loader.loadClass("com.sun.tools.attach.VirtualMachine");
+		
+		Object attachVmdObj = null;
+		for( Object obj : (List<?>)vmClass.getMethod("list", (Class<?>[])null).invoke(null, (Object[])null) ) {
+			if( ((String)vmdClass.getMethod("id", (Class<?>[])null).invoke(obj, (Object[])null)).equals(""+configer.getJavaPid()) ) {
+				attachVmdObj =  obj;
+			}
+		}
+		
+		if( null == attachVmdObj ) {
 			throw new IllegalArgumentException("pid:"+configer.getJavaPid()+" not existed.");
 		}
 		
-		VirtualMachine vm = null;
+		Object vmObj = null;
 		try {
-			vm = VirtualMachine.attach(attachVmd);
-			vm.loadAgent(JARFILE, configer.toString());
-		}finally {
-			if( null != vm ) {
-				vm.detach();
+			vmObj = vmClass.getMethod("attach", vmdClass).invoke(null, attachVmdObj);
+			vmClass.getMethod("loadAgent", String.class, String.class).invoke(vmObj, JARFILE, configer.toString());
+		} finally {
+			if( null != vmObj ) {
+				vmClass.getMethod("detach", (Class<?>[])null).invoke(vmObj, (Object[])null);
 			}
 		}
+		
 	}
 	
 	/**
