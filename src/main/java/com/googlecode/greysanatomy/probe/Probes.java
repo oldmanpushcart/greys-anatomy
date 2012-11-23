@@ -1,6 +1,6 @@
 package com.googlecode.greysanatomy.probe;
 
-import static com.googlecode.greysanatomy.probe.ProbeJobs.listProbeListeners;
+import static com.googlecode.greysanatomy.probe.ProbeJobs.*;
 import static java.lang.String.format;
 import static javassist.Modifier.isAbstract;
 import static javassist.Modifier.isInterface;
@@ -20,10 +20,10 @@ import javassist.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.greysanatomy.probe.Probe.Target;
-import com.googlecode.greysanatomy.probe.Probe.TargetBehavior;
-import com.googlecode.greysanatomy.probe.Probe.TargetConstructor;
-import com.googlecode.greysanatomy.probe.Probe.TargetMethod;
+import com.googlecode.greysanatomy.probe.Advice.Target;
+import com.googlecode.greysanatomy.probe.Advice.TargetBehavior;
+import com.googlecode.greysanatomy.probe.Advice.TargetConstructor;
+import com.googlecode.greysanatomy.probe.Advice.TargetMethod;
 import com.googlecode.greysanatomy.util.GaCheckUtils;
 
 /**
@@ -94,10 +94,10 @@ public class Probes {
 	 * @param args
 	 */
 	public static void doBefore(int id, Class<?> targetClass, Constructor<?> targetConstructor, Method targetMethod, Object targetThis, Object[] args) {
-		for( ProbeListener listener : listProbeListeners(id) ) {
+		if( isListener(id, AdviceListener.class) ) {
 			try {
-				Probe p = new Probe(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, false);
-				listener.onBefore(p);
+				Advice p = new Advice(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, false);
+				((AdviceListener)getJobListeners(id)).onBefore(p);
 			}catch(Throwable t) {
 				logger.warn("error at doBefore", t);
 			}
@@ -115,16 +115,17 @@ public class Probes {
 	 * @param returnObj
 	 */
 	public static void doSuccess(int id, Class<?> targetClass, Constructor<?> targetConstructor, Method targetMethod, Object targetThis, Object[] args, Object returnObj) {
-		for( ProbeListener listener : listProbeListeners(id) ) {
+		if( isListener(id, AdviceListener.class) ) {
 			try {
-				Probe p = new Probe(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, false);
+				Advice p = new Advice(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, false);
 				p.setReturnObj(returnObj);
-				listener.onSuccess(p);
+				((AdviceListener)getJobListeners(id)).onSuccess(p);
 			}catch(Throwable t) {
 				logger.warn("error at onSuccess", t);
 			}
+			doFinish(id, targetClass, targetConstructor, targetMethod, targetThis, args, returnObj, null);
 		}
-		doFinish(id, targetClass, targetConstructor, targetMethod, targetThis, args, returnObj, null);
+		
 	}
 	
 	/**
@@ -138,16 +139,17 @@ public class Probes {
 	 * @param throwException
 	 */
 	public static void doException(int id, Class<?> targetClass, Constructor<?> targetConstructor, Method targetMethod, Object targetThis, Object[] args, Throwable throwException) {
-		for( ProbeListener listener : listProbeListeners(id) ) {
+		if( isListener(id, AdviceListener.class) ) {
 			try {
-				Probe p = new Probe(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, false);
+				Advice p = new Advice(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, false);
 				p.setThrowException(throwException);
-				listener.onException(p);
+				((AdviceListener)getJobListeners(id)).onException(p);
 			}catch(Throwable t) {
 				logger.warn("error at onException", t);
 			}
+			doFinish(id, targetClass, targetConstructor, targetMethod, targetThis, args, null, throwException);
 		}
-		doFinish(id, targetClass, targetConstructor, targetMethod, targetThis, args, null, throwException);
+		
 	}
 	
 	/**
@@ -162,12 +164,12 @@ public class Probes {
 	 * @param throwException
 	 */
 	public static void doFinish(int id, Class<?> targetClass, Constructor<?> targetConstructor, Method targetMethod, Object targetThis, Object[] args, Object returnObj, Throwable throwException) {
-		for( ProbeListener listener : listProbeListeners(id) ) {
+		if( isListener(id, AdviceListener.class) ) {
 			try {
-				Probe p = new Probe(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, true);
+				Advice p = new Advice(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, true);
 				p.setThrowException(throwException);
 				p.setReturnObj(returnObj);
-				listener.onFinish(p);
+				((AdviceListener)getJobListeners(id)).onFinish(p);
 			}catch(Throwable t) {
 				logger.warn("error at onFinish", t);
 			}
@@ -355,6 +357,7 @@ public class Probes {
 		
 	}
 	
+	
 	/**
 	 * 埋点探测器
 	 * @param id
@@ -391,17 +394,21 @@ public class Probes {
 						probesClass, 
 						cc.getName(), 
 						toJavassistStringParamTypes(cb))
-				: "null";	
+				: "null";
 		
 		// 目标实例,如果是静态方法，则为null
 		final String javassistThis = isStatic(cb.getModifiers()) ? "null" : "this";
 		
-		// 构造函数在这里是不能做insertBefore的,所以构造函数的before是做在doCache中
-		if( cb.getMethodInfo().isMethod() ) {
-			mineForMethod(cb, id, javassistClass, javassistConstructor, javassistMethod, javassistThis);
-		} else if( cb.getMethodInfo().isConstructor() ) {
-			mineForConstructor(cb, id, javassistClass, javassistConstructor, javassistMethod, javassistThis);
+		// 埋点通知
+		if( isListener(id, AdviceListener.class) ) {
+			// 构造函数在这里是不能做insertBefore的,所以构造函数的before是做在doCache中
+			if( cb.getMethodInfo().isMethod() ) {
+				mineProbeForMethod(cb, id, javassistClass, javassistConstructor, javassistMethod, javassistThis);
+			} else if( cb.getMethodInfo().isConstructor() ) {
+				mineProbeForConstructor(cb, id, javassistClass, javassistConstructor, javassistMethod, javassistThis);
+			}
 		}
+		
 	}
 	
 	/**
@@ -415,7 +422,7 @@ public class Probes {
 	 * @throws CannotCompileException
 	 * @throws NotFoundException
 	 */
-	private static void mineForConstructor(CtBehavior cb, int id, String javassistClass, String javassistConstructor, String javassistMethod, String javassistThis) throws CannotCompileException, NotFoundException {
+	private static void mineProbeForConstructor(CtBehavior cb, int id, String javassistClass, String javassistConstructor, String javassistMethod, String javassistThis) throws CannotCompileException, NotFoundException {
 		cb.addCatch(format("{if(%s.isJobAlive(%s)){%s.doBefore(%s,%s,%s,%s,%s,$args);%s.doException(%s,%s,%s,%s,%s,$args,$e);}throw $e;}", 
 				jobsClass, id, 
 				probesClass, id, javassistClass, javassistConstructor, javassistMethod, javassistThis, 
@@ -438,7 +445,7 @@ public class Probes {
 	 * @throws CannotCompileException
 	 * @throws NotFoundException
 	 */
-	private static void mineForMethod(CtBehavior cb, int id, String javassistClass, String javassistConstructor, String javassistMethod, String javassistThis) throws CannotCompileException, NotFoundException {
+	private static void mineProbeForMethod(CtBehavior cb, int id, String javassistClass, String javassistConstructor, String javassistMethod, String javassistThis) throws CannotCompileException, NotFoundException {
 		cb.insertBefore(format("{if(%s.isJobAlive(%s))%s.doBefore(%s,%s,%s,%s,%s,$args);}", 
 				jobsClass, id, probesClass, id, javassistClass, javassistConstructor, javassistMethod, javassistThis));
 		cb.addCatch(format("{if(%s.isJobAlive(%s))%s.doException(%s,%s,%s,%s,%s,$args,$e);throw $e;}", 

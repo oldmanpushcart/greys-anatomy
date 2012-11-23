@@ -5,28 +5,28 @@ package com.googlecode.greysanatomy.probe;
  * @author vlinux
  *
  */
-public class ProbeListenerAdapter implements ProbeListener {
+public class AdviceListenerAdapter implements AdviceListener {
 
 	@Override
-	public void onBefore(Probe p) {
+	public void onBefore(Advice advice) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void onSuccess(Probe p) {
+	public void onSuccess(Advice advice) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void onException(Probe p) {
+	public void onException(Advice advice) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void onFinish(Probe p) {
+	public void onFinish(Advice advice) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -1,7 +1,6 @@
 package com.googlecode.greysanatomy.probe;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +26,7 @@ public class ProbeJobs {
 	private static class Job {
 		private int id;
 		private boolean isAlive;
-		private final List<ProbeListener> listeners = new ArrayList<ProbeListener>();
+		private JobListener listener;
 	}
 	
 	private static final Map<Integer,Job> jobs = new ConcurrentHashMap<Integer, Job>();
@@ -37,10 +36,10 @@ public class ProbeJobs {
 	 * 注册侦听器
 	 * @param listener
 	 */
-	public static void register(int id, ProbeListener listener) {
+	public static void register(int id, JobListener listener) {
 		Job job = jobs.get(id);
 		if( null != job ) {
-			job.listeners.add(listener);
+			job.listener = listener;
 			listener.create();
 		}
 	}
@@ -87,12 +86,10 @@ public class ProbeJobs {
 		Job job = jobs.get(id);
 		if( null != job ) {
 			job.isAlive = false;
-			for(ProbeListener listener : job.listeners) {
-				try {
-					listener.destroy();
-				}catch(Throwable t) {
-					logger.warn("destroy listener failed, jobId={}", id, t);
-				}
+			try {
+				job.listener.destroy();
+			}catch(Throwable t) {
+				logger.warn("destroy listener failed, jobId={}", id, t);
 			}
 		}
 	}
@@ -116,12 +113,26 @@ public class ProbeJobs {
 	 * @param id
 	 * @return
 	 */
-	public static List<ProbeListener> listProbeListeners(int id) {
+	public static JobListener getJobListeners(int id) {
 		if( jobs.containsKey(id) ) {
-			return jobs.get(id).listeners;
+			return jobs.get(id).listener;
 		} else {
-			return Collections.emptyList(); 
+			return null; 
 		}
+	}
+	
+	/**
+	 * job是否实现了指定的listener
+	 * @param id
+	 * @param classListener
+	 * @return
+	 */
+	public static boolean isListener(int id, Class<? extends JobListener> classListener) {
+		
+		final JobListener jobListener = getJobListeners(id);
+		return null != jobListener 
+				&& classListener.isAssignableFrom(jobListener.getClass());
+		
 	}
 	
 }

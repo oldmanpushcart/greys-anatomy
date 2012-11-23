@@ -23,8 +23,8 @@ import org.apache.commons.lang.StringUtils;
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
-import com.googlecode.greysanatomy.probe.Probe;
-import com.googlecode.greysanatomy.probe.ProbeListenerAdapter;
+import com.googlecode.greysanatomy.probe.Advice;
+import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 
 /**
@@ -144,17 +144,17 @@ public class MonitorCommand extends Command {
 			public void action(Info info, final Sender sender) throws Throwable {
 				
 				final Instrumentation inst = info.getInst();
-				final TransformResult result = transform(inst, classRegex, methodRegex, new ProbeListenerAdapter() {
+				final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
 					
 					private final ThreadLocal<Long> beginTimestamp = new ThreadLocal<Long>();
 					
 					@Override
-					public void onBefore(Probe p) {
+					public void onBefore(Advice p) {
 						beginTimestamp.set(System.currentTimeMillis());
 					}
 
 					@Override
-					public void onFinish(Probe p) {
+					public void onFinish(Advice p) {
 						final long cost = System.currentTimeMillis() - beginTimestamp.get();
 						final Key key = new Key(p.getTarget().getTargetClass().getName(), p.getTarget().getTargetBehavior().getName());
 						

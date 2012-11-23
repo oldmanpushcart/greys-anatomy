@@ -4,12 +4,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
 /**
- * 探测点
+ * 通知点
  * 
  * @author vlinux
  * 
  */
-public class Probe {
+public class Advice {
 
 	/**
 	 * 探测目标
@@ -151,7 +151,7 @@ public class Probe {
 	 * @param parameters
 	 * @param isFinished
 	 */
-	public Probe(Target target, Object[] parameters, boolean isFinished) {
+	public Advice(Target target, Object[] parameters, boolean isFinished) {
 		this.target = target;
 		this.parameters = parameters;
 		this.isFinished = isFinished;

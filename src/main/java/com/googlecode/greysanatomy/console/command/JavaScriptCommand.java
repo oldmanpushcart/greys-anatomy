@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
-import com.googlecode.greysanatomy.probe.Probe;
-import com.googlecode.greysanatomy.probe.ProbeListenerAdapter;
+import com.googlecode.greysanatomy.probe.Advice;
+import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 
 /**
@@ -96,10 +96,10 @@ public class JavaScriptCommand extends Command {
 	 */
 	public static interface ScriptListener {
 
-		void before(Probe p, Output output, TLS tls);
-		void success(Probe p, Output output, TLS tls);
-		void exception(Probe p, Output output, TLS tls);
-		void finished(Probe p, Output output, TLS tls);
+		void before(Advice p, Output output, TLS tls);
+		void success(Advice p, Output output, TLS tls);
+		void exception(Advice p, Output output, TLS tls);
+		void finished(Advice p, Output output, TLS tls);
 		void create(Output output, TLS tls);
 		void destroy(Output output, TLS tls);
 
@@ -142,25 +142,25 @@ public class JavaScriptCommand extends Command {
 				}
 				
 				final Instrumentation inst = info.getInst();
-				final TransformResult result = transform(inst, classRegex, methodRegex, new ProbeListenerAdapter() {
+				final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
 					
 					@Override
-					public void onBefore(final Probe p) {
+					public void onBefore(final Advice p) {
 						try {scriptListener.before(p, output, tls);}catch(Throwable t) {}
 					}
 
 					@Override
-					public void onSuccess(final Probe p) {
+					public void onSuccess(final Advice p) {
 						try {scriptListener.success(p, output, tls);}catch(Throwable t) {}
 					}
 
 					@Override
-					public void onException(final Probe p) {
+					public void onException(final Advice p) {
 						try {scriptListener.exception(p, output, tls);}catch(Throwable t) {}
 					}
 
 					@Override
-					public void onFinish(final Probe p) {
+					public void onFinish(final Advice p) {
 						try {scriptListener.finished(p, output, tls);}catch(Throwable t) {}
 					}
 

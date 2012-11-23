@@ -9,8 +9,8 @@ import java.lang.instrument.Instrumentation;
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
-import com.googlecode.greysanatomy.probe.Probe;
-import com.googlecode.greysanatomy.probe.ProbeListenerAdapter;
+import com.googlecode.greysanatomy.probe.Advice;
+import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.ProfilerUtils;
 
@@ -44,10 +44,10 @@ public class ProfilerCommand extends Command {
 			public void action(Info info, final Sender sender) throws Throwable {
 				
 				final Instrumentation inst = info.getInst();
-				final TransformResult result = transform(inst, classRegex, methodRegex, new ProbeListenerAdapter() {
+				final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
 					
 					@Override
-					public void onBefore(Probe p) {
+					public void onBefore(Advice p) {
 						init();
 						if( !isEntered(p) ) {
 							return;
@@ -62,7 +62,7 @@ public class ProfilerCommand extends Command {
 					}
 
 					@Override
-					public void onFinish(Probe p) {
+					public void onFinish(Advice p) {
 						if( !isEntered.get() ) {
 							return;
 						}
@@ -87,7 +87,7 @@ public class ProfilerCommand extends Command {
 						}
 					}
 					
-					private boolean isEntered(Probe p) {
+					private boolean isEntered(Advice p) {
 						return isEntered.get()
 								|| (p.getTarget().getTargetClass().getName().matches(probeClassRegex) && p.getTarget().getTargetBehavior().getName().matches(probeMethodRegex));
 					}

@@ -22,7 +22,7 @@ import javassist.LoaderClassPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.greysanatomy.probe.ProbeListener;
+import com.googlecode.greysanatomy.probe.JobListener;
 import com.googlecode.greysanatomy.probe.Probes;
 import com.googlecode.greysanatomy.util.GaReflectUtils;
 
@@ -43,7 +43,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 	private GreysAnatomyClassFileTransformer(
 			final String perfClzRegex,
 			final String perfMthRegex, 
-			final ProbeListener listener, 
+			final JobListener listener, 
 			final List<CtBehavior> modifiedBehaviors) {
 		this.perfClzRegex = perfClzRegex;
 		this.perfMthRegex = perfMthRegex;
@@ -146,7 +146,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 	public static TransformResult transform(final Instrumentation instrumentation, 
 			final String perfClzRegex, 
 			final String perfMthRegex, 
-			final ProbeListener listener) throws UnmodifiableClassException {
+			final JobListener listener) throws UnmodifiableClassException {
 		
 		final List<CtBehavior> modifiedBehaviors = new ArrayList<CtBehavior>();
 		GreysAnatomyClassFileTransformer jcft = new GreysAnatomyClassFileTransformer(perfClzRegex, perfMthRegex, listener, modifiedBehaviors);
