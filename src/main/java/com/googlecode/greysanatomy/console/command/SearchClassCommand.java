@@ -85,7 +85,6 @@ public class SearchClassCommand extends Command {
 					} else {
 						message.append(clazz.getName()).append("\n");
 					}
-					
 				}
 				
 				message.append(GaStringUtils.LINE);

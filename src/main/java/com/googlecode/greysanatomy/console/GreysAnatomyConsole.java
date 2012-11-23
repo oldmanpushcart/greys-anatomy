@@ -65,9 +65,8 @@ public class GreysAnatomyConsole {
 			while(true) {
 				try {
 					doRead();
-				}catch(IOException e) {
-					// 这里是控制台，可能么？
-					logger.warn("console read failed.",e);
+				}catch(Exception e) {
+					//ignore
 				}
 			}
 		}
