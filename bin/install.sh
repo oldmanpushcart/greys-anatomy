@@ -22,7 +22,7 @@ else
     typeset md5;
     if [[ $OS = "Darwin" ]]; then
         md5=$(cat $GREYS_FILE | md5 | awk '{print $1}');
-    elif [[ $os = "Linux" ]]; then
+    elif [[ $OS = "Linux" ]]; then
         md5=$(cat $GREYS_FILE | md5sum | awk '{print $1}');
     fi
     if [[ $md5 != $CHECKSUM  ]]; then
@@ -33,8 +33,8 @@ else
     fi 
 fi
 
-unzip greys.zip
-rm -rf greys.zip
+unzip $GREYS_FILE
+rm -rf $GREYS_FILE
 chmod +x greys/greys
 
 echo "done. enjoy yourself."
