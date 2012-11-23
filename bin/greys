@@ -11,5 +11,5 @@ else
         BOOT_CLASSPATH=-Xbootclasspath/a:$JAVA_HOME/lib/tools.jar
     fi
 
-    $JAVA_HOME/bin/java $BOOT_CLASSPATH -jar $ROOT/ga.jar "$@"
+    $JAVA_HOME/bin/java $BOOT_CLASSPATH -jar $ROOT/greys.jar "$@"
 fi
