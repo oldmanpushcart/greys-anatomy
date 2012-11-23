@@ -14,14 +14,17 @@ import com.googlecode.greysanatomy.util.GaStringUtils;
  * @author vlinux
  *
  */
-@Cmd("detail-method")
-public class DetailMethodCommand extends Command {
+@Cmd("search-method")
+public class SearchMethodCommand extends Command {
 
 	@Arg(name="class",isRequired=true)
 	private String classRegex;
 	
 	@Arg(name="method",isRequired=true)
 	private String methodRegex;
+	
+	@Arg(name="is-deetail", isRequired=false)
+	private boolean isDetail = false;
 	
 	@Override
 	public Action getAction() {
@@ -42,7 +45,12 @@ public class DetailMethodCommand extends Command {
 					for( Method method : clazz.getDeclaredMethods() ) {
 						
 						if( method.getName().matches(methodRegex) ) {
-							message.append(GaDetailUtils.detail(method)).append("\n");
+							if( isDetail ) {
+								message.append(GaDetailUtils.detail(method)).append("\n");
+							} else {
+								message.append(clazz.getName()).append("->").append(method.getName()).append("\n");
+							}
+							
 							mthCnt++;
 							hasMethod = true;
 						}

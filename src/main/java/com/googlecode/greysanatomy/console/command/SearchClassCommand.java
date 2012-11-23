@@ -16,14 +16,17 @@ import com.googlecode.greysanatomy.util.GaStringUtils;
  * @author vlinux
  *
  */
-@Cmd("detail-class")
-public class DetailClassCommand extends Command {
+@Cmd("search-class")
+public class SearchClassCommand extends Command {
 
 	@Arg(name="class")
 	private String classRegex;
 	
 	@Arg(name="is-super", isRequired=false)
 	private boolean isSuper = false;
+	
+	@Arg(name="is-deetail", isRequired=false)
+	private boolean isDetail = false;
 	
 	
 	/**
@@ -77,7 +80,12 @@ public class DetailClassCommand extends Command {
 				}
 				
 				for( Class<?> clazz : matchs ) {
-					message.append(GaDetailUtils.detail(clazz)).append("\n");
+					if( isDetail ) {
+						message.append(GaDetailUtils.detail(clazz)).append("\n");
+					} else {
+						message.append(clazz.getName()).append("\n");
+					}
+					
 				}
 				
 				message.append(GaStringUtils.LINE);
