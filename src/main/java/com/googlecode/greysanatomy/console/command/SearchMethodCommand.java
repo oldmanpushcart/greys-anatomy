@@ -23,7 +23,7 @@ public class SearchMethodCommand extends Command {
 	@Arg(name="method",isRequired=true)
 	private String methodRegex;
 	
-	@Arg(name="is-deetail", isRequired=false)
+	@Arg(name="is-detail", isRequired=false)
 	private boolean isDetail = false;
 	
 	@Override

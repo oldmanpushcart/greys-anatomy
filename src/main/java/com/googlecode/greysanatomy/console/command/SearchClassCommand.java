@@ -25,7 +25,7 @@ public class SearchClassCommand extends Command {
 	@Arg(name="is-super", isRequired=false)
 	private boolean isSuper = false;
 	
-	@Arg(name="is-deetail", isRequired=false)
+	@Arg(name="is-detail", isRequired=false)
 	private boolean isDetail = false;
 	
 	
