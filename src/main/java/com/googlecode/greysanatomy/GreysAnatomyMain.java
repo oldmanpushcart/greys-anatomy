@@ -48,6 +48,7 @@ public class GreysAnatomyMain {
 		final OptionParser parser = new OptionParser();
 		parser.accepts("pid").withRequiredArg().ofType(int.class).required();
 		parser.accepts("port").withOptionalArg().ofType(int.class);
+		
 		final OptionSet os = parser.parse(args);
 		
 		final Configer configer = new Configer();
@@ -115,7 +116,7 @@ public class GreysAnatomyMain {
 		try {
 			new GreysAnatomyMain(args);
 		}catch(Throwable t) {
-			logger.error("start greys-anatomy failed.",t);
+			logger.error("start greys-anatomy failed. because "+t.getMessage(), t);
 			System.exit(-1);
 		}
 		
