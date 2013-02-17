@@ -108,6 +108,7 @@ public class ConsoleServerHandler {
 	}
 
 	public long register() {
+		//
 		return registSession();
 	}
 
