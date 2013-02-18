@@ -1,2 +1,2 @@
 安装脚本^-^ 
-curl -Lk https://raw.github.com/oldmanpushcart/greys-anatomy/master/bin/install.sh|ksh
+curl -Lk https://raw.github.com/chengtongda/greys-anatomy/master/bin/install.sh|ksh
