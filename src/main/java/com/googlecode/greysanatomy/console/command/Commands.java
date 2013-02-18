@@ -137,8 +137,21 @@ public class Commands {
 		for( Field field : getArgFields(clazz) ) {
 			final Arg arg = field.getAnnotation(Arg.class);
 			if( opt.has(arg.name()) ) {
-				final Object value = opt.valueOf(arg.name());
+				Object value = opt.valueOf(arg.name());
 				verifyArg(arg, value);
+				
+				//如果是枚举类型，则根据枚举信息赋值
+				if(field.getType().isEnum()){
+					Enum<?>[] enums = (Enum[]) field.getType().getEnumConstants();
+					if(enums != null){
+						for(Enum<?> e: enums){
+							if(e.name().equals(value)){
+								value = e;
+								break;
+							}
+						}
+					}
+				}
 				GaReflectUtils.set(field, value, command);
 			}
 		}//for
@@ -146,7 +159,7 @@ public class Commands {
 		return command;
 		
 	}
-
+	
 	/**
 	 * 列出所有命令
 	 * @return
@@ -176,6 +189,13 @@ public class Commands {
 					} else if( Boolean.class.isAssignableFrom(field.getType()) 
 							|| boolean.class.isAssignableFrom(field.getType())) {
 						argCompleter.getCompleters().add(new StringsCompleter("true","false"));
+					} else if( field.getType().isEnum() ){
+						Enum<?>[] enums = (Enum[]) field.getType().getEnumConstants();
+						String[] enumArgs = new String[enums.length];
+						for (int i = 0; i < enums.length; i++) {
+							enumArgs[i] = enums[i].name();
+						}
+						argCompleter.getCompleters().add(new StringsCompleter(enumArgs));
 					} else {
 						argCompleter.getCompleters().add(new InputCompleter());
 					}
