@@ -3,7 +3,7 @@
 typeset GREYS_FILE="greys.zip";
 
 echo "Download... greys.zip";
-curl -sLk "http://t.cn/zYS85aC" -o $GREYS_FILE;
+curl -sLk "http://t.cn/zYooo5P" -o $GREYS_FILE;
 if [[ ! $? -eq  0 ]]; then
     echo "download file failed!";
     exit -1;
