@@ -3,6 +3,8 @@ package com.googlecode.greysanatomy.console.command;
 import static java.lang.String.format;
 
 import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
@@ -32,6 +34,7 @@ public class SearchMethodCommand extends Command {
 
 			@Override
 			public void action(Info info, Sender sender) throws Throwable {
+				final Set<String> uniqueLine = new HashSet<String>();
 				final StringBuilder message = new StringBuilder();
 				int clzCnt = 0;
 				int mthCnt = 0;
@@ -48,7 +51,15 @@ public class SearchMethodCommand extends Command {
 							if( isDetail ) {
 								message.append(GaDetailUtils.detail(method)).append("\n");
 							} else {
-								message.append(clazz.getName()).append("->").append(method.getName()).append("\n");
+								/*
+								 * ¹ýÂËÖØ¸´ÐÐ
+								 */
+								final String line = format("%s->%s\n", clazz.getName(), method.getName());
+								if( uniqueLine.contains(line) ) {
+									continue;
+								}
+								message.append(line);
+								uniqueLine.add(line);
 							}
 							
 							mthCnt++;
