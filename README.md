@@ -66,9 +66,30 @@ greys-anatomy 是一个java进程执行过程中的异常诊断工具。
  - 通用参数: -o 输出结果重定向
 
 - 相关类结构
- - Advice
- - OutPut
- - TLS
+```
+Advice
+   |-Target target (探测目标)
+   |     |-Class<?> targetClass (探测目标类)
+   |     |
+   |     |-Object targetThis  (探测目标实例)
+   |	 |
+   |	 |-TargetBehavior targetBehavior   (探测方法/构造器)
+   |			  |-String name
+   |-Object[] parameters   (调用参数)
+   |-Object returnObj      (返回值)
+   |-Throwable throwException   (抛出异常)
+```
+```
+OutPut
+   |-println(String msg)   (打印)
+```
+```
+TLS  (threadLocal)
+  |-put(String key,Object value)
+  |
+  |-get(String key)
+```
+
 - 快捷键
  - 中断:ctrl+d
  - 退出:ctrl+c
