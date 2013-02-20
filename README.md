@@ -179,9 +179,11 @@ TLS  (threadLocal)
 	this is before function:firstParameterStr=nihao
 	this is finished function:returnObj=world!
 ```
+
 ## 吐槽反馈
-  文档看不懂，与木有！
-  功能不完善啊，有木有！
-  发现一坨bug啊，有木有！
-  我佛慈悲，吐槽之后请反馈给我^_^~ 
-  mailTo: jiangyi.ctd@taobao.com/chengtongda@163.com
+- 文档看不懂，与木有！
+- 功能不完善啊，有木有！
+- 发现一坨bug啊，有木有！
+- 我有好想法好建议，有木有！
+- 我佛慈悲，吐槽之后请反馈给我^_^~ 
+- mailTo: jiangyi.ctd@taobao.com/chengtongda@163.com
