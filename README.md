@@ -21,3 +21,108 @@ greys-anatomy 是一个java进程执行过程中的异常诊断工具。
  - curl -sLk https://raw.github.com/chengtongda/greys-anatomy/master/bin/install.sh|ksh  
 - 手动下载安装（直接解压即可）：
  - http://pan.baidu.com/share/link?shareid=285557&uk=3039715289
+
+## 入门
+- 启动
+
+    ./greys -pid 9999 -port 3658
+  - 参数：-pid 代理进程id 
+         -port 链接端口号（默认3658）	
+
+- 命令
+ - search-class   查看加载的类信息
+ > 参数：-class 查找的类名称
+		      -is-super 是否带父类搜索
+			     -is-detail 是否查看类详细信息
+			  
+ - search-method  查看加载的方法信息
+ > 参数：-class  查找的方法所属类名称
+			  -method 查找的方法名称
+			  -is-detail 是否查看方法详细信息
+
+ - monitor   方法执行监控
+ > 参数：-class  需要监控的方法所属类名称
+			  -method 需要监控的方法名称
+			  -cycle  监控周期（单位s）
+
+ - watch   方法执行数据观测
+ > 参数：-class  需要观测的方法的类名称
+			  -method 需要观测的方法名称
+			  -exp  观测数据表达式（js表达式）
+			  -watch-point  观测点（方法执行和方法执行后/before,finish）
+		
+ - javascript   方法执行自定义观测
+ > 参数：-class  需要观测的方法的类名称
+			  -method 需要观测的方法名称
+			  -file  js脚本路径
+		支持接口：onBefore/onSuccess/onException/onFinish/create/destory		
+		
+ - 通用参数: -o 输出结果重定向
+
+- 快捷键
+ - 中断:ctrl+d
+ - 退出:ctrl+c
+
+- 命令示例
+ - search-class
+```
+   ga?>search-class -class .*TestApp.* -is-super false -is-detail true
+ 	 class info : com.googlecode.greys.test.TestApp
+		 ---------------------------------------------------------------
+			code-source : /home/jiangyi/workspace/test.jar
+				   name : com.googlecode.greys.test.TestApp
+			simple-name : TestApp
+			   modifier : public
+			 annotation : 
+			 interfaces :     super-class : java.lang.Object
+		   class-loader : sun.misc.Launcher$AppClassLoader@11b86e7
+							`-->sun.misc.Launcher$ExtClassLoader@35ce36
+
+		---------------------------------------------------------------
+		done. classes result: match-class=1;
+```
+ - search-method
+```
+ 	ga?>search-method -class .*TestApp.* -method .*hello.* -is-detail true 
+		method info : com.googlecode.greys.test.TestApp->helloMethod
+		---------------------------------------------------------------
+		declaring-class : com.googlecode.greys.test.TestApp
+			   modifier : public
+				   name : helloMethod
+			 annotation : 
+			return-type : void
+				 params : com.googlecode.greys.test.TestApp
+
+		---------------------------------------------------------------
+		done. method result: match-class=1; match-method=1
+```
+
+ - monitor
+ ```
+ 	ga?>monitor -class .*TestApp.* -method .*hello.* -cycle 10
+		---------------------------------------------------------------
+		done. probe:c-Cnt=1,m-Cnt=1
+
+		+---------------------+-----------------------------------+-------------+-------+---------+------+------+-----------+
+		|           timestamp |                             class |    behavior | total | success | fail |   rt | fail-rate |
+		+---------------------+-----------------------------------+-------------+-------+---------+------+------+-----------+
+		| 2013-02-19 23:46:22 | com.googlecode.greys.test.TestApp | helloMethod |     5 |       5 |    0 | 0.00 |     0.00% |
+		+---------------------+-----------------------------------+-------------+-------+---------+------+------+-----------+
+
+		+---------------------+-----------------------------------+-------------+-------+---------+------+------+-----------+
+		|           timestamp |                             class |    behavior | total | success | fail |   rt | fail-rate |
+		+---------------------+-----------------------------------+-------------+-------+---------+------+------+-----------+
+		| 2013-02-19 23:46:32 | com.googlecode.greys.test.TestApp | helloMethod |    12 |      12 |    0 | 0.00 |     0.00% |
+		+---------------------+-----------------------------------+-------------+-------+---------+------+------+-----------+
+```
+		
+ - watch
+```
+		ga?>watch -class .*TestApp.* -method .*hello.* -exp p.parameters[0].str -watch-point before
+		---------------------------------------------------------------
+		done. probe:c-Cnt=1,m-Cnt=1
+
+		helloworld!
+		hellogreys
+		testParameter[0]
+```
