@@ -31,32 +31,38 @@ greys-anatomy 是一个java进程执行过程中的异常诊断工具。
 
 - 命令
  - search-class   查看加载的类信息
- > 参数：-class 查找的类名称
+
+        参数：-class 查找的类名称
 		      -is-super 是否带父类搜索
 			     -is-detail 是否查看类详细信息
 			  
  - search-method  查看加载的方法信息
- > 参数：-class  查找的方法所属类名称
+
+        参数：-class  查找的方法所属类名称
 			  -method 查找的方法名称
 			  -is-detail 是否查看方法详细信息
 
  - monitor   方法执行监控
- > 参数：-class  需要监控的方法所属类名称
+
+        参数：-class  需要监控的方法所属类名称
 			  -method 需要监控的方法名称
 			  -cycle  监控周期（单位s）
 
  - watch   方法执行数据观测
- > 参数：-class  需要观测的方法的类名称
+
+        参数：-class  需要观测的方法的类名称
 			  -method 需要观测的方法名称
 			  -exp  观测数据表达式（js表达式）
 			  -watch-point  观测点（方法执行和方法执行后/before,finish）
 		
  - javascript   方法执行自定义观测
- > 参数：-class  需要观测的方法的类名称
-			  -method 需要观测的方法名称
-			  -file  js脚本路径
-		支持接口：onBefore/onSuccess/onException/onFinish/create/destory		
-		
+
+        参数：-class  需要观测的方法的类名称 -method 需要观测的方法名称 -file  js脚本路径
+        
+            支持接口（只需在js脚本中实现这些接口即可）：
+                before/success/exception/finished/   入参：Advice p,Output output,TLS tls
+                create/destory    入参：Output output,TLS tls				
+
  - 通用参数: -o 输出结果重定向
 
 - 快捷键
@@ -126,3 +132,26 @@ greys-anatomy 是一个java进程执行过程中的异常诊断工具。
 		hellogreys
 		testParameter[0]
 ```
+
+ - javascript
+```
+	js脚本,在方法执行前，打印入参对象的str字段。方法执行后打印返回结果
+	function before(p,o,t){
+		o.println('this is before function:firstParameterStr='+p.parameters[0].str+'\n');
+	}
+	function finished(p,o,t){
+		o.println('this is finished function:returnObj='+p.returnObj+'\n');
+	} 
+```
+```
+	命令
+	ga?>javascript -class .*TestApp.* -method .*hello.* -file /home/jiangyi/greys/testjs
+	---------------------------------------------------------------
+	done. probe:c-Cnt=1,m-Cnt=1
+	this is before function:firstParameterStr=hello
+	this is finished function:returnObj=world!
+	this is before function:firstParameterStr=nihao
+	this is finished function:returnObj=world!
+```
+## 应用及吐槽
+  欢迎大家实际操练，给力吐槽，提出宝贵的意见及建议。
