@@ -54,7 +54,8 @@ greys-anatomy 是一个java进程执行过程中的异常诊断工具。
 			  -method 需要观测的方法名称
 			  -exp  观测数据表达式（js表达式）
 			  -watch-point  观测点（方法执行和方法执行后/before,finish）
-		
+	
+		watch可获取打Advice数据，变量名为p
  - javascript   方法执行自定义观测
 
         参数：-class  需要观测的方法的类名称 -method 需要观测的方法名称 -file  js脚本路径
@@ -178,5 +179,9 @@ TLS  (threadLocal)
 	this is before function:firstParameterStr=nihao
 	this is finished function:returnObj=world!
 ```
-## 应用及吐槽
-  欢迎大家实际操练，给力吐槽，提出宝贵的意见及建议。
+## 吐槽反馈
+  文档看不懂，与木有！
+  功能不完善啊，有木有！
+  发现一坨bug啊，有木有！
+  我佛慈悲，吐槽之后请反馈给我^_^~ 
+  mailTo: jiangyi.ctd@taobao.com/chengtongda@163.com
