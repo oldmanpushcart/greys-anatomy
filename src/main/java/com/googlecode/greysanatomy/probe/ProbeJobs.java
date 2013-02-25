@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.greysanatomy.console.command.JavaScriptCommand.JLS;
+
 public class ProbeJobs {
 
 	private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
@@ -86,6 +88,7 @@ public class ProbeJobs {
 			}catch(Throwable t) {
 				logger.warn("destroy listener failed, jobId={}", id, t);
 			}
+			JLS.removeJob(id);
 		}
 	}
 	
