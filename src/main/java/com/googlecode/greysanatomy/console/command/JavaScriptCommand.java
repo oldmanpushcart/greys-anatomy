@@ -53,6 +53,11 @@ public class JavaScriptCommand extends Command {
 	 */
 	public static class TLS {
 
+		/**
+		 * JLS中保存的TLS对象的key
+		 */
+		public static final String TLS_JLSKEY = "greys-TLS" + (char) 29;
+		
 		private final ThreadLocal<Map<String, Object>> tls = new ThreadLocal<Map<String, Object>>();
 
 		public void put(String name, Object value) {
@@ -156,7 +161,7 @@ public class JavaScriptCommand extends Command {
 					return;
 				}
 				
-				final TLS tls = new TLS();
+				JLS.put(info.getJobId(), TLS.TLS_JLSKEY, new TLS());
 				final Output output = new Output(sender);
 				final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
 				final Invocable invoke = (Invocable) jsEngine;
@@ -183,32 +188,32 @@ public class JavaScriptCommand extends Command {
 					
 					@Override
 					public void onBefore(final Advice p) {
-						try {scriptListener.before(p, output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.before(p, output, JLS.getJLS(info.getJobId()),(TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));}catch(Throwable t) {output.println(t.getMessage());}
 					}
 
 					@Override
 					public void onSuccess(final Advice p) {
-						try {scriptListener.success(p, output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.success(p, output, JLS.getJLS(info.getJobId()),(TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));}catch(Throwable t) {output.println(t.getMessage());}
 					}
 
 					@Override
 					public void onException(final Advice p) {
-						try {scriptListener.exception(p, output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.exception(p, output, JLS.getJLS(info.getJobId()),(TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));}catch(Throwable t) {output.println(t.getMessage());}
 					}
 
 					@Override
 					public void onFinish(final Advice p) {
-						try {scriptListener.finished(p, output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.finished(p, output, JLS.getJLS(info.getJobId()),(TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));}catch(Throwable t) {output.println(t.getMessage());}
 					}
 
 					@Override
 					public void create() {
-						try {scriptListener.create(output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.create(output, JLS.getJLS(info.getJobId()),(TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));}catch(Throwable t) {output.println(t.getMessage());}
 					}
 
 					@Override
 					public void destroy() {
-						try {scriptListener.destroy(output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.destroy(output, JLS.getJLS(info.getJobId()),(TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));}catch(Throwable t) {output.println(t.getMessage());}
 					}
 					
 				},info);
