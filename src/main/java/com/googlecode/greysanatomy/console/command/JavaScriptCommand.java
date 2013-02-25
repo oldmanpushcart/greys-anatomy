@@ -55,15 +55,17 @@ public class JavaScriptCommand extends Command {
 
 		private final ThreadLocal<Map<String, Object>> tls = new ThreadLocal<Map<String, Object>>();
 
-		public TLS() {
-			tls.set(new HashMap<String, Object>());
-		}
-
 		public void put(String name, Object value) {
+			if(tls.get() == null){
+				tls.set(new HashMap<String, Object>());
+			}
 			tls.get().put(name, value);
 		}
 
 		public Object get(String name) {
+			if(tls.get() == null){
+				return null;
+			}
 			return tls.get().get(name);
 		}
 
@@ -88,6 +90,20 @@ public class JavaScriptCommand extends Command {
 		
 		public static void removeJob(String jobId){
 			jobLocals.remove(jobId);
+		}
+		
+		public static void put(String jobId, String key, Object value){
+			if(jobLocals.get(jobId) == null){
+				jobLocals.put(jobId, new HashMap<String,Object>());
+			}
+			jobLocals.get(jobId).put(key, value);
+		}
+		
+		public static Object get(String jobId, String key){
+			if(jobLocals.get(jobId) == null){
+				return null;
+			}
+			return jobLocals.get(jobId).get(key);
 		}
 	}
 	
