@@ -47,6 +47,29 @@ public class JavaScriptCommand extends Command {
 	private File scriptFile;
 
 	/**
+	 * TLS = ThreadLocals
+	 * @author vlinux
+	 *
+	 */
+	public static class TLS {
+
+		private final ThreadLocal<Map<String, Object>> tls = new ThreadLocal<Map<String, Object>>();
+
+		public TLS() {
+			tls.set(new HashMap<String, Object>());
+		}
+
+		public void put(String name, Object value) {
+			tls.get().put(name, value);
+		}
+
+		public Object get(String name) {
+			return tls.get().get(name);
+		}
+
+	}
+	
+	/**
 	 * JobLocals
 	 * 每个jobKill的时候清掉
 	 * @author chengtongda
@@ -94,12 +117,12 @@ public class JavaScriptCommand extends Command {
 	 */
 	public static interface ScriptListener {
 
-		void before(Advice p, Output output, Map<String,Object> tls);
-		void success(Advice p, Output output, Map<String,Object> tls);
-		void exception(Advice p, Output output, Map<String,Object> tls);
-		void finished(Advice p, Output output, Map<String,Object> tls);
-		void create(Output output, Map<String,Object> tls);
-		void destroy(Output output, Map<String,Object> tls);
+		void before(Advice p, Output output, Map<String,Object> jls, TLS tls);
+		void success(Advice p, Output output, Map<String,Object> jls, TLS tls);
+		void exception(Advice p, Output output, Map<String,Object> jls, TLS tls);
+		void finished(Advice p, Output output, Map<String,Object> jls, TLS tls);
+		void create(Output output, Map<String,Object> jls, TLS tls);
+		void destroy(Output output, Map<String,Object> jls, TLS tls);
 
 	}
 
@@ -117,6 +140,7 @@ public class JavaScriptCommand extends Command {
 					return;
 				}
 				
+				final TLS tls = new TLS();
 				final Output output = new Output(sender);
 				final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
 				final Invocable invoke = (Invocable) jsEngine;
@@ -143,32 +167,32 @@ public class JavaScriptCommand extends Command {
 					
 					@Override
 					public void onBefore(final Advice p) {
-						try {scriptListener.before(p, output, JLS.getJLS(info.getJobId()));}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.before(p, output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
 					}
 
 					@Override
 					public void onSuccess(final Advice p) {
-						try {scriptListener.success(p, output, JLS.getJLS(info.getJobId()));}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.success(p, output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
 					}
 
 					@Override
 					public void onException(final Advice p) {
-						try {scriptListener.exception(p, output, JLS.getJLS(info.getJobId()));}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.exception(p, output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
 					}
 
 					@Override
 					public void onFinish(final Advice p) {
-						try {scriptListener.finished(p, output, JLS.getJLS(info.getJobId()));}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.finished(p, output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
 					}
 
 					@Override
 					public void create() {
-						try {scriptListener.create(output, JLS.getJLS(info.getJobId()));}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.create(output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
 					}
 
 					@Override
 					public void destroy() {
-						try {scriptListener.destroy(output, JLS.getJLS(info.getJobId()));}catch(Throwable t) {output.println(t.getMessage());}
+						try {scriptListener.destroy(output, JLS.getJLS(info.getJobId()),tls);}catch(Throwable t) {output.println(t.getMessage());}
 					}
 					
 				},info);
