@@ -41,7 +41,7 @@ public class WatchCommand extends Command {
 			public void action(Info info, final Sender sender) throws Throwable {
 				ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
 				
-				jsEngine.eval("function printWatch(p,o){o.send(false, " + expression + ");}");
+				jsEngine.eval("function printWatch(p,o){try{o.send(false, " + expression + ");}catch(e){o.send(false, e.message);}}");
 				final Invocable invoke = (Invocable) jsEngine;
 				
 				final Instrumentation inst = info.getInst();
