@@ -31,7 +31,7 @@ public class WatchCommand extends Command {
 	private String expression;
 	
 	@Arg(name="watch-point", isRequired=false)
-	private WatchPointEnum watchPoint;
+	private WatchPointEnum watchPoint = WatchPointEnum.before;
 
 	@Override
 	public Action getAction() {
@@ -41,7 +41,7 @@ public class WatchCommand extends Command {
 			public void action(Info info, final Sender sender) throws Throwable {
 				ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
 				
-				jsEngine.eval("function printWatch(p,o){try{o.send(false, " + expression + ");}catch(e){o.send(false, e.message);}}");
+				jsEngine.eval("function printWatch(p,o){try{o.send(false, " + expression + "+'\\n');}catch(e){o.send(false, e.message+'\\n');}}");
 				final Invocable invoke = (Invocable) jsEngine;
 				
 				final Instrumentation inst = info.getInst();

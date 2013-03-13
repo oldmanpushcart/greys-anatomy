@@ -156,7 +156,7 @@ public class ConsoleServerHandler {
 			return;
 		}
 		
-		RandomAccessFile rf;
+		RandomAccessFile rf = null;
 		
 		try {
 			new File(executeResultDir).mkdir();
@@ -167,7 +167,15 @@ public class ConsoleServerHandler {
 		} catch (IOException e) {
 			logger.warn("jobFile write error!",e);
 			return ;
-		}  
+		} finally {
+			if( null != rf ) {
+				try {
+					rf.close();
+				}catch(Exception e) {
+					//
+				}
+			}
+		}
 	}
 	
 	/**
@@ -179,9 +187,9 @@ public class ConsoleServerHandler {
 	 * @return
 	 */
 	private void read(String jobId, int pos, RespResult respResult) {
-		RandomAccessFile rf;
-		StringBuilder sb = new StringBuilder();
 		int newPos = pos;
+		final StringBuilder sb = new StringBuilder();
+		RandomAccessFile rf = null;
 		try {
 			rf = new RandomAccessFile(getExecuteFilePath(jobId), "r");
 			rf.seek(pos);
@@ -190,14 +198,22 @@ public class ConsoleServerHandler {
 			while ((len=rf.read(buffer))!=-1) { 
 				newPos += len;
 				sb.append(new String(buffer,0,len)); 
-	        } 
-			rf.close();
+	        }
+			respResult.setPos(newPos);
+			respResult.setMessage(sb.toString());
 		} catch (IOException e) {
 			logger.warn("jobFile read error!");
 			return ;
-		}  
-		respResult.setPos(newPos);
-		respResult.setMessage(sb.toString());
+		} finally {
+			if( null != rf ) {
+				try {
+					rf.close();
+				}catch(Exception e) {
+					//
+				}
+			}
+		}
+		
 	}
 	
 	private String getExecuteFilePath(String jobId){
