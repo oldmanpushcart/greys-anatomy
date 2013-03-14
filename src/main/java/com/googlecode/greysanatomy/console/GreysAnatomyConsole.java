@@ -232,7 +232,7 @@ public class GreysAnatomyConsole {
 	private void write(String message) {
 		final Writer writer = console.getOutput();
 		try {
-			writer.write(message+"\n");
+			writer.write(message);
 			writer.flush();
 		}catch(IOException e) {
 			// 控制台写失败，可能么？
