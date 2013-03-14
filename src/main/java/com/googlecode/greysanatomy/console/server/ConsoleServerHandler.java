@@ -123,22 +123,27 @@ public class ConsoleServerHandler {
 		return respResult;
 	}
 
+	/**
+	 * 干掉一个Job
+	 * @param req
+	 */
 	public void killJob(ReqKillJob req) {
 		unRegistJob(req.getGaSessionId(), req.getJobId());
 	}
 
+	/**
+	 * 会话心跳
+	 * @param req
+	 * @return
+	 */
 	public boolean sessionHeartBeat(ReqHeart req) {
 		return heartBeatSession(req.getGaSessionId());
 	}
 	
-	/**
-	 * 执行结果输出文件路径
-	 */
-	private final String executeResultDir = System.getProperty("java.io.tmpdir") + "/greysdata/";
-	
-	private final String executeResultFileExtensions = ".ga";
-	
-	private final String endMark = ""+(char)29;
+	private final String REST_DIR = System.getProperty("java.io.tmpdir")//执行结果输出文件路径 
+			+ File.separator + "greysdata" + File.separator;			
+	private final String REST_FILE_EXT = ".ga";							//存储中间结果的临时文件后缀名
+	private final String END_MASK = ""+(char)29;						//用于标记文件结束的标识符
 	
 	/**
 	 * 写结果
@@ -148,8 +153,9 @@ public class ConsoleServerHandler {
 	 * @param message
 	 */
 	private void write(long gaSessionId, String jobId, boolean isF, String message) {
+		//TODO 这里用队列来做缓存，改善写文件性能，否则可能会影响被probe代码的效率
 		if(isF){
-			message += endMark;
+			message += END_MASK;
 		}
 		
 		if(StringUtils.isEmpty(message)){
@@ -159,11 +165,10 @@ public class ConsoleServerHandler {
 		RandomAccessFile rf = null;
 		
 		try {
-			new File(executeResultDir).mkdir();
+			new File(REST_DIR).mkdir();
 			rf = new RandomAccessFile(getExecuteFilePath(jobId), "rw");
 			rf.seek(rf.length());
 			rf.write(message.getBytes());
-			rf.close();
 		} catch (IOException e) {
 			logger.warn("jobFile write error!",e);
 			return ;
@@ -217,10 +222,10 @@ public class ConsoleServerHandler {
 	}
 	
 	private String getExecuteFilePath(String jobId){
-		return executeResultDir + jobId + executeResultFileExtensions;
+		return REST_DIR + jobId + REST_FILE_EXT;
 	}
 	
 	private boolean isFinish(String message){
-		return !StringUtils.isEmpty(message) ? message.endsWith(endMark) : false;
+		return !StringUtils.isEmpty(message) ? message.endsWith(END_MASK) : false;
 	}
 }
