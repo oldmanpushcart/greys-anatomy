@@ -11,7 +11,6 @@ import javax.script.ScriptEngineManager;
 
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
-import com.googlecode.greysanatomy.util.GaReflectUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.SearchUtils;
 
@@ -48,11 +47,7 @@ public class PeekCommand extends Command {
 					Field field = null;
 					boolean isFieldAccessable = false;
 					try{
-						field = GaReflectUtils.getField(clazz, fieldName);
-						if(field == null){
-							message.append(" not has the field:").append(fieldName).append("\n");
-							continue;
-						}
+						field = clazz.getDeclaredField(fieldName);
 						isFieldAccessable = field.isAccessible();
 						field.setAccessible(true);
 						message.append(".").append(fieldName).append(" peaked value").append("=["); 
@@ -73,5 +68,5 @@ public class PeekCommand extends Command {
 			}
 		};
 	}
-
+	
 }
