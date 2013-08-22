@@ -5,6 +5,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Scanner;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -77,6 +78,31 @@ public class GaStringUtils {
 		for( int i=0; i<c; i++ ) {
 			sb.append(str);
 		}
+	}
+	
+	/**
+	 * 获取方法执行堆栈信息
+	 * @return
+	 */
+	public static String getStack() {
+		final StackTraceElement[] stes = Thread.currentThread().getStackTrace();
+		final StringBuilder stSB = new StringBuilder()
+			.append("Thread Info:").append(Thread.currentThread().getName()).append("\n");
+		
+		if( ArrayUtils.isEmpty(stes) 
+				|| stes.length == 1) {
+			return stSB.toString();
+		}
+		
+		for( int index = 1; index < stes.length; index++ ) {
+			final StackTraceElement ste = stes[index];
+			stSB.append(index==1?"  ":"    at ")
+				.append(ste.getClassName()).append(".")
+				.append(ste.getMethodName())
+				.append("(").append(ste.getFileName()).append(":").append(ste.getLineNumber()).append(")\n");
+		}
+		
+		return stSB.toString();
 	}
 	
 }
