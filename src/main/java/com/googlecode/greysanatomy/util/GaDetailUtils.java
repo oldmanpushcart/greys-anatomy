@@ -28,6 +28,15 @@ public class GaDetailUtils {
 		CodeSource cs = clazz.getProtectionDomain().getCodeSource(); 
 		detailSB.append(format("%15s : %s\n","code-source",null == cs?NULL:cs.getLocation().getFile()));
 		detailSB.append(format("%15s : %s\n","name",getClassName(clazz)));
+		detailSB.append(format("%15s : %s\n","isInterface",clazz.isInterface()));
+		detailSB.append(format("%15s : %s\n","isAnnotation",clazz.isAnnotation()));
+		detailSB.append(format("%15s : %s\n","isEnum",clazz.isEnum()));
+		detailSB.append(format("%15s : %s\n","isAnonymousClass",clazz.isAnonymousClass()));
+		detailSB.append(format("%15s : %s\n","isArray",clazz.isArray()));
+		detailSB.append(format("%15s : %s\n","isLocalClass",clazz.isLocalClass()));
+		detailSB.append(format("%15s : %s\n","isMemberClass",clazz.isMemberClass()));
+		detailSB.append(format("%15s : %s\n","isPrimitive",clazz.isPrimitive()));
+		detailSB.append(format("%15s : %s\n","isSynthetic",clazz.isSynthetic()));
 		detailSB.append(format("%15s : %s\n","simple-name",clazz.getSimpleName()));
 		detailSB.append(format("%15s : %s\n","modifier",tranModifier(clazz.getModifiers())));
 		
@@ -63,7 +72,7 @@ public class GaDetailUtils {
 				}
 				interfaceSB.append("\n");
 			}
-			detailSB.append(format("%15s : %s","interfaces",interfaceSB.toString()));
+			detailSB.append(format("%15s : %s\n","interfaces",interfaceSB.toString()));
 		}
 		
 		// super-class
