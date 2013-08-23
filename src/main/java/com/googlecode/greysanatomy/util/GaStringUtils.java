@@ -94,15 +94,19 @@ public class GaStringUtils {
 			return stSB.toString();
 		}
 		
-		for( int index = 1; index < stes.length; index++ ) {
+		for( int index = 4; index < stes.length; index++ ) {
 			final StackTraceElement ste = stes[index];
-			stSB.append(index==1?"  ":"    at ")
+			stSB.append(index==2?"  ":"    at ")
 				.append(ste.getClassName()).append(".")
 				.append(ste.getMethodName())
 				.append("(").append(ste.getFileName()).append(":").append(ste.getLineNumber()).append(")\n");
 		}
 		
 		return stSB.toString();
+	}
+	
+	public static void main(String... args) {
+		System.out.println( getStack() );
 	}
 	
 }
