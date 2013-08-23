@@ -26,19 +26,19 @@ public class GaDetailUtils {
 		detailSB.append(GaStringUtils.LINE);
 		
 		CodeSource cs = clazz.getProtectionDomain().getCodeSource(); 
-		detailSB.append(format("%15s : %s\n","code-source",null == cs?NULL:cs.getLocation().getFile()));
-		detailSB.append(format("%15s : %s\n","name",getClassName(clazz)));
-		detailSB.append(format("%15s : %s\n","isInterface",clazz.isInterface()));
-		detailSB.append(format("%15s : %s\n","isAnnotation",clazz.isAnnotation()));
-		detailSB.append(format("%15s : %s\n","isEnum",clazz.isEnum()));
-		detailSB.append(format("%15s : %s\n","isAnonymousClass",clazz.isAnonymousClass()));
-		detailSB.append(format("%15s : %s\n","isArray",clazz.isArray()));
-		detailSB.append(format("%15s : %s\n","isLocalClass",clazz.isLocalClass()));
-		detailSB.append(format("%15s : %s\n","isMemberClass",clazz.isMemberClass()));
-		detailSB.append(format("%15s : %s\n","isPrimitive",clazz.isPrimitive()));
-		detailSB.append(format("%15s : %s\n","isSynthetic",clazz.isSynthetic()));
-		detailSB.append(format("%15s : %s\n","simple-name",clazz.getSimpleName()));
-		detailSB.append(format("%15s : %s\n","modifier",tranModifier(clazz.getModifiers())));
+		detailSB.append(format("%16s : %s\n","code-source",null == cs?NULL:cs.getLocation().getFile()));
+		detailSB.append(format("%16s : %s\n","name",getClassName(clazz)));
+		detailSB.append(format("%16s : %s\n","isInterface",clazz.isInterface()));
+		detailSB.append(format("%16s : %s\n","isAnnotation",clazz.isAnnotation()));
+		detailSB.append(format("%16s : %s\n","isEnum",clazz.isEnum()));
+		detailSB.append(format("%16s : %s\n","isAnonymousClass",clazz.isAnonymousClass()));
+		detailSB.append(format("%16s : %s\n","isArray",clazz.isArray()));
+		detailSB.append(format("%16s : %s\n","isLocalClass",clazz.isLocalClass()));
+		detailSB.append(format("%16s : %s\n","isMemberClass",clazz.isMemberClass()));
+		detailSB.append(format("%16s : %s\n","isPrimitive",clazz.isPrimitive()));
+		detailSB.append(format("%16s : %s\n","isSynthetic",clazz.isSynthetic()));
+		detailSB.append(format("%16s : %s\n","simple-name",clazz.getSimpleName()));
+		detailSB.append(format("%16s : %s\n","modifier",tranModifier(clazz.getModifiers())));
 		
 		// annotation
 		{
@@ -54,7 +54,7 @@ public class GaDetailUtils {
 			} else {
 				annoSB.append(NULL);
 			}
-			detailSB.append(format("%15s : %s\n","annotation",annoSB.toString()));
+			detailSB.append(format("%16s : %s\n","annotation",annoSB.toString()));
 		}
 		
 		// interface
@@ -72,7 +72,7 @@ public class GaDetailUtils {
 				}
 				interfaceSB.append("\n");
 			}
-			detailSB.append(format("%15s : %s\n","interfaces",interfaceSB.toString()));
+			detailSB.append(format("%16s : %s\n","interfaces",interfaceSB.toString()));
 		}
 		
 		// super-class
@@ -89,9 +89,9 @@ public class GaDetailUtils {
 					superSB.append(STEP_TAB).append(preSB.toString()).append("`-->").append(getClassName(superClass)).append("\n");
 					preSB.append(STEP_FLOW_TAB);
 				}//while
-				detailSB.append(format("%15s : %s","super-class",superSB.toString()));
+				detailSB.append(format("%16s : %s","super-class",superSB.toString()));
 			} else {
-				detailSB.append(format("%15s : %s\n","super-class",NULL));
+				detailSB.append(format("%16s : %s\n","super-class",NULL));
 			}
 			
 		}
@@ -114,7 +114,7 @@ public class GaDetailUtils {
 			} else {
 				loaderSB.append(NULL).append("\n");
 			}//if
-			detailSB.append(format("%15s : %s","class-loader",loaderSB.toString()));
+			detailSB.append(format("%16s : %s","class-loader",loaderSB.toString()));
 		}
 		
 		return detailSB.toString();
@@ -170,9 +170,9 @@ public class GaDetailUtils {
 		detailSB.append("method info : ").append(format("%s->%s",method.getDeclaringClass().getName(), method.getName())).append("\n");
 		detailSB.append(GaStringUtils.LINE);
 
-		detailSB.append(format("%15s : %s\n","declaring-class",getClassName(method.getDeclaringClass())));
-		detailSB.append(format("%15s : %s\n","modifier",tranModifier(method.getModifiers())));
-		detailSB.append(format("%15s : %s\n","name",method.getName()));
+		detailSB.append(format("%16s : %s\n","declaring-class",getClassName(method.getDeclaringClass())));
+		detailSB.append(format("%16s : %s\n","modifier",tranModifier(method.getModifiers())));
+		detailSB.append(format("%16s : %s\n","name",method.getName()));
 		
 		// annotation
 		{
@@ -188,10 +188,10 @@ public class GaDetailUtils {
 			} else {
 				annoSB.append(NULL);
 			}
-			detailSB.append(format("%15s : %s\n","annotation",annoSB.toString()));
+			detailSB.append(format("%16s : %s\n","annotation",annoSB.toString()));
 		}
 		
-		detailSB.append(format("%15s : %s\n","return-type",getClassName(method.getReturnType())));
+		detailSB.append(format("%16s : %s\n","return-type",getClassName(method.getReturnType())));
 		
 		// params
 		{
@@ -209,7 +209,7 @@ public class GaDetailUtils {
 			} else {
 				paramSB.append(NULL);
 			}
-			detailSB.append(format("%15s : %s\n","params",paramSB.toString()));
+			detailSB.append(format("%16s : %s\n","params",paramSB.toString()));
 		}
 		
 		return detailSB.toString();
