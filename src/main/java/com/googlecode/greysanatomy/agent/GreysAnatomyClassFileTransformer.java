@@ -162,8 +162,14 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 		}
 		try {
 			synchronized (GreysAnatomyClassFileTransformer.class) {
-				instrumentation.retransformClasses(modifiedClasses.toArray(new Class[0]));
-			}
+				for( Class<?> clazz : modifiedClasses ) {
+					try {
+						instrumentation.retransformClasses(clazz);
+					}catch(Throwable t) {
+						logger.warn("retransform class {} failed.", clazz, t);
+					}
+				}//for
+			}//sycn
 		}finally {
 			instrumentation.removeTransformer(jcft);
 		}

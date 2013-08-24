@@ -20,6 +20,8 @@ public class AgentMain {
 	public static synchronized void main(final String args, final Instrumentation inst) {
 //		AgentServer.init(inst, ConfigUtils.DEFAULT_AGENT_SERVER_PORT);
 		try {
+			
+			// 这里考虑下是否要破坏双亲委派
 			URLClassLoader agentLoader = new URLClassLoader(new URL[]{new URL("file:"+GreysAnatomyMain.JARFILE)});
 			
 			final Configer configer = Configer.toConfiger(args);

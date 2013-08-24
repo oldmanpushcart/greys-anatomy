@@ -72,7 +72,10 @@ public class ProfilerCommand extends Command {
 							final long cost = System.currentTimeMillis() - beginTimestamp.get();
 							final String dump = ProfilerUtils.dump();
 							if( cost >= ProfilerCommand.this.cost ) {
-								sender.send(false, dump);
+								final StringBuilder dumpSB = new StringBuilder()
+									.append("Thread Info:").append(Thread.currentThread().getName()).append("\n")
+									.append(dump).append("\n\n");
+								sender.send(false, dumpSB.toString());
 							}
 							isEntered.set(false);
 						}
