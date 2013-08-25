@@ -44,7 +44,7 @@ public class ProfilerCommand extends Command {
 			public void action(Info info, final Sender sender) throws Throwable {
 				
 				final Instrumentation inst = info.getInst();
-				final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
+				final AdviceListenerAdapter advice = new AdviceListenerAdapter() {
 					
 					@Override
 					public void onBefore(Advice p) {
@@ -95,13 +95,17 @@ public class ProfilerCommand extends Command {
 								|| (p.getTarget().getTargetClass().getName().matches(probeClassRegex) && p.getTarget().getTargetBehavior().getName().matches(probeMethodRegex));
 					}
 					
-				},info);
+				};
+				final TransformResult result = transform(inst, classRegex, methodRegex, advice,info);
+				final TransformResult resultForProbe = transform(inst, probeClassRegex, probeMethodRegex, advice,info);
 				
 				// 注册任务
 				registJob(info.getSessionId(), result.getId());
+				registJob(info.getSessionId(), resultForProbe.getId());
 			
 				// 激活任务
 				activeJob(result.getId());
+				activeJob(resultForProbe.getId());
 				
 				final StringBuilder message = new StringBuilder();
 				message.append(GaStringUtils.LINE);
