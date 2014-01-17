@@ -5,6 +5,8 @@ import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regis
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
 import java.lang.instrument.Instrumentation;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
@@ -39,6 +41,7 @@ public class ProfilerCommand extends Command {
 			private final ThreadLocal<Boolean> isEntered = new ThreadLocal<Boolean>();
 			private final ThreadLocal<Integer> deep = new ThreadLocal<Integer>();
 			private final ThreadLocal<Long> beginTimestamp = new ThreadLocal<Long>();
+			private final Map<String, Boolean> cmCache = new ConcurrentHashMap<String, Boolean>();
 			
 			@Override
 			public void action(Info info, final Sender sender) throws Throwable {
@@ -91,8 +94,23 @@ public class ProfilerCommand extends Command {
 					}
 					
 					private boolean isEntered(Advice p) {
-						return isEntered.get()
-								|| (p.getTarget().getTargetClass().getName().matches(probeClassRegex) && p.getTarget().getTargetBehavior().getName().matches(probeMethodRegex));
+						if( isEntered.get() ) {
+							return true;
+						}
+						final String cmKey = new StringBuilder()
+							.append(p.getTarget().getTargetClass().getName())
+							.append("#")
+							.append(p.getTarget().getTargetBehavior().getName())
+							.toString();
+						
+						if( cmCache.containsKey(cmKey) ) {
+							return cmCache.get(cmKey);
+						} else {
+							final boolean isProbe = p.getTarget().getTargetClass().getName().matches(probeClassRegex) 
+									&& p.getTarget().getTargetBehavior().getName().matches(probeMethodRegex);
+							cmCache.put(cmKey, isProbe);
+							return isProbe;
+						}
 					}
 					
 				};
