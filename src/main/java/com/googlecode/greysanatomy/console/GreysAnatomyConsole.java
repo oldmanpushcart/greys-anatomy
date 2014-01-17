@@ -5,8 +5,11 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.PrintWriter;
 import java.io.Writer;
 
 import jline.console.ConsoleReader;
@@ -101,9 +104,11 @@ public class GreysAnatomyConsole {
 				if(!StringUtils.isEmpty(path)){
 					//发命令之前先把重定向文件创建好，如果没有权限或其他问题，就不发起任务
 					try{
-						new RandomAccessFile(path, "rw").setLength(0);
+						new File(path).createNewFile();
 					}catch(Exception e){
-						write(path + ":" + e.getMessage());
+						final String msg = String.format("create path:%s failed. %s", path, e.getMessage());
+						logger.warn(msg, e);
+						write(msg);
 						return;
 					}
 				}
@@ -172,6 +177,7 @@ public class GreysAnatomyConsole {
 				//重定向写文件出现异常时，需要kill掉job 不执行了
 				consolServer.killJob(new ReqKillJob(sessionId, jobId));
 				isF = true;
+				logger.warn("writeToFile failed.", e);
 				write(path + ":" + e.getMessage());
 				return;
 			}
@@ -203,8 +209,8 @@ public class GreysAnatomyConsole {
 			}
 			
 		});
-		new Thread(new GaConsoleInputer(consoleServer)).start();
-		new Thread(new GaConsoleOutputer(consoleServer)).start();
+		new Thread(new GaConsoleInputer(consoleServer), "ga-console-inputer").start();
+		new Thread(new GaConsoleOutputer(consoleServer), "ga-console-outputer").start();
 	}
 	
 	
@@ -247,14 +253,20 @@ public class GreysAnatomyConsole {
 	 * @param path
 	 * @throws IOException 
 	 */
-	private void writeToFile(String message, String path) throws IOException{
+	private void writeToFile(String message, String path) throws IOException {
 		if(StringUtils.isEmpty(message) || StringUtils.isEmpty(path)){
 			return ;
 		}
 		
-		RandomAccessFile rf = new RandomAccessFile(path, "rw");
-		rf.seek(rf.length());
-		rf.write(message.getBytes());
-		rf.close();
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(new BufferedWriter(new FileWriter(path, true)));
+			out.println(message);
+			out.flush();
+		} finally {
+			if( null != out ) {
+				out.close();
+			}
+		}
 	}
 }
