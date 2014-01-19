@@ -4,6 +4,8 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.googlecode.greysanatomy.clocker.Clocker;
+
 /**
  * 性能统计工具
  * @author vlinux
@@ -119,7 +121,7 @@ public class ProfilerUtils {
          */
         private Entry(String message, Entry parentEntry, Entry firstEntry) {
             this.message     = message;
-            this.startTime   = System.currentTimeMillis();
+            this.startTime   = Clocker.current().getCurrentTimeMillis();
             this.parentEntry = parentEntry;
             this.firstEntry  = (Entry) defaultIfNull(firstEntry, this);
             this.baseTime    = (firstEntry == null) ? 0 : firstEntry.startTime;
@@ -214,7 +216,7 @@ public class ProfilerUtils {
          * 结束当前entry，并记录结束时间。
          */
         private void release() {
-            endTime = System.currentTimeMillis();
+            endTime = Clocker.current().getCurrentTimeMillis();
         }
 
         /**
