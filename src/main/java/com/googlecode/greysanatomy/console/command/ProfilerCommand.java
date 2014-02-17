@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
+import com.googlecode.greysanatomy.clocker.Clocker;
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
 import com.googlecode.greysanatomy.probe.Advice;
@@ -56,7 +57,7 @@ public class ProfilerCommand extends Command {
 							return;
 						}
 						if( 0 == deep.get() ) {
-							beginTimestamp.set(System.currentTimeMillis());
+							beginTimestamp.set(Clocker.current().getCurrentTimeMillis());
 							isEntered.set(true);
 							ProfilerUtils.start("");
 						}
@@ -72,7 +73,7 @@ public class ProfilerCommand extends Command {
 						deep.set(deep.get()-1);
 						ProfilerUtils.release();
 						if( 0 == deep.get() ) {
-							final long cost = System.currentTimeMillis() - beginTimestamp.get();
+							final long cost = Clocker.current().getCurrentTimeMillis() - beginTimestamp.get();
 							final String dump = ProfilerUtils.dump();
 							if( cost >= ProfilerCommand.this.cost ) {
 								final StringBuilder dumpSB = new StringBuilder()
