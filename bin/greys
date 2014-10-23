@@ -79,8 +79,11 @@ function main
 	# fix -m option
 	[[ -z $IS_MULTI ]]&&IS_MULTI=0
 
+	# fix BOOT_CLASSPATH
+    [[ -f $JAVA_HOME/lib/tools.jar ]]&&BOOT_CLASSPATH=-Xbootclasspath/a:$JAVA_HOME/lib/tools.jar
+
 	typeset local GREYS_ROOT=$(dirname  ${0})
-	echo $JAVA_HOME/bin/java $BOOT_CLASSPATH -jar $GREYS_ROOT/greys.jar -pid ${TARGET_PID} -target ${TARGET} -multi ${IS_MULTI}
+	$JAVA_HOME/bin/java $BOOT_CLASSPATH -jar $GREYS_ROOT/greys.jar -pid ${TARGET_PID} -target ${TARGET} -multi ${IS_MULTI}
 
 }
 
