@@ -9,10 +9,11 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Cmd {
 
-	/**
-	 * 指定命令的名称<br/>
-	 * @return 返回命令的名称
-	 */
-	public String value();
-	
+    /**
+     * 指定命令的名称<br/>
+     *
+     * @return 返回命令的名称
+     */
+    public String value();
+
 }
