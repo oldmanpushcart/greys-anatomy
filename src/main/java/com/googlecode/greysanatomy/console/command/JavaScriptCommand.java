@@ -3,6 +3,7 @@ package com.googlecode.greysanatomy.console.command;
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
@@ -154,7 +155,7 @@ public class JavaScriptCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(final Info info, final Sender sender) throws Throwable {
+            public void action(final ConsoleServer consoleServer, final Info info, final Sender sender) throws Throwable {
 
                 if (!scriptFile.isFile()
                         || !scriptFile.exists()

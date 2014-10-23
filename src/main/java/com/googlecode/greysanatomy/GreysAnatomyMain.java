@@ -1,6 +1,7 @@
 package com.googlecode.greysanatomy;
 
 import com.googlecode.greysanatomy.console.client.ConsoleClient;
+import com.googlecode.greysanatomy.util.HostUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.slf4j.Logger;
@@ -21,17 +22,20 @@ public class GreysAnatomyMain {
     public GreysAnatomyMain(String[] args) throws Exception {
 
         // 解析配置文件
-        Configer configer = parsetConfiger(args);
+        Configer configer = analyzeConfiger(args);
 
-        // 加载agent
-        attachAgent(configer);
+        // 如果是本地IP,则尝试加载Agent
+        if(HostUtils.isLocalHostIp(configer.getTargetIp())) {
+            // 加载agent
+            attachAgent(configer);
+        }
 
         // 激活控制台
         activeConsoleClient(configer);
 
-        logger.info("attach done! pid={}; port={}; JarFile={}", new Object[]{
+        logger.info("attach done! pid={}; host={}; JarFile={}", new Object[]{
                 configer.getJavaPid(),
-                configer.getConsolePort(),
+                configer.getTargetIp()+":"+configer.getTargetPort(),
                 JARFILE});
     }
 
@@ -41,17 +45,28 @@ public class GreysAnatomyMain {
      * @param args
      * @return
      */
-    private Configer parsetConfiger(String[] args) {
+    private Configer analyzeConfiger(String[] args) {
         final OptionParser parser = new OptionParser();
         parser.accepts("pid").withRequiredArg().ofType(int.class).required();
-        parser.accepts("port").withOptionalArg().ofType(int.class);
+        parser.accepts("target").withOptionalArg().ofType(String.class);
+        parser.accepts("multi").withOptionalArg().ofType(int.class);
 
         final OptionSet os = parser.parse(args);
-
         final Configer configer = new Configer();
-        if (os.has("port")) {
-            configer.setConsolePort((Integer) os.valueOf("port"));
+
+        if (os.has("target")) {
+            final String[] strSplit = ((String) os.valueOf("target")).split(":");
+            configer.setTargetIp(strSplit[0]);
+            configer.setTargetPort(Integer.valueOf(strSplit[1]));
         }
+
+        if (os.has("multi")
+                && (Boolean) os.valueOf("multi")) {
+            configer.setMulti(true);
+        } else {
+            configer.setMulti(false);
+        }
+
         configer.setJavaPid((Integer) os.valueOf("pid"));
         return configer;
     }

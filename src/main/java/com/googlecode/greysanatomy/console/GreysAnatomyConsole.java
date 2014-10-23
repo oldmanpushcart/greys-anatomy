@@ -186,7 +186,7 @@ public class GreysAnatomyConsole {
     /**
      * Æô¶¯console
      *
-     * @param channel
+     * @param consoleServer
      */
     public synchronized void start(final ConsoleServerService consoleServer) {
         this.console.getKeys().bind("" + KeyMap.CTRL_D, new ActionListener() {

@@ -46,7 +46,7 @@ public class Commands {
      */
     private static Set<Field> getArgFields(Class<?> clazz) {
         final Set<Field> fields = new HashSet<Field>();
-        for (Field field : GaReflectUtils.getFileds(clazz)) {
+        for (Field field : GaReflectUtils.getFields(clazz)) {
             if (!field.isAnnotationPresent(Arg.class)) {
                 continue;
             }
@@ -84,7 +84,7 @@ public class Commands {
      * ะฃั้
      *
      * @param arg
-     * @param value
+     * @param obj
      */
     private static void verifyArg(Arg arg, Object obj) {
 
@@ -175,7 +175,7 @@ public class Commands {
             ArgumentCompleter argCompleter = new ArgumentCompleter();
             completers.add(argCompleter);
             argCompleter.getCompleters().add(new StringsCompleter(entry.getKey()));
-            for (Field field : GaReflectUtils.getFileds(entry.getValue())) {
+            for (Field field : GaReflectUtils.getFields(entry.getValue())) {
                 if (field.isAnnotationPresent(Arg.class)) {
                     Arg arg = field.getAnnotation(Arg.class);
                     argCompleter.getCompleters().add(new StringsCompleter("-" + arg.name()));

@@ -1,6 +1,7 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
+import com.googlecode.greysanatomy.console.server.ConsoleServer;
 
 import java.lang.instrument.Instrumentation;
 
@@ -77,11 +78,12 @@ public abstract class Command {
         /**
          * Ö´ÐÐ¶¯×÷
          *
+         * @param consoleServer
          * @param info
          * @param sender
          * @throws Throwable
          */
-        void action(Info info, Sender sender) throws Throwable;
+        void action(ConsoleServer consoleServer, Info info, Sender sender) throws Throwable;
 
     }
 

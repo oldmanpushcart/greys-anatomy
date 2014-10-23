@@ -62,9 +62,6 @@ public class SessionJobsHolder {
 
     /**
      * 注册一个会话
-     *
-     * @param channel
-     * @param jobid
      */
     public static synchronized long registSession() {
         GaSession session = new GaSession();
@@ -76,8 +73,7 @@ public class SessionJobsHolder {
     /**
      * session心跳
      *
-     * @param channel
-     * @param jobids
+     * @param gaSessionId
      * @return false为session已失效
      */
     public static synchronized boolean heartBeatSession(long gaSessionId) {
@@ -93,8 +89,8 @@ public class SessionJobsHolder {
     /**
      * 注销一个任务
      *
-     * @param channel
-     * @param jobids
+     * @param gaSessionId
+     * @param jobId
      */
     public static synchronized void unRegistJob(long gaSessionId, String jobId) {
         GaSession holderSession = sessionHolder.get(gaSessionId);
@@ -130,8 +126,7 @@ public class SessionJobsHolder {
     /**
      * 注销一个会话
      *
-     * @param channel
-     * @param jobids
+     * @param gaSessionId
      */
     public static synchronized void unRegistSession(long gaSessionId) {
         GaSession holderSession = sessionHolder.get(gaSessionId);

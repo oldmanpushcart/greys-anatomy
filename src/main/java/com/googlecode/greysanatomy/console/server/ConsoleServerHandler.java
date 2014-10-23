@@ -36,10 +36,12 @@ public class ConsoleServerHandler {
 
     private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
 
+    private final ConsoleServer consoleServer;
     private final Instrumentation inst;
     private final ExecutorService workers;
 
-    public ConsoleServerHandler(Instrumentation inst) {
+    public ConsoleServerHandler(ConsoleServer consoleServer, Instrumentation inst) {
+        this.consoleServer = consoleServer;
         this.inst = inst;
         this.workers = Executors.newCachedThreadPool(new ThreadFactory() {
 

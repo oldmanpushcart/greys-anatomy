@@ -1,3 +1,4 @@
+#!/bin/sh
 ./package.sh
 mkdir -p ../target/greys
 cp greys ../target/greys

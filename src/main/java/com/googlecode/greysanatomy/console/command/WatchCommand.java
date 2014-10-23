@@ -4,6 +4,7 @@ import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.Transf
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
 import com.googlecode.greysanatomy.console.command.parameter.WatchPointEnum;
+import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
@@ -37,7 +38,7 @@ public class WatchCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(Info info, final Sender sender) throws Throwable {
+            public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
                 ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
 
                 jsEngine.eval("function printWatch(p,o){try{o.send(false, " + expression + "+'\\n');}catch(e){o.send(false, e.message+'\\n');}}");

@@ -24,10 +24,11 @@ public class ConsoleClient {
     private final long sessionId;
 
     private ConsoleClient(Configer configer) throws Exception {
-        this.consoleServer = (ConsoleServerService) Naming.lookup("rmi://127.0.0.1:" + configer.getConsolePort() + "/RMI_GREYS_ANATOMY");
+        this.consoleServer = (ConsoleServerService) Naming.lookup(String.format("rmi://%s:%d/RMI_GREYS_ANATOMY",
+                configer.getTargetIp(),
+                configer.getTargetPort()));
         this.sessionId = this.consoleServer.register();
-        final GreysAnatomyConsole console = new GreysAnatomyConsole(configer, sessionId);
-        console.start(consoleServer);
+        new GreysAnatomyConsole(configer, sessionId).start(consoleServer);
         heartBeat();
     }
 

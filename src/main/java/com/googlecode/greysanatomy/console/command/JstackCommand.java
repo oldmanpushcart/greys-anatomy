@@ -3,6 +3,7 @@ package com.googlecode.greysanatomy.console.command;
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
@@ -33,7 +34,7 @@ public class JstackCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(Info info, final Sender sender) throws Throwable {
+            public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
                 final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {

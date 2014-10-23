@@ -185,14 +185,14 @@ public class GaReflectUtils {
      * @param clazz
      * @return
      */
-    public static Set<Field> getFileds(Class<?> clazz) {
+    public static Set<Field> getFields(Class<?> clazz) {
         final Set<Field> fields = new LinkedHashSet<Field>();
         final Class<?> parentClazz = clazz.getSuperclass();
         for (Field field : clazz.getDeclaredFields()) {
             fields.add(field);
         }
         if (null != parentClazz) {
-            fields.addAll(getFileds(parentClazz));
+            fields.addAll(getFields(parentClazz));
         }
         return fields;
     }
@@ -205,7 +205,7 @@ public class GaReflectUtils {
      * @return
      */
     public static Field getField(Class<?> clazz, String name) {
-        for (Field field : getFileds(clazz)) {
+        for (Field field : getFields(clazz)) {
             if (StringUtils.equals(field.getName(), name)) {
                 return field;
             }
@@ -305,7 +305,7 @@ public class GaReflectUtils {
     /**
      * 将filepath的格式<p>java/lang/String</p>转换为classpath<p>java.lang.String.class</p>
      *
-     * @param path
+     * @param filePath
      * @return
      */
     public static String toClassPath(String filePath) {

@@ -2,6 +2,7 @@ package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.util.GaDetailUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 
@@ -33,7 +34,7 @@ public class SearchMethodCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(Info info, Sender sender) throws Throwable {
+            public void action(final ConsoleServer consoleServer, Info info, Sender sender) throws Throwable {
                 final Set<String> uniqueLine = new HashSet<String>();
                 final StringBuilder message = new StringBuilder();
                 int clzCnt = 0;
