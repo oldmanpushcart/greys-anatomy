@@ -72,7 +72,7 @@ public class ConsoleClient {
         heartBeatDaemon.start();
     }
 
-    private static ConsoleClient instance;
+    private static volatile ConsoleClient instance;
 
     /**
      * 单例控制台客户端
