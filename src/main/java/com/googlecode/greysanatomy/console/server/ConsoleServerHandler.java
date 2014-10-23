@@ -93,7 +93,7 @@ public class ConsoleServerHandler {
                         return;
                     }
                     final Action action = command.getAction();
-                    action.action(info, sender);
+                    action.action(consoleServer, info, sender);
                 } catch (Throwable t) {
                     // 执行命令失败
                     logger.warn("do action failed.", t);
@@ -187,12 +187,9 @@ public class ConsoleServerHandler {
 
     /**
      * 读job的结果
-     *
-     * @param gaSessionId
      * @param jobId
      * @param pos
-     * @param message
-     * @return
+     * @param respResult
      */
     private void read(String jobId, int pos, RespResult respResult) {
         int newPos = pos;
