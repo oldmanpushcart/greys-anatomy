@@ -61,7 +61,7 @@ public class GreysAnatomyMain {
         }
 
         if (os.has("multi")
-                && (Boolean) os.valueOf("multi")) {
+                && (Integer) os.valueOf("multi") == 1) {
             configer.setMulti(true);
         } else {
             configer.setMulti(false);
