@@ -208,7 +208,7 @@ public class ConsoleServerHandler {
             respResult.setPos(newPos);
             respResult.setMessage(sb.toString());
         } catch (IOException e) {
-            logger.warn("jobFile read error!",e);
+            logger.warn("jobFile read error!");
             return;
         } finally {
             if (null != rf) {
