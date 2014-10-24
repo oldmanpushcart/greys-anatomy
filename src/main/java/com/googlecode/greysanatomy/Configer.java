@@ -3,6 +3,8 @@ package com.googlecode.greysanatomy;
 import org.apache.commons.lang.StringUtils;
 
 import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import static com.googlecode.greysanatomy.util.GaReflectUtils.*;
 import static com.googlecode.greysanatomy.util.GaStringUtils.*;
@@ -13,7 +15,6 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.*;
  * @author vlinux
  */
 public class Configer {
-
 
     private String targetIp;                //目标主机IP
     private int targetPort;                 //目标进程号
@@ -107,4 +108,9 @@ public class Configer {
     public void setConsolePrompt(String consolePrompt) {
         this.consolePrompt = consolePrompt;
     }
+
+    public static void main(String... args) throws UnknownHostException {
+        System.out.println(InetAddress.getLocalHost().toString());
+    }
+
 }

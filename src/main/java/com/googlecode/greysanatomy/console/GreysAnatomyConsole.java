@@ -3,6 +3,7 @@ package com.googlecode.greysanatomy.console;
 import com.googlecode.greysanatomy.Configer;
 import com.googlecode.greysanatomy.console.command.Command;
 import com.googlecode.greysanatomy.console.command.Commands;
+import com.googlecode.greysanatomy.console.command.ShutdownCommand;
 import com.googlecode.greysanatomy.console.rmi.RespResult;
 import com.googlecode.greysanatomy.console.rmi.req.ReqCmd;
 import com.googlecode.greysanatomy.console.rmi.req.ReqGetResult;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.rmi.NoSuchObjectException;
 
 import static org.apache.commons.lang.StringUtils.EMPTY;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -35,6 +37,7 @@ public class GreysAnatomyConsole {
     private final ConsoleReader console;
 
     private volatile boolean isF = true;
+    private volatile boolean isShutdown = false;
 
     private final long sessionId;
     private String jobId;
@@ -63,8 +66,8 @@ public class GreysAnatomyConsole {
 
         private final ConsoleServerService consolServer;
 
-        private GaConsoleInputer(ConsoleServerService consolServer) {
-            this.consolServer = consolServer;
+        private GaConsoleInputer(ConsoleServerService consoleServer) {
+            this.consolServer = consoleServer;
         }
 
         @Override
@@ -85,7 +88,7 @@ public class GreysAnatomyConsole {
             final ReqCmd reqCmd = new ReqCmd(console.readLine(prompt), sessionId);
 
 			/*
-			 * 如果读入的是空白字符串或者当前控制台没被标记为已完成
+             * 如果读入的是空白字符串或者当前控制台没被标记为已完成
 			 * 则放弃本次所读取内容
 			 */
             if (isBlank(reqCmd.getCommand()) || !isF) {
@@ -115,6 +118,11 @@ public class GreysAnatomyConsole {
             // 将命令状态标记为未完成
             isF = false;
 
+            // 用户执行了一个shutdown命令,终端需要退出
+            if( command instanceof ShutdownCommand) {
+                isShutdown = true;
+            }
+
             // 发送命令请求
             RespResult result = consolServer.postCmd(reqCmd);
             jobId = result.getJobId();
@@ -133,8 +141,8 @@ public class GreysAnatomyConsole {
         private String currentJob;
         private int pos = 0;
 
-        private GaConsoleOutputer(ConsoleServerService consolServer) {
-            this.consolServer = consolServer;
+        private GaConsoleOutputer(ConsoleServerService consoleServer) {
+            this.consolServer = consoleServer;
         }
 
         @Override
@@ -145,6 +153,10 @@ public class GreysAnatomyConsole {
                     doWrite();
                     //每500ms读一次结果
                     Thread.sleep(500);
+                } catch (NoSuchObjectException nsoe) {
+                    // 目标RMI关闭,需要退出控制台
+                    logger.warn("target RMI's server was closed, console will be exit.");
+                    break;
                 } catch (Exception e) {
                     logger.warn("console write failed.", e);
                 }
@@ -179,6 +191,12 @@ public class GreysAnatomyConsole {
             }
 
             write(resp);
+
+            if( isShutdown ) {
+                logger.info("greys console will be shutdown.");
+                System.exit(0);
+            }
+
         }
 
     }
@@ -218,13 +236,13 @@ public class GreysAnatomyConsole {
      */
     public void write(RespResult resp) {
         if (!isF) {
+            String content = resp.getMessage();
             if (resp.isFinish()) {
                 isF = true;
-                resp.setMessage(resp.getMessage()
-                        + "------------------------------end------------------------------\n");
+                content += "\n------------------------------end------------------------------\n";
             }
-            if (!StringUtils.isEmpty(resp.getMessage())) {
-                write(resp.getMessage());
+            if (!StringUtils.isEmpty(content)) {
+                write(content);
             }
         }
     }

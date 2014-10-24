@@ -121,6 +121,7 @@ public class SessionJobsHolder {
             throw new SessionTimeOutException("session is not exsit!");
         }
         holderSession.getJobIds().add(jobId);
+        logger.info("regist job={} for session={}", jobId, sessionId);
     }
 
     /**

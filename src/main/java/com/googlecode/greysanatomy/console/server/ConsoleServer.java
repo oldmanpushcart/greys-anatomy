@@ -11,12 +11,12 @@ import com.googlecode.greysanatomy.util.HostUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.rmi.PortableRemoteObject;
 import java.lang.instrument.Instrumentation;
 import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
+import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 /**
@@ -33,6 +33,9 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     private final ConsoleServerHandler serverHandler;
     private final Configer configer;
 
+    private Registry registry;
+    private boolean bind = false;
+
     /**
      * 构造控制台服务器
      *
@@ -41,7 +44,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
      * @throws RemoteException
      * @throws MalformedURLException
      */
-    private ConsoleServer(Configer configer, final Instrumentation inst) throws RemoteException, MalformedURLException {
+    private ConsoleServer(Configer configer, final Instrumentation inst) throws RemoteException, MalformedURLException, AlreadyBoundException {
         super();
         serverHandler = new ConsoleServerHandler(this, inst);
         this.configer = configer;
@@ -50,35 +53,71 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
 
     /**
      * 绑定Naming
+     *
      * @throws MalformedURLException
      * @throws RemoteException
+     * @throws AlreadyBoundException
      */
-    private void rebind() throws MalformedURLException, RemoteException {
+    public synchronized void rebind() throws MalformedURLException, RemoteException, AlreadyBoundException {
 
-        LocateRegistry.createRegistry(configer.getTargetPort());
-        for( String ip : HostUtils.getAllLocalHostIP() ) {
-            Naming.rebind(String.format("rmi://%s:%d/RMI_GREYS_ANATOMY",
-                    ip,
-                    configer.getTargetPort()),this);
+        registry = LocateRegistry.createRegistry(configer.getTargetPort());
+        for (String ip : HostUtils.getAllLocalHostIP()) {
+            final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configer.getTargetPort());
+            try {
+                Naming.lookup(bindName);
+                bind = true;
+            } catch (NotBoundException e) {
+                // 只有没有绑定才会去绑
+                logger.info("rebind : " + bindName);
+                Naming.bind(bindName, this);
+            }
         }
 
     }
 
     /**
      * 解除绑定Naming
+     *
+     * @throws RemoteException
+     * @throws NotBoundException
+     * @throws MalformedURLException
      */
-    private void unbind() throws RemoteException, NotBoundException, MalformedURLException {
+    private synchronized void unbind() throws RemoteException, NotBoundException, MalformedURLException {
 
-        for( String ip : HostUtils.getAllLocalHostIP() ) {
-            Naming.unbind(String.format("rmi://%s:%d/RMI_GREYS_ANATOMY",
-                    ip,
-                    configer.getTargetPort()));
+        for (String ip : HostUtils.getAllLocalHostIP()) {
+
+            final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configer.getTargetPort());
+            try {
+                Naming.unbind(bindName);
+                logger.info("unbind : " + bindName);
+            } catch (NotBoundException e) {
+                continue;
+            } catch (NoSuchObjectException e) {
+                continue;
+            }
+        }//for
+
+        if (null != registry) {
+            UnicastRemoteObject.unexportObject(registry, true);
+//            PortableRemoteObject.unexportObject(this);
         }
+
+        bind = false;
 
     }
 
     /**
+     * 是否已被RMI.bind()
+     *
+     * @return
+     */
+    public boolean isBind() {
+        return bind;
+    }
+
+    /**
      * 关闭ConsoleServer
+     *
      * @throws RemoteException
      * @throws NotBoundException
      * @throws MalformedURLException
@@ -88,7 +127,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     }
 
 
-    private static ConsoleServer instance;
+    private static volatile ConsoleServer instance;
 
     /**
      * 单例控制台服务器
@@ -97,7 +136,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
      * @throws MalformedURLException
      * @throws RemoteException
      */
-    public static synchronized ConsoleServer getInstance(Configer configer, Instrumentation inst) throws RemoteException, MalformedURLException {
+    public static synchronized ConsoleServer getInstance(Configer configer, Instrumentation inst) throws RemoteException, MalformedURLException, AlreadyBoundException {
         if (null == instance) {
             instance = new ConsoleServer(configer, inst);
             logger.info(GaStringUtils.getLogo());

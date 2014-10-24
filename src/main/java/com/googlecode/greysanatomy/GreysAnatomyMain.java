@@ -25,7 +25,7 @@ public class GreysAnatomyMain {
         Configer configer = analyzeConfiger(args);
 
         // 如果是本地IP,则尝试加载Agent
-        if(HostUtils.isLocalHostIp(configer.getTargetIp())) {
+        if (HostUtils.isLocalHostIp(configer.getTargetIp())) {
             // 加载agent
             attachAgent(configer);
         }
@@ -35,7 +35,7 @@ public class GreysAnatomyMain {
 
         logger.info("attach done! pid={}; host={}; JarFile={}", new Object[]{
                 configer.getJavaPid(),
-                configer.getTargetIp()+":"+configer.getTargetPort(),
+                configer.getTargetIp() + ":" + configer.getTargetPort(),
                 JARFILE});
     }
 
@@ -119,7 +119,11 @@ public class GreysAnatomyMain {
      * @throws Exception
      */
     private void activeConsoleClient(Configer configer) throws Exception {
-        ConsoleClient.getInstance(configer);
+        try {
+            ConsoleClient.getInstance(configer);
+        } catch (java.rmi.ConnectException ce) {
+            logger.warn("target{{}:{}} RMI was shutdown, ");
+        }
     }
 
 

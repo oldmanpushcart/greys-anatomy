@@ -119,6 +119,7 @@ public class ConsoleServerHandler {
         }
         read(req.getJobId(), req.getPos(), respResult);
         respResult.setFinish(isFinish(respResult.getMessage()));
+//        logger.info("debug for req={},respResult.message={}",req,respResult.getMessage());
         return respResult;
     }
 
@@ -172,7 +173,7 @@ public class ConsoleServerHandler {
             rf.seek(rf.length());
             rf.write(message.getBytes());
         } catch (IOException e) {
-            logger.warn("jobFile write error!", e);
+            logger.warn("jobFile write error!");
             return;
         } finally {
             if (null != rf) {
@@ -207,7 +208,7 @@ public class ConsoleServerHandler {
             respResult.setPos(newPos);
             respResult.setMessage(sb.toString());
         } catch (IOException e) {
-            logger.warn("jobFile read error!");
+            logger.warn("jobFile read error!",e);
             return;
         } finally {
             if (null != rf) {
