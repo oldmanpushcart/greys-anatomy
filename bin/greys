@@ -2,89 +2,71 @@
 
 # program : greys
 #  author : oldmanpushcart@gmail.com
-
 #    date : 2014-10-23
 #    desc : write for july
 
-#   usage : ./greys -p <PID>
-#   usage : ./greys -p <PID> -t <IP:PORT>
-#   usage : ./greys -p <PID> -t <PORT>
-#   usage : ./greys -p <PID> -m
-#   usage : ./greys -p <PID> -t <PORT> -m
-#   usage : ./greys -p <PID> -t <IP:PORT> -m
-#   and so on ...
-
 typeset DEFAULT_TARGET_IP="127.0.0.1"
 typeset DEFAULT_TARGET_PORT="3658"
-typeset DEFAULT_TARGET=${DEFAULT_TARGET_IP}:${DEFAULT_TARGET_PORT}
-
-
 
 function usage
 {
 	print "
 greys usage:
-    <p> : the target java PID
-    [t] : the target, the format is IP:PORT or PORT.
-          default was 127.0.0.1:3658
-    [m] : multi user mode, when use this option, greys allow one or many user connect to one target
-    [h] : show the usage
+	the format was <PID>[@IP:PORT]
+	 <PID> : the target Java Process ID
+	  [IP] : the target's IP
+	[PORT] : the target's PORT
+
+example:
+	./greys <PID>
+	./greys <PID>@[IP]
+	./greys <PID>@[IP:PORT]
 "
 }
 
 function main
 {
-	while getopts p:t:mh OPTION
-	do
-		case "$OPTION" in
-			p) typeset TARGET_PID=${OPTARG} ;;
-			t) typeset TARGET=${OPTARG} ;;
-			m) typeset IS_MULTI=1;;
-			h|\?) usage ;;
+	typeset local pid=$(echo ${1}|awk -F"@" '{print $1}')
+	typeset local ip=$(echo ${1}|awk -F"@|:" '{print $2}')
+	typeset local port=$(echo ${1}|awk -F":" '{print $2}')
 
-		esac
-	done
-
-	# check -p option
-	if [[ -z $TARGET_PID ]];then
-		print "illegal options, the -p option was missed." >> /dev/stderr
+	# check pid
+	if [[ -z $pid ]];then
+		print "illegal arguments, the <PID> must need." >> /dev/stderr
 		usage
 		exit 1
 	fi
+	
 
-	# fix the -t option was empty
-	[[ -z $TARGET ]]&&typeset TARGET=${DEFAULT_TARGET}
+	# fix ip
+	[[ -z $ip ]]&&ip=${DEFAULT_TARGET_IP}
+	
+	# fix port
+	[[ -z $port ]]&&port=${DEFAULT_TARGET_PORT}
 
-	# fix the -t option was numbers
-	typeset local target_number_flag=$(echo ${TARGET}|awk '/^[0-9]+$/')
-	[[ ! -z $target_number_flag ]]&&typeset TARGET=${DEFAULT_TARGET_IP}":"${TARGET}
-
-	# check -t option
-	typeset local target_check_flag=$(echo ${TARGET}|awk '/^.+:[0-9]+$/')
-	if [[ -z $target_check_flag ]];then
-		print "illegal options, the -t option format was wrong." >> /dev/stderr
-		usage
-		exit 1
-	fi
+	# check arg's format
+	#typeset local args=${pid}"@"${ip}":"${port}
+	#typeset local args_check_flag=$(echo ${args}|awk '/^[0-9]+@([0-9]{1,3}\.){1,3}[0-9]{1,3}:[0-9]+$/')
+	#if [[ -z $args_check_flag ]];then
+    #    print "illegal arguments." >> /dev/stderr
+    #    usage
+    #    exit 1
+    #fi
 
 	# if env define the JAVA_HOME, use it first
-	# if is alibaba opts, use default JAVA_HOME
-	typeset local JAVA_VERSION=$(${JAVA_HOME}/bin/java -version 2>&1|awk -F '"' '/java version/&&$2>"1.5"{print $2}')
-	[[ -z $JAVA_HOME ]]&&JAVA_HOME=/opt/taobao/java
-	if [[ ! -x $JAVA_HOME || -z $JAVA_VERSION ]];then
-		print "illegal ENV, please set JAVA_HOME to JDK6+" >> /dev/stderr
-		exit 1
-	fi
-
-	# fix -m option
-	[[ -z $IS_MULTI ]]&&IS_MULTI=0
+    # if is alibaba opts, use default JAVA_HOME
+    typeset local JAVA_VERSION=$(${JAVA_HOME}/bin/java -version 2>&1|awk -F '"' '/java version/&&$2>"1.5"{print $2}')
+    [[ -z $JAVA_HOME ]]&&JAVA_HOME=/opt/taobao/java
+    if [[ ! -x $JAVA_HOME || -z $JAVA_VERSION ]];then
+        print "illegal ENV, please set JAVA_HOME to JDK6+" >> /dev/stderr
+        exit 1
+    fi
 
 	# fix BOOT_CLASSPATH
     [[ -f $JAVA_HOME/lib/tools.jar ]]&&BOOT_CLASSPATH=-Xbootclasspath/a:$JAVA_HOME/lib/tools.jar
-
+	
 	typeset local GREYS_ROOT=$(dirname  ${0})
-	$JAVA_HOME/bin/java $BOOT_CLASSPATH -jar $GREYS_ROOT/greys.jar -pid ${TARGET_PID} -target ${TARGET} -multi ${IS_MULTI}
-
+	$JAVA_HOME/bin/java $BOOT_CLASSPATH -jar $GREYS_ROOT/greys.jar -pid ${pid} -target ${ip}":"${port} -multi 0
 }
 
 main ${@}

@@ -5,6 +5,7 @@ import com.googlecode.greysanatomy.console.GreysAnatomyConsole;
 import com.googlecode.greysanatomy.console.rmi.req.ReqHeart;
 import com.googlecode.greysanatomy.console.server.ConsoleServerService;
 import com.googlecode.greysanatomy.exception.ConsoleException;
+import com.googlecode.greysanatomy.exception.PIDNotMatchException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,12 @@ public class ConsoleClient {
         this.consoleServer = (ConsoleServerService) Naming.lookup(String.format("rmi://%s:%d/RMI_GREYS_ANATOMY",
                 configer.getTargetIp(),
                 configer.getTargetPort()));
+
+        // 检查PID是否正确
+        if( !consoleServer.checkPID(configer.getJavaPid()) ) {
+            throw new PIDNotMatchException();
+        }
+
         this.sessionId = this.consoleServer.register();
         new GreysAnatomyConsole(configer, sessionId).start(consoleServer);
         heartBeat();

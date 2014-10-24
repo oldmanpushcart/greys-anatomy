@@ -1,6 +1,7 @@
 package com.googlecode.greysanatomy;
 
 import com.googlecode.greysanatomy.console.client.ConsoleClient;
+import com.googlecode.greysanatomy.exception.PIDNotMatchException;
 import com.googlecode.greysanatomy.util.HostUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -31,12 +32,14 @@ public class GreysAnatomyMain {
         }
 
         // ¼¤»î¿ØÖÆÌ¨
-        activeConsoleClient(configer);
+        if(activeConsoleClient(configer)) {
 
-        logger.info("attach done! pid={}; host={}; JarFile={}", new Object[]{
-                configer.getJavaPid(),
-                configer.getTargetIp() + ":" + configer.getTargetPort(),
-                JARFILE});
+            logger.info("attach done! pid={}; host={}; JarFile={}", new Object[]{
+                    configer.getJavaPid(),
+                    configer.getTargetIp() + ":" + configer.getTargetPort(),
+                    JARFILE});
+        }
+
     }
 
     /**
@@ -118,12 +121,16 @@ public class GreysAnatomyMain {
      * @param configer
      * @throws Exception
      */
-    private void activeConsoleClient(Configer configer) throws Exception {
+    private boolean activeConsoleClient(Configer configer) throws Exception {
         try {
             ConsoleClient.getInstance(configer);
+            return true;
         } catch (java.rmi.ConnectException ce) {
-            logger.warn("target{{}:{}} RMI was shutdown, ");
+            logger.warn("target{{}:{}} RMI was shutdown, console will be exit.", configer.getTargetIp(), configer.getTargetPort());
+        } catch (PIDNotMatchException pidnme) {
+            logger.warn("target{{}:{}} PID was not match, console will be exit.", configer.getTargetIp(), configer.getTargetPort());
         }
+        return false;
     }
 
 

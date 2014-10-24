@@ -31,6 +31,15 @@ public interface ConsoleServerService extends Remote {
     public long register() throws Exception;
 
     /**
+     * 核对PID是否正确
+     *
+     * @param pid
+     * @return
+     * @throws Exception
+     */
+    public boolean checkPID(int pid) throws Exception;
+
+    /**
      * 获取命令执行结果
      *
      * @param req

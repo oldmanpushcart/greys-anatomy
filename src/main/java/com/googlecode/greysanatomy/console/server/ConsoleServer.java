@@ -11,7 +11,6 @@ import com.googlecode.greysanatomy.util.HostUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.rmi.PortableRemoteObject;
 import java.lang.instrument.Instrumentation;
 import java.net.MalformedURLException;
 import java.rmi.*;
@@ -155,6 +154,11 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     }
 
     @Override
+    public boolean checkPID(int pid) throws Exception {
+        return configer.getJavaPid() == pid;
+    }
+
+    @Override
     public RespResult getCmdExecuteResult(ReqGetResult req) throws Exception {
         return serverHandler.getCmdExecuteResult(req);
     }
@@ -169,4 +173,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
         return serverHandler.sessionHeartBeat(req);
     }
 
+    public Configer getConfiger() {
+        return configer;
+    }
 }

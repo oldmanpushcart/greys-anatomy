@@ -32,6 +32,8 @@ public class AgentMain {
                     .invoke(null, configer, inst);
 
             if( !consoleServer.isBind() ) {
+//                consoleServer.getConfiger().setTargetIp(configer.getTargetIp());
+                consoleServer.getConfiger().setTargetPort(configer.getTargetPort());
                 consoleServer.rebind();
             }
 
