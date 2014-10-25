@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.rmi.ConnectException;
 import java.rmi.Naming;
 
 /**
@@ -37,6 +36,7 @@ public class ConsoleClient {
 
         this.sessionId = this.consoleServer.register();
         new GreysAnatomyConsole(configer, sessionId).start(consoleServer);
+//        new RISCGreysAnatomyConsole(configer, sessionId).start(consoleServer);
         heartBeat();
     }
 

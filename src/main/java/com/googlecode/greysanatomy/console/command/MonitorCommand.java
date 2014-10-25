@@ -203,13 +203,15 @@ public class MonitorCommand extends Command {
                                     final AtomicReference<Data> value = entry.getValue();
 
                                     Data data = null;
-                                    final Data newData = new Data();
                                     while (true) {
                                         data = value.get();
-                                        if (value.compareAndSet(data, newData)) {
+                                        if (value.compareAndSet(data, new Data())) {
                                             break;
                                         }
                                     }
+
+//                                    final Data data = value.get();
+//                                    value.set(new Data());
 
                                     if (null != data) {
                                         monitorSB.append(timestamp).append("\t");

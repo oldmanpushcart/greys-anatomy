@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.instrument.Instrumentation;
@@ -155,7 +156,7 @@ public class ConsoleServerHandler {
      * @param isF
      * @param message
      */
-    private synchronized void write(long gaSessionId, String jobId, boolean isF, String message) {
+    private void write(long gaSessionId, String jobId, boolean isF, String message) {
         //TODO 这里用队列来做缓存，改善写文件性能，否则可能会影响被probe代码的效率
         if (isF) {
             message += END_MASK;
@@ -208,8 +209,10 @@ public class ConsoleServerHandler {
             }
             respResult.setPos(newPos);
             respResult.setMessage(sb.toString());
+        } catch (FileNotFoundException fnfe) {
+            logger.info("jobId={} was not ready yet.",jobId);
         } catch (IOException e) {
-            logger.warn("jobFile read error!", e);
+            logger.warn("jobId={}'s file read error!", jobId, e);
             return;
         } finally {
             if (null != rf) {

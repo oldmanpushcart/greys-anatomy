@@ -119,7 +119,7 @@ public class GreysAnatomyConsole {
             isF = false;
 
             // 用户执行了一个shutdown命令,终端需要退出
-            if( command instanceof ShutdownCommand) {
+            if (command instanceof ShutdownCommand) {
                 isShutdown = true;
             }
 
@@ -192,7 +192,7 @@ public class GreysAnatomyConsole {
 
             write(resp);
 
-            if( isShutdown ) {
+            if (isShutdown) {
                 logger.info("greys console will be shutdown.");
                 System.exit(0);
             }
@@ -234,12 +234,13 @@ public class GreysAnatomyConsole {
      *
      * @param resp
      */
-    public void write(RespResult resp) {
+    private void write(RespResult resp) {
         if (!isF) {
             String content = resp.getMessage();
             if (resp.isFinish()) {
                 isF = true;
-                content += "\n------------------------------end------------------------------\n";
+                //content += "\n------------------------------end------------------------------\n";
+                content += "\n";
             }
             if (!StringUtils.isEmpty(content)) {
                 write(content);
