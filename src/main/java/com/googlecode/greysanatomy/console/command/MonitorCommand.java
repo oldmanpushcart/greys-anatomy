@@ -137,7 +137,7 @@ public class MonitorCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
+            public void action(final ConsoleServer consoleServer, final Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
                 final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
@@ -151,7 +151,11 @@ public class MonitorCommand extends Command {
 
                     @Override
                     public void onFinish(Advice p) {
-                        final long cost = System.currentTimeMillis() - beginTimestamp.get();
+                        final Long startTime = beginTimestamp.get();
+                        if( null == startTime ) {
+                            return;
+                        }
+                        final long cost = System.currentTimeMillis() - startTime;
                         final Key key = new Key(p.getTarget().getTargetClass().getName(), p.getTarget().getTargetBehavior().getName());
 
                         while (true) {
@@ -183,7 +187,7 @@ public class MonitorCommand extends Command {
 
                     @Override
                     public void create() {
-                        timer = new Timer();
+                        timer = new Timer("Timer-for-greys-monitor-" + info.getJobId(), true);
                         timer.scheduleAtFixedRate(new TimerTask() {
 
                             @Override
@@ -197,19 +201,30 @@ public class MonitorCommand extends Command {
                                 while (it.hasNext()) {
                                     final Map.Entry<Key, AtomicReference<Data>> entry = it.next();
                                     final AtomicReference<Data> value = entry.getValue();
-                                    final Data data = value.get();
-                                    monitorSB.append(timestamp).append("\t");
-                                    monitorSB.append(entry.getKey().className).append("\t");
-                                    monitorSB.append(entry.getKey().behaviorName).append("\t");
-                                    monitorSB.append(data.total).append("\t");
-                                    monitorSB.append(data.success).append("\t");
-                                    monitorSB.append(data.failed).append("\t");
 
-                                    final DecimalFormat df = new DecimalFormat("0.00");
-                                    monitorSB.append(df.format(div(data.cost, data.total))).append("\t");
-                                    monitorSB.append(df.format(100.0d * div(data.failed, data.total))).append("%");
-                                    monitorSB.append("\n");
-                                    while (!value.compareAndSet(data, new Data())) ;
+                                    Data data = null;
+                                    final Data newData = new Data();
+                                    while (true) {
+                                        data = value.get();
+                                        if (value.compareAndSet(data, newData)) {
+                                            break;
+                                        }
+                                    }
+
+                                    if (null != data) {
+                                        monitorSB.append(timestamp).append("\t");
+                                        monitorSB.append(entry.getKey().className).append("\t");
+                                        monitorSB.append(entry.getKey().behaviorName).append("\t");
+                                        monitorSB.append(data.total).append("\t");
+                                        monitorSB.append(data.success).append("\t");
+                                        monitorSB.append(data.failed).append("\t");
+
+                                        final DecimalFormat df = new DecimalFormat("0.00");
+                                        monitorSB.append(df.format(div(data.cost, data.total))).append("\t");
+                                        monitorSB.append(df.format(100.0d * div(data.failed, data.total))).append("%");
+                                        monitorSB.append("\n");
+                                    }
+
                                 }//while
 
                                 sender.send(false, tableFormat(monitorSB.toString()));

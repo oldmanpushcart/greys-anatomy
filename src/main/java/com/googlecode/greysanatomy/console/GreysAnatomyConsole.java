@@ -64,10 +64,10 @@ public class GreysAnatomyConsole {
      */
     private class GaConsoleInputer implements Runnable {
 
-        private final ConsoleServerService consolServer;
+        private final ConsoleServerService consoleServer;
 
         private GaConsoleInputer(ConsoleServerService consoleServer) {
-            this.consolServer = consoleServer;
+            this.consoleServer = consoleServer;
         }
 
         @Override
@@ -124,7 +124,7 @@ public class GreysAnatomyConsole {
             }
 
             // 发送命令请求
-            RespResult result = consolServer.postCmd(reqCmd);
+            RespResult result = consoleServer.postCmd(reqCmd);
             jobId = result.getJobId();
         }
 
@@ -137,12 +137,12 @@ public class GreysAnatomyConsole {
      */
     private class GaConsoleOutputer implements Runnable {
 
-        private final ConsoleServerService consolServer;
+        private final ConsoleServerService consoleServer;
         private String currentJob;
         private int pos = 0;
 
         private GaConsoleOutputer(ConsoleServerService consoleServer) {
-            this.consolServer = consoleServer;
+            this.consoleServer = consoleServer;
         }
 
         @Override
@@ -175,7 +175,7 @@ public class GreysAnatomyConsole {
                 currentJob = jobId;
             }
 
-            RespResult resp = consolServer.getCmdExecuteResult(new ReqGetResult(jobId, sessionId, pos));
+            RespResult resp = consoleServer.getCmdExecuteResult(new ReqGetResult(jobId, sessionId, pos));
             pos = resp.getPos();
 
             //先写重定向
@@ -183,7 +183,7 @@ public class GreysAnatomyConsole {
                 writeToFile(resp.getMessage(), path);
             } catch (IOException e) {
                 //重定向写文件出现异常时，需要kill掉job 不执行了
-                consolServer.killJob(new ReqKillJob(sessionId, jobId));
+                consoleServer.killJob(new ReqKillJob(sessionId, jobId));
                 isF = true;
                 logger.warn("writeToFile failed.", e);
                 write(path + ":" + e.getMessage());

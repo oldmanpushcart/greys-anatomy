@@ -155,7 +155,7 @@ public class ConsoleServerHandler {
      * @param isF
      * @param message
      */
-    private void write(long gaSessionId, String jobId, boolean isF, String message) {
+    private synchronized void write(long gaSessionId, String jobId, boolean isF, String message) {
         //TODO 这里用队列来做缓存，改善写文件性能，否则可能会影响被probe代码的效率
         if (isF) {
             message += END_MASK;
@@ -173,7 +173,7 @@ public class ConsoleServerHandler {
             rf.seek(rf.length());
             rf.write(message.getBytes());
         } catch (IOException e) {
-            logger.warn("jobFile write error!");
+            logger.warn("jobFile write error!", e);
             return;
         } finally {
             if (null != rf) {
@@ -188,6 +188,7 @@ public class ConsoleServerHandler {
 
     /**
      * 读job的结果
+     *
      * @param jobId
      * @param pos
      * @param respResult
@@ -208,7 +209,7 @@ public class ConsoleServerHandler {
             respResult.setPos(newPos);
             respResult.setMessage(sb.toString());
         } catch (IOException e) {
-            logger.warn("jobFile read error!");
+            logger.warn("jobFile read error!", e);
             return;
         } finally {
             if (null != rf) {
