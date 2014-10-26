@@ -1,6 +1,15 @@
-![Logo](http://photo.yupoo.com/chengtongda/CFCG1kEV/medish.jpg)
-
+```
+                                                        _
+  ____  ____ _____ _   _  ___ _____ _____ ____  _____ _| |_ ___  ____  _   _
+ / _  |/ ___) ___ | | | |/___|_____|____ |  _ \(____ (_   _) _ \|    \| | | |
+( (_| | |   | ____| |_| |___ |     / ___ | | | / ___ | | || |_| | | | | |_| |
+ \___ |_|   |_____)\__  (___/      \_____|_| |_\_____|  \__)___/|_|_|_|\__  |
+(_____|           (____/                                              (____/
+                                                      +-+-+-+-+-+-+-+-+-+-+-+
+                                                      |v|e|r|s|i|o|n|:|1|.|5|
+                                                      +-+-+-+-+-+-+-+-+-+-+-+
+```
 [greys介绍](https://github.com/chengtongda/greys-anatomy/wiki/Greys-Anatomy)
 
 程序安装：
-curl -sLk https://raw.github.com/chengtongda/greys-anatomy/master/bin/install.sh|ksh
+curl -sLk http://ompc.oss-cn-hangzhou.aliyuncs.com/greys/install.sh|ksh
