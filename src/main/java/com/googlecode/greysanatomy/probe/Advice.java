@@ -213,4 +213,16 @@ public class Advice {
         return parameters;
     }
 
+    /**
+     * getParameters()方法的别名，原来的名字太TM长了
+     * @return
+     */
+    public Object[] getParams() {return parameters;}
+
+    /**
+     * getThrowException()方法的别名
+     * @return
+     */
+    public Throwable getThrowExp() {return throwException;}
+
 }
