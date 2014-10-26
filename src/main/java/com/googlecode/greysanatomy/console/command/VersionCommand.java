@@ -1,6 +1,7 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 
@@ -10,6 +11,7 @@ import com.googlecode.greysanatomy.util.GaStringUtils;
  * @author vlinux
  */
 @Cmd("version")
+@RiscCmd(named = "version", sort = 8, desc = "Output the target's greys version")
 public class VersionCommand extends Command {
 
     @Override

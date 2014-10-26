@@ -87,7 +87,7 @@ public class ConsoleServerHandler {
                 };
 
                 try {
-                    final Command command = Commands.getInstance().newCommand(cmd.getCommand());
+                    final Command command = Commands.getInstance().newRiscCommand(cmd.getCommand());
                     // √¸¡Ó≤ª¥Ê‘⁄
                     if (null == command) {
                         write(respResult.getSessionId(), respResult.getJobId(), true, "command not found!");

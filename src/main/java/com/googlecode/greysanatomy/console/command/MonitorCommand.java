@@ -1,8 +1,7 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-import com.googlecode.greysanatomy.console.command.annotation.Arg;
-import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.*;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -68,15 +67,19 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  * @author vlinux
  */
 @Cmd("monitor")
+@RiscCmd(named = "monitor", sort = 5, desc = "Buried point method for monitoring the operation.")
 public class MonitorCommand extends Command {
 
     @Arg(name = "class")
+    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
 
     @Arg(name = "method")
+    @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
     private String methodRegex;
 
     @Arg(name = "cycle")
+    @RiscNamedArg(named = "c", hasValue = true, description = "the cycle of output")
     private int cycle = 120;
 
     /*
@@ -152,7 +155,7 @@ public class MonitorCommand extends Command {
                     @Override
                     public void onFinish(Advice p) {
                         final Long startTime = beginTimestamp.get();
-                        if( null == startTime ) {
+                        if (null == startTime) {
                             return;
                         }
                         final long cost = System.currentTimeMillis() - startTime;

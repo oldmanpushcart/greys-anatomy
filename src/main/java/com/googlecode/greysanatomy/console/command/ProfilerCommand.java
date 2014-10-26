@@ -2,8 +2,7 @@ package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
 import com.googlecode.greysanatomy.clocker.Clocker;
-import com.googlecode.greysanatomy.console.command.annotation.Arg;
-import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.*;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -19,21 +18,27 @@ import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regis
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
 @Cmd("profiler")
+@RiscCmd(named = "profiler", sort = 6, desc = "The call stack output buried point method for rendering path of.")
 public class ProfilerCommand extends Command {
 
     @Arg(name = "class")
+    @RiscIndexArg(index = 0, name = "rendering-class-regex", description = "regex match of rendering classpath.classname")
     private String classRegex;
 
     @Arg(name = "method")
+    @RiscIndexArg(index = 1, name = "rendering-method-regex", description = "regex match of rendering methodname")
     private String methodRegex;
 
     @Arg(name = "probe-class")
+    @RiscIndexArg(index = 2, name = "class-regex", description = "regex match of classpath.classname")
     private String probeClassRegex;
 
     @Arg(name = "probe-method")
+    @RiscIndexArg(index = 3, name = "method-regex", description = "regex match of methodname")
     private String probeMethodRegex;
 
     @Arg(name = "cost")
+    @RiscNamedArg(named = "c", hasValue = true, description = "the cost limit for output")
     private long cost;
 
     @Override

@@ -9,6 +9,7 @@ import com.googlecode.greysanatomy.console.rmi.req.ReqCmd;
 import com.googlecode.greysanatomy.console.rmi.req.ReqGetResult;
 import com.googlecode.greysanatomy.console.rmi.req.ReqKillJob;
 import com.googlecode.greysanatomy.console.server.ConsoleServerService;
+import com.googlecode.greysanatomy.exception.ConsoleException;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import jline.console.ConsoleReader;
 import jline.console.KeyMap;
@@ -76,6 +77,9 @@ public class GreysAnatomyConsole {
                 try {
                     //控制台读命令
                     doRead();
+                } catch (ConsoleException ce) {
+                    write("Error : "+ce.getMessage()+"\n");
+                    write("Please type help for more information...\n\n");
                 } catch (Exception e) {
                     // 这里是控制台，可能么？
                     logger.warn("console read failed.", e);
@@ -95,7 +99,13 @@ public class GreysAnatomyConsole {
                 return;
             }
 
-            final Command command = Commands.getInstance().newCommand(reqCmd.getCommand());
+            final Command command;
+            try {
+                command = Commands.getInstance().newRiscCommand(reqCmd.getCommand());
+            } catch (Exception e) {
+                throw new ConsoleException(e.getMessage());
+            }
+
 
             if (command != null) {
                 path = command.getRedirectPath();
