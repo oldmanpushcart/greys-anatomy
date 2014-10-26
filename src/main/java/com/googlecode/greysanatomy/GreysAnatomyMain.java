@@ -1,6 +1,8 @@
 package com.googlecode.greysanatomy;
 
 import com.googlecode.greysanatomy.console.client.ConsoleClient;
+import com.googlecode.greysanatomy.exception.PIDNotMatchException;
+import com.googlecode.greysanatomy.util.HostUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.slf4j.Logger;
@@ -21,18 +23,23 @@ public class GreysAnatomyMain {
     public GreysAnatomyMain(String[] args) throws Exception {
 
         // 解析配置文件
-        Configer configer = parsetConfiger(args);
+        Configer configer = analyzeConfiger(args);
 
-        // 加载agent
-        attachAgent(configer);
+        // 如果是本地IP,则尝试加载Agent
+        if (HostUtils.isLocalHostIp(configer.getTargetIp())) {
+            // 加载agent
+            attachAgent(configer);
+        }
 
         // 激活控制台
-        activeConsoleClient(configer);
+        if(activeConsoleClient(configer)) {
 
-        logger.info("attach done! pid={}; port={}; JarFile={}", new Object[]{
-                configer.getJavaPid(),
-                configer.getConsolePort(),
-                JARFILE});
+            logger.info("attach done! pid={}; host={}; JarFile={}", new Object[]{
+                    configer.getJavaPid(),
+                    configer.getTargetIp() + ":" + configer.getTargetPort(),
+                    JARFILE});
+        }
+
     }
 
     /**
@@ -41,17 +48,28 @@ public class GreysAnatomyMain {
      * @param args
      * @return
      */
-    private Configer parsetConfiger(String[] args) {
+    private Configer analyzeConfiger(String[] args) {
         final OptionParser parser = new OptionParser();
         parser.accepts("pid").withRequiredArg().ofType(int.class).required();
-        parser.accepts("port").withOptionalArg().ofType(int.class);
+        parser.accepts("target").withOptionalArg().ofType(String.class);
+        parser.accepts("multi").withOptionalArg().ofType(int.class);
 
         final OptionSet os = parser.parse(args);
-
         final Configer configer = new Configer();
-        if (os.has("port")) {
-            configer.setConsolePort((Integer) os.valueOf("port"));
+
+        if (os.has("target")) {
+            final String[] strSplit = ((String) os.valueOf("target")).split(":");
+            configer.setTargetIp(strSplit[0]);
+            configer.setTargetPort(Integer.valueOf(strSplit[1]));
         }
+
+        if (os.has("multi")
+                && (Integer) os.valueOf("multi") == 1) {
+            configer.setMulti(true);
+        } else {
+            configer.setMulti(false);
+        }
+
         configer.setJavaPid((Integer) os.valueOf("pid"));
         return configer;
     }
@@ -103,8 +121,16 @@ public class GreysAnatomyMain {
      * @param configer
      * @throws Exception
      */
-    private void activeConsoleClient(Configer configer) throws Exception {
-        ConsoleClient.getInstance(configer);
+    private boolean activeConsoleClient(Configer configer) throws Exception {
+        try {
+            ConsoleClient.getInstance(configer);
+            return true;
+        } catch (java.rmi.ConnectException ce) {
+            logger.warn("target{{}:{}} RMI was shutdown, console will be exit.", configer.getTargetIp(), configer.getTargetPort());
+        } catch (PIDNotMatchException pidnme) {
+            logger.warn("target{{}:{}} PID was not match, console will be exit.", configer.getTargetIp(), configer.getTargetPort());
+        }
+        return false;
     }
 
 

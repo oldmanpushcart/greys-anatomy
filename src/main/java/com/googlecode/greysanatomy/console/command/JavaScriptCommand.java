@@ -1,8 +1,8 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-import com.googlecode.greysanatomy.console.command.annotation.Arg;
-import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.*;
+import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
@@ -30,17 +30,21 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  * @author vlinux
  */
 @Cmd("javascript")
+@RiscCmd(named = "js", sort = 3, desc = "Let Greys use the JavaScript enhancement.")
 public class JavaScriptCommand extends Command {
 
     private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
 
     @Arg(name = "class")
+    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
 
     @Arg(name = "method")
+    @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
     private String methodRegex;
 
     @Arg(name = "file")
+    @RiscNamedArg(named = "f", hasValue = true, description = "the file of javascript")
     private File scriptFile;
 
     /**
@@ -154,7 +158,7 @@ public class JavaScriptCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(final Info info, final Sender sender) throws Throwable {
+            public void action(final ConsoleServer consoleServer, final Info info, final Sender sender) throws Throwable {
 
                 if (!scriptFile.isFile()
                         || !scriptFile.exists()

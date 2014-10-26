@@ -1,9 +1,9 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-import com.googlecode.greysanatomy.console.command.annotation.Arg;
-import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.*;
 import com.googlecode.greysanatomy.console.command.parameter.WatchPointEnum;
+import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
@@ -18,26 +18,36 @@ import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regis
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
 @Cmd("watch")
+@RiscCmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.")
 public class WatchCommand extends Command {
 
     @Arg(name = "class", isRequired = true)
+    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
 
     @Arg(name = "method", isRequired = true)
+    @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
     private String methodRegex;
 
     @Arg(name = "exp", isRequired = true)
+    @RiscIndexArg(index = 2, name = "express", description = "expression, write by javascript")
     private String expression;
 
     @Arg(name = "watch-point", isRequired = false)
     private WatchPointEnum watchPoint = WatchPointEnum.before;
+
+    @RiscNamedArg(named = "b", description = "is watch on before")
+    private boolean isBefore = true;
+
+    @RiscNamedArg(named = "f", description = "is watch on finish")
+    private boolean isFinish = false;
 
     @Override
     public Action getAction() {
         return new Action() {
 
             @Override
-            public void action(Info info, final Sender sender) throws Throwable {
+            public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
                 ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
 
                 jsEngine.eval("function printWatch(p,o){try{o.send(false, " + expression + "+'\\n');}catch(e){o.send(false, e.message+'\\n');}}");
@@ -48,7 +58,8 @@ public class WatchCommand extends Command {
 
                     @Override
                     public void onBefore(Advice p) {
-                        if (watchPoint == WatchPointEnum.before) {
+                        if (watchPoint == WatchPointEnum.before
+                                && isBefore) {
                             try {
                                 invoke.invokeFunction("printWatch", p, sender);
                             } catch (Exception e) {
@@ -58,7 +69,8 @@ public class WatchCommand extends Command {
 
                     @Override
                     public void onFinish(Advice p) {
-                        if (watchPoint == WatchPointEnum.finish) {
+                        if (watchPoint == WatchPointEnum.finish
+                                || isFinish) {
                             try {
                                 invoke.invokeFunction("printWatch", p, sender);
                             } catch (Exception e) {

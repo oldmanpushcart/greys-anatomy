@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.instrument.Instrumentation;
@@ -36,10 +37,12 @@ public class ConsoleServerHandler {
 
     private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
 
+    private final ConsoleServer consoleServer;
     private final Instrumentation inst;
     private final ExecutorService workers;
 
-    public ConsoleServerHandler(Instrumentation inst) {
+    public ConsoleServerHandler(ConsoleServer consoleServer, Instrumentation inst) {
+        this.consoleServer = consoleServer;
         this.inst = inst;
         this.workers = Executors.newCachedThreadPool(new ThreadFactory() {
 
@@ -84,14 +87,14 @@ public class ConsoleServerHandler {
                 };
 
                 try {
-                    final Command command = Commands.getInstance().newCommand(cmd.getCommand());
+                    final Command command = Commands.getInstance().newRiscCommand(cmd.getCommand());
                     // 命令不存在
                     if (null == command) {
                         write(respResult.getSessionId(), respResult.getJobId(), true, "command not found!");
                         return;
                     }
                     final Action action = command.getAction();
-                    action.action(info, sender);
+                    action.action(consoleServer, info, sender);
                 } catch (Throwable t) {
                     // 执行命令失败
                     logger.warn("do action failed.", t);
@@ -117,6 +120,7 @@ public class ConsoleServerHandler {
         }
         read(req.getJobId(), req.getPos(), respResult);
         respResult.setFinish(isFinish(respResult.getMessage()));
+//        logger.info("debug for req={},respResult.message={}",req,respResult.getMessage());
         return respResult;
     }
 
@@ -186,11 +190,9 @@ public class ConsoleServerHandler {
     /**
      * 读job的结果
      *
-     * @param gaSessionId
      * @param jobId
      * @param pos
-     * @param message
-     * @return
+     * @param respResult
      */
     private void read(String jobId, int pos, RespResult respResult) {
         int newPos = pos;
@@ -207,8 +209,10 @@ public class ConsoleServerHandler {
             }
             respResult.setPos(newPos);
             respResult.setMessage(sb.toString());
+        } catch (FileNotFoundException fnfe) {
+            logger.info("jobId={} was not ready yet.",jobId);
         } catch (IOException e) {
-            logger.warn("jobFile read error!");
+            logger.warn("jobId={}'s file read error!", jobId, e);
             return;
         } finally {
             if (null != rf) {

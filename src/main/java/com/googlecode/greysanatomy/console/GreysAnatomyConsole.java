@@ -3,11 +3,13 @@ package com.googlecode.greysanatomy.console;
 import com.googlecode.greysanatomy.Configer;
 import com.googlecode.greysanatomy.console.command.Command;
 import com.googlecode.greysanatomy.console.command.Commands;
+import com.googlecode.greysanatomy.console.command.ShutdownCommand;
 import com.googlecode.greysanatomy.console.rmi.RespResult;
 import com.googlecode.greysanatomy.console.rmi.req.ReqCmd;
 import com.googlecode.greysanatomy.console.rmi.req.ReqGetResult;
 import com.googlecode.greysanatomy.console.rmi.req.ReqKillJob;
 import com.googlecode.greysanatomy.console.server.ConsoleServerService;
+import com.googlecode.greysanatomy.exception.ConsoleException;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import jline.console.ConsoleReader;
 import jline.console.KeyMap;
@@ -18,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.rmi.NoSuchObjectException;
 
 import static org.apache.commons.lang.StringUtils.EMPTY;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -35,6 +38,7 @@ public class GreysAnatomyConsole {
     private final ConsoleReader console;
 
     private volatile boolean isF = true;
+    private volatile boolean isShutdown = false;
 
     private final long sessionId;
     private String jobId;
@@ -61,10 +65,10 @@ public class GreysAnatomyConsole {
      */
     private class GaConsoleInputer implements Runnable {
 
-        private final ConsoleServerService consolServer;
+        private final ConsoleServerService consoleServer;
 
-        private GaConsoleInputer(ConsoleServerService consolServer) {
-            this.consolServer = consolServer;
+        private GaConsoleInputer(ConsoleServerService consoleServer) {
+            this.consoleServer = consoleServer;
         }
 
         @Override
@@ -73,6 +77,9 @@ public class GreysAnatomyConsole {
                 try {
                     //控制台读命令
                     doRead();
+                } catch (ConsoleException ce) {
+                    write("Error : "+ce.getMessage()+"\n");
+                    write("Please type help for more information...\n\n");
                 } catch (Exception e) {
                     // 这里是控制台，可能么？
                     logger.warn("console read failed.", e);
@@ -85,14 +92,20 @@ public class GreysAnatomyConsole {
             final ReqCmd reqCmd = new ReqCmd(console.readLine(prompt), sessionId);
 
 			/*
-			 * 如果读入的是空白字符串或者当前控制台没被标记为已完成
+             * 如果读入的是空白字符串或者当前控制台没被标记为已完成
 			 * 则放弃本次所读取内容
 			 */
             if (isBlank(reqCmd.getCommand()) || !isF) {
                 return;
             }
 
-            final Command command = Commands.getInstance().newCommand(reqCmd.getCommand());
+            final Command command;
+            try {
+                command = Commands.getInstance().newRiscCommand(reqCmd.getCommand());
+            } catch (Exception e) {
+                throw new ConsoleException(e.getMessage());
+            }
+
 
             if (command != null) {
                 path = command.getRedirectPath();
@@ -115,8 +128,13 @@ public class GreysAnatomyConsole {
             // 将命令状态标记为未完成
             isF = false;
 
+            // 用户执行了一个shutdown命令,终端需要退出
+            if (command instanceof ShutdownCommand) {
+                isShutdown = true;
+            }
+
             // 发送命令请求
-            RespResult result = consolServer.postCmd(reqCmd);
+            RespResult result = consoleServer.postCmd(reqCmd);
             jobId = result.getJobId();
         }
 
@@ -129,12 +147,12 @@ public class GreysAnatomyConsole {
      */
     private class GaConsoleOutputer implements Runnable {
 
-        private final ConsoleServerService consolServer;
+        private final ConsoleServerService consoleServer;
         private String currentJob;
         private int pos = 0;
 
-        private GaConsoleOutputer(ConsoleServerService consolServer) {
-            this.consolServer = consolServer;
+        private GaConsoleOutputer(ConsoleServerService consoleServer) {
+            this.consoleServer = consoleServer;
         }
 
         @Override
@@ -145,6 +163,10 @@ public class GreysAnatomyConsole {
                     doWrite();
                     //每500ms读一次结果
                     Thread.sleep(500);
+                } catch (NoSuchObjectException nsoe) {
+                    // 目标RMI关闭,需要退出控制台
+                    logger.warn("target RMI's server was closed, console will be exit.");
+                    break;
                 } catch (Exception e) {
                     logger.warn("console write failed.", e);
                 }
@@ -163,7 +185,7 @@ public class GreysAnatomyConsole {
                 currentJob = jobId;
             }
 
-            RespResult resp = consolServer.getCmdExecuteResult(new ReqGetResult(jobId, sessionId, pos));
+            RespResult resp = consoleServer.getCmdExecuteResult(new ReqGetResult(jobId, sessionId, pos));
             pos = resp.getPos();
 
             //先写重定向
@@ -171,7 +193,7 @@ public class GreysAnatomyConsole {
                 writeToFile(resp.getMessage(), path);
             } catch (IOException e) {
                 //重定向写文件出现异常时，需要kill掉job 不执行了
-                consolServer.killJob(new ReqKillJob(sessionId, jobId));
+                consoleServer.killJob(new ReqKillJob(sessionId, jobId));
                 isF = true;
                 logger.warn("writeToFile failed.", e);
                 write(path + ":" + e.getMessage());
@@ -179,6 +201,12 @@ public class GreysAnatomyConsole {
             }
 
             write(resp);
+
+            if (isShutdown) {
+                logger.info("greys console will be shutdown.");
+                System.exit(0);
+            }
+
         }
 
     }
@@ -186,7 +214,7 @@ public class GreysAnatomyConsole {
     /**
      * 启动console
      *
-     * @param channel
+     * @param consoleServer
      */
     public synchronized void start(final ConsoleServerService consoleServer) {
         this.console.getKeys().bind("" + KeyMap.CTRL_D, new ActionListener() {
@@ -216,15 +244,16 @@ public class GreysAnatomyConsole {
      *
      * @param resp
      */
-    public void write(RespResult resp) {
+    private void write(RespResult resp) {
         if (!isF) {
+            String content = resp.getMessage();
             if (resp.isFinish()) {
                 isF = true;
-                resp.setMessage(resp.getMessage()
-                        + "------------------------------end------------------------------\n");
+                //content += "\n------------------------------end------------------------------\n";
+                content += "\n";
             }
-            if (!StringUtils.isEmpty(resp.getMessage())) {
-                write(resp.getMessage());
+            if (!StringUtils.isEmpty(content)) {
+                write(content);
             }
         }
     }

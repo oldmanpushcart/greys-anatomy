@@ -1,8 +1,8 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-import com.googlecode.greysanatomy.console.command.annotation.Arg;
-import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.*;
+import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
@@ -67,15 +67,19 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  * @author vlinux
  */
 @Cmd("monitor")
+@RiscCmd(named = "monitor", sort = 5, desc = "Buried point method for monitoring the operation.")
 public class MonitorCommand extends Command {
 
     @Arg(name = "class")
+    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
 
     @Arg(name = "method")
+    @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
     private String methodRegex;
 
     @Arg(name = "cycle")
+    @RiscNamedArg(named = "c", hasValue = true, description = "the cycle of output")
     private int cycle = 120;
 
     /*
@@ -136,7 +140,7 @@ public class MonitorCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(Info info, final Sender sender) throws Throwable {
+            public void action(final ConsoleServer consoleServer, final Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
                 final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
@@ -150,7 +154,11 @@ public class MonitorCommand extends Command {
 
                     @Override
                     public void onFinish(Advice p) {
-                        final long cost = System.currentTimeMillis() - beginTimestamp.get();
+                        final Long startTime = beginTimestamp.get();
+                        if (null == startTime) {
+                            return;
+                        }
+                        final long cost = System.currentTimeMillis() - startTime;
                         final Key key = new Key(p.getTarget().getTargetClass().getName(), p.getTarget().getTargetBehavior().getName());
 
                         while (true) {
@@ -182,7 +190,7 @@ public class MonitorCommand extends Command {
 
                     @Override
                     public void create() {
-                        timer = new Timer();
+                        timer = new Timer("Timer-for-greys-monitor-" + info.getJobId(), true);
                         timer.scheduleAtFixedRate(new TimerTask() {
 
                             @Override
@@ -196,19 +204,32 @@ public class MonitorCommand extends Command {
                                 while (it.hasNext()) {
                                     final Map.Entry<Key, AtomicReference<Data>> entry = it.next();
                                     final AtomicReference<Data> value = entry.getValue();
-                                    final Data data = value.get();
-                                    monitorSB.append(timestamp).append("\t");
-                                    monitorSB.append(entry.getKey().className).append("\t");
-                                    monitorSB.append(entry.getKey().behaviorName).append("\t");
-                                    monitorSB.append(data.total).append("\t");
-                                    monitorSB.append(data.success).append("\t");
-                                    monitorSB.append(data.failed).append("\t");
 
-                                    final DecimalFormat df = new DecimalFormat("0.00");
-                                    monitorSB.append(df.format(div(data.cost, data.total))).append("\t");
-                                    monitorSB.append(df.format(100.0d * div(data.failed, data.total))).append("%");
-                                    monitorSB.append("\n");
-                                    while (!value.compareAndSet(data, new Data())) ;
+                                    Data data = null;
+                                    while (true) {
+                                        data = value.get();
+                                        if (value.compareAndSet(data, new Data())) {
+                                            break;
+                                        }
+                                    }
+
+//                                    final Data data = value.get();
+//                                    value.set(new Data());
+
+                                    if (null != data) {
+                                        monitorSB.append(timestamp).append("\t");
+                                        monitorSB.append(entry.getKey().className).append("\t");
+                                        monitorSB.append(entry.getKey().behaviorName).append("\t");
+                                        monitorSB.append(data.total).append("\t");
+                                        monitorSB.append(data.success).append("\t");
+                                        monitorSB.append(data.failed).append("\t");
+
+                                        final DecimalFormat df = new DecimalFormat("0.00");
+                                        monitorSB.append(df.format(div(data.cost, data.total))).append("\t");
+                                        monitorSB.append(df.format(100.0d * div(data.failed, data.total))).append("%");
+                                        monitorSB.append("\n");
+                                    }
+
                                 }//while
 
                                 sender.send(false, tableFormat(monitorSB.toString()));

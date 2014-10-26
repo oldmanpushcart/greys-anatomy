@@ -5,6 +5,7 @@ import com.googlecode.greysanatomy.console.GreysAnatomyConsole;
 import com.googlecode.greysanatomy.console.rmi.req.ReqHeart;
 import com.googlecode.greysanatomy.console.server.ConsoleServerService;
 import com.googlecode.greysanatomy.exception.ConsoleException;
+import com.googlecode.greysanatomy.exception.PIDNotMatchException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,10 +25,18 @@ public class ConsoleClient {
     private final long sessionId;
 
     private ConsoleClient(Configer configer) throws Exception {
-        this.consoleServer = (ConsoleServerService) Naming.lookup("rmi://127.0.0.1:" + configer.getConsolePort() + "/RMI_GREYS_ANATOMY");
+        this.consoleServer = (ConsoleServerService) Naming.lookup(String.format("rmi://%s:%d/RMI_GREYS_ANATOMY",
+                configer.getTargetIp(),
+                configer.getTargetPort()));
+
+        // 检查PID是否正确
+        if( !consoleServer.checkPID(configer.getJavaPid()) ) {
+            throw new PIDNotMatchException();
+        }
+
         this.sessionId = this.consoleServer.register();
-        final GreysAnatomyConsole console = new GreysAnatomyConsole(configer, sessionId);
-        console.start(consoleServer);
+        new GreysAnatomyConsole(configer, sessionId).start(consoleServer);
+//        new RISCGreysAnatomyConsole(configer, sessionId).start(consoleServer);
         heartBeat();
     }
 
@@ -72,7 +81,7 @@ public class ConsoleClient {
         heartBeatDaemon.start();
     }
 
-    private static ConsoleClient instance;
+    private static volatile ConsoleClient instance;
 
     /**
      * 单例控制台客户端

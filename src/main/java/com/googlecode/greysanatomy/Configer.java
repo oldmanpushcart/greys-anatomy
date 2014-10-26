@@ -3,6 +3,8 @@ package com.googlecode.greysanatomy;
 import org.apache.commons.lang.StringUtils;
 
 import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import static com.googlecode.greysanatomy.util.GaReflectUtils.*;
 import static com.googlecode.greysanatomy.util.GaStringUtils.*;
@@ -14,36 +16,19 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.*;
  */
 public class Configer {
 
-    /*
-     * 控制台连接端口
-     */
-    private int consolePort = 3658;
-
-    /*
-     * 对方java进程号
-     */
-    private int javaPid;
-
-    /*
-     * 连接超时时间(ms)
-     */
-    private long connectTimeout = 6000;
-
-    /*
-     * 控制台提示符
-     */
-    private String consolePrompt = "ga?>";
-
-    public Configer() {
-        //
-    }
+    private String targetIp;                //目标主机IP
+    private int targetPort;                 //目标进程号
+    private int javaPid;                    //对方java进程号
+    private long connectTimeout = 6000;     //连接超时时间(ms)
+    private boolean multi;                  //多用户模式
+    private String consolePrompt = "ga?>";  //控制台提示符
 
     /**
      * 将Configer对象转换为字符串
      */
     public String toString() {
         final StringBuilder strSB = new StringBuilder();
-        for (Field field : getFileds(Configer.class)) {
+        for (Field field : getFields(Configer.class)) {
             try {
                 strSB.append(field.getName()).append("=").append(encode(newString(getFieldValueByField(this, field)))).append(";");
             } catch (Throwable t) {
@@ -76,76 +61,56 @@ public class Configer {
         return configer;
     }
 
-    /**
-     * 获取控制台端口
-     *
-     * @return
-     */
-    public int getConsolePort() {
-        return consolePort;
+    public String getTargetIp() {
+        return targetIp;
     }
 
-    /**
-     * 设置控制台端口
-     *
-     * @param consolePort
-     */
-    public void setConsolePort(int consolePort) {
-        this.consolePort = consolePort;
+    public void setTargetIp(String targetIp) {
+        this.targetIp = targetIp;
     }
 
-    /**
-     * 获取目标java进程号
-     *
-     * @return
-     */
+    public int getTargetPort() {
+        return targetPort;
+    }
+
+    public void setTargetPort(int targetPort) {
+        this.targetPort = targetPort;
+    }
+
     public int getJavaPid() {
         return javaPid;
     }
 
-    /**
-     * 设置目标java进程号
-     *
-     * @param javaPid
-     */
     public void setJavaPid(int javaPid) {
         this.javaPid = javaPid;
     }
 
-    /**
-     * 获取连接超时时间
-     *
-     * @return
-     */
     public long getConnectTimeout() {
         return connectTimeout;
     }
 
-    /**
-     * 设置连接超时时间
-     *
-     * @param connectTimeout
-     */
     public void setConnectTimeout(long connectTimeout) {
         this.connectTimeout = connectTimeout;
     }
 
-    /**
-     * 获取控制台提示符
-     *
-     * @return
-     */
+    public boolean isMulti() {
+        return multi;
+    }
+
+    public void setMulti(boolean multi) {
+        this.multi = multi;
+    }
+
     public String getConsolePrompt() {
         return consolePrompt;
     }
 
-    /**
-     * 设置控制台提示符
-     *
-     * @param consolePrompt
-     */
     public void setConsolePrompt(String consolePrompt) {
         this.consolePrompt = consolePrompt;
+    }
+
+    public static void main(String... args) throws UnknownHostException {
+        System.out.println(InetAddress.getLocalHost().toString());
     }
 
 }

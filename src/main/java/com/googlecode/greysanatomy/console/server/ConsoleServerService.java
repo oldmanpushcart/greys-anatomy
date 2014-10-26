@@ -31,9 +31,18 @@ public interface ConsoleServerService extends Remote {
     public long register() throws Exception;
 
     /**
+     * 核对PID是否正确
+     *
+     * @param pid
+     * @return
+     * @throws Exception
+     */
+    public boolean checkPID(int pid) throws Exception;
+
+    /**
      * 获取命令执行结果
      *
-     * @param cmd
+     * @param req
      * @return
      */
     public RespResult getCmdExecuteResult(ReqGetResult req) throws Exception;
@@ -41,14 +50,14 @@ public interface ConsoleServerService extends Remote {
     /**
      * 杀死任务
      *
-     * @param cmd
+     * @param req
      */
     public void killJob(ReqKillJob req) throws Exception;
 
     /**
      * session心跳
      *
-     * @param cmd
+     * @param req
      */
     public boolean sessionHeartBeat(ReqHeart req) throws Exception;
 

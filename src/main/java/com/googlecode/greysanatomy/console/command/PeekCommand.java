@@ -2,6 +2,7 @@ package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.SearchUtils;
 
@@ -30,7 +31,7 @@ public class PeekCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(final Info info, final Sender sender) throws Throwable {
+            public void action(final ConsoleServer consoleServer, final Info info, final Sender sender) throws Throwable {
                 ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
                 jsEngine.eval("var $F=com.googlecode.greysanatomy.util.GaReflectUtils.getFieldValueByFieldName;");
                 jsEngine.eval("function peek($this,m){try{m.append(" + expression + ")}catch(e){m.append(e.message);}}");

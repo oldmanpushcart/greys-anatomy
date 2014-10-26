@@ -2,6 +2,7 @@ package com.googlecode.greysanatomy.agent;
 
 import com.googlecode.greysanatomy.Configer;
 import com.googlecode.greysanatomy.GreysAnatomyMain;
+import com.googlecode.greysanatomy.console.server.ConsoleServer;
 
 import java.lang.instrument.Instrumentation;
 import java.net.URL;
@@ -25,7 +26,16 @@ public class AgentMain {
             URLClassLoader agentLoader = new URLClassLoader(new URL[]{new URL("file:" + GreysAnatomyMain.JARFILE)});
 
             final Configer configer = Configer.toConfiger(args);
-            agentLoader.loadClass("com.googlecode.greysanatomy.console.server.ConsoleServer").getMethod("getInstance", Configer.class, Instrumentation.class).invoke(null, configer, inst);
+            final ConsoleServer consoleServer = (ConsoleServer)agentLoader
+                    .loadClass("com.googlecode.greysanatomy.console.server.ConsoleServer")
+                    .getMethod("getInstance", Configer.class, Instrumentation.class)
+                    .invoke(null, configer, inst);
+
+            if( !consoleServer.isBind() ) {
+//                consoleServer.getConfiger().setTargetIp(configer.getTargetIp());
+                consoleServer.getConfiger().setTargetPort(configer.getTargetPort());
+                consoleServer.rebind();
+            }
 
         } catch (Throwable t) {
             t.printStackTrace();
