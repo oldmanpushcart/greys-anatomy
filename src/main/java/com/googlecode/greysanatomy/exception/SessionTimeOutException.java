@@ -2,27 +2,27 @@ package com.googlecode.greysanatomy.exception;
 
 /**
  * session³¬Ê±
- * @author chengtongda
  *
+ * @author chengtongda
  */
 public class SessionTimeOutException extends Exception {
-	
-	private static final long serialVersionUID = 3533150161706718201L;
 
-	public SessionTimeOutException() {
-		super();
-	}
+    private static final long serialVersionUID = 3533150161706718201L;
 
-	public SessionTimeOutException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public SessionTimeOutException() {
+        super();
+    }
 
-	public SessionTimeOutException(String message) {
-		super(message);
-	}
+    public SessionTimeOutException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public SessionTimeOutException(Throwable cause) {
-		super(cause);
-	}
-	
+    public SessionTimeOutException(String message) {
+        super(message);
+    }
+
+    public SessionTimeOutException(Throwable cause) {
+        super(cause);
+    }
+
 }

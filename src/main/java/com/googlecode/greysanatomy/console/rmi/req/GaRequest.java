@@ -4,23 +4,23 @@ import java.io.Serializable;
 
 /**
  * request
- * @author chengtongda
  *
+ * @author chengtongda
  */
 public class GaRequest implements Serializable {
-	private static final long serialVersionUID = 3425339787742173576L;
-	
-	/**
-	 * 访问会话
-	 */
-	private long gaSessionId;
+    private static final long serialVersionUID = 3425339787742173576L;
 
-	public long getGaSessionId() {
-		return gaSessionId;
-	}
+    /**
+     * 访问会话
+     */
+    private long gaSessionId;
 
-	public void setGaSessionId(long gaSessionId) {
-		this.gaSessionId = gaSessionId;
-	}
-	
+    public long getGaSessionId() {
+        return gaSessionId;
+    }
+
+    public void setGaSessionId(long gaSessionId) {
+        this.gaSessionId = gaSessionId;
+    }
+
 }

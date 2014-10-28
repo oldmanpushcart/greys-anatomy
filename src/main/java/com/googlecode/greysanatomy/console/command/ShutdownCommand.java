@@ -3,16 +3,14 @@ package com.googlecode.greysanatomy.console.command;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
 import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
-import com.googlecode.greysanatomy.util.GaStringUtils;
 
 /**
- *  ‰≥ˆ∞Ê±æ
- *
- * @author vlinux
+ * πÿ±’√¸¡Ó
+ * Created by vlinux on 14/10/23.
  */
-@Cmd("version")
-@RiscCmd(named = "version", sort = 8, desc = "Output the target's greys version")
-public class VersionCommand extends Command {
+@Cmd("shutdown")
+@RiscCmd(named = "shutdown", sort = 9, desc = "Shutdown the greys's RMI service, and exit the console.")
+public class ShutdownCommand extends Command {
 
     @Override
     public Action getAction() {
@@ -20,7 +18,8 @@ public class VersionCommand extends Command {
 
             @Override
             public void action(final ConsoleServer consoleServer, final Info info, final Sender sender) throws Throwable {
-                sender.send(true, GaStringUtils.getLogo());
+                consoleServer.shutdown();
+                sender.send(true, "Greys shutdown complated.");
             }
 
         };

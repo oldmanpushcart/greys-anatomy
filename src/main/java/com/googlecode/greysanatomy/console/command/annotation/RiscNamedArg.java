@@ -5,23 +5,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * 精简指令命名参数
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Arg {
+public @interface RiscNamedArg {
 
     /**
-     * 在命令行中的参数名称
-     *
-     * @return 参数名称
-     */
-    public String name();
-
-    /**
-     * 是否必填
+     * 参数在命令中的位置
      *
      * @return
      */
-    public boolean isRequired() default true;
+    public String named();
 
     /**
      * 参数注释
@@ -29,6 +25,13 @@ public @interface Arg {
      * @return
      */
     public String description() default "";
+
+    /**
+     * 是否有值
+     *
+     * @return
+     */
+    public boolean hasValue() default false;
 
     /**
      * 参数校验
