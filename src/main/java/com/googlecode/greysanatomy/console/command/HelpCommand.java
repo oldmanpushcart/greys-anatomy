@@ -95,20 +95,8 @@ public class HelpCommand extends Command {
 
 
         for (Field f : clazz.getDeclaredFields()) {
-            if (f.isAnnotationPresent(RiscIndexArg.class)) {
-                final RiscIndexArg indexArg = f.getAnnotation(RiscIndexArg.class);
-                final int diff = Math.max(maxCol, indexArg.name().length()) - indexArg.name().length();
-                for (int i = 0; i < diff + 2; i++) {
-                    sb.append(" ");
-                }
-                sb.append(indexArg.name()).append(" : ");
-                sb.append(indexArg.description());
-                sb.append("\n");
-            }
-        }
-
-        for (Field f : clazz.getDeclaredFields()) {
             if (f.isAnnotationPresent(RiscNamedArg.class)) {
+                int len = 0;
                 final RiscNamedArg namedArg = f.getAnnotation(RiscNamedArg.class);
                 final String named = "[" + namedArg.named() + (namedArg.hasValue() ? ":" : "") + "]";
                 final int diff = Math.max(maxCol, named.length()) - named.length();
@@ -118,6 +106,33 @@ public class HelpCommand extends Command {
                 sb.append(named).append(" : ");
                 sb.append(namedArg.description());
                 sb.append("\n");
+
+            }
+        }
+
+        for (Field f : clazz.getDeclaredFields()) {
+            if (f.isAnnotationPresent(RiscIndexArg.class)) {
+                final RiscIndexArg indexArg = f.getAnnotation(RiscIndexArg.class);
+                final int diff = Math.max(maxCol, indexArg.name().length()) - indexArg.name().length();
+                for (int i = 0; i < diff + 2; i++) {
+                    sb.append(" ");
+                }
+                sb.append(indexArg.name()).append(" : ");
+                sb.append(indexArg.description());
+                sb.append("\n");
+
+                int len = diff + 2 + indexArg.name().length()+3;
+                if( !StringUtils.isBlank(indexArg.description2()) ) {
+
+                    for( String split : StringUtils.split(indexArg.description2(),"\n") ) {
+                        for( int j=0;j<len;j++ ) {
+                            sb.append(" ");
+                        }
+                        sb.append(split).append("\n");
+                    }
+
+                }
+
             }
         }
 

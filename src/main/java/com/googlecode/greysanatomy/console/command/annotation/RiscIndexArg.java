@@ -32,6 +32,12 @@ public @interface RiscIndexArg {
     public String description() default "";
 
     /**
+     * 更详细的参数注释
+     * @return
+     */
+    public String description2() default "";
+
+    /**
      * 参数校验
      *
      * @return

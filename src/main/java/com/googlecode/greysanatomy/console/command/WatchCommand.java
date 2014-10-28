@@ -30,7 +30,27 @@ public class WatchCommand extends Command {
     private String methodRegex;
 
     @Arg(name = "exp", isRequired = true)
-    @RiscIndexArg(index = 2, name = "express", description = "expression, write by javascript")
+    @RiscIndexArg(index = 2, name = "express",
+            description = "expression, write by javascript. use 'p.' before express",
+            description2 = ""
+                    + " \n"
+                    + "For example\n"
+                    + "    : p.params[0]\n"
+                    + "    : p.params[0]+p.params[1]\n"
+                    + "    : p.returnObj\n"
+                    + "    : p.throwExp\n"
+                    + "    : p.target.targetThis.getClass()\n"
+                    + " \n"
+                    + "The structure of 'p'\n"
+                    + "    p.\n"
+                    + "    \\+- params[0..n] : the parameters of methods\n"
+                    + "    \\+- returnObj    : the return object of methods\n"
+                    + "    \\+- throwExp     : the throw exception of methods\n"
+                    + "    \\+- target\n"
+                    + "         \\+- targetThis  : the object entity\n"
+                    + "         \\+- targetClass : the object's class"
+    )
+
     private String expression;
 
     @Arg(name = "watch-point", isRequired = false)
