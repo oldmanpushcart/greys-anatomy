@@ -24,8 +24,8 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
 
-    private final String perfClzRegex;
-    private final String perfMthRegex;
+    private final String prefClzRegex;
+    private final String prefMthRegex;
     private final String id;
     private final List<CtBehavior> modifiedBehaviors;
 
@@ -35,13 +35,13 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     private final static Map<String, byte[]> classBytesCache = new ConcurrentHashMap<String, byte[]>();
 
     private GreysAnatomyClassFileTransformer(
-            final String perfClzRegex,
-            final String perfMthRegex,
+            final String prefClzRegex,
+            final String prefMthRegex,
             final JobListener listener,
             final List<CtBehavior> modifiedBehaviors,
             final Info info) {
-        this.perfClzRegex = perfClzRegex;
-        this.perfMthRegex = perfMthRegex;
+        this.prefClzRegex = prefClzRegex;
+        this.prefMthRegex = prefMthRegex;
         this.modifiedBehaviors = modifiedBehaviors;
         this.id = info.getJobId();
         register(this.id, listener);
@@ -54,7 +54,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
             throws IllegalClassFormatException {
 
         final String className = GaReflectUtils.toClassPath(classNameForFilepath);
-        if (!className.matches(perfClzRegex)) {
+        if (!className.matches(prefClzRegex)) {
             return null;
         }
 
@@ -67,7 +67,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
             }
 
             CtClass cc = null;
-            byte[] datas;
+            byte[] data;
             try {
                 cc = cp.getCtClass(className);
                 cc.defrost();
@@ -75,25 +75,25 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                 final CtBehavior[] cbs = cc.getDeclaredBehaviors();
                 if (null != cbs) {
                     for (CtBehavior cb : cbs) {
-                        if (cb.getMethodInfo().getName().matches(perfMthRegex)) {
+                        if (cb.getMethodInfo().getName().matches(prefMthRegex)) {
                             modifiedBehaviors.add(cb);
                             Probes.mine(id, cc, cb);
                         }
                     }
                 }
 
-                datas = cc.toBytecode();
+                data = cc.toBytecode();
             } catch (Exception e) {
                 logger.warn("transform {} failed!", className, e);
-                datas = null;
+                data = null;
             } finally {
                 if (null != cc) {
                     cc.freeze();
                 }
             }
 
-            classBytesCache.put(className, datas);
-            return datas;
+            classBytesCache.put(className, data);
+            return data;
         }
 
     }
@@ -139,24 +139,24 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
      * 对类进行形变
      *
      * @param instrumentation
-     * @param perfClzRegex
-     * @param perfMthRegex
+     * @param prefClzRegex
+     * @param prefMthRegex
      * @param listener
      * @return
      * @throws UnmodifiableClassException
      */
     public static TransformResult transform(final Instrumentation instrumentation,
-                                            final String perfClzRegex,
-                                            final String perfMthRegex,
+                                            final String prefClzRegex,
+                                            final String prefMthRegex,
                                             final JobListener listener,
                                             final Info info) throws UnmodifiableClassException {
 
         final List<CtBehavior> modifiedBehaviors = new ArrayList<CtBehavior>();
-        GreysAnatomyClassFileTransformer jcft = new GreysAnatomyClassFileTransformer(perfClzRegex, perfMthRegex, listener, modifiedBehaviors, info);
+        GreysAnatomyClassFileTransformer jcft = new GreysAnatomyClassFileTransformer(prefClzRegex, prefMthRegex, listener, modifiedBehaviors, info);
         instrumentation.addTransformer(jcft, true);
         final List<Class<?>> modifiedClasses = new ArrayList<Class<?>>();
         for (Class<?> clazz : instrumentation.getAllLoadedClasses()) {
-            if (clazz.getName().matches(perfClzRegex)) {
+            if (clazz.getName().matches(prefClzRegex)) {
                 modifiedClasses.add(clazz);
             }
         }
