@@ -1,8 +1,5 @@
 package com.googlecode.greysanatomy.probe;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-
 /**
  * 通知点
  *
@@ -17,130 +14,44 @@ public class Advice {
      */
     public static class Target {
 
-        /*
-         * 探测目标类
-         */
-        private final Class<?> targetClass;
-
-        /*
-         * 探测目标行为(method/constructor)
-         */
-        private final TargetBehavior targetBehavior;
-
-        /*
-         * 探测目标实例
-         */
+        private final String targetClassName;
+        private final String targetBehaviorName;
         private final Object targetThis;
 
-        public Target(Class<?> targetClass, TargetBehavior targetBehavior, Object targetThis) {
-            this.targetClass = targetClass;
-            this.targetBehavior = targetBehavior;
+        public Target(String targetClassName, String targetBehaviorName, Object targetThis) {
+            this.targetClassName = targetClassName;
+            this.targetBehaviorName = targetBehaviorName;
             this.targetThis = targetThis;
         }
 
         /**
-         * 获取探测目标类
+         * 获取探测目标类名称
          *
-         * @return
+         * @return 被探测的目标类名称
          */
-        public Class<?> getTargetClass() {
-            return targetClass;
+        public String getTargetClassName() {
+            return targetClassName;
         }
 
         /**
-         * 获取探测目标行为(method/constructor)
+         * 获取探测目标行为(method/constructor)名称
          *
-         * @return
+         * @return 被探测的行为名称
          */
-        public TargetBehavior getTargetBehavior() {
-            return targetBehavior;
+        public String getTargetBehaviorName() {
+            return targetBehaviorName;
         }
 
         /**
          * 获取探测目标实例
          *
-         * @return
+         * @return 被探测目标实例
          */
         public Object getTargetThis() {
             return targetThis;
         }
 
     }
-
-    /**
-     * 探测目标行为(method/constructur)
-     *
-     * @author vlinux
-     */
-    public static interface TargetBehavior {
-
-        /**
-         * 获取行为的名称
-         *
-         * @return
-         */
-        String getName();
-
-    }
-
-    /**
-     * 探测行为：构造函数探测
-     *
-     * @author vlinux
-     */
-    public static class TargetConstructor implements TargetBehavior {
-
-        private final Constructor<?> constructor;
-
-        public TargetConstructor(Constructor<?> constructor) {
-            this.constructor = constructor;
-        }
-
-        @Override
-        public String getName() {
-            return "<init>";
-        }
-
-        /**
-         * 获取构造函数
-         *
-         * @return
-         */
-        public Constructor<?> getConstructor() {
-            return constructor;
-        }
-
-    }
-
-    /**
-     * 探测行为：方法探测
-     *
-     * @author vlinux
-     */
-    public static class TargetMethod implements TargetBehavior {
-
-        private final Method method;
-
-        public TargetMethod(Method method) {
-            this.method = method;
-        }
-
-        @Override
-        public String getName() {
-            return method.getName();
-        }
-
-        /**
-         * 获取方法体
-         *
-         * @return
-         */
-        public Method getMethod() {
-            return method;
-        }
-
-    }
-
 
     private final Target target;        // 探测目标
     private final Object[] parameters;    // 调用参数
@@ -149,13 +60,6 @@ public class Advice {
     private Object returnObj;            // 返回值，如果目标方法以抛异常的形式结束，则此值为null
     private Throwable throwException;    // 抛出异常，如果目标方法以正常方式结束，则此值为null
 
-    /**
-     * 探测器构造函数
-     *
-     * @param target
-     * @param parameters
-     * @param isFinished
-     */
     public Advice(Target target, Object[] parameters, boolean isFinished) {
         this.target = target;
         this.parameters = parameters;
@@ -215,14 +119,20 @@ public class Advice {
 
     /**
      * getParameters()方法的别名，原来的名字太TM长了
-     * @return
+     *
+     * @return 参数列表
      */
-    public Object[] getParams() {return parameters;}
+    public Object[] getParams() {
+        return parameters;
+    }
 
     /**
      * getThrowException()方法的别名
-     * @return
+     *
+     * @return 异常对象
      */
-    public Throwable getThrowExp() {return throwException;}
+    public Throwable getThrowExp() {
+        return throwException;
+    }
 
 }

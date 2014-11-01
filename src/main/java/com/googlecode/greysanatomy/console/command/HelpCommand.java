@@ -121,11 +121,11 @@ public class HelpCommand extends Command {
                 sb.append(indexArg.description());
                 sb.append("\n");
 
-                int len = diff + 2 + indexArg.name().length()+3;
-                if( !StringUtils.isBlank(indexArg.description2()) ) {
+                int len = diff + 2 + indexArg.name().length() + 3;
+                if (!StringUtils.isBlank(indexArg.description2())) {
 
-                    for( String split : StringUtils.split(indexArg.description2(),"\n") ) {
-                        for( int j=0;j<len;j++ ) {
+                    for (String split : StringUtils.split(indexArg.description2(), "\n")) {
+                        for (int j = 0; j < len; j++) {
                             sb.append(" ");
                         }
                         sb.append(split).append("\n");

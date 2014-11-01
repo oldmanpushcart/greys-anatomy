@@ -1,8 +1,9 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-import com.googlecode.greysanatomy.console.command.annotation.*;
-import com.googlecode.greysanatomy.console.command.parameter.WatchPointEnum;
+import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
+import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -17,19 +18,15 @@ import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
-@Cmd("watch")
 @RiscCmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.")
 public class WatchCommand extends Command {
 
-    @Arg(name = "class", isRequired = true)
     @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
 
-    @Arg(name = "method", isRequired = true)
     @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
     private String methodRegex;
 
-    @Arg(name = "exp", isRequired = true)
     @RiscIndexArg(index = 2, name = "express",
             description = "expression, write by javascript. use 'p.' before express",
             description2 = ""
@@ -53,9 +50,6 @@ public class WatchCommand extends Command {
 
     private String expression;
 
-    @Arg(name = "watch-point", isRequired = false)
-    private WatchPointEnum watchPoint = WatchPointEnum.before;
-
     @RiscNamedArg(named = "b", description = "is watch on before")
     private boolean isBefore = true;
 
@@ -78,8 +72,7 @@ public class WatchCommand extends Command {
 
                     @Override
                     public void onBefore(Advice p) {
-                        if (watchPoint == WatchPointEnum.before
-                                && isBefore) {
+                        if (isBefore) {
                             try {
                                 invoke.invokeFunction("printWatch", p, sender);
                             } catch (Exception e) {
@@ -89,8 +82,7 @@ public class WatchCommand extends Command {
 
                     @Override
                     public void onFinish(Advice p) {
-                        if (watchPoint == WatchPointEnum.finish
-                                || isFinish) {
+                        if (isFinish) {
                             try {
                                 invoke.invokeFunction("printWatch", p, sender);
                             } catch (Exception e) {

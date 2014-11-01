@@ -21,12 +21,14 @@ public @interface RiscCmd {
 
     /**
      * 指定命令的解释
+     *
      * @return
      */
     public String desc();
 
     /**
      * 排序,在help命令中
+     *
      * @return
      */
     public int sort() default 0;

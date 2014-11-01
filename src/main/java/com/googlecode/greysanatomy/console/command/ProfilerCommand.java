@@ -2,7 +2,9 @@ package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
 import com.googlecode.greysanatomy.clocker.Clocker;
-import com.googlecode.greysanatomy.console.command.annotation.*;
+import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
+import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -17,27 +19,21 @@ import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
-@Cmd("profiler")
 @RiscCmd(named = "profiler", sort = 6, desc = "The call stack output buried point method for rendering path of.")
 public class ProfilerCommand extends Command {
 
-    @Arg(name = "class")
     @RiscIndexArg(index = 0, name = "rendering-class-regex", description = "regex match of rendering classpath.classname")
     private String classRegex;
 
-    @Arg(name = "method")
     @RiscIndexArg(index = 1, name = "rendering-method-regex", description = "regex match of rendering methodname")
     private String methodRegex;
 
-    @Arg(name = "probe-class")
     @RiscIndexArg(index = 2, name = "class-regex", description = "regex match of classpath.classname")
     private String probeClassRegex;
 
-    @Arg(name = "probe-method")
     @RiscIndexArg(index = 3, name = "method-regex", description = "regex match of methodname")
     private String probeMethodRegex;
 
-    @Arg(name = "cost")
     @RiscNamedArg(named = "c", hasValue = true, description = "the cost limit for output")
     private long cost;
 
@@ -105,16 +101,16 @@ public class ProfilerCommand extends Command {
                             return true;
                         }
                         final String cmKey = new StringBuilder()
-                                .append(p.getTarget().getTargetClass().getName())
+                                .append(p.getTarget().getTargetClassName())
                                 .append("#")
-                                .append(p.getTarget().getTargetBehavior().getName())
+                                .append(p.getTarget().getTargetBehaviorName())
                                 .toString();
 
                         if (cmCache.containsKey(cmKey)) {
                             return cmCache.get(cmKey);
                         } else {
-                            final boolean isProbe = p.getTarget().getTargetClass().getName().matches(probeClassRegex)
-                                    && p.getTarget().getTargetBehavior().getName().matches(probeMethodRegex);
+                            final boolean isProbe = p.getTarget().getTargetClassName().matches(probeClassRegex)
+                                    && p.getTarget().getTargetBehaviorName().matches(probeMethodRegex);
                             cmCache.put(cmKey, isProbe);
                             return isProbe;
                         }

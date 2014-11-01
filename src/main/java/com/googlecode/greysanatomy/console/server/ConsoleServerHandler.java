@@ -210,7 +210,7 @@ public class ConsoleServerHandler {
             respResult.setPos(newPos);
             respResult.setMessage(sb.toString());
         } catch (FileNotFoundException fnfe) {
-            logger.info("jobId={} was not ready yet.",jobId);
+            logger.info("jobId={} was not ready yet.", jobId);
         } catch (IOException e) {
             logger.warn("jobId={}'s file read error!", jobId, e);
             return;

@@ -30,7 +30,7 @@ public class ConsoleClient {
                 configer.getTargetPort()));
 
         // 检查PID是否正确
-        if( !consoleServer.checkPID(configer.getJavaPid()) ) {
+        if (!consoleServer.checkPID(configer.getJavaPid())) {
             throw new PIDNotMatchException();
         }
 

@@ -32,7 +32,7 @@ public class GreysAnatomyMain {
         }
 
         // ¼¤»î¿ØÖÆÌ¨
-        if(activeConsoleClient(configer)) {
+        if (activeConsoleClient(configer)) {
 
             logger.info("attach done! pid={}; host={}; JarFile={}", new Object[]{
                     configer.getJavaPid(),

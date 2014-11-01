@@ -3,6 +3,7 @@ package com.googlecode.greysanatomy.console;
 import com.googlecode.greysanatomy.Configer;
 import com.googlecode.greysanatomy.console.command.Command;
 import com.googlecode.greysanatomy.console.command.Commands;
+import com.googlecode.greysanatomy.console.command.QuitCommand;
 import com.googlecode.greysanatomy.console.command.ShutdownCommand;
 import com.googlecode.greysanatomy.console.rmi.RespResult;
 import com.googlecode.greysanatomy.console.rmi.req.ReqCmd;
@@ -19,7 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
+import java.io.IOException;
+import java.io.Writer;
 import java.rmi.NoSuchObjectException;
 
 import static org.apache.commons.lang.StringUtils.EMPTY;
@@ -38,11 +40,10 @@ public class GreysAnatomyConsole {
     private final ConsoleReader console;
 
     private volatile boolean isF = true;
-    private volatile boolean isShutdown = false;
+    private volatile boolean isQuit = false;
 
     private final long sessionId;
     private String jobId;
-    private String path;
 
     /**
      * 创建GA控制台
@@ -78,7 +79,7 @@ public class GreysAnatomyConsole {
                     //控制台读命令
                     doRead();
                 } catch (ConsoleException ce) {
-                    write("Error : "+ce.getMessage()+"\n");
+                    write("Error : " + ce.getMessage() + "\n");
                     write("Please type help for more information...\n\n");
                 } catch (Exception e) {
                     // 这里是控制台，可能么？
@@ -106,32 +107,15 @@ public class GreysAnatomyConsole {
                 throw new ConsoleException(e.getMessage());
             }
 
-
-            if (command != null) {
-                path = command.getRedirectPath();
-                if (!StringUtils.isEmpty(path)) {
-                    //发命令之前先把重定向文件创建好，如果没有权限或其他问题，就不发起任务
-                    try {
-                        new File(path).createNewFile();
-                    } catch (Exception e) {
-                        final String msg = String.format("create path:%s failed. %s", path, e.getMessage());
-                        logger.warn(msg, e);
-                        write(msg);
-                        return;
-                    }
-                }
-            } else {
-                //如果命令不存在，客户端不抛异常，交给服务端处理。但是需要把path清空
-                path = EMPTY;
-            }
-
             // 将命令状态标记为未完成
             isF = false;
 
             // 用户执行了一个shutdown命令,终端需要退出
-            if (command instanceof ShutdownCommand) {
-                isShutdown = true;
+            if (command instanceof ShutdownCommand
+                    || command instanceof QuitCommand) {
+                isQuit = true;
             }
+
 
             // 发送命令请求
             RespResult result = consoleServer.postCmd(reqCmd);
@@ -188,21 +172,9 @@ public class GreysAnatomyConsole {
             RespResult resp = consoleServer.getCmdExecuteResult(new ReqGetResult(jobId, sessionId, pos));
             pos = resp.getPos();
 
-            //先写重定向
-            try {
-                writeToFile(resp.getMessage(), path);
-            } catch (IOException e) {
-                //重定向写文件出现异常时，需要kill掉job 不执行了
-                consoleServer.killJob(new ReqKillJob(sessionId, jobId));
-                isF = true;
-                logger.warn("writeToFile failed.", e);
-                write(path + ":" + e.getMessage());
-                return;
-            }
-
             write(resp);
 
-            if (isShutdown) {
+            if (isQuit) {
                 logger.info("greys console will be shutdown.");
                 System.exit(0);
             }
@@ -214,7 +186,7 @@ public class GreysAnatomyConsole {
     /**
      * 启动console
      *
-     * @param consoleServer
+     * @param consoleServer RMI通讯用的ConsoleServer
      */
     public synchronized void start(final ConsoleServerService consoleServer) {
         this.console.getKeys().bind("" + KeyMap.CTRL_D, new ActionListener() {
@@ -242,7 +214,7 @@ public class GreysAnatomyConsole {
     /**
      * 向控制台输出返回信息
      *
-     * @param resp
+     * @param resp 返回报文信息
      */
     private void write(RespResult resp) {
         if (!isF) {
@@ -261,7 +233,7 @@ public class GreysAnatomyConsole {
     /**
      * 输出信息
      *
-     * @param message
+     * @param message 输出文本内容
      */
     private void write(String message) {
         final Writer writer = console.getOutput();
@@ -275,27 +247,4 @@ public class GreysAnatomyConsole {
 
     }
 
-    /**
-     * 输出信息到文件
-     *
-     * @param message
-     * @param path
-     * @throws IOException
-     */
-    private void writeToFile(String message, String path) throws IOException {
-        if (StringUtils.isEmpty(message) || StringUtils.isEmpty(path)) {
-            return;
-        }
-
-        PrintWriter out = null;
-        try {
-            out = new PrintWriter(new BufferedWriter(new FileWriter(path, true)));
-            out.println(message);
-            out.flush();
-        } finally {
-            if (null != out) {
-                out.close();
-            }
-        }
-    }
 }

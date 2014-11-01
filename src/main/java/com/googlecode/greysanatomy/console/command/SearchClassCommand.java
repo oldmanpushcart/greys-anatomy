@@ -1,6 +1,8 @@
 package com.googlecode.greysanatomy.console.command;
 
-import com.googlecode.greysanatomy.console.command.annotation.*;
+import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
+import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.util.GaDetailUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
@@ -15,19 +17,15 @@ import static java.lang.String.format;
  *
  * @author vlinux
  */
-@Cmd("search-class")
-@RiscCmd(named="sc",sort = 0, desc="Search all have been loaded by the JVM class.")
+@RiscCmd(named = "sc", sort = 0, desc = "Search all have been loaded by the JVM class.")
 public class SearchClassCommand extends Command {
 
-    @Arg(name = "class")
-    @RiscIndexArg(index = 0, name="class-regex", description = "regex match of classpath.classname")
+    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
 
-    @Arg(name = "is-super", isRequired = false)
     @RiscNamedArg(named = "s", description = "including class's parents")
     private boolean isSuper = false;
 
-    @Arg(name = "is-detail", isRequired = false)
     @RiscNamedArg(named = "d", description = "show the detail of class")
     private boolean isDetail = false;
 

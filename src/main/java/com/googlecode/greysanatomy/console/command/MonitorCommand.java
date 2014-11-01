@@ -1,7 +1,9 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-import com.googlecode.greysanatomy.console.command.annotation.*;
+import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
+import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -66,19 +68,15 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
-@Cmd("monitor")
 @RiscCmd(named = "monitor", sort = 5, desc = "Buried point method for monitoring the operation.")
 public class MonitorCommand extends Command {
 
-    @Arg(name = "class")
     @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
 
-    @Arg(name = "method")
     @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
     private String methodRegex;
 
-    @Arg(name = "cycle")
     @RiscNamedArg(named = "c", hasValue = true, description = "the cycle of output")
     private int cycle = 120;
 
@@ -159,7 +157,7 @@ public class MonitorCommand extends Command {
                             return;
                         }
                         final long cost = System.currentTimeMillis() - startTime;
-                        final Key key = new Key(p.getTarget().getTargetClass().getName(), p.getTarget().getTargetBehavior().getName());
+                        final Key key = new Key(p.getTarget().getTargetClassName(), p.getTarget().getTargetBehaviorName());
 
                         while (true) {
                             AtomicReference<Data> value = monitorDatas.get(key);
@@ -277,12 +275,6 @@ public class MonitorCommand extends Command {
         };
     }
 
-    /**
-     * 表格格式化
-     *
-     * @param output
-     * @return
-     */
     private String tableFormat(String output) {
 
         final StringBuilder outputSB = new StringBuilder();
