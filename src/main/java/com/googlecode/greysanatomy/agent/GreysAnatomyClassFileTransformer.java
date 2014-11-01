@@ -130,11 +130,6 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
     }
 
-//    /*
-//     * 多线程对类进行形变
-//     */
-//    private static ExecutorService transformThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-
     /**
      * 对类进行形变
      *
@@ -162,33 +157,13 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
         }
         synchronized (GreysAnatomyClassFileTransformer.class) {
             try {
-                // 需要渲染的信号量(渲染的类个数)
-//                final AtomicInteger counter = new AtomicInteger(modifiedClasses.size());
                 for (final Class<?> clazz : modifiedClasses) {
-//                    transformThreadPool.execute(new Runnable() {
-//
-//                        @Override
-//                        public void run() {
-//                            try {
-//                                instrumentation.retransformClasses(clazz);
-//                            } catch (Throwable t) {
-//                                logger.warn("retransform class {} failed.", clazz, t);
-//                            } finally {
-//                                counter.decrementAndGet();
-//                            }
-//                        }
-//
-//                    });
-                    instrumentation.retransformClasses(clazz);
+                    try {
+                        instrumentation.retransformClasses(clazz);
+                    } catch(Throwable t) {
+                        logger.warn("transform failed, class={}.", clazz, t);
+                    }
                 }//for
-                // waiting when the counter is 0
-//                while (counter.get() > 0) {
-//                    try {
-//                        Thread.sleep(500);
-//                    } catch (InterruptedException e) {
-//                        // do nothing...
-//                    }
-//                }
             } finally {
                 instrumentation.removeTransformer(jcft);
             }//try
