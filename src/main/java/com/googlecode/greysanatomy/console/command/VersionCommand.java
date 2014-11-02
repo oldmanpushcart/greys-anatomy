@@ -9,7 +9,10 @@ import com.googlecode.greysanatomy.util.GaStringUtils;
  *
  * @author vlinux
  */
-@RiscCmd(named = "version", sort = 8, desc = "Output the target's greys version")
+@RiscCmd(named = "version", sort = 8, desc = "Output the target's greys version",
+        eg = {
+                "version"
+        })
 public class VersionCommand extends Command {
 
     @Override

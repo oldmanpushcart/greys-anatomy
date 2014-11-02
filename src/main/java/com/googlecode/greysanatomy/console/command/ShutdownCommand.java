@@ -7,7 +7,10 @@ import com.googlecode.greysanatomy.console.server.ConsoleServer;
  * πÿ±’√¸¡Ó
  * Created by vlinux on 14/10/23.
  */
-@RiscCmd(named = "shutdown", sort = 9, desc = "Shutdown the greys's RMI service, and exit the console.")
+@RiscCmd(named = "shutdown", sort = 9, desc = "Shutdown the greys's RMI service, and exit the console.",
+        eg = {
+                "shutdown"
+        })
 public class ShutdownCommand extends Command {
 
     @Override

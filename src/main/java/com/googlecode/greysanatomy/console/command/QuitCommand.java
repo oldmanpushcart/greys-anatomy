@@ -7,7 +7,10 @@ import com.googlecode.greysanatomy.console.server.ConsoleServer;
  * ÍË³öÃüÁî
  * Created by vlinux on 14/11/1.
  */
-@RiscCmd(named = "quit", sort = 8, desc = "Quit the Greys console.")
+@RiscCmd(named = "quit", sort = 8, desc = "Quit the Greys console.",
+        eg = {
+                "quit"
+        })
 public class QuitCommand extends Command {
     @Override
     public Action getAction() {
