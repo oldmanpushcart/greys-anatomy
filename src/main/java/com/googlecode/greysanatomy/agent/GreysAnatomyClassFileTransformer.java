@@ -61,9 +61,12 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
         // 这里做一个并发控制，防止两边并发对类进行编译，影响缓存
         synchronized (classBytesCache) {
             final ClassPool cp = new ClassPool(null);
-            cp.insertClassPath(new LoaderClassPath(loader));
-            if (classBytesCache.containsKey(className)) {
-                cp.insertClassPath(new ByteArrayClassPath(className, classBytesCache.get(className)));
+            cp.childFirstLookup = true;
+            cp.appendClassPath(new LoaderClassPath(loader));
+
+            final String cacheKey = className + "@" + loader;
+            if (classBytesCache.containsKey(cacheKey)) {
+                cp.appendClassPath(new ByteArrayClassPath(className, classBytesCache.get(cacheKey)));
             }
 
             CtClass cc = null;
@@ -84,7 +87,8 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
                 data = cc.toBytecode();
             } catch (Exception e) {
-                logger.warn("transform {} failed!", className, e);
+                logger.debug("transform class failed. class={}, classloader={}", new Object[]{className, loader, e});
+                logger.info("transform class failed. class={}, classloader={}", className, loader);
                 data = null;
             } finally {
                 if (null != cc) {
@@ -92,7 +96,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                 }
             }
 
-            classBytesCache.put(className, data);
+            classBytesCache.put(cacheKey, data);
             return data;
         }
 
@@ -160,7 +164,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                 for (final Class<?> clazz : modifiedClasses) {
                     try {
                         instrumentation.retransformClasses(clazz);
-                    } catch(Throwable t) {
+                    } catch (Throwable t) {
                         logger.warn("transform failed, class={}.", clazz, t);
                     }
                 }//for

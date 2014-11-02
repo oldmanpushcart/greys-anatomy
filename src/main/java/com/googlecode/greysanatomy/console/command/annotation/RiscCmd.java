@@ -22,14 +22,20 @@ public @interface RiscCmd {
     /**
      * 指定命令的解释
      *
-     * @return
+     * @return 返回命令的解释
      */
     public String desc();
 
     /**
+     * 例子
+     * @return 返回命令的例子
+     */
+    public String[] eg() default {};
+
+    /**
      * 排序,在help命令中
      *
-     * @return
+     * @return 返回命令在目录中的排序
      */
     public int sort() default 0;
 

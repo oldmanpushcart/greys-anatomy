@@ -17,6 +17,8 @@ public class GaStringUtils {
 
     public static final String LINE = "---------------------------------------------------------------\n";
 
+    public static final String ABORT_MSG = "Press Ctrl+D to abort this job.";
+
     /**
      * ½øÐÐURL-ENCODE
      *

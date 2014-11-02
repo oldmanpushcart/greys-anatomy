@@ -31,7 +31,11 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
-@RiscCmd(named = "js", sort = 3, desc = "Let Greys use the JavaScript enhancement.")
+@RiscCmd(named = "js", sort = 3, desc = "Let Greys use the JavaScript enhancement.",
+eg={
+        "js -f /tmp/debug.js org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
+        "js -f /tmp/debug.js .*StringUtils isEmpty",
+})
 public class JavaScriptCommand extends Command {
 
     private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
@@ -257,6 +261,7 @@ public class JavaScriptCommand extends Command {
                 message.append(String.format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
                         result.getModifiedClasses().size(),
                         result.getModifiedBehaviors().size()));
+                message.append(GaStringUtils.ABORT_MSG).append("\n");
                 sender.send(false, message.toString());
             }
 

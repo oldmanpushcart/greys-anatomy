@@ -18,7 +18,13 @@ import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
-@RiscCmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.")
+@RiscCmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
+eg={
+        "watch -b org\\.apache\\.commons\\.lang\\.StringUtils isEmpty p.params[0]",
+        "watch -f org\\.apache\\.commons\\.lang\\.StringUtils isEmpty p.returnObj",
+        "watch -bf .*StringUtils isEmpty p.params[0]",
+        "watch .*StringUtils isEmpty p.params[0]",
+})
 public class WatchCommand extends Command {
 
     @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
@@ -103,6 +109,7 @@ public class WatchCommand extends Command {
                 message.append(String.format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
                         result.getModifiedClasses().size(),
                         result.getModifiedBehaviors().size()));
+                message.append(GaStringUtils.ABORT_MSG).append("\n");
                 sender.send(false, message.toString());
             }
 

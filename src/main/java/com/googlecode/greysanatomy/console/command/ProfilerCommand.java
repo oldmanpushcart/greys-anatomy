@@ -19,7 +19,11 @@ import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
-@RiscCmd(named = "profiler", sort = 6, desc = "The call stack output buried point method for rendering path of.")
+@RiscCmd(named = "profiler", sort = 6, desc = "The call stack output buried point method for rendering path of.",
+eg={
+        "profiler -c 50 org\\.apache\\.commons\\..* .* org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
+        "profiler -c 50 org\\.apache\\.commons\\..* .* .*StringUtils isEmpty",
+})
 public class ProfilerCommand extends Command {
 
     @RiscIndexArg(index = 0, name = "rendering-class-regex", description = "regex match of rendering classpath.classname")
@@ -41,9 +45,27 @@ public class ProfilerCommand extends Command {
     public Action getAction() {
         return new Action() {
 
-            private final ThreadLocal<Boolean> isEntered = new ThreadLocal<Boolean>();
-            private final ThreadLocal<Integer> deep = new ThreadLocal<Integer>();
-            private final ThreadLocal<Long> beginTimestamp = new ThreadLocal<Long>();
+            private final ThreadLocal<Boolean> isEntered = new ThreadLocal<Boolean>(){
+                @Override
+                protected Boolean initialValue() {
+                    return false;
+                }
+            };
+
+            private final ThreadLocal<Integer> deep = new ThreadLocal<Integer>(){
+                @Override
+                protected Integer initialValue() {
+                    return 0;
+                }
+            };
+
+            private final ThreadLocal<Long> beginTimestamp = new ThreadLocal<Long>(){
+                @Override
+                protected Long initialValue() {
+                    return System.currentTimeMillis();
+                }
+            };
+
             private final Map<String, Boolean> cmCache = new ConcurrentHashMap<String, Boolean>();
 
             @Override
@@ -133,6 +155,7 @@ public class ProfilerCommand extends Command {
                 message.append(String.format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
                         result.getModifiedClasses().size(),
                         result.getModifiedBehaviors().size()));
+                message.append(GaStringUtils.ABORT_MSG).append("\n");
                 sender.send(false, message.toString());
             }
 

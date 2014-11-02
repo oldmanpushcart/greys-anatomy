@@ -14,7 +14,13 @@ import java.util.*;
  * 这个类的代码丑得一B啊，我都不想看
  * Created by vlinux on 14/10/26.
  */
-@RiscCmd(named = "help", sort = 10, desc = "List of the Greys command list.")
+@RiscCmd(named = "help", sort = 10, desc = "List of the Greys command list.",
+eg={
+        "help",
+        "help sc",
+        "help sm",
+        "help watch"
+})
 public class HelpCommand extends Command {
 
     @RiscIndexArg(index = 0, isRequired = false, name = "command-name", description = "the name of command")
@@ -135,6 +141,17 @@ public class HelpCommand extends Command {
 
             }
         }
+
+        if (cmd.eg() != null
+                && cmd.eg().length > 0) {
+            sb.append("\nExample : \n");
+            for (String eg : cmd.eg()) {
+                sb.append("\t").append(eg).append("\n");
+            }
+        }
+
+        sb.append("\n");
+
 
         return sb.toString();
     }

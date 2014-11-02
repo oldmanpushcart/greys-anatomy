@@ -159,6 +159,7 @@ public class Probes {
                 jobsClass, id,
                 probesClass, id, targetClassName, targetBehaviorName, javassistThis,
                 probesClass, id, targetClassName, targetBehaviorName, javassistThis));
+
     }
 
     private static void mineProbeForMethod(CtBehavior cb, String id, String targetClassName, String targetBehaviorName, String javassistThis) throws CannotCompileException, NotFoundException {

@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ProbeJobs {
+public final class ProbeJobs {
 
     private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
 

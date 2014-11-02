@@ -269,6 +269,7 @@ public class MonitorCommand extends Command {
                 message.append(String.format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
                         result.getModifiedClasses().size(),
                         result.getModifiedBehaviors().size()));
+                message.append(GaStringUtils.ABORT_MSG).append("\n");
                 sender.send(false, message.toString());
             }
 
