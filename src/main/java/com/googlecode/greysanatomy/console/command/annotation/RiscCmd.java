@@ -28,6 +28,7 @@ public @interface RiscCmd {
 
     /**
      * 例子
+     *
      * @return 返回命令的例子
      */
     public String[] eg() default {};

@@ -21,10 +21,10 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  * @author vlinux
  */
 @RiscCmd(named = "jstack", sort = 7, desc = "The call stack output buried point method in each thread.",
-eg={
-        "jstack org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
-        "jstack .*StringUtils isEmpty"
-})
+        eg = {
+                "jstack org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
+                "jstack .*StringUtils isEmpty"
+        })
 public class JstackCommand extends Command {
 
     @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")

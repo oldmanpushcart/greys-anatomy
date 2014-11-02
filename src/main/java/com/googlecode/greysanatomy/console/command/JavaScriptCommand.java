@@ -32,10 +32,10 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  * @author vlinux
  */
 @RiscCmd(named = "js", sort = 3, desc = "Let Greys use the JavaScript enhancement.",
-eg={
-        "js -f /tmp/debug.js org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
-        "js -f /tmp/debug.js .*StringUtils isEmpty",
-})
+        eg = {
+                "js -f /tmp/debug.js org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
+                "js -f /tmp/debug.js .*StringUtils isEmpty",
+        })
 public class JavaScriptCommand extends Command {
 
     private static final Logger logger = LoggerFactory.getLogger("greysanatomy");

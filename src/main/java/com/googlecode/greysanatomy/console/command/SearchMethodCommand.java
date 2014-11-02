@@ -19,10 +19,10 @@ import static java.lang.String.format;
  * @author vlinux
  */
 @RiscCmd(named = "sm", sort = 1, desc = "Search all have been class method JVM loading.",
-eg={
-        "sm org\\.apache\\.commons\\.lang\\.StringUtils .*",
-        "sm -d org\\.apache\\.commons\\.lang\\.StringUtils .*",
-})
+        eg = {
+                "sm org\\.apache\\.commons\\.lang\\.StringUtils .*",
+                "sm -d org\\.apache\\.commons\\.lang\\.StringUtils .*",
+        })
 public class SearchMethodCommand extends Command {
 
     @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")

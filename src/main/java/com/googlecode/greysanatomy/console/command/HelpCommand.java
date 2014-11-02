@@ -15,12 +15,12 @@ import java.util.*;
  * Created by vlinux on 14/10/26.
  */
 @RiscCmd(named = "help", sort = 10, desc = "List of the Greys command list.",
-eg={
-        "help",
-        "help sc",
-        "help sm",
-        "help watch"
-})
+        eg = {
+                "help",
+                "help sc",
+                "help sm",
+                "help watch"
+        })
 public class HelpCommand extends Command {
 
     @RiscIndexArg(index = 0, isRequired = false, name = "command-name", description = "the name of command")
@@ -84,74 +84,78 @@ public class HelpCommand extends Command {
         sb.append("\n");
         sb.append("\t").append(cmd.desc()).append("\n\n");
 
-        sb.append("\nOptions :\n\n");
 
         int maxCol = 10;
+        boolean hasOptions = false;
         for (Field f : clazz.getDeclaredFields()) {
             if (f.isAnnotationPresent(RiscIndexArg.class)) {
                 final RiscIndexArg indexArg = f.getAnnotation(RiscIndexArg.class);
                 maxCol = Math.max(indexArg.name().length(), maxCol);
+                hasOptions = true;
             }
             if (f.isAnnotationPresent(RiscNamedArg.class)) {
                 final RiscNamedArg namedArg = f.getAnnotation(RiscNamedArg.class);
                 maxCol = Math.max(namedArg.named().length(), maxCol);
+                hasOptions = true;
             }
 
         }
 
+        if (hasOptions) {
 
-        for (Field f : clazz.getDeclaredFields()) {
-            if (f.isAnnotationPresent(RiscNamedArg.class)) {
-                int len = 0;
-                final RiscNamedArg namedArg = f.getAnnotation(RiscNamedArg.class);
-                final String named = "[" + namedArg.named() + (namedArg.hasValue() ? ":" : "") + "]";
-                final int diff = Math.max(maxCol, named.length()) - named.length();
-                for (int i = 0; i < diff + 2; i++) {
-                    sb.append(" ");
+            sb.append("\nOptions :\n\n");
+            for (Field f : clazz.getDeclaredFields()) {
+                if (f.isAnnotationPresent(RiscNamedArg.class)) {
+                    int len = 0;
+                    final RiscNamedArg namedArg = f.getAnnotation(RiscNamedArg.class);
+                    final String named = "[" + namedArg.named() + (namedArg.hasValue() ? ":" : "") + "]";
+                    final int diff = Math.max(maxCol, named.length()) - named.length();
+                    for (int i = 0; i < diff + 2; i++) {
+                        sb.append(" ");
+                    }
+                    sb.append(named).append(" : ");
+                    sb.append(namedArg.description());
+                    sb.append("\n");
+
                 }
-                sb.append(named).append(" : ");
-                sb.append(namedArg.description());
-                sb.append("\n");
-
             }
-        }
 
-        for (Field f : clazz.getDeclaredFields()) {
-            if (f.isAnnotationPresent(RiscIndexArg.class)) {
-                final RiscIndexArg indexArg = f.getAnnotation(RiscIndexArg.class);
-                final int diff = Math.max(maxCol, indexArg.name().length()) - indexArg.name().length();
-                for (int i = 0; i < diff + 2; i++) {
-                    sb.append(" ");
-                }
-                sb.append(indexArg.name()).append(" : ");
-                sb.append(indexArg.description());
-                sb.append("\n");
+            for (Field f : clazz.getDeclaredFields()) {
+                if (f.isAnnotationPresent(RiscIndexArg.class)) {
+                    final RiscIndexArg indexArg = f.getAnnotation(RiscIndexArg.class);
+                    final int diff = Math.max(maxCol, indexArg.name().length()) - indexArg.name().length();
+                    for (int i = 0; i < diff + 2; i++) {
+                        sb.append(" ");
+                    }
+                    sb.append(indexArg.name()).append(" : ");
+                    sb.append(indexArg.description());
+                    sb.append("\n");
 
-                int len = diff + 2 + indexArg.name().length() + 3;
-                if (!StringUtils.isBlank(indexArg.description2())) {
+                    int len = diff + 2 + indexArg.name().length() + 3;
+                    if (!StringUtils.isBlank(indexArg.description2())) {
 
-                    for (String split : StringUtils.split(indexArg.description2(), "\n")) {
-                        for (int j = 0; j < len; j++) {
-                            sb.append(" ");
+                        for (String split : StringUtils.split(indexArg.description2(), "\n")) {
+                            for (int j = 0; j < len; j++) {
+                                sb.append(" ");
+                            }
+                            sb.append(split).append("\n");
                         }
-                        sb.append(split).append("\n");
+
                     }
 
                 }
-
             }
+
         }
+
 
         if (cmd.eg() != null
                 && cmd.eg().length > 0) {
-            sb.append("\nExample : \n");
+            sb.append("\nExample : \n\n");
             for (String eg : cmd.eg()) {
-                sb.append("\t").append(eg).append("\n");
+                sb.append("     ").append(eg).append("\n");
             }
         }
-
-        sb.append("\n");
-
 
         return sb.toString();
     }
