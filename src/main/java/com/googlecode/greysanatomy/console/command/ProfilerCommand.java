@@ -1,5 +1,6 @@
 package com.googlecode.greysanatomy.console.command;
 
+import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer;
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
 import com.googlecode.greysanatomy.clocker.Clocker;
 import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
@@ -139,7 +140,37 @@ public class ProfilerCommand extends Command {
                     }
 
                 };
-                final TransformResult result = transform(inst, classRegex, methodRegex, advice, info);
+                final TransformResult result = transform(inst, classRegex, methodRegex, advice, info, new GreysAnatomyClassFileTransformer.Progress() {
+
+                    int nextRate = 0;
+
+                    @Override
+                    public void progress(int index, int total) {
+
+                        if (total > 0) {
+                            // 进度
+                            final int step;
+
+                            if (total < 500) {
+                                step = 10;
+                            } else if (total < 1000) {
+                                step = 5;
+                            } else if (total < 2000) {
+                                step = 2;
+                            } else {
+                                step = 1;
+                            }
+
+                            final int rate = index * 100 / total;
+                            if (rate >= nextRate) {
+                                nextRate += step;
+                                sender.send(false, GaStringUtils.progress("rendering", index, total) + "\n");
+                            }
+                        }
+
+                    }
+
+                });
                 final TransformResult resultForProbe = transform(inst, probeClassRegex, probeMethodRegex, advice, info);
 
                 // 注册任务

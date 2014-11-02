@@ -135,6 +135,23 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     }
 
     /**
+     * 进度
+     */
+    public static interface Progress {
+
+        void progress(int index, int total);
+
+    }
+
+    public static TransformResult transform(final Instrumentation instrumentation,
+                                            final String prefClzRegex,
+                                            final String prefMthRegex,
+                                            final JobListener listener,
+                                            final Info info) throws UnmodifiableClassException {
+        return transform(instrumentation, prefClzRegex, prefMthRegex, listener, info, null);
+    }
+
+    /**
      * 对类进行形变
      *
      * @param instrumentation
@@ -148,7 +165,8 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                                             final String prefClzRegex,
                                             final String prefMthRegex,
                                             final JobListener listener,
-                                            final Info info) throws UnmodifiableClassException {
+                                            final Info info,
+                                            final Progress progress) throws UnmodifiableClassException {
 
         final List<CtBehavior> modifiedBehaviors = new ArrayList<CtBehavior>();
         GreysAnatomyClassFileTransformer jcft = new GreysAnatomyClassFileTransformer(prefClzRegex, prefMthRegex, listener, modifiedBehaviors, info);
@@ -161,11 +179,17 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
         }
         synchronized (GreysAnatomyClassFileTransformer.class) {
             try {
+                int index = 0;
+                int total = modifiedClasses.size();
                 for (final Class<?> clazz : modifiedClasses) {
                     try {
                         instrumentation.retransformClasses(clazz);
                     } catch (Throwable t) {
                         logger.warn("transform failed, class={}.", clazz, t);
+                    } finally {
+                        if (null != progress) {
+                            progress.progress(++index, total);
+                        }
                     }
                 }//for
             } finally {

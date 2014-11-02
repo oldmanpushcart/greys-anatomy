@@ -113,8 +113,23 @@ public class GaStringUtils {
         return stSB.toString();
     }
 
-    public static void main(String... args) {
-        System.out.println(getStack());
+
+    public static String progress(String name, int progress, int total) {
+
+        final StringBuilder sb = new StringBuilder();
+        final int f = progress*100/total;
+        sb.append(String.format("%s: %3d",name,f)).append("%[");
+        for( int index=1;index<=100;index++ ) {
+            if( index<=f ) {
+                sb.append("#");
+            } else {
+                sb.append(" ");
+            }
+        }
+        sb.append("]");
+
+        return sb.toString();
+
     }
 
 }

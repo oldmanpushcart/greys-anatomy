@@ -71,7 +71,7 @@ public final class ProbeJobs {
      * 判断job是否还可以继续工作
      *
      * @param id
-     * @return
+     * @return true可以继续工作,false不可以
      */
     public static boolean isJobAlive(String id) {
         Job job = jobs.get(id);
