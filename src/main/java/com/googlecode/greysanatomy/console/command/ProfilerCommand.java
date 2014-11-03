@@ -140,6 +140,10 @@ public class ProfilerCommand extends Command {
                     }
 
                 };
+
+                // 将注册提前
+                registJob(info.getSessionId(), info.getJobId());
+
                 final TransformResult result = transform(inst, classRegex, methodRegex, advice, info, new GreysAnatomyClassFileTransformer.Progress() {
 
                     int nextRate = 0;
@@ -173,9 +177,9 @@ public class ProfilerCommand extends Command {
                 });
                 final TransformResult resultForProbe = transform(inst, probeClassRegex, probeMethodRegex, advice, info);
 
-                // 注册任务
-                registJob(info.getSessionId(), result.getId());
-                registJob(info.getSessionId(), resultForProbe.getId());
+//                // 注册任务
+//                registJob(info.getSessionId(), result.getId());
+//                registJob(info.getSessionId(), resultForProbe.getId());
 
                 // 激活任务
                 activeJob(result.getId());

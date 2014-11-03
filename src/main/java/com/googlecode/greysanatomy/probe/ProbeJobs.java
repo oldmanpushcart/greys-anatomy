@@ -22,6 +22,7 @@ public final class ProbeJobs {
     private static class Job {
         private String id;
         private boolean isAlive;
+        private boolean isKilled;
         private JobListener listener;
     }
 
@@ -79,6 +80,16 @@ public final class ProbeJobs {
     }
 
     /**
+     * 判断job是否已经被kill
+     * @param id
+     * @return
+     */
+    public static boolean isJobKilled(String id) {
+        Job job = jobs.get(id);
+        return null != job && job.isKilled;
+    }
+
+    /**
      * 杀死一个job
      *
      * @param id
@@ -87,6 +98,7 @@ public final class ProbeJobs {
         Job job = jobs.get(id);
         if (null != job) {
             job.isAlive = false;
+            job.isKilled = true;
             try {
                 job.listener.destroy();
             } catch (Throwable t) {

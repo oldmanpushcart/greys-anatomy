@@ -2,6 +2,7 @@ package com.googlecode.greysanatomy.agent;
 
 import com.googlecode.greysanatomy.console.command.Command.Info;
 import com.googlecode.greysanatomy.probe.JobListener;
+import com.googlecode.greysanatomy.probe.ProbeJobs;
 import com.googlecode.greysanatomy.probe.Probes;
 import com.googlecode.greysanatomy.util.GaReflectUtils;
 import javassist.*;
@@ -183,6 +184,10 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                 int total = modifiedClasses.size();
                 for (final Class<?> clazz : modifiedClasses) {
                     try {
+                        if(ProbeJobs.isJobKilled(info.getJobId()) ) {
+                            logger.info("job[id={}] was killed, stop this retransform.",info.getJobId());
+                            break;
+                        }
                         instrumentation.retransformClasses(clazz);
                     } catch (Throwable t) {
                         logger.warn("transform failed, class={}.", clazz, t);
