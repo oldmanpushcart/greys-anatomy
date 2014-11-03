@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.rmi.NoSuchObjectException;
 
@@ -194,9 +195,10 @@ public class GreysAnatomyConsole {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!isF) {
-                    write("abort it.");
-                    isF = true;
                     try {
+                        isF = true;
+                        write("abort it.\n");
+                        redrawLine();
                         consoleServer.killJob(new ReqKillJob(sessionId, jobId));
                     } catch (Exception e1) {
                         // 这里是控制台，可能么？
@@ -210,13 +212,19 @@ public class GreysAnatomyConsole {
         new Thread(new GaConsoleOutputer(consoleServer), "ga-console-outputer").start();
     }
 
+    private synchronized void redrawLine() throws IOException {
+        final String prompt = isF ? configer.getConsolePrompt() : EMPTY;
+        console.setPrompt(prompt);
+        console.redrawLine();
+        console.flush();
+    }
 
     /**
      * 向控制台输出返回信息
      *
      * @param resp 返回报文信息
      */
-    private void write(RespResult resp) {
+    private void write(RespResult resp) throws IOException {
         if (!isF) {
             String content = resp.getMessage();
             if (resp.isFinish()) {
@@ -226,6 +234,7 @@ public class GreysAnatomyConsole {
             }
             if (!StringUtils.isEmpty(content)) {
                 write(content);
+                redrawLine();
             }
         }
     }

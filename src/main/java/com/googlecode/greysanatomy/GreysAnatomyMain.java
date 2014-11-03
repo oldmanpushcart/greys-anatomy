@@ -34,10 +34,12 @@ public class GreysAnatomyMain {
         // ¼¤»î¿ØÖÆÌ¨
         if (activeConsoleClient(configer)) {
 
-            logger.info("attach done! pid={}; host={}; JarFile={}", new Object[]{
-                    configer.getJavaPid(),
-                    configer.getTargetIp() + ":" + configer.getTargetPort(),
-                    JARFILE});
+//            logger.info("attach done! pid={}; host={}; JarFile={}", new Object[]{
+//                    configer.getJavaPid(),
+//                    configer.getTargetIp() + ":" + configer.getTargetPort(),
+//                    JARFILE});
+
+
         }
 
     }
