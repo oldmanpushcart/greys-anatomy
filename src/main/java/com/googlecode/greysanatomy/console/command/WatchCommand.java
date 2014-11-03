@@ -62,6 +62,12 @@ public class WatchCommand extends Command {
     @RiscNamedArg(named = "f", description = "is watch on finish")
     private boolean isFinish = false;
 
+    @RiscNamedArg(named = "e", description = "is watch on exception")
+    private boolean isException = false;
+
+    @RiscNamedArg(named = "s", description = "is watch on success")
+    private boolean isSuccess = false;
+
     @Override
     public Action getAction() {
         return new Action() {
@@ -89,6 +95,26 @@ public class WatchCommand extends Command {
                     @Override
                     public void onFinish(Advice p) {
                         if (isFinish) {
+                            try {
+                                invoke.invokeFunction("printWatch", p, sender);
+                            } catch (Exception e) {
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onException(Advice p) {
+                        if (isException) {
+                            try {
+                                invoke.invokeFunction("printWatch", p, sender);
+                            } catch (Exception e) {
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onSuccess(Advice p) {
+                        if (isSuccess) {
                             try {
                                 invoke.invokeFunction("printWatch", p, sender);
                             } catch (Exception e) {
