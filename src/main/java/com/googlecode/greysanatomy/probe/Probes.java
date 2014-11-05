@@ -41,7 +41,7 @@ public class Probes {
         return new Target(targetClassName, targetBehaviorName, targetThis);
     }
 
-    public static void doBefore(String id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args) {
+    public static void doBefore(int id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args) {
         if (isListener(id, AdviceListener.class)) {
             try {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
@@ -52,7 +52,7 @@ public class Probes {
         }
     }
 
-    public static void doSuccess(String id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args, Object returnObj) {
+    public static void doSuccess(int id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args, Object returnObj) {
         if (isListener(id, AdviceListener.class)) {
             try {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
@@ -66,7 +66,7 @@ public class Probes {
 
     }
 
-    public static void doException(String id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args, Throwable throwException) {
+    public static void doException(int id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args, Throwable throwException) {
         if (isListener(id, AdviceListener.class)) {
             try {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
@@ -80,7 +80,7 @@ public class Probes {
 
     }
 
-    public static void doFinish(String id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args, Object returnObj, Throwable throwException) {
+    public static void doFinish(int id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args, Object returnObj, Throwable throwException) {
         if (isListener(id, AdviceListener.class)) {
             try {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, true);
@@ -126,7 +126,7 @@ public class Probes {
      * @throws CannotCompileException
      * @throws NotFoundException
      */
-    public static void mine(String id, CtClass cc, CtBehavior cb) throws CannotCompileException, NotFoundException {
+    public static void mine(int id, CtClass cc, CtBehavior cb) throws CannotCompileException, NotFoundException {
 
         if (isIngore(cc, cb)) {
             return;
@@ -147,33 +147,33 @@ public class Probes {
 
     }
 
-    private static void mineProbeForConstructor(CtBehavior cb, String id, String targetClassName, String targetBehaviorName, String javassistThis) throws CannotCompileException, NotFoundException {
-        cb.addCatch(format("{if(%s.isJobAlive(\"%s\")){%s.doBefore(\"%s\",\"%s\",\"%s\",%s,$args);%s.doException(\"%s\",\"%s\",\"%s\",%s,$args,$e);}throw $e;}",
+    private static void mineProbeForConstructor(CtBehavior cb, int id, String targetClassName, String targetBehaviorName, String javassistThis) throws CannotCompileException, NotFoundException {
+        cb.addCatch(format("{if(%s.isJobAlive(%s)){%s.doBefore(%s,\"%s\",\"%s\",%s,$args);%s.doException(%s,\"%s\",\"%s\",%s,$args,$e);}throw $e;}",
                         jobsClass, id,
                         probesClass, id, targetClassName, targetBehaviorName, javassistThis,
                         probesClass, id, targetClassName, targetBehaviorName, javassistThis),
                 ClassPool.getDefault().get("java.lang.Throwable"));
 
         // TODO : 奇怪，为啥这里要doBefore两次?
-        cb.insertAfter(format("{if(%s.isJobAlive(\"%s\")){%s.doBefore(\"%s\",\"%s\",\"%s\",%s,$args);%s.doSuccess(\"%s\",\"%s\",\"%s\",%s,$args,($w)$_);}}",
+        cb.insertAfter(format("{if(%s.isJobAlive(%s)){%s.doBefore(%s,\"%s\",\"%s\",%s,$args);%s.doSuccess(%s,\"%s\",\"%s\",%s,$args,($w)$_);}}",
                 jobsClass, id,
                 probesClass, id, targetClassName, targetBehaviorName, javassistThis,
                 probesClass, id, targetClassName, targetBehaviorName, javassistThis));
 
     }
 
-    private static void mineProbeForMethod(CtBehavior cb, String id, String targetClassName, String targetBehaviorName, String javassistThis) throws CannotCompileException, NotFoundException {
+    private static void mineProbeForMethod(CtBehavior cb, int id, String targetClassName, String targetBehaviorName, String javassistThis) throws CannotCompileException, NotFoundException {
 
-        cb.insertBefore(format("{if(%s.isJobAlive(\"%s\"))%s.doBefore(\"%s\",\"%s\",\"%s\",%s,$args);}",
+        cb.insertBefore(format("{if(%s.isJobAlive(%s))%s.doBefore(%s,\"%s\",\"%s\",%s,$args);}",
                 jobsClass, id,
                 probesClass, id, targetClassName, targetBehaviorName, javassistThis));
 
-        cb.addCatch(format("{if(%s.isJobAlive(\"%s\"))%s.doException(\"%s\",\"%s\",\"%s\",%s,$args,$e);throw $e;}",
+        cb.addCatch(format("{if(%s.isJobAlive(%s))%s.doException(%s,\"%s\",\"%s\",%s,$args,$e);throw $e;}",
                         jobsClass, id,
                         probesClass, id, targetClassName, targetBehaviorName, javassistThis),
                 ClassPool.getDefault().get("java.lang.Throwable"));
 
-        cb.insertAfter(format("{if(%s.isJobAlive(\"%s\"))%s.doSuccess(\"%s\",\"%s\",\"%s\",%s,$args,($w)$_);}",
+        cb.insertAfter(format("{if(%s.isJobAlive(%s))%s.doSuccess(%s,\"%s\",\"%s\",%s,$args,($w)$_);}",
                 jobsClass, id,
                 probesClass, id, targetClassName, targetBehaviorName, javassistThis));
     }

@@ -87,27 +87,27 @@ public class JavaScriptCommand extends Command {
      */
     public static class JLS {
 
-        private static final Map<String, Map<String, Object>> jobLocals = new HashMap<String, Map<String, Object>>();
+        private static final Map<Integer, Map<String, Object>> jobLocals = new HashMap<Integer, Map<String, Object>>();
 
-        public static Map<String, Object> getJLS(String jobId) {
+        public static Map<String, Object> getJLS(int jobId) {
             if (jobLocals.get(jobId) == null) {
                 jobLocals.put(jobId, new HashMap<String, Object>());
             }
             return jobLocals.get(jobId);
         }
 
-        public static void removeJob(String jobId) {
+        public static void removeJob(int jobId) {
             jobLocals.remove(jobId);
         }
 
-        public static void put(String jobId, String key, Object value) {
+        public static void put(int jobId, String key, Object value) {
             if (jobLocals.get(jobId) == null) {
                 jobLocals.put(jobId, new HashMap<String, Object>());
             }
             jobLocals.get(jobId).put(key, value);
         }
 
-        public static Object get(String jobId, String key) {
+        public static Object get(int jobId, String key) {
             if (jobLocals.get(jobId) == null) {
                 return null;
             }

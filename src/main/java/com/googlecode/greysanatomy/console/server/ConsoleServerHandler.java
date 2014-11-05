@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.instrument.Instrumentation;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -144,7 +145,10 @@ public class ConsoleServerHandler {
     }
 
     private final String REST_DIR = System.getProperty("java.io.tmpdir")//执行结果输出文件路径
-            + File.separator + "greysdata" + File.separator;
+            + File.separator + "greysdata"
+            + File.separator + UUID.randomUUID().toString()
+            + File.separator
+            ;
     private final String REST_FILE_EXT = ".ga";                            //存储中间结果的临时文件后缀名
     private final String END_MASK = "" + (char) 29;                        //用于标记文件结束的标识符
 
@@ -156,7 +160,7 @@ public class ConsoleServerHandler {
      * @param isF
      * @param message
      */
-    private void write(long gaSessionId, String jobId, boolean isF, String message) {
+    private void write(long gaSessionId, int jobId, boolean isF, String message) {
         //TODO 这里用队列来做缓存，改善写文件性能，否则可能会影响被probe代码的效率
         if (isF) {
             message += END_MASK;
@@ -194,7 +198,7 @@ public class ConsoleServerHandler {
      * @param pos
      * @param respResult
      */
-    private void read(String jobId, int pos, RespResult respResult) {
+    private void read(int jobId, int pos, RespResult respResult) {
         int newPos = pos;
         final StringBuilder sb = new StringBuilder();
         RandomAccessFile rf = null;
@@ -226,7 +230,7 @@ public class ConsoleServerHandler {
 
     }
 
-    private String getExecuteFilePath(String jobId) {
+    private String getExecuteFilePath(int jobId) {
         return REST_DIR + jobId + REST_FILE_EXT;
     }
 

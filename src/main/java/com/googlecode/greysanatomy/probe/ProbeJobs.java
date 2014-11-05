@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class ProbeJobs {
 
@@ -20,13 +21,14 @@ public final class ProbeJobs {
      * @author vlinux
      */
     private static class Job {
-        private String id;
+        private int id;
         private boolean isAlive;
         private boolean isKilled;
         private JobListener listener;
     }
 
-    private static final Map<String, Job> jobs = new ConcurrentHashMap<String, Job>();
+    private static final Map<Integer, Job> jobs = new ConcurrentHashMap<Integer, Job>();
+    private static final AtomicInteger jobIdxSequencer = new AtomicInteger(1000);
 
 
     /**
@@ -34,7 +36,7 @@ public final class ProbeJobs {
      *
      * @param listener
      */
-    public static void register(String id, JobListener listener) {
+    public static void register(Integer id, JobListener listener) {
         Job job = jobs.get(id);
         if (null != job) {
             job.listener = listener;
@@ -47,8 +49,8 @@ public final class ProbeJobs {
      *
      * @return
      */
-    public static String createJob() {
-        final String id = UUID.randomUUID().toString();
+    public static int createJob() {
+        final int id = jobIdxSequencer.getAndIncrement();
         Job job = new Job();
         job.id = id;
         job.isAlive = false;
@@ -61,7 +63,7 @@ public final class ProbeJobs {
      *
      * @param id
      */
-    public static void activeJob(String id) {
+    public static void activeJob(int id) {
         Job job = jobs.get(id);
         if (null != job) {
             job.isAlive = true;
@@ -74,7 +76,7 @@ public final class ProbeJobs {
      * @param id
      * @return true可以继续工作,false不可以
      */
-    public static boolean isJobAlive(String id) {
+    public static boolean isJobAlive(int id) {
         Job job = jobs.get(id);
         return null != job && job.isAlive;
     }
@@ -84,7 +86,7 @@ public final class ProbeJobs {
      * @param id
      * @return
      */
-    public static boolean isJobKilled(String id) {
+    public static boolean isJobKilled(int id) {
         Job job = jobs.get(id);
         return null != job && job.isKilled;
     }
@@ -94,7 +96,7 @@ public final class ProbeJobs {
      *
      * @param id
      */
-    public static void killJob(String id) {
+    public static void killJob(int id) {
         Job job = jobs.get(id);
         if (null != job) {
             job.isAlive = false;
@@ -113,8 +115,8 @@ public final class ProbeJobs {
      *
      * @return
      */
-    public static List<String> listAliveJobIds() {
-        final List<String> jobIds = new ArrayList<String>();
+    public static List<Integer> listAliveJobIds() {
+        final List<Integer> jobIds = new ArrayList<Integer>();
         for (Job job : jobs.values()) {
             if (job.isAlive) {
                 jobIds.add(job.id);
@@ -129,7 +131,7 @@ public final class ProbeJobs {
      * @param id
      * @return
      */
-    public static JobListener getJobListeners(String id) {
+    public static JobListener getJobListeners(int id) {
         if (jobs.containsKey(id)) {
             return jobs.get(id).listener;
         } else {
@@ -144,7 +146,7 @@ public final class ProbeJobs {
      * @param classListener
      * @return
      */
-    public static boolean isListener(String id, Class<? extends JobListener> classListener) {
+    public static boolean isListener(int id, Class<? extends JobListener> classListener) {
 
         final JobListener jobListener = getJobListeners(id);
         return null != jobListener

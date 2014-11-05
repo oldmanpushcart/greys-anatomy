@@ -10,7 +10,7 @@ import java.io.Serializable;
 public class RespResult implements Serializable {
     private static final long serialVersionUID = 661800158888334705L;
 
-    private String jobId;
+    private int jobId;
 
     private long sessionId;
 
@@ -20,11 +20,11 @@ public class RespResult implements Serializable {
 
     private boolean isFinish;
 
-    public String getJobId() {
+    public int getJobId() {
         return jobId;
     }
 
-    public void setJobId(String jobId) {
+    public void setJobId(int jobId) {
         this.jobId = jobId;
     }
 

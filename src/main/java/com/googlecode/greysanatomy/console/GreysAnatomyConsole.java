@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.rmi.NoSuchObjectException;
 
@@ -44,7 +43,7 @@ public class GreysAnatomyConsole {
     private volatile boolean isQuit = false;
 
     private final long sessionId;
-    private String jobId;
+    private int jobId;
 
     /**
      * 创建GA控制台
@@ -133,7 +132,7 @@ public class GreysAnatomyConsole {
     private class GaConsoleOutputer implements Runnable {
 
         private final ConsoleServerService consoleServer;
-        private String currentJob;
+        private int currentJob;
         private int pos = 0;
 
         private GaConsoleOutputer(ConsoleServerService consoleServer) {
@@ -160,12 +159,16 @@ public class GreysAnatomyConsole {
 
         private void doWrite() throws Exception {
             //如果任务结束，或还没有注册好job  则不读
-            if (isF || sessionId == 0 || StringUtils.isEmpty(jobId)) {
+            if (isF
+                    || sessionId == 0
+//                    || StringUtils.isEmpty(jobId)) {
+                    || jobId == 0) {
                 return;
             }
 
             //如果当前获取结果的job不是正在执行的job，则从0开始读
-            if (!StringUtils.equals(currentJob, jobId)) {
+//            if (!StringUtils.equals(currentJob, jobId)) {
+            if (currentJob != jobId) {
                 pos = 0;
                 currentJob = jobId;
             }

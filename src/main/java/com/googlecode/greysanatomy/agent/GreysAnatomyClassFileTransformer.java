@@ -27,7 +27,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
     private final String prefClzRegex;
     private final String prefMthRegex;
-    private final String id;
+    private final int id;
     private final List<CtBehavior> modifiedBehaviors;
 
     /*
@@ -62,13 +62,13 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
         // 这里做一个并发控制，防止两边并发对类进行编译，影响缓存
         synchronized (classBytesCache) {
             final ClassPool cp = new ClassPool(null);
-            cp.childFirstLookup = true;
-            cp.appendClassPath(new LoaderClassPath(loader));
 
             final String cacheKey = className + "@" + loader;
             if (classBytesCache.containsKey(cacheKey)) {
                 cp.appendClassPath(new ByteArrayClassPath(className, classBytesCache.get(cacheKey)));
             }
+
+            cp.appendClassPath(new LoaderClassPath(loader));
 
             CtClass cc = null;
             byte[] data;
@@ -111,11 +111,11 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
      */
     public static class TransformResult {
 
-        private final String id;
+        private final int id;
         private final List<Class<?>> modifiedClasses;
         private final List<CtBehavior> modifiedBehaviors;
 
-        private TransformResult(String id, final List<Class<?>> modifiedClasses, final List<CtBehavior> modifiedBehaviors) {
+        private TransformResult(int id, final List<Class<?>> modifiedClasses, final List<CtBehavior> modifiedBehaviors) {
             this.id = id;
             this.modifiedClasses = new ArrayList<Class<?>>(modifiedClasses);
             this.modifiedBehaviors = new ArrayList<CtBehavior>(modifiedBehaviors);
@@ -129,7 +129,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
             return modifiedBehaviors;
         }
 
-        public String getId() {
+        public int getId() {
             return id;
         }
 
