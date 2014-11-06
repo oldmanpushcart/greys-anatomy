@@ -4,6 +4,7 @@ import com.googlecode.greysanatomy.console.command.JavaScriptCommand.JLS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,16 +16,45 @@ public final class ProbeJobs {
 
     private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
 
+    private static final String REST_DIR = System.getProperty("java.io.tmpdir")//执行结果输出文件路径
+            + File.separator + "greysdata"
+            + File.separator + UUID.randomUUID().toString()
+            + File.separator
+            ;
+    private static final String REST_FILE_EXT = ".ga";                            //存储中间结果的临时文件后缀名
+
     /**
      * 任务
      *
      * @author vlinux
      */
     private static class Job {
-        private int id;
+        private final int id;
         private boolean isAlive;
         private boolean isKilled;
         private JobListener listener;
+
+        private final File jobFile;
+
+        // JOB文件读
+        private final Reader jobReader;
+
+        // JOB文件写
+        private final Writer jobWriter;
+
+
+        Job(int id) throws IOException {
+            this.id = id;
+            final File dir = new File(REST_DIR);
+            if( !dir.exists() ) {
+                dir.mkdir();
+            }
+            jobFile = new File(REST_DIR + id + REST_FILE_EXT);
+            jobFile.createNewFile();
+            jobReader = new BufferedReader(new FileReader(jobFile));
+            jobWriter = new BufferedWriter(new FileWriter(jobFile));
+        }
+
     }
 
     private static final Map<Integer, Job> jobs = new ConcurrentHashMap<Integer, Job>();
@@ -49,10 +79,9 @@ public final class ProbeJobs {
      *
      * @return
      */
-    public static int createJob() {
+    public static int createJob() throws IOException {
         final int id = jobIdxSequencer.getAndIncrement();
-        Job job = new Job();
-        job.id = id;
+        Job job = new Job(id);
         job.isAlive = false;
         jobs.put(id, job);
         return id;
@@ -104,7 +133,14 @@ public final class ProbeJobs {
             try {
                 job.listener.destroy();
             } catch (Throwable t) {
-                logger.warn("destroy listener failed, jobId={}", id, t);
+                logger.warn("destroy job listener failed, jobId={}", id, t);
+            }
+            try {
+                job.jobReader.close();
+                job.jobWriter.close();
+                job.jobFile.deleteOnExit();
+            }catch(IOException e) {
+                logger.warn("close jobFile failed. jobId={}",id, e);
             }
             JLS.removeJob(id);
         }
@@ -123,6 +159,22 @@ public final class ProbeJobs {
             }
         }
         return jobIds;
+    }
+
+    public static Reader getJobReader(int id) {
+        if (jobs.containsKey(id)) {
+            return jobs.get(id).jobReader;
+        } else {
+            return null;
+        }
+    }
+
+    public static Writer getJobWriter(int id) {
+        if (jobs.containsKey(id)) {
+            return jobs.get(id).jobWriter;
+        } else {
+            return null;
+        }
     }
 
     /**
