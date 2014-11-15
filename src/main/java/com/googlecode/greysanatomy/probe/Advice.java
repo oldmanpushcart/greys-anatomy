@@ -17,11 +17,31 @@ public class Advice {
         private final String targetClassName;
         private final String targetBehaviorName;
         private final Object targetThis;
+        private final Class targetClass;
+        private final Class[] parameterTypes;
 
-        public Target(String targetClassName, String targetBehaviorName, Object targetThis) {
+        public Target(String targetClassName, String targetBehaviorName, Object targetThis, Class targetClass, Class[] parameterTypes) {
             this.targetClassName = targetClassName;
             this.targetBehaviorName = targetBehaviorName;
             this.targetThis = targetThis;
+            this.targetClass = targetClass;
+            this.parameterTypes = parameterTypes;
+        }
+
+        /**
+         * 获取探测目标类类型
+         * @return 被探测目标类类型
+         */
+        public Class getTargetClass() {
+            return targetClass;
+        }
+
+        /**
+         * 获取探测目标类参数类型
+         * @return 被探测目标类参数类型
+         */
+        public Class[] getParameterTypes() {
+            return parameterTypes;
         }
 
         /**
