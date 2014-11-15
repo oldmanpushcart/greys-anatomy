@@ -16,7 +16,6 @@ import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -42,7 +41,7 @@ import static org.apache.commons.lang.StringUtils.substring;
                 "record -D",
                 "record -i 1000 -w p.params[0]",
                 "record -i 1000 -d",
-                "record -i 1000 -p"
+//                "record -i 1000 -p"
         })
 public class RecordCommand extends Command {
 
@@ -101,9 +100,9 @@ public class RecordCommand extends Command {
     private String watchExpress = StringUtils.EMPTY;
 
 
-    // play the index record
-    @RiscNamedArg(named = "p", description = "play the record of method called.")
-    private boolean isPlay = false;
+//    // play the index record
+//    @RiscNamedArg(named = "p", description = "play the record of method called.")
+//    private boolean isPlay = false;
 
     // delete the index record
     @RiscNamedArg(named = "d", description = "delete the index record.")
@@ -117,7 +116,7 @@ public class RecordCommand extends Command {
 
         // 检查p/w/d参数是否有i参数配套
         if (StringUtils.isNotBlank(watchExpress)
-                || isPlay
+//                || isPlay
                 || isDelete) {
 
             if (null == index) {
@@ -137,24 +136,25 @@ public class RecordCommand extends Command {
         }
 
         // 如果只有i参数，没有对应的p/w/d，则是没有意义的
-        if( null != index ) {
+        if (null != index) {
 
-            if( StringUtils.isBlank(watchExpress)
-                    && !isPlay
+            if (StringUtils.isBlank(watchExpress)
+//                    && !isPlay
                     && !isDelete) {
-                throw new IllegalArgumentException("miss arguments to work in with -w/-d/-p .");
+                throw new IllegalArgumentException("miss arguments to work in with -w/-d .");
             }
 
         }
 
         // 一个参数都没有是不行滴
-        if( null == index
+        if (null == index
                 && !isRecord
                 && !isDelete
                 && !isDeleteAll
                 && StringUtils.isBlank(watchExpress)
                 && !isList
-                && !isPlay) {
+//                && !isPlay
+                ) {
 
             throw new IllegalArgumentException("miss arguments, type help record to got usage.");
 
@@ -185,9 +185,9 @@ public class RecordCommand extends Command {
             8, // isRet
             8, // isExp
             15, // object address
-            20, // class loader
-            20, // class
-            20, // method
+//            20, // class loader
+            30, // class
+            30, // method
 
     };
 
@@ -201,7 +201,7 @@ public class RecordCommand extends Command {
             "IS-RET",
             "IS-EXP",
             "OBJECT",
-            "CLASS-LOADER",
+//            "CLASS-LOADER",
             "CLASS",
             "METHOD"
 
@@ -261,12 +261,12 @@ public class RecordCommand extends Command {
         lineSB.append(format(lineFormat,
                 index,
                 sdf.format(record.getGmtCreate()),
-                record.isReturn(),
-                record.isThrowException(),
-                record.getTargetThis() == null ? "NULL" : "0x" + Integer.toHexString(record.getTargetThis().hashCode()),
-                substring(record.getTargetClassLoader().getClass().getSimpleName(), 0, TABLE_COL_WIDTH[5]),
-                substring(record.getTargetClass().getSimpleName(), 0, TABLE_COL_WIDTH[6]),
-                substring(record.getTargetMethod().getName(), 0, TABLE_COL_WIDTH[7])
+                record.getAdvice().isReturn(),
+                record.getAdvice().isThrowException(),
+                record.getAdvice().getTarget().getTargetThis() == null ? "NULL" : "0x" + Integer.toHexString(record.getAdvice().getTarget().getTargetThis().hashCode()),
+//                substring(record.getTargetClassLoader().getClass().getSimpleName(), 0, TABLE_COL_WIDTH[4]),
+                substring(record.getAdvice().getTarget().getTargetClassName(), 0, TABLE_COL_WIDTH[5]),
+                substring(record.getAdvice().getTarget().getTargetBehaviorName(), 0, TABLE_COL_WIDTH[6])
         )).append("\n");
 
     }
@@ -290,26 +290,8 @@ public class RecordCommand extends Command {
 
                 try {
 
-                    final Class<?> targetClass = advice.getTarget().getTargetClass();
-                    final ClassLoader targetClassLoader = targetClass.getClassLoader();
-                    final Object targetObject = advice.getTarget().getTargetThis();
-                    final Method targetMethod = targetClass.getDeclaredMethod(advice.getTarget().getTargetBehaviorName(), advice.getTarget().getParameterTypes());
-
-                    final Record record = new Record(
-                            targetClassLoader,
-                            targetClass,
-                            targetMethod,
-                            advice.getTarget().getParameterTypes(),
-                            targetObject,
-                            advice.getParameters(),
-                            advice.getReturnObj(),
-                            advice.getThrowException(),
-                            advice.isReturn(),
-                            advice.isThrowException(),
-                            new Date()
-                    );
+                    final Record record = new Record(advice, new Date());
                     final int index = putRecord(record);
-
 
                     final StringBuilder lineSB = new StringBuilder();
                     if (isFirst) {
@@ -397,19 +379,10 @@ public class RecordCommand extends Command {
 
         final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
 
-        jsEngine.eval("function printWatch(p,o){try{o.send(false, " + watchExpress + "+'\\n');}catch(e){o.send(false, e.message+'\\n');}}");
+        jsEngine.eval("function printWatch(p,o){try{o.send(true, " + watchExpress + "+'\\n');}catch(e){o.send(false, e.message+'\\n');}}");
         final Invocable invoke = (Invocable) jsEngine;
-        final Advice.Target target = new Advice.Target(
-                record.getTargetClass().getName(),
-                record.getTargetMethod().getName(),
-                record.getTargetThis(),
-                record.getTargetClass(),
-                record.getParameterTypes());
-        final Advice p = new Advice(target, record.getParameters(), true);
-        p.setReturnObj(record.getReturnObj());
-        p.setThrowException(record.getThrowException());
+        final Advice p = record.getAdvice();
         invoke.invokeFunction("printWatch", p, sender);
-        sender.send(true, "\n");
 
     }
 
@@ -426,32 +399,32 @@ public class RecordCommand extends Command {
 
     }
 
-    /**
-     * 执行回放操作
-     *
-     * @param sender
-     * @throws Throwable
-     */
-    private void doPlay(final Sender sender) throws Throwable {
-
-        // find the record
-        final Record record = records.get(index);
-        if (null == record) {
-            sender.send(true, format("record %s not found.", index));
-            return;
-        }
-
-        try {
-            final Method method = record.getTargetMethod();
-            method.invoke(record.getTargetThis(), record.getParameters());
-        } catch (Throwable t) {
-            // do nothing...
-            logger.info("play record {} got an exception.", index, t);
-        } finally {
-            sender.send(true, format("play record %s done.", index));
-        }
-
-    }
+//    /**
+//     * 执行回放操作
+//     *
+//     * @param sender
+//     * @throws Throwable
+//     */
+//    private void doPlay(final Sender sender) throws Throwable {
+//
+//        // find the record
+//        final Record record = records.get(index);
+//        if (null == record) {
+//            sender.send(true, format("record %s not found.", index));
+//            return;
+//        }
+//
+//        try {
+//            final Method method = record.getTargetMethod();
+//            method.invoke(record.getTargetThis(), record.getParameters());
+//        } catch (Throwable t) {
+//            // do nothing...
+//            logger.info("play record {} got an exception.", index, t);
+//        } finally {
+//            sender.send(true, format("play record %s done.", index));
+//        }
+//
+//    }
 
     @Override
     public Action getAction() {
@@ -487,12 +460,13 @@ public class RecordCommand extends Command {
                     // delete index record
                     doDelete(sender);
 
-                } else if (isPlay) {
-
-                    // play the record
-                    doPlay(sender);
-
                 }
+//                else if (isPlay) {
+//
+//                    // play the record
+//                    doPlay(sender);
+//
+//                }
 
 
             }
@@ -508,81 +482,19 @@ public class RecordCommand extends Command {
  */
 class Record {
 
-    private final ClassLoader targetClassLoader;
-    private final Class<?> targetClass;
-    private final Method targetMethod;
-    private final Class[] parameterTypes;
-    private final Object targetThis;
-    private final Object[] parameters;
-    private final Object returnObj;
-    private final Throwable throwExp;
-    private final boolean isReturn;
-    private final boolean isThrowException;
-    private final Date gmtCreate;
-
-
-    public Record(
-            // JVM style
-            ClassLoader targetClassLoader, Class<?> targetClass, Method targetMethod, Class[] parameterTypes,
-            // Runtime style
-            Object targetThis, Object[] parameters, Object returnObj, Throwable throwExp,
-            // record info style
-            boolean isReturn, boolean isThrowException, Date gmtCreate) {
-        this.targetClassLoader = targetClassLoader;
-        this.targetClass = targetClass;
-        this.targetMethod = targetMethod;
-        this.parameterTypes = parameterTypes;
-        this.targetThis = targetThis;
-        this.parameters = parameters;
-        this.returnObj = returnObj;
-        this.throwExp = throwExp;
-        this.isReturn = isReturn;
-        this.isThrowException = isThrowException;
+    public Record(Advice advice, Date gmtCreate) {
+        this.advice = advice;
         this.gmtCreate = gmtCreate;
     }
 
-    public boolean isReturn() {
-        return isReturn;
-    }
+    private final Advice advice;
+    private final Date gmtCreate;
 
-    public boolean isThrowException() {
-        return isThrowException;
-    }
-
-    public Object getReturnObj() {
-        return returnObj;
-    }
-
-    public Throwable getThrowException() {
-        return throwExp;
-    }
-
-    public ClassLoader getTargetClassLoader() {
-        return targetClassLoader;
-    }
-
-    public Class<?> getTargetClass() {
-        return targetClass;
-    }
-
-    public Method getTargetMethod() {
-        return targetMethod;
-    }
-
-    public Class[] getParameterTypes() {
-        return parameterTypes;
-    }
-
-    public Object getTargetThis() {
-        return targetThis;
-    }
-
-    public Object[] getParameters() {
-        return parameters;
+    public Advice getAdvice() {
+        return advice;
     }
 
     public Date getGmtCreate() {
         return gmtCreate;
     }
-
 }
