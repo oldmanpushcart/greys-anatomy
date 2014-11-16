@@ -382,7 +382,7 @@ public class RecordCommand extends Command {
 
         final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
 
-        jsEngine.eval("function printWatch(p,o){try{o.send(true, " + watchExpress + "+'\\n');}catch(e){o.send(false, e.message+'\\n');}}");
+        jsEngine.eval("function printWatch(p,o){try{o.send(true, " + watchExpress + "+'\\n');}catch(e){o.send(true, e.message+'\\n');}}");
         final Invocable invoke = (Invocable) jsEngine;
         final Advice p = record.getAdvice();
         invoke.invokeFunction("printWatch", p, sender);
