@@ -447,10 +447,10 @@ public class RecordCommand extends Command {
         final String className = record.getAdvice().getTarget().getTargetClassName();
         final String methodName = record.getAdvice().getTarget().getTargetBehaviorName();
         final String objectAddress = record.getAdvice().getTarget().getTargetThis() == null ? "NULL" : "0x" + Integer.toHexString(record.getAdvice().getTarget().getTargetThis().hashCode());
-        final int maxColLen = 1+Math.max(Math.max(className.length(), methodName.length()), 50);
+        final int maxColLen = Math.max(Math.max(className.length(), methodName.length()), 50);
 
         final StringBuilder detailSB = new StringBuilder();
-        final String headFormat = "|%20s| %-" + maxColLen + "s|";
+        final String headFormat = "|%20s|%-" + maxColLen + "s|";
         final String lineSplit = new StringBuilder()
                 .append("+").append(StringUtils.repeat("-", 20))
                 .append("+").append(StringUtils.repeat("-", maxColLen))
