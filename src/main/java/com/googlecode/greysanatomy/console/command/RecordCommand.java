@@ -461,13 +461,13 @@ public class RecordCommand extends Command {
 
         // fill the head
         detailSB.append(lineSplit)
-                .append(format(headFormat, "INDEX: ", " "+index)).append("\n")
-                .append(format(headFormat, "GMT-CREATE: ", " "+sdf.format(record.getGmtCreate()))).append("\n")
-                .append(format(headFormat, "IS-RETURN: ", " "+record.getAdvice().isReturn())).append("\n")
-                .append(format(headFormat, "IS-EXCEPTION: ", " "+record.getAdvice().isThrowException())).append("\n")
-                .append(format(headFormat, "OBJECT: ", " "+objectAddress)).append("\n")
-                .append(format(headFormat, "CLASS: ", " " + className)).append("\n")
-                .append(format(headFormat, "METHOD: ", " "+methodName)).append("\n")
+                .append(format(headFormat, "INDEX: ", index)).append("\n")
+                .append(format(headFormat, "GMT-CREATE: ", sdf.format(record.getGmtCreate()))).append("\n")
+                .append(format(headFormat, "IS-RETURN: ", record.getAdvice().isReturn())).append("\n")
+                .append(format(headFormat, "IS-EXCEPTION: ", record.getAdvice().isThrowException())).append("\n")
+                .append(format(headFormat, "OBJECT: ", objectAddress)).append("\n")
+                .append(format(headFormat, "CLASS: ", className)).append("\n")
+                .append(format(headFormat, "METHOD: ", methodName)).append("\n")
                 .append(lineSplit)
         .append("\n");
 
