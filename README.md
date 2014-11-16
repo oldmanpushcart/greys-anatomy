@@ -12,4 +12,4 @@
 [greys介绍](https://github.com/chengtongda/greys-anatomy/wiki/Greys-Anatomy)
 
 程序安装：
-curl -sLk http://ompc.oss-cn-hangzhou.aliyuncs.com/greys/install.sh|ksh
+curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
