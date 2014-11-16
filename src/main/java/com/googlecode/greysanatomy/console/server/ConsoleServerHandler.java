@@ -99,7 +99,7 @@ public class ConsoleServerHandler {
                 } catch (Throwable t) {
                     // ÷¥––√¸¡Ó ß∞‹
                     logger.warn("do action failed.", t);
-                    write(respResult.getJobId(), true, "do action failed. cause:" + t.getMessage());
+                    write(respResult.getJobId(), true, "do action failed. cause : " + t.getMessage());
                     return;
                 }
             }

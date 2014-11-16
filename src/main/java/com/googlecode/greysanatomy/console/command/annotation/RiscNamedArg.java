@@ -27,6 +27,13 @@ public @interface RiscNamedArg {
     public String description() default "";
 
     /**
+     * 参数注释2
+     *
+     * @return
+     */
+    public String description2() default "";
+
+    /**
      * 是否有值
      *
      * @return

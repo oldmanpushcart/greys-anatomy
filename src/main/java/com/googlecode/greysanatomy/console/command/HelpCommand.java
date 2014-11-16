@@ -106,7 +106,6 @@ public class HelpCommand extends Command {
             sb.append("\nOptions :\n\n");
             for (Field f : clazz.getDeclaredFields()) {
                 if (f.isAnnotationPresent(RiscNamedArg.class)) {
-                    int len = 0;
                     final RiscNamedArg namedArg = f.getAnnotation(RiscNamedArg.class);
                     final String named = "[" + namedArg.named() + (namedArg.hasValue() ? ":" : "") + "]";
                     final int diff = Math.max(maxCol, named.length()) - named.length();
@@ -116,6 +115,18 @@ public class HelpCommand extends Command {
                     sb.append(named).append(" : ");
                     sb.append(namedArg.description());
                     sb.append("\n");
+
+                    int len = diff + 2 + named.length() + 3;
+                    if (!StringUtils.isBlank(namedArg.description2())) {
+
+                        for (String split : StringUtils.split(namedArg.description2(), "\n")) {
+                            for (int j = 0; j < len; j++) {
+                                sb.append(" ");
+                            }
+                            sb.append(split).append("\n");
+                        }
+
+                    }
 
                 }
             }
