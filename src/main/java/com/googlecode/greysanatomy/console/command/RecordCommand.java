@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.instrument.Instrumentation;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,24 +27,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
+import static com.googlecode.greysanatomy.util.GaStringUtils.summary;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.*;
 
 /**
- * 探测器命令<br/>
+ * 记录命令<br/>
  * 参数w/d依赖于参数i所传递的记录编号<br/>
  * Created by vlinux on 14/11/15.
  */
-@RiscCmd(named = "prober", sort = 8, desc = "Release the prober for recording method call.",
+@RiscCmd(named = "record", sort = 8, desc = "Recording the method call.",
         eg = {
-                "prober -r .*StringUtils isEmpty",
-                "prober -l",
-                "prober -D",
-                "prober -i 1000 -w p.params[0]",
-                "prober -i 1000 -d",
+                "record -r .*StringUtils isEmpty",
+                "record -l",
+                "record -D",
+                "record -i 1000 -w p.params[0]",
+                "record -i 1000 -d",
+                "record -i 1000",
 //                "record -i 1000 -p"
         })
-public class ProberCommand extends Command {
+public class RecordCommand extends Command {
 
     private final Logger logger = LoggerFactory.getLogger("greysanatomy");
 
@@ -71,7 +75,7 @@ public class ProberCommand extends Command {
 
 
     // index of record
-    @RiscNamedArg(named = "i", hasValue = true, description = "the index of record.")
+    @RiscNamedArg(named = "i", hasValue = true, description = "appoint the index of record. If use only, show the record detail.")
     private Integer index;
 
     // watch the index record
@@ -134,16 +138,16 @@ public class ProberCommand extends Command {
             }
         }
 
-        // 如果只有i参数，没有对应的p/w/d，则是没有意义的
-        if (null != index) {
-
-            if (StringUtils.isBlank(watchExpress)
-//                    && !isPlay
-                    && !isDelete) {
-                throw new IllegalArgumentException("miss arguments to work in with -w/-d .");
-            }
-
-        }
+//        // 如果只有i参数，没有对应的p/w/d，则是没有意义的
+//        if (null != index) {
+//
+//            if (StringUtils.isBlank(watchExpress)
+////                    && !isPlay
+//                    && !isDelete) {
+//                throw new IllegalArgumentException("miss arguments to work in with -w/-d .");
+//            }
+//
+//        }
 
         // 一个参数都没有是不行滴
         if (null == index
@@ -264,8 +268,8 @@ public class ProberCommand extends Command {
                 record.getAdvice().isThrowException(),
                 record.getAdvice().getTarget().getTargetThis() == null ? "NULL" : "0x" + Integer.toHexString(record.getAdvice().getTarget().getTargetThis().hashCode()),
 //                substring(record.getTargetClassLoader().getClass().getSimpleName(), 0, TABLE_COL_WIDTH[4]),
-                substring(substringAfterLast(record.getAdvice().getTarget().getTargetClassName(), "."), 0, TABLE_COL_WIDTH[5]),
-                substring(record.getAdvice().getTarget().getTargetBehaviorName(), 0, TABLE_COL_WIDTH[6])
+                summary(substring(substringAfterLast(record.getAdvice().getTarget().getTargetClassName(), "."), 0, TABLE_COL_WIDTH[5]), TABLE_COL_WIDTH[5]),
+                summary(substring(record.getAdvice().getTarget().getTargetBehaviorName(), 0, TABLE_COL_WIDTH[6]), TABLE_COL_WIDTH[6])
         )).append("\n");
 
     }
@@ -425,6 +429,79 @@ public class ProberCommand extends Command {
 //
 //    }
 
+
+    /**
+     * 展示指定记录
+     *
+     * @param sender
+     */
+    private void doShow(final Sender sender) {
+
+        // find the record
+        final Record record = records.get(index);
+        if (null == record) {
+            sender.send(true, format("record %s not found.", index));
+            return;
+        }
+
+        final String className = record.getAdvice().getTarget().getTargetClassName();
+        final String methodName = record.getAdvice().getTarget().getTargetBehaviorName();
+        final String objectAddress = record.getAdvice().getTarget().getTargetThis() == null ? "NULL" : "0x" + Integer.toHexString(record.getAdvice().getTarget().getTargetThis().hashCode());
+        final int maxColLen = Math.max(Math.max(className.length(), methodName.length()), 50);
+
+        final StringBuilder detailSB = new StringBuilder();
+        final String headFormat = "|%20s|%-" + maxColLen + "s|";
+        final String lineSplit = new StringBuilder()
+                .append("+").append(StringUtils.repeat("-", 20))
+                .append("+").append(StringUtils.repeat("-", maxColLen))
+                .append("+\n")
+                .toString();
+
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        // fill the head
+        detailSB.append(lineSplit)
+                .append(format(headFormat, "INDEX: ", " "+index)).append("\n")
+                .append(format(headFormat, "GMT-CREATE: ", " "+sdf.format(record.getGmtCreate()))).append("\n")
+                .append(format(headFormat, "IS-RETURN: ", " "+record.getAdvice().isReturn())).append("\n")
+                .append(format(headFormat, "IS-EXCEPTION: ", " "+record.getAdvice().isThrowException())).append("\n")
+                .append(format(headFormat, "OBJECT: ", " "+objectAddress)).append("\n")
+                .append(format(headFormat, "CLASS: ", " " + className)).append("\n")
+                .append(format(headFormat, "METHOD: ", " "+methodName)).append("\n")
+                .append(lineSplit)
+        .append("\n");
+
+
+        // fill the paramenters
+        if (null != record.getAdvice().getParameters()) {
+
+            int paramIndex = 0;
+            for (Object param : record.getAdvice().getParameters()) {
+                detailSB.append("PARAMETERS[" + paramIndex++ + "]:\n").append(param).append("\n\n");
+            }
+
+        }
+
+
+        // fill the returnObj
+        if (record.getAdvice().isReturn()) {
+            detailSB.append("RETURN-OBJ:\n").append(record.getAdvice().getReturnObj()).append("\n\n");
+        }
+
+
+        // fill the throw exception
+        if (record.getAdvice().isThrowException()) {
+            final Throwable throwable = record.getAdvice().getThrowException();
+            final StringWriter stringWriter = new StringWriter();
+            final PrintWriter printWriter = new PrintWriter(stringWriter);
+            throwable.printStackTrace(printWriter);
+            detailSB.append("THROW-EXCEPTION:\n").append(stringWriter.toString()).append("\n\n");
+        }
+
+        sender.send(true, detailSB.toString());
+
+    }
+
     @Override
     public Action getAction() {
         return new Action() {
@@ -458,6 +535,11 @@ public class ProberCommand extends Command {
 
                     // delete index record
                     doDelete(sender);
+
+                } else if (null != index) {
+
+                    // show the record
+                    doShow(sender);
 
                 }
 //                else if (isPlay) {
