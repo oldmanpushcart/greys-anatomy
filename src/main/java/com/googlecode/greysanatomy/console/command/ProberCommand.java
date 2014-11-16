@@ -26,24 +26,23 @@ import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.repeat;
-import static org.apache.commons.lang.StringUtils.substring;
+import static org.apache.commons.lang.StringUtils.*;
 
 /**
- * 方法调用记录／回放命令<br/>
- * 参数p/w/d依赖于参数i所传递的记录编号<br/>
+ * 探测器命令<br/>
+ * 参数w/d依赖于参数i所传递的记录编号<br/>
  * Created by vlinux on 14/11/15.
  */
-@RiscCmd(named = "record", sort = 8, desc = "Record the method call.",
+@RiscCmd(named = "prober", sort = 8, desc = "Release the prober for recording method call.",
         eg = {
-                "record -r .*StringUtils isEmpty",
-                "record -l",
-                "record -D",
-                "record -i 1000 -w p.params[0]",
-                "record -i 1000 -d",
+                "prober -r .*StringUtils isEmpty",
+                "prober -l",
+                "prober -D",
+                "prober -i 1000 -w p.params[0]",
+                "prober -i 1000 -d",
 //                "record -i 1000 -p"
         })
-public class RecordCommand extends Command {
+public class ProberCommand extends Command {
 
     private final Logger logger = LoggerFactory.getLogger("greysanatomy");
 
@@ -265,7 +264,7 @@ public class RecordCommand extends Command {
                 record.getAdvice().isThrowException(),
                 record.getAdvice().getTarget().getTargetThis() == null ? "NULL" : "0x" + Integer.toHexString(record.getAdvice().getTarget().getTargetThis().hashCode()),
 //                substring(record.getTargetClassLoader().getClass().getSimpleName(), 0, TABLE_COL_WIDTH[4]),
-                substring(record.getAdvice().getTarget().getTargetClassName(), 0, TABLE_COL_WIDTH[5]),
+                substring(substringAfterLast(record.getAdvice().getTarget().getTargetClassName(), "."), 0, TABLE_COL_WIDTH[5]),
                 substring(record.getAdvice().getTarget().getTargetBehaviorName(), 0, TABLE_COL_WIDTH[6])
         )).append("\n");
 
@@ -478,7 +477,7 @@ public class RecordCommand extends Command {
 
 
 /**
- * 方法调用记录
+ * 探测记录方法调用记录
  */
 class Record {
 
