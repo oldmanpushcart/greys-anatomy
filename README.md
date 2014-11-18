@@ -1,4 +1,4 @@
-![LOGO icon](http://ompc.oss-cn-hangzhou.aliyuncs.com/greys/LOGO.png) 
+![LOGO icon](http://ompc.oss.aliyuncs.com/greys/LOGO.png?timestamp=10001)
 
 ## 最新版本
 
@@ -16,9 +16,9 @@
 
 ## 程序安装：
 
-`
+```shell
 curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
-`
+```
 
 ## 更新日志
 
