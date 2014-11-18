@@ -12,7 +12,7 @@
 
 ## Greys介绍
 
-* [Greys介绍](https://github.com/chengtongda/greys-anatomy/wiki/Greys-Anatomy)
+* [Greys介绍](https://github.com/oldmanpushcart/greys-anatomy/wiki)
 
 ## 程序安装：
 
