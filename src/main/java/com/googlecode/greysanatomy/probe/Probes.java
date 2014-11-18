@@ -1,19 +1,25 @@
 package com.googlecode.greysanatomy.probe;
 
 import com.googlecode.greysanatomy.probe.Advice.Target;
+<<<<<<< HEAD
 import com.googlecode.greysanatomy.probe.Advice.TargetBehavior;
 import com.googlecode.greysanatomy.probe.Advice.TargetConstructor;
 import com.googlecode.greysanatomy.probe.Advice.TargetMethod;
 import com.googlecode.greysanatomy.util.GaCheckUtils;
+=======
+>>>>>>> pr/8
 import javassist.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+<<<<<<< HEAD
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+=======
+>>>>>>> pr/8
 import static com.googlecode.greysanatomy.probe.ProbeJobs.getJobListeners;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.isListener;
 import static java.lang.String.format;
@@ -46,6 +52,7 @@ public class Probes {
     private static final String jobsClass = "com.googlecode.greysanatomy.probe.ProbeJobs";
     private static final String probesClass = "com.googlecode.greysanatomy.probe.Probes";
 
+<<<<<<< HEAD
     private static final Map<String, Class<?>> cacheForGetClassByName = new ConcurrentHashMap<String, Class<?>>();
     private static final Map<GetBehaviorKey, Method> cacheForGetMethodByName = new ConcurrentHashMap<GetBehaviorKey, Method>();
     private static final Map<GetBehaviorKey, Constructor<?>> cacheForGetConstructorByParamTypes = new ConcurrentHashMap<GetBehaviorKey, Constructor<?>>();
@@ -93,6 +100,16 @@ public class Probes {
         if (isListener(id, AdviceListener.class)) {
             try {
                 Advice p = new Advice(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, false);
+=======
+    private static Target newTarget(String targetClassName, String targetBehaviorName, Object targetThis) {
+        return new Target(targetClassName, targetBehaviorName, targetThis);
+    }
+
+    public static void doBefore(int id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args) {
+        if (isListener(id, AdviceListener.class)) {
+            try {
+                Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
+>>>>>>> pr/8
                 ((AdviceListener) getJobListeners(id)).onBefore(p);
             } catch (Throwable t) {
                 logger.warn("error at doBefore", t);
@@ -100,6 +117,7 @@ public class Probes {
         }
     }
 
+<<<<<<< HEAD
     /**
      * 执行成功
      *
@@ -115,16 +133,27 @@ public class Probes {
         if (isListener(id, AdviceListener.class)) {
             try {
                 Advice p = new Advice(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, false);
+=======
+    public static void doSuccess(int id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args, Object returnObj) {
+        if (isListener(id, AdviceListener.class)) {
+            try {
+                Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
+>>>>>>> pr/8
                 p.setReturnObj(returnObj);
                 ((AdviceListener) getJobListeners(id)).onSuccess(p);
             } catch (Throwable t) {
                 logger.warn("error at onSuccess", t);
             }
+<<<<<<< HEAD
             doFinish(id, targetClass, targetConstructor, targetMethod, targetThis, args, returnObj, null);
+=======
+            doFinish(id, targetClassName, targetBehaviorName, targetThis, args, returnObj, null);
+>>>>>>> pr/8
         }
 
     }
 
+<<<<<<< HEAD
     /**
      * 执行异常
      *
@@ -140,16 +169,27 @@ public class Probes {
         if (isListener(id, AdviceListener.class)) {
             try {
                 Advice p = new Advice(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, false);
+=======
+    public static void doException(int id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args, Throwable throwException) {
+        if (isListener(id, AdviceListener.class)) {
+            try {
+                Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
+>>>>>>> pr/8
                 p.setThrowException(throwException);
                 ((AdviceListener) getJobListeners(id)).onException(p);
             } catch (Throwable t) {
                 logger.warn("error at onException", t);
             }
+<<<<<<< HEAD
             doFinish(id, targetClass, targetConstructor, targetMethod, targetThis, args, null, throwException);
+=======
+            doFinish(id, targetClassName, targetBehaviorName, targetThis, args, null, throwException);
+>>>>>>> pr/8
         }
 
     }
 
+<<<<<<< HEAD
     /**
      * 执行完成
      *
@@ -166,6 +206,12 @@ public class Probes {
         if (isListener(id, AdviceListener.class)) {
             try {
                 Advice p = new Advice(newTarget(targetClass, targetConstructor, targetMethod, targetThis), args, true);
+=======
+    public static void doFinish(int id, String targetClassName, String targetBehaviorName, Object targetThis, Object[] args, Object returnObj, Throwable throwException) {
+        if (isListener(id, AdviceListener.class)) {
+            try {
+                Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, true);
+>>>>>>> pr/8
                 p.setThrowException(throwException);
                 p.setReturnObj(returnObj);
                 ((AdviceListener) getJobListeners(id)).onFinish(p);
@@ -177,6 +223,7 @@ public class Probes {
 
 
     /**
+<<<<<<< HEAD
      * 获取类信息
      *
      * @param name
@@ -333,6 +380,8 @@ public class Probes {
     }
 
     /**
+=======
+>>>>>>> pr/8
      * 是否过滤掉当前探测的目标
      *
      * @param cc
@@ -344,6 +393,7 @@ public class Probes {
         final int ccMod = cc.getModifiers();
         final int cbMod = cb.getModifiers();
 
+<<<<<<< HEAD
         // 过滤掉接口
         if (isInterface(ccMod)) {
             return true;
@@ -356,6 +406,11 @@ public class Probes {
 
         // 过滤掉自己，避免递归调用
         if (cc.getName().startsWith("com.googlecode.greysanatomy.")) {
+=======
+        if (isInterface(ccMod)
+                || isAbstract(cbMod)
+                || cc.getName().startsWith("com.googlecode.greysanatomy.")) {
+>>>>>>> pr/8
             return true;
         }
 
@@ -372,14 +427,20 @@ public class Probes {
      * @param cb
      * @throws CannotCompileException
      * @throws NotFoundException
+<<<<<<< HEAD
      * @throws ClassNotFoundException
      */
     public static void mine(String id, CtClass cc, CtBehavior cb) throws CannotCompileException, NotFoundException, ClassNotFoundException {
+=======
+     */
+    public static void mine(int id, CtClass cc, CtBehavior cb) throws CannotCompileException, NotFoundException {
+>>>>>>> pr/8
 
         if (isIngore(cc, cb)) {
             return;
         }
 
+<<<<<<< HEAD
         // 目标类
         final String javassistClass = format("(%s.getClassByName(\"%s\"))",
                 probesClass,
@@ -402,6 +463,8 @@ public class Probes {
                 toJavassistStringParamTypes(cb))
                 : "null";
 
+=======
+>>>>>>> pr/8
         // 目标实例,如果是静态方法，则为null
         final String javassistThis = isStatic(cb.getModifiers()) ? "null" : "this";
 
@@ -409,14 +472,21 @@ public class Probes {
         if (isListener(id, AdviceListener.class)) {
             // 构造函数在这里是不能做insertBefore的,所以构造函数的before是做在doCache中
             if (cb.getMethodInfo().isMethod()) {
+<<<<<<< HEAD
                 mineProbeForMethod(cb, id, javassistClass, javassistConstructor, javassistMethod, javassistThis);
             } else if (cb.getMethodInfo().isConstructor()) {
                 mineProbeForConstructor(cb, id, javassistClass, javassistConstructor, javassistMethod, javassistThis);
+=======
+                mineProbeForMethod(cb, id, cc.getName(), cb.getName(), javassistThis);
+            } else if (cb.getMethodInfo().isConstructor()) {
+                mineProbeForConstructor(cb, id, cc.getName(), cb.getName(), javassistThis);
+>>>>>>> pr/8
             }
         }
 
     }
 
+<<<<<<< HEAD
     /**
      * 给构造函数埋点
      *
@@ -461,6 +531,37 @@ public class Probes {
                 ClassPool.getDefault().get("java.lang.Throwable"));
         cb.insertAfter(format("{if(%s.isJobAlive(\"%s\"))%s.doSuccess(\"%s\",%s,%s,%s,%s,$args,($w)$_);}",
                 jobsClass, id, probesClass, id, javassistClass, javassistConstructor, javassistMethod, javassistThis));
+=======
+    private static void mineProbeForConstructor(CtBehavior cb, int id, String targetClassName, String targetBehaviorName, String javassistThis) throws CannotCompileException, NotFoundException {
+        cb.addCatch(format("{if(%s.isJobAlive(%s)){%s.doBefore(%s,\"%s\",\"%s\",%s,$args);%s.doException(%s,\"%s\",\"%s\",%s,$args,$e);}throw $e;}",
+                        jobsClass, id,
+                        probesClass, id, targetClassName, targetBehaviorName, javassistThis,
+                        probesClass, id, targetClassName, targetBehaviorName, javassistThis),
+                ClassPool.getDefault().get("java.lang.Throwable"));
+
+        // TODO : 奇怪，为啥这里要doBefore两次?
+        cb.insertAfter(format("{if(%s.isJobAlive(%s)){%s.doBefore(%s,\"%s\",\"%s\",%s,$args);%s.doSuccess(%s,\"%s\",\"%s\",%s,$args,($w)$_);}}",
+                jobsClass, id,
+                probesClass, id, targetClassName, targetBehaviorName, javassistThis,
+                probesClass, id, targetClassName, targetBehaviorName, javassistThis));
+
+    }
+
+    private static void mineProbeForMethod(CtBehavior cb, int id, String targetClassName, String targetBehaviorName, String javassistThis) throws CannotCompileException, NotFoundException {
+
+        cb.insertBefore(format("{if(%s.isJobAlive(%s))%s.doBefore(%s,\"%s\",\"%s\",%s,$args);}",
+                jobsClass, id,
+                probesClass, id, targetClassName, targetBehaviorName, javassistThis));
+
+        cb.addCatch(format("{if(%s.isJobAlive(%s))%s.doException(%s,\"%s\",\"%s\",%s,$args,$e);throw $e;}",
+                        jobsClass, id,
+                        probesClass, id, targetClassName, targetBehaviorName, javassistThis),
+                ClassPool.getDefault().get("java.lang.Throwable"));
+
+        cb.insertAfter(format("{if(%s.isJobAlive(%s))%s.doSuccess(%s,\"%s\",\"%s\",%s,$args,($w)$_);}",
+                jobsClass, id,
+                probesClass, id, targetClassName, targetBehaviorName, javassistThis));
+>>>>>>> pr/8
     }
 
 }

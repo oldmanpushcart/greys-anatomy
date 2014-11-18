@@ -1,8 +1,5 @@
 package com.googlecode.greysanatomy.probe;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-
 /**
  * 通知点
  *
@@ -17,6 +14,7 @@ public class Advice {
      */
     public static class Target {
 
+<<<<<<< HEAD
         /*
          * 探测目标类
          */
@@ -35,10 +33,20 @@ public class Advice {
         public Target(Class<?> targetClass, TargetBehavior targetBehavior, Object targetThis) {
             this.targetClass = targetClass;
             this.targetBehavior = targetBehavior;
+=======
+        private final String targetClassName;
+        private final String targetBehaviorName;
+        private final Object targetThis;
+
+        public Target(String targetClassName, String targetBehaviorName, Object targetThis) {
+            this.targetClassName = targetClassName;
+            this.targetBehaviorName = targetBehaviorName;
+>>>>>>> pr/8
             this.targetThis = targetThis;
         }
 
         /**
+<<<<<<< HEAD
          * 获取探测目标类
          *
          * @return
@@ -54,12 +62,33 @@ public class Advice {
          */
         public TargetBehavior getTargetBehavior() {
             return targetBehavior;
+=======
+         * 获取探测目标类名称
+         *
+         * @return 被探测的目标类名称
+         */
+        public String getTargetClassName() {
+            return targetClassName;
+        }
+
+        /**
+         * 获取探测目标行为(method/constructor)名称
+         *
+         * @return 被探测的行为名称
+         */
+        public String getTargetBehaviorName() {
+            return targetBehaviorName;
+>>>>>>> pr/8
         }
 
         /**
          * 获取探测目标实例
          *
+<<<<<<< HEAD
          * @return
+=======
+         * @return 被探测目标实例
+>>>>>>> pr/8
          */
         public Object getTargetThis() {
             return targetThis;
@@ -67,6 +96,7 @@ public class Advice {
 
     }
 
+<<<<<<< HEAD
     /**
      * 探测目标行为(method/constructur)
      *
@@ -142,6 +172,8 @@ public class Advice {
     }
 
 
+=======
+>>>>>>> pr/8
     private final Target target;        // 探测目标
     private final Object[] parameters;    // 调用参数
     private final boolean isFinished;    // 是否到doFinish方法
@@ -149,6 +181,7 @@ public class Advice {
     private Object returnObj;            // 返回值，如果目标方法以抛异常的形式结束，则此值为null
     private Throwable throwException;    // 抛出异常，如果目标方法以正常方式结束，则此值为null
 
+<<<<<<< HEAD
     /**
      * 探测器构造函数
      *
@@ -156,6 +189,8 @@ public class Advice {
      * @param parameters
      * @param isFinished
      */
+=======
+>>>>>>> pr/8
     public Advice(Target target, Object[] parameters, boolean isFinished) {
         this.target = target;
         this.parameters = parameters;
@@ -215,6 +250,7 @@ public class Advice {
 
     /**
      * getParameters()方法的别名，原来的名字太TM长了
+<<<<<<< HEAD
      * @return
      */
     public Object[] getParams() {return parameters;}
@@ -224,5 +260,22 @@ public class Advice {
      * @return
      */
     public Throwable getThrowExp() {return throwException;}
+=======
+     *
+     * @return 参数列表
+     */
+    public Object[] getParams() {
+        return parameters;
+    }
+
+    /**
+     * getThrowException()方法的别名
+     *
+     * @return 异常对象
+     */
+    public Throwable getThrowExp() {
+        return throwException;
+    }
+>>>>>>> pr/8
 
 }

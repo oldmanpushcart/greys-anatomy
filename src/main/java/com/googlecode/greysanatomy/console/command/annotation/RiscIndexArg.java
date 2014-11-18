@@ -14,12 +14,20 @@ public @interface RiscIndexArg {
 
     /**
      * 参数在命令中的位置
+<<<<<<< HEAD
+=======
+     *
+>>>>>>> pr/8
      * @return
      */
     public int index();
 
     /**
      * 参数名称
+<<<<<<< HEAD
+=======
+     *
+>>>>>>> pr/8
      * @return
      */
     public String name();
@@ -33,6 +41,10 @@ public @interface RiscIndexArg {
 
     /**
      * 更详细的参数注释
+<<<<<<< HEAD
+=======
+     *
+>>>>>>> pr/8
      * @return
      */
     public String description2() default "";

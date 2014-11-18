@@ -1,7 +1,13 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
+<<<<<<< HEAD
 import com.googlecode.greysanatomy.console.command.annotation.*;
+=======
+import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
+import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
+>>>>>>> pr/8
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -66,6 +72,7 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
+<<<<<<< HEAD
 @Cmd("monitor")
 @RiscCmd(named = "monitor", sort = 5, desc = "Buried point method for monitoring the operation.")
 public class MonitorCommand extends Command {
@@ -79,6 +86,17 @@ public class MonitorCommand extends Command {
     private String methodRegex;
 
     @Arg(name = "cycle")
+=======
+@RiscCmd(named = "monitor", sort = 5, desc = "Buried point method for monitoring the operation.")
+public class MonitorCommand extends Command {
+
+    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
+    private String classRegex;
+
+    @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
+    private String methodRegex;
+
+>>>>>>> pr/8
     @RiscNamedArg(named = "c", hasValue = true, description = "the cycle of output")
     private int cycle = 120;
 
@@ -159,7 +177,11 @@ public class MonitorCommand extends Command {
                             return;
                         }
                         final long cost = System.currentTimeMillis() - startTime;
+<<<<<<< HEAD
                         final Key key = new Key(p.getTarget().getTargetClass().getName(), p.getTarget().getTargetBehavior().getName());
+=======
+                        final Key key = new Key(p.getTarget().getTargetClassName(), p.getTarget().getTargetBehaviorName());
+>>>>>>> pr/8
 
                         while (true) {
                             AtomicReference<Data> value = monitorDatas.get(key);
@@ -271,18 +293,25 @@ public class MonitorCommand extends Command {
                 message.append(String.format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
                         result.getModifiedClasses().size(),
                         result.getModifiedBehaviors().size()));
+<<<<<<< HEAD
+=======
+                message.append(GaStringUtils.ABORT_MSG).append("\n");
+>>>>>>> pr/8
                 sender.send(false, message.toString());
             }
 
         };
     }
 
+<<<<<<< HEAD
     /**
      * 表格格式化
      *
      * @param output
      * @return
      */
+=======
+>>>>>>> pr/8
     private String tableFormat(String output) {
 
         final StringBuilder outputSB = new StringBuilder();

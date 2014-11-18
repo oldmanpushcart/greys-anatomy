@@ -2,4 +2,9 @@
 /.settings
 /.classpath
 /.project
+<<<<<<< HEAD
 /.DS_Store
+=======
+/.idea
+/greys-anatomy.iml
+>>>>>>> pr/8

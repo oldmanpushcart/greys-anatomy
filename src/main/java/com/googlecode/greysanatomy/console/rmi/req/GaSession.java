@@ -17,7 +17,11 @@ public class GaSession implements Serializable {
 
     private final long sessionId;
 
+<<<<<<< HEAD
     private Set<String> jobIds = new HashSet<String>();
+=======
+    private Set<Integer> jobIds = new HashSet<Integer>();
+>>>>>>> pr/8
 
     private boolean isAlive = true;
 
@@ -43,11 +47,19 @@ public class GaSession implements Serializable {
         this.lastModified = lastModified;
     }
 
+<<<<<<< HEAD
     public Set<String> getJobIds() {
         return jobIds;
     }
 
     public void setJobIds(Set<String> jobIds) {
+=======
+    public Set<Integer> getJobIds() {
+        return jobIds;
+    }
+
+    public void setJobIds(Set<Integer> jobIds) {
+>>>>>>> pr/8
         this.jobIds = jobIds;
     }
 

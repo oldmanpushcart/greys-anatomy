@@ -17,6 +17,11 @@ public class GaStringUtils {
 
     public static final String LINE = "---------------------------------------------------------------\n";
 
+<<<<<<< HEAD
+=======
+    public static final String ABORT_MSG = "Press Ctrl+D to abort this job.";
+
+>>>>>>> pr/8
     /**
      * 进行URL-ENCODE
      *
@@ -111,8 +116,59 @@ public class GaStringUtils {
         return stSB.toString();
     }
 
+<<<<<<< HEAD
     public static void main(String... args) {
         System.out.println(getStack());
+=======
+
+    /**
+     * 进度条
+     *
+     * @param name
+     * @param progress
+     * @param total
+     * @return
+     */
+    public static String progress(String name, int progress, int total) {
+
+        final StringBuilder sb = new StringBuilder();
+        final int f = progress * 100 / total;
+        sb.append(String.format("%s: %3d", name, f)).append("%[");
+        for (int index = 1; index <= 100; index++) {
+            if (index <= f) {
+                sb.append("#");
+            } else {
+                sb.append(" ");
+            }
+        }
+        sb.append("]");
+
+        return sb.toString();
+
+    }
+
+    /**
+     * 产生摘要
+     *
+     * @param str
+     * @param length
+     * @return
+     */
+    public static String summary(String str, int length) {
+
+        final StringBuilder sb = new StringBuilder();
+
+        if (StringUtils.length(str) <= length) {
+            sb.append(str);
+        } else if (length <= 3) {
+            sb.append(StringUtils.substring(str, 0, 3));
+        } else {
+            sb.append(StringUtils.substring(str, 0, length - 3)).append("...");
+        }
+
+        return sb.toString();
+
+>>>>>>> pr/8
     }
 
 }

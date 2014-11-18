@@ -1,8 +1,11 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
+<<<<<<< HEAD
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+=======
+>>>>>>> pr/8
 import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
 import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
@@ -22,6 +25,7 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
+<<<<<<< HEAD
 @Cmd("jstack")
 @RiscCmd(named = "jstack", sort = 7, desc = "The call stack output buried point method in each thread.")
 public class JstackCommand extends Command {
@@ -31,6 +35,18 @@ public class JstackCommand extends Command {
     private String classRegex;
 
     @Arg(name = "method")
+=======
+@RiscCmd(named = "jstack", sort = 7, desc = "The call stack output buried point method in each thread.",
+        eg = {
+                "jstack org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
+                "jstack .*StringUtils isEmpty"
+        })
+public class JstackCommand extends Command {
+
+    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
+    private String classRegex;
+
+>>>>>>> pr/8
     @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
     private String methodRegex;
 
@@ -65,6 +81,10 @@ public class JstackCommand extends Command {
                 message.append(String.format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
                         result.getModifiedClasses().size(),
                         result.getModifiedBehaviors().size()));
+<<<<<<< HEAD
+=======
+                message.append(GaStringUtils.ABORT_MSG).append("\n");
+>>>>>>> pr/8
                 sender.send(false, message.toString());
 
             }

@@ -26,12 +26,20 @@ public class AgentMain {
             URLClassLoader agentLoader = new URLClassLoader(new URL[]{new URL("file:" + GreysAnatomyMain.JARFILE)});
 
             final Configer configer = Configer.toConfiger(args);
+<<<<<<< HEAD
             final ConsoleServer consoleServer = (ConsoleServer)agentLoader
+=======
+            final ConsoleServer consoleServer = (ConsoleServer) agentLoader
+>>>>>>> pr/8
                     .loadClass("com.googlecode.greysanatomy.console.server.ConsoleServer")
                     .getMethod("getInstance", Configer.class, Instrumentation.class)
                     .invoke(null, configer, inst);
 
+<<<<<<< HEAD
             if( !consoleServer.isBind() ) {
+=======
+            if (!consoleServer.isBind()) {
+>>>>>>> pr/8
 //                consoleServer.getConfiger().setTargetIp(configer.getTargetIp());
                 consoleServer.getConfiger().setTargetPort(configer.getTargetPort());
                 consoleServer.rebind();

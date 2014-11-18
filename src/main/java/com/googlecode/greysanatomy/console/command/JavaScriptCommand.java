@@ -1,7 +1,13 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
+<<<<<<< HEAD
 import com.googlecode.greysanatomy.console.command.annotation.*;
+=======
+import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
+import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
+>>>>>>> pr/8
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -29,12 +35,21 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
+<<<<<<< HEAD
 @Cmd("javascript")
 @RiscCmd(named = "js", sort = 3, desc = "Let Greys use the JavaScript enhancement.")
+=======
+@RiscCmd(named = "js", sort = 3, desc = "Let Greys use the JavaScript enhancement.",
+        eg = {
+                "js -f /tmp/debug.js org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
+                "js -f /tmp/debug.js .*StringUtils isEmpty",
+        })
+>>>>>>> pr/8
 public class JavaScriptCommand extends Command {
 
     private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
 
+<<<<<<< HEAD
     @Arg(name = "class")
     @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
@@ -44,6 +59,14 @@ public class JavaScriptCommand extends Command {
     private String methodRegex;
 
     @Arg(name = "file")
+=======
+    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
+    private String classRegex;
+
+    @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
+    private String methodRegex;
+
+>>>>>>> pr/8
     @RiscNamedArg(named = "f", hasValue = true, description = "the file of javascript")
     private File scriptFile;
 
@@ -85,27 +108,45 @@ public class JavaScriptCommand extends Command {
      */
     public static class JLS {
 
+<<<<<<< HEAD
         private static final Map<String, Map<String, Object>> jobLocals = new HashMap<String, Map<String, Object>>();
 
         public static Map<String, Object> getJLS(String jobId) {
+=======
+        private static final Map<Integer, Map<String, Object>> jobLocals = new HashMap<Integer, Map<String, Object>>();
+
+        public static Map<String, Object> getJLS(int jobId) {
+>>>>>>> pr/8
             if (jobLocals.get(jobId) == null) {
                 jobLocals.put(jobId, new HashMap<String, Object>());
             }
             return jobLocals.get(jobId);
         }
 
+<<<<<<< HEAD
         public static void removeJob(String jobId) {
             jobLocals.remove(jobId);
         }
 
         public static void put(String jobId, String key, Object value) {
+=======
+        public static void removeJob(int jobId) {
+            jobLocals.remove(jobId);
+        }
+
+        public static void put(int jobId, String key, Object value) {
+>>>>>>> pr/8
             if (jobLocals.get(jobId) == null) {
                 jobLocals.put(jobId, new HashMap<String, Object>());
             }
             jobLocals.get(jobId).put(key, value);
         }
 
+<<<<<<< HEAD
         public static Object get(String jobId, String key) {
+=======
+        public static Object get(int jobId, String key) {
+>>>>>>> pr/8
             if (jobLocals.get(jobId) == null) {
                 return null;
             }
@@ -259,6 +300,10 @@ public class JavaScriptCommand extends Command {
                 message.append(String.format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
                         result.getModifiedClasses().size(),
                         result.getModifiedBehaviors().size()));
+<<<<<<< HEAD
+=======
+                message.append(GaStringUtils.ABORT_MSG).append("\n");
+>>>>>>> pr/8
                 sender.send(false, message.toString());
             }
 

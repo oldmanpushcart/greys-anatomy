@@ -21,13 +21,31 @@ public @interface RiscCmd {
 
     /**
      * 指定命令的解释
+<<<<<<< HEAD
      * @return
+=======
+     *
+     * @return 返回命令的解释
+>>>>>>> pr/8
      */
     public String desc();
 
     /**
+<<<<<<< HEAD
      * 排序,在help命令中
      * @return
+=======
+     * 例子
+     *
+     * @return 返回命令的例子
+     */
+    public String[] eg() default {};
+
+    /**
+     * 排序,在help命令中
+     *
+     * @return 返回命令在目录中的排序
+>>>>>>> pr/8
      */
     public int sort() default 0;
 

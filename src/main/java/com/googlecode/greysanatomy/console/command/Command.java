@@ -1,6 +1,9 @@
 package com.googlecode.greysanatomy.console.command;
 
+<<<<<<< HEAD
 import com.googlecode.greysanatomy.console.command.annotation.Arg;
+=======
+>>>>>>> pr/8
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 
 import java.lang.instrument.Instrumentation;
@@ -13,12 +16,15 @@ import java.lang.instrument.Instrumentation;
 public abstract class Command {
 
     /**
+<<<<<<< HEAD
      * 重定向路径
      */
     @Arg(name = "o", isRequired = false)
     String redirectPath;
 
     /**
+=======
+>>>>>>> pr/8
      * 信息发送者
      *
      * @author vlinux
@@ -46,9 +52,15 @@ public abstract class Command {
 
         private final Instrumentation inst;
         private final long sessionId;
+<<<<<<< HEAD
         private final String jobId;
 
         public Info(Instrumentation inst, long sessionId, String jobId) {
+=======
+        private final int jobId;
+
+        public Info(Instrumentation inst, long sessionId, int jobId) {
+>>>>>>> pr/8
             this.inst = inst;
             this.sessionId = sessionId;
             this.jobId = jobId;
@@ -62,7 +74,11 @@ public abstract class Command {
             return sessionId;
         }
 
+<<<<<<< HEAD
         public String getJobId() {
+=======
+        public int getJobId() {
+>>>>>>> pr/8
             return jobId;
         }
 
@@ -94,6 +110,7 @@ public abstract class Command {
      */
     abstract public Action getAction();
 
+<<<<<<< HEAD
     public String getRedirectPath() {
         return redirectPath;
     }
@@ -102,4 +119,6 @@ public abstract class Command {
         this.redirectPath = redirectPath;
     }
 
+=======
+>>>>>>> pr/8
 }

@@ -92,6 +92,7 @@ public class SessionJobsHolder {
      * @param gaSessionId
      * @param jobId
      */
+<<<<<<< HEAD
     public static synchronized void unRegistJob(long gaSessionId, String jobId) {
         GaSession holderSession = sessionHolder.get(gaSessionId);
         //注销任务则不需要判断会话是否还在，即使不在也可以注销
@@ -100,6 +101,17 @@ public class SessionJobsHolder {
             while (it.hasNext()) {
                 String id = it.next();
                 if (StringUtils.equals(id, jobId)) {
+=======
+    public static synchronized void unRegistJob(long gaSessionId, int jobId) {
+        GaSession holderSession = sessionHolder.get(gaSessionId);
+        //注销任务则不需要判断会话是否还在，即使不在也可以注销
+        if (holderSession != null) {
+            final Iterator<Integer> it = holderSession.getJobIds().iterator();
+            while (it.hasNext()) {
+                final int id = it.next();
+//                if (StringUtils.equals(id, jobId)) {
+                if( id == jobId ) {
+>>>>>>> pr/8
                     killJob(id);
                     it.remove();
                     logger.info("unRegist job={} for session={}", id, gaSessionId);
@@ -115,7 +127,11 @@ public class SessionJobsHolder {
      * @param jobId
      * @throws SessionTimeOutException
      */
+<<<<<<< HEAD
     public static synchronized void registJob(long sessionId, String jobId) throws SessionTimeOutException {
+=======
+    public static synchronized void registJob(long sessionId, int jobId) throws SessionTimeOutException {
+>>>>>>> pr/8
         GaSession holderSession = sessionHolder.get(sessionId);
         if (holderSession == null || !holderSession.isAlive()) {
             throw new SessionTimeOutException("session is not exsit!");
@@ -135,7 +151,11 @@ public class SessionJobsHolder {
             return;
         }
         holderSession.setAlive(false);
+<<<<<<< HEAD
         final Iterator<String> it = holderSession.getJobIds().iterator();
+=======
+        final Iterator<Integer> it = holderSession.getJobIds().iterator();
+>>>>>>> pr/8
         while (it.hasNext()) {
             killJob(it.next());
         }

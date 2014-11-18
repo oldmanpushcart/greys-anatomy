@@ -24,7 +24,10 @@ public class Clocker implements Runnable {
 
     @Override
     public void run() {
+<<<<<<< HEAD
         System.out.println("start");
+=======
+>>>>>>> pr/8
         while (true) {
 
             lock.lock();
