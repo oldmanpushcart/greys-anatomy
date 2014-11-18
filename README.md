@@ -1,3 +1,6 @@
+![LOGO icon](http://ompc.oss.aliyuncs.com/greys/LOGO.png) 
+### version : 1.5.3
+
 ```
                                                         _
   ____  ____ _____ _   _  ___ _____ _____ ____  _____ _| |_ ___  ____  _   _
@@ -9,7 +12,9 @@
                                                   |v|e|r|s|i|o|n|:|1|.|5|.|3|
                                                   +-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-[greys介绍](https://github.com/chengtongda/greys-anatomy/wiki/Greys-Anatomy)
+[Greys介绍](https://github.com/chengtongda/greys-anatomy/wiki/Greys-Anatomy)
 
 程序安装：
+`
 curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
+`
