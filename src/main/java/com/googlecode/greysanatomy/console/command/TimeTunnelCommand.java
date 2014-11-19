@@ -38,7 +38,7 @@ import static org.apache.commons.lang.StringUtils.*;
  */
 @RiscCmd(named = "tt", sort = 8, desc = "TimeTunnel the method call.",
         eg = {
-                "tt -r .*StringUtils isEmpty",
+                "tt -t .*StringUtils isEmpty",
                 "tt -l",
                 "tt -D",
                 "tt -i 1000 -w p.params[0]",
