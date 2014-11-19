@@ -22,8 +22,8 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  */
 @RiscCmd(named = "jstack", sort = 7, desc = "The call stack output buried point method in each thread.",
         eg = {
-                "jstack org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
-                "jstack .*StringUtils isEmpty"
+                "jstack org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
+                "jstack .*StringUtils isBlank"
         })
 public class JstackCommand extends Command {
 

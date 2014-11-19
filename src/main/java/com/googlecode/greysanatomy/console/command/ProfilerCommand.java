@@ -22,8 +22,7 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
 @RiscCmd(named = "profiler", sort = 6, desc = "The call stack output buried point method for rendering path of.",
         eg = {
-                "profiler -c 50 org\\.apache\\.commons\\..* .* org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
-                "profiler -c 50 org\\.apache\\.commons\\..* .* .*StringUtils isEmpty",
+                "profiler -c 5 .*ibatis.* .* .*ibatis.*SqlMapClientImpl openSession",
         })
 public class ProfilerCommand extends Command {
 

@@ -33,7 +33,7 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  */
 @RiscCmd(named = "js", sort = 3, desc = "Let Greys use the JavaScript enhancement.",
         eg = {
-                "js -f /tmp/debug.js org\\.apache\\.commons\\.lang\\.StringUtils isEmpty",
+                "js -f /tmp/debug.js org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
                 "js -f /tmp/debug.js .*StringUtils isEmpty",
         })
 public class JavaScriptCommand extends Command {
