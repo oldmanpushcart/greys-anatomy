@@ -14,7 +14,6 @@ import com.googlecode.greysanatomy.exception.SessionTimeOutException;
 import com.googlecode.greysanatomy.probe.ProbeJobs;
 import com.googlecode.greysanatomy.util.JvmUtils;
 import com.googlecode.greysanatomy.util.JvmUtils.ShutdownHook;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,7 +174,7 @@ public class ConsoleServerHandler {
             message += END_MASK;
         }
 
-        if (StringUtils.isEmpty(message)) {
+        if (null == message || message.length() == 0) {
             return;
         }
 
@@ -217,6 +216,14 @@ public class ConsoleServerHandler {
     }
 
     private boolean isFinish(String message) {
-        return !StringUtils.isEmpty(message) ? message.endsWith(END_MASK) : false;
+
+        if( null != message
+                && message.length() > 0) {
+            return message.endsWith(END_MASK);
+        }
+
+        return false;
+
+//        return !StringUtils.isEmpty(message) ? message.endsWith(END_MASK) : false;
     }
 }
