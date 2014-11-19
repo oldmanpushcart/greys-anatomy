@@ -24,7 +24,7 @@ curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
 
 ### 1.5.3
 
-* 实现record命令
+* 实现TimeTunnel命令
 
 ### 1.5.2
 
