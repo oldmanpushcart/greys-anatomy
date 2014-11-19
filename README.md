@@ -10,9 +10,11 @@
 * [姜小逸又胖了](http://weibo.com/chengtd)
 
 
-## Greys介绍
+## 相关文档
 
-* [Greys介绍](https://github.com/oldmanpushcart/greys-anatomy/wiki)
+* [ABOUT](https://github.com/oldmanpushcart/greys-anatomy/wiki)
+* [安装](https://github.com/oldmanpushcart/greys-anatomy/wiki/installing)
+* [入门](https://github.com/oldmanpushcart/greys-anatomy/wiki/Getting-Start)
 
 ## 程序安装：
 
