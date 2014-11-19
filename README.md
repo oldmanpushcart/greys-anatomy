@@ -12,9 +12,9 @@
 
 ## 相关文档
 
-* [ABOUT](https://github.com/oldmanpushcart/greys-anatomy/wiki)
-* [安装](https://github.com/oldmanpushcart/greys-anatomy/wiki/installing)
-* [入门](https://github.com/oldmanpushcart/greys-anatomy/wiki/Getting-Start)
+* [关于软件](https://github.com/oldmanpushcart/greys-anatomy/wiki)
+* [程序安装](https://github.com/oldmanpushcart/greys-anatomy/wiki/installing)
+* [入门说明](https://github.com/oldmanpushcart/greys-anatomy/wiki/Getting-Start)
 
 ## 程序安装：
 
