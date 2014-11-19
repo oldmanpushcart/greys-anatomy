@@ -60,8 +60,6 @@ public class JavaScriptCommand extends Command {
                     + "    function success(p,o);   // method call at each success\n"
                     + "    function exception(p,o); // method call at each exception\n"
                     + "    function finish(p,o);    // method call at each finished\n"
-                    + "    function create(p,o);    // javascript execute at create\n"
-                    + "    function destroy(p,o);   // javascript execute at destroy\n"
                     + " \n"
                     + "The structure of arguments 'p'\n"
                     + "    p.\n"
@@ -73,8 +71,9 @@ public class JavaScriptCommand extends Command {
                     + "         \\+- targetClassName : the object's class\n"
                     + "         \\+- targetBehaviorName : the object's class\n"
                     + " \n"
-                    + "The methods of arguments 'o'\n"
-                    + "    o.println(java.lang.String)\n"
+                    + "The method sign of arguments 'o'\n"
+                    + "    o.print(java.lang.String);\n"
+                    + "    o.println(java.lang.String);\n"
                     + " \n"
     )
     private File scriptFile;
@@ -158,8 +157,12 @@ public class JavaScriptCommand extends Command {
             this.sender = sender;
         }
 
-        public void println(String msg) {
+        public void print(String msg) {
             sender.send(false, msg);
+        }
+
+        public void println(String msg) {
+            sender.send(false, msg+"\n");
         }
 
     }

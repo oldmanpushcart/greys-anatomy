@@ -47,7 +47,9 @@ public final class ProbeJobs {
             this.id = id;
             final File dir = new File(REST_DIR);
             if( !dir.exists() ) {
-                dir.mkdir();
+                if(!dir.mkdir()) {
+                    throw new IOException(String.format("create greys's temp dir:%s failed.",REST_DIR));
+                }
             }
             jobFile = new File(REST_DIR + id + REST_FILE_EXT);
             jobFile.createNewFile();
@@ -128,10 +130,10 @@ public final class ProbeJobs {
     public static void killJob(int id) {
         Job job = jobs.get(id);
         if (null != job) {
-            job.isAlive = false;
-            job.isKilled = true;
             try {
-                job.listener.destroy();
+                if( null != job.listener ) {
+                    job.listener.destroy();
+                }
             } catch (Throwable t) {
                 logger.warn("destroy job listener failed, jobId={}", id, t);
             }
@@ -143,6 +145,10 @@ public final class ProbeJobs {
                 logger.warn("close jobFile failed. jobId={}",id, e);
             }
             JLS.removeJob(id);
+
+            job.isAlive = false;
+            job.isKilled = true;
+
         }
     }
 

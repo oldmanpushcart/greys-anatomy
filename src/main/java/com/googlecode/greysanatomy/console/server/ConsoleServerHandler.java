@@ -10,6 +10,7 @@ import com.googlecode.greysanatomy.console.rmi.req.ReqCmd;
 import com.googlecode.greysanatomy.console.rmi.req.ReqGetResult;
 import com.googlecode.greysanatomy.console.rmi.req.ReqHeart;
 import com.googlecode.greysanatomy.console.rmi.req.ReqKillJob;
+import com.googlecode.greysanatomy.exception.SessionTimeOutException;
 import com.googlecode.greysanatomy.probe.ProbeJobs;
 import com.googlecode.greysanatomy.util.JvmUtils;
 import com.googlecode.greysanatomy.util.JvmUtils.ShutdownHook;
@@ -73,6 +74,15 @@ public class ConsoleServerHandler {
         final RespResult respResult = new RespResult();
         respResult.setSessionId(cmd.getGaSessionId());
         respResult.setJobId(createJob());
+
+
+        // bugfix reg job when an job was created.
+        try {
+            SessionJobsHolder.registJob(cmd.getGaSessionId(), respResult.getJobId());
+        } catch (SessionTimeOutException e) {
+            throw new IOException(String.format("session[sessionId=%s] was timeout.",cmd.getGaSessionId()), e);
+        }
+
         workers.execute(new Runnable() {
 
             @Override
@@ -122,6 +132,12 @@ public class ConsoleServerHandler {
         read(req.getJobId(), req.getPos(), respResult);
         respResult.setFinish(isFinish(respResult.getMessage()));
 //        logger.info("debug for req={},respResult.message={}",req,respResult.getMessage());
+
+        // bugfix, when got an finish flag, kill this job
+        if( respResult.isFinish() ) {
+            SessionJobsHolder.unRegistJob(req.getGaSessionId(), req.getJobId());
+        }
+
         return respResult;
     }
 
