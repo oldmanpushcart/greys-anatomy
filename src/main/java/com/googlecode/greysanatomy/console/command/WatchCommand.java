@@ -20,10 +20,10 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
 @RiscCmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
         eg = {
-                "watch -b org\\.apache\\.commons\\.lang\\.StringUtils isEmpty p.params[0]",
-                "watch -f org\\.apache\\.commons\\.lang\\.StringUtils isEmpty p.returnObj",
-                "watch -bf .*StringUtils isEmpty p.params[0]",
-                "watch .*StringUtils isEmpty p.params[0]",
+                "watch -b org\\.apache\\.commons\\.lang\\.StringUtils isBlank p.params[0]",
+                "watch -f org\\.apache\\.commons\\.lang\\.StringUtils isBlank p.returnObj",
+                "watch -bf .*StringUtils isBlank p.params[0]",
+                "watch .*StringUtils isBlank p.params[0]",
         })
 public class WatchCommand extends Command {
 
