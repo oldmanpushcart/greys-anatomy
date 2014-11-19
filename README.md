@@ -10,9 +10,11 @@
 * [姜小逸又胖了](http://weibo.com/chengtd)
 
 
-## Greys介绍
+## 相关文档
 
-* [Greys介绍](https://github.com/oldmanpushcart/greys-anatomy/wiki)
+* [关于软件](https://github.com/oldmanpushcart/greys-anatomy/wiki)
+* [程序安装](https://github.com/oldmanpushcart/greys-anatomy/wiki/installing)
+* [入门说明](https://github.com/oldmanpushcart/greys-anatomy/wiki/Getting-Start)
 
 ## 程序安装：
 
@@ -24,7 +26,7 @@ curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
 
 ### 1.5.3
 
-* 实现record命令
+* 实现TimeTunnel命令
 
 ### 1.5.2
 
