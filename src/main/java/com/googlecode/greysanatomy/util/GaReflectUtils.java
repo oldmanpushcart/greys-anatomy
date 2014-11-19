@@ -245,7 +245,8 @@ public class GaReflectUtils {
      */
     @SuppressWarnings("unchecked")
     public static <T> T getFieldValueByFieldName(Object target, String fieldName) throws IllegalArgumentException, IllegalAccessException {
-        if (StringUtils.isEmpty(fieldName)) {
+        if (null == fieldName
+                || fieldName.length() == 0) {
             return (T) target;
         }
         return (T) getFieldValueByField(target, getField(target.getClass(), fieldName));
