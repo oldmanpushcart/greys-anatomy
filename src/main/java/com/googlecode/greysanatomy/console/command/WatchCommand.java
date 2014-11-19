@@ -51,7 +51,8 @@ public class WatchCommand extends Command {
                     + "    \\+- throwExp     : the throw exception of methods\n"
                     + "    \\+- target\n"
                     + "         \\+- targetThis  : the object entity\n"
-                    + "         \\+- targetClass : the object's class"
+                    + "         \\+- targetClassName : the object's class\n"
+                    + "         \\+- targetBehaviorName : the object's class\n"
     )
 
     private String expression;

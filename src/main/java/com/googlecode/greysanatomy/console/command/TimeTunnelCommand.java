@@ -98,7 +98,8 @@ public class TimeTunnelCommand extends Command {
                     + "    \\+- throwExp     : the throw exception of methods\n"
                     + "    \\+- target\n"
                     + "         \\+- targetThis  : the object entity\n"
-                    + "         \\+- targetClass : the object's class\n"
+                    + "         \\+- targetClassName : the object's class\n"
+                    + "         \\+- targetBehaviorName : the object's class\n"
                     + " \n")
     private String watchExpress = StringUtils.EMPTY;
 

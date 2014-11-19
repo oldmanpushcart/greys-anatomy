@@ -46,7 +46,37 @@ public class JavaScriptCommand extends Command {
     @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
     private String methodRegex;
 
-    @RiscNamedArg(named = "f", hasValue = true, description = "the file of javascript")
+    @RiscNamedArg(named = "f", hasValue = true, description = "the file of javascript",
+            description2 = ""
+                    + " \n"
+                    + "For example\n"
+                    + "    function before(p,o)\n"
+                    + "    {\n"
+                    + "        o.println(p.target.targetBehaviorName+': '+p.parameters[0]+'\\n');\n"
+                    + "    }\n"
+                    + " \n"
+                    + "The functions of js:\n"
+                    + "    function before(p,o);    // method call at each before\n"
+                    + "    function success(p,o);   // method call at each success\n"
+                    + "    function exception(p,o); // method call at each exception\n"
+                    + "    function finish(p,o);    // method call at each finished\n"
+                    + "    function create(p,o);    // javascript execute at create\n"
+                    + "    function destroy(p,o);   // javascript execute at destroy\n"
+                    + " \n"
+                    + "The structure of arguments 'p'\n"
+                    + "    p.\n"
+                    + "    \\+- params[0..n] : the parameters of methods\n"
+                    + "    \\+- returnObj    : the return object of methods\n"
+                    + "    \\+- throwExp     : the throw exception of methods\n"
+                    + "    \\+- target\n"
+                    + "         \\+- targetThis  : the object entity\n"
+                    + "         \\+- targetClassName : the object's class\n"
+                    + "         \\+- targetBehaviorName : the object's class\n"
+                    + " \n"
+                    + "The methods of arguments 'o'\n"
+                    + "    o.println(java.lang.String)\n"
+                    + " \n"
+    )
     private File scriptFile;
 
     /**
@@ -147,7 +177,7 @@ public class JavaScriptCommand extends Command {
 
         void exception(Advice p, Output output, Map<String, Object> jls, TLS tls);
 
-        void finished(Advice p, Output output, Map<String, Object> jls, TLS tls);
+        void finish(Advice p, Output output, Map<String, Object> jls, TLS tls);
 
         void create(Output output, Map<String, Object> jls, TLS tls);
 
@@ -224,7 +254,7 @@ public class JavaScriptCommand extends Command {
                     @Override
                     public void onFinish(final Advice p) {
                         try {
-                            scriptListener.finished(p, output, JLS.getJLS(info.getJobId()), (TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));
+                            scriptListener.finish(p, output, JLS.getJLS(info.getJobId()), (TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));
                         } catch (Throwable t) {
                             output.println(t.getMessage());
                         }
