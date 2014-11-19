@@ -1,15 +1,31 @@
-```
-                                                        _
-  ____  ____ _____ _   _  ___ _____ _____ ____  _____ _| |_ ___  ____  _   _
- / _  |/ ___) ___ | | | |/___|_____|____ |  _ \(____ (_   _) _ \|    \| | | |
-( (_| | |   | ____| |_| |___ |     / ___ | | | / ___ | | || |_| | | | | |_| |
- \___ |_|   |_____)\__  (___/      \_____|_| |_\_____|  \__)___/|_|_|_|\__  |
-(_____|           (____/                                              (____/
-                                                  +-+-+-+-+-+-+-+-+-+-+-+-+-+
-                                                  |v|e|r|s|i|o|n|:|1|.|5|.|3|
-                                                  +-+-+-+-+-+-+-+-+-+-+-+-+-+
-```
-[greys介绍](https://github.com/chengtongda/greys-anatomy/wiki/Greys-Anatomy)
+![LOGO icon](http://ompc.oss.aliyuncs.com/greys/LOGO.png?timestamp=10001)
 
-程序安装：
+## 最新版本
+
+* **VERSION : 1.5.3**
+
+## 维护者
+
+* [李夏驰](http://www.weibo.com/vlinux)
+* [姜小逸又胖了](http://weibo.com/chengtd)
+
+
+## Greys介绍
+
+* [Greys介绍](https://github.com/oldmanpushcart/greys-anatomy/wiki)
+
+## 程序安装：
+
+```shell
 curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
+```
+
+## 更新日志
+
+### 1.5.3
+
+* 实现record命令
+
+### 1.5.2
+
+* 优化性能
