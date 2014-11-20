@@ -2,7 +2,7 @@
 
 ## 最新版本
 
-* **VERSION : 1.5.3**
+* **VERSION : 1.5.3.1**
 
 ## 维护者
 
@@ -23,6 +23,10 @@ curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
 ```
 
 ## 更新日志
+
+### 1.5.3.1
+
+* 修复创建临时目录的BUG
 
 ### 1.5.3
 

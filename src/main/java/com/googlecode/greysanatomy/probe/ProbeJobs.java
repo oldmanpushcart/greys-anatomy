@@ -47,7 +47,7 @@ public final class ProbeJobs {
             this.id = id;
             final File dir = new File(REST_DIR);
             if( !dir.exists() ) {
-                if(!dir.mkdir()) {
+                if(!dir.mkdirs()) {
                     throw new IOException(String.format("create greys's temp dir:%s failed.",REST_DIR));
                 }
             }
