@@ -2,7 +2,7 @@
 
 ## 最新版本
 
-* **VERSION : 1.5.3.1**
+* **VERSION : 1.5.3.2**
 
 ## 维护者
 
@@ -21,17 +21,3 @@
 ```shell
 curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
 ```
-
-## 更新日志
-
-### 1.5.3.1
-
-* 修复创建临时目录的BUG
-
-### 1.5.3
-
-* 实现TimeTunnel命令
-
-### 1.5.2
-
-* 优化性能
