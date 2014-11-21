@@ -7,8 +7,6 @@ import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
-import com.googlecode.greysanatomy.util.GaStringUtils;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +27,7 @@ import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regis
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 import static com.googlecode.greysanatomy.util.GaStringUtils.summary;
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.*;
+import static com.googlecode.greysanatomy.util.GaStringUtils.*;
 
 /**
  * 时光隧道命令<br/>
@@ -101,7 +99,7 @@ public class TimeTunnelCommand extends Command {
                     + "         \\+- targetClassName : the object's class\n"
                     + "         \\+- targetBehaviorName : the object's class\n"
                     + " \n")
-    private String watchExpress = StringUtils.EMPTY;
+    private String watchExpress = EMPTY;
 
 
 //    // play the index TimeTunnel
@@ -119,7 +117,7 @@ public class TimeTunnelCommand extends Command {
     private void checkArguments() {
 
         // 检查p/w/d参数是否有i参数配套
-        if (StringUtils.isNotBlank(watchExpress)
+        if (isNotBlank(watchExpress)
 //                || isPlay
                 || isDelete) {
 
@@ -131,10 +129,10 @@ public class TimeTunnelCommand extends Command {
 
         // 在r参数下class-regex,method-regex由选填变成必填
         if (isTimeTunnel) {
-            if (StringUtils.isBlank(classRegex)) {
+            if (isBlank(classRegex)) {
                 throw new IllegalArgumentException("miss class-regex, please type the regex express to match class.");
             }
-            if (StringUtils.isBlank(methodRegex)) {
+            if (isBlank(methodRegex)) {
                 throw new IllegalArgumentException("miss method-regex, please type the regex express to match method.");
             }
         }
@@ -155,7 +153,7 @@ public class TimeTunnelCommand extends Command {
                 && !isTimeTunnel
                 && !isDelete
                 && !isDeleteAll
-                && StringUtils.isBlank(watchExpress)
+                && isBlank(watchExpress)
                 && !isList
 //                && !isPlay
                 ) {
@@ -322,11 +320,11 @@ public class TimeTunnelCommand extends Command {
         activeJob(result.getId());
 
         final StringBuilder message = new StringBuilder();
-        message.append(GaStringUtils.LINE);
+        message.append(LINE);
         message.append(format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
                 result.getModifiedClasses().size(),
                 result.getModifiedBehaviors().size()));
-        message.append(GaStringUtils.ABORT_MSG).append("\n");
+        message.append(ABORT_MSG).append("\n");
         sender.send(false, message.toString());
 
     }
@@ -453,8 +451,8 @@ public class TimeTunnelCommand extends Command {
         final StringBuilder detailSB = new StringBuilder();
         final String headFormat = "|%20s|%-" + maxColLen + "s|";
         final String lineSplit = new StringBuilder()
-                .append("+").append(StringUtils.repeat("-", 20))
-                .append("+").append(StringUtils.repeat("-", maxColLen))
+                .append("+").append(repeat("-", 20))
+                .append("+").append(repeat("-", maxColLen))
                 .append("+\n")
                 .toString();
 
@@ -527,7 +525,7 @@ public class TimeTunnelCommand extends Command {
                     // delete all the TimeTunnel
                     doDeleteAll(sender);
 
-                } else if (StringUtils.isNotBlank(watchExpress)) {
+                } else if (isNotBlank(watchExpress)) {
 
                     // watch TimeTunnel by js express
                     doWatch(sender);

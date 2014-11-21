@@ -8,7 +8,6 @@ import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
-import org.apache.commons.lang.StringUtils;
 
 import java.lang.instrument.Instrumentation;
 import java.text.DecimalFormat;
@@ -116,7 +115,7 @@ public class MonitorCommand extends Command {
                 return false;
             }
             Key okey = (Key) obj;
-            return StringUtils.equals(okey.className, className) && StringUtils.equals(okey.behaviorName, behaviorName);
+            return GaStringUtils.equals(okey.className, className) && GaStringUtils.equals(okey.behaviorName, behaviorName);
         }
 
     }

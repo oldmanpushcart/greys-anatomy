@@ -1,7 +1,5 @@
 package com.googlecode.greysanatomy;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -46,10 +44,10 @@ public class Configer {
      */
     public static Configer toConfiger(String toString) {
         final Configer configer = new Configer();
-        final String[] pvs = StringUtils.split(toString, ";");
+        final String[] pvs = split(toString, ";");
         for (String pv : pvs) {
             try {
-                final String[] strs = StringUtils.split(pv, "=");
+                final String[] strs = split(pv, "=");
                 final String p = strs[0];
                 final String v = decode(strs[1]);
                 final Field field = getField(Configer.class, p);

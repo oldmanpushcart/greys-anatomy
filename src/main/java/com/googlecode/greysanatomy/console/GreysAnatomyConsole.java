@@ -14,7 +14,6 @@ import com.googlecode.greysanatomy.exception.ConsoleException;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import jline.console.ConsoleReader;
 import jline.console.KeyMap;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +23,9 @@ import java.io.IOException;
 import java.io.Writer;
 import java.rmi.NoSuchObjectException;
 
-import static org.apache.commons.lang.StringUtils.EMPTY;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static com.googlecode.greysanatomy.util.GaStringUtils.isBlank;
+import static com.googlecode.greysanatomy.util.GaStringUtils.EMPTY;
+
 
 /**
  * 控制台
@@ -161,13 +161,11 @@ public class GreysAnatomyConsole {
             //如果任务结束，或还没有注册好job  则不读
             if (isF
                     || sessionId == 0
-//                    || StringUtils.isEmpty(jobId)) {
                     || jobId == 0) {
                 return;
             }
 
             //如果当前获取结果的job不是正在执行的job，则从0开始读
-//            if (!StringUtils.equals(currentJob, jobId)) {
             if (currentJob != jobId) {
                 pos = 0;
                 currentJob = jobId;
@@ -235,7 +233,7 @@ public class GreysAnatomyConsole {
                 //content += "\n------------------------------end------------------------------\n";
                 content += "\n";
             }
-            if (!StringUtils.isEmpty(content)) {
+            if (!GaStringUtils.isEmpty(content)) {
                 write(content);
                 redrawLine();
             }

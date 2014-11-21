@@ -224,6 +224,5 @@ public class ConsoleServerHandler {
 
         return false;
 
-//        return !StringUtils.isEmpty(message) ? message.endsWith(END_MASK) : false;
     }
 }

@@ -4,7 +4,7 @@ import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
 import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
 import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
-import org.apache.commons.lang.StringUtils;
+import static com.googlecode.greysanatomy.util.GaStringUtils.*;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -34,7 +34,7 @@ public class HelpCommand extends Command {
             public void action(final ConsoleServer consoleServer, final Info info, final Sender sender) throws Throwable {
 //                sender.send(true, GaStringUtils.getLogo());
 
-                if (StringUtils.isBlank(cmd)
+                if (isBlank(cmd)
                         || !Commands.getInstance().listRiscCommands().containsKey(cmd)) {
                     sender.send(true, mainHelp());
                 } else {
@@ -117,9 +117,9 @@ public class HelpCommand extends Command {
                     sb.append("\n");
 
                     int len = diff + 2 + named.length() + 3;
-                    if (!StringUtils.isBlank(namedArg.description2())) {
+                    if (!isBlank(namedArg.description2())) {
 
-                        for (String split : StringUtils.split(namedArg.description2(), "\n")) {
+                        for (String split : split(namedArg.description2(), "\n")) {
                             for (int j = 0; j < len; j++) {
                                 sb.append(" ");
                             }
@@ -143,9 +143,9 @@ public class HelpCommand extends Command {
                     sb.append("\n");
 
                     int len = diff + 2 + indexArg.name().length() + 3;
-                    if (!StringUtils.isBlank(indexArg.description2())) {
+                    if (!isBlank(indexArg.description2())) {
 
-                        for (String split : StringUtils.split(indexArg.description2(), "\n")) {
+                        for (String split : split(indexArg.description2(), "\n")) {
                             for (int j = 0; j < len; j++) {
                                 sb.append(" ");
                             }

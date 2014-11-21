@@ -1,7 +1,5 @@
 package com.googlecode.greysanatomy.util;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -15,7 +13,8 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import static com.googlecode.greysanatomy.util.GaCheckUtils.isIn;
+import static com.googlecode.greysanatomy.util.GaCheckUtils.*;
+import com.googlecode.greysanatomy.util.GaStringUtils;
 
 /**
  * 反射工具类
@@ -206,7 +205,7 @@ public class GaReflectUtils {
      */
     public static Field getField(Class<?> clazz, String name) {
         for (Field field : getFields(clazz)) {
-            if (StringUtils.equals(field.getName(), name)) {
+            if (GaStringUtils.equals(field.getName(), name)) {
                 return field;
             }
         }//for

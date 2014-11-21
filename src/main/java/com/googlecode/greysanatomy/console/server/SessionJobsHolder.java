@@ -2,7 +2,6 @@ package com.googlecode.greysanatomy.console.server;
 
 import com.googlecode.greysanatomy.console.rmi.req.GaSession;
 import com.googlecode.greysanatomy.exception.SessionTimeOutException;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

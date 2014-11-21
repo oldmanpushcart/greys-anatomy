@@ -1,7 +1,6 @@
 package com.googlecode.greysanatomy.util;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer;
-import org.apache.commons.lang.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -16,7 +15,7 @@ public class GaDetailUtils {
     private static final String STEP_TAB = "                    ";
     private static final String STEP_FLOW_TAB = "  ";
     private static final String FLOW_TAB = "                  ";
-    private static final String NULL = StringUtils.EMPTY;
+    private static final String NULL = GaStringUtils.EMPTY;
 
     public static String detail(Class<?> clazz) {
 
