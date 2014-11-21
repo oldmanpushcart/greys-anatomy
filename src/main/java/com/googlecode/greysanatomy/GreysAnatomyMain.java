@@ -5,19 +5,19 @@ import com.googlecode.greysanatomy.exception.PIDNotMatchException;
 import com.googlecode.greysanatomy.util.HostUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Hello world!
  */
 public class GreysAnatomyMain {
 
-    private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
+    private static final Logger logger = Logger.getLogger("greysanatomy");
     public static final String JARFILE = GreysAnatomyMain.class.getProtectionDomain().getCodeSource().getLocation().getFile();
 
     public GreysAnatomyMain(String[] args) throws Exception {
@@ -128,9 +128,13 @@ public class GreysAnatomyMain {
             ConsoleClient.getInstance(configer);
             return true;
         } catch (java.rmi.ConnectException ce) {
-            logger.warn("target{{}:{}} RMI was shutdown, console will be exit.", configer.getTargetIp(), configer.getTargetPort());
+            if(logger.isLoggable(Level.WARNING)){
+                logger.warning(String.format("target{%s:%s} RMI was shutdown, console will be exit.", configer.getTargetIp(), configer.getTargetPort()));
+            }
         } catch (PIDNotMatchException pidnme) {
-            logger.warn("target{{}:{}} PID was not match, console will be exit.", configer.getTargetIp(), configer.getTargetPort());
+            if(logger.isLoggable(Level.WARNING)){
+                logger.warning(String.format("target{%s:%s} PID was not match, console will be exit.", configer.getTargetIp(), configer.getTargetPort()));
+            }
         }
         return false;
     }
@@ -141,7 +145,9 @@ public class GreysAnatomyMain {
         try {
             new GreysAnatomyMain(args);
         } catch (Throwable t) {
-            logger.error("start greys-anatomy failed. because " + t.getMessage(), t);
+            if(logger.isLoggable(Level.SEVERE)){
+                logger.log(Level.SEVERE,String.format("start greys-anatomy failed. because %s", t.getMessage()), t);
+            }
             System.exit(-1);
         }
 

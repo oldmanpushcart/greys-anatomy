@@ -8,8 +8,6 @@ import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -21,6 +19,8 @@ import java.io.FileReader;
 import java.lang.instrument.Instrumentation;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
@@ -38,7 +38,7 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
         })
 public class JavaScriptCommand extends Command {
 
-    private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
+    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
@@ -214,12 +214,16 @@ public class JavaScriptCommand extends Command {
                     scriptListener = invoke.getInterface(ScriptListener.class);
                 } catch (FileNotFoundException e) {
                     final String msg = "script file not exist.";
-                    logger.warn(msg, e);
+                    if(logger.isLoggable(Level.WARNING)) {
+                        logger.log(Level.WARNING, msg, e);
+                    }
                     sender.send(true, msg);
                     return;
                 } catch (ScriptException e) {
                     final String msg = "script execute failed." + e.getMessage();
-                    logger.warn(msg, e);
+                    if(logger.isLoggable(Level.WARNING)) {
+                        logger.log(Level.WARNING, msg, e);
+                    }
                     sender.send(true, msg);
                     return;
                 }

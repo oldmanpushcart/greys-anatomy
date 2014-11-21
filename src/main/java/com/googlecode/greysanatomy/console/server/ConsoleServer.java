@@ -8,8 +8,6 @@ import com.googlecode.greysanatomy.console.rmi.req.ReqHeart;
 import com.googlecode.greysanatomy.console.rmi.req.ReqKillJob;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.HostUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
 import java.net.MalformedURLException;
@@ -17,6 +15,8 @@ import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * 控制台服务器
@@ -27,7 +27,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
 
     private static final long serialVersionUID = 7625219488001802803L;
 
-    private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
+    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private final ConsoleServerHandler serverHandler;
     private final Configer configer;
@@ -67,7 +67,9 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
                 bind = true;
             } catch (NotBoundException e) {
                 // 只有没有绑定才会去绑
-                logger.info("rebind : " + bindName);
+                if(logger.isLoggable(Level.INFO)) {
+                    logger.info("rebind : " + bindName);
+                }
                 Naming.bind(bindName, this);
             }
         }
@@ -88,7 +90,9 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
             final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configer.getTargetPort());
             try {
                 Naming.unbind(bindName);
-                logger.info("unbind : " + bindName);
+                if(logger.isLoggable(Level.INFO)){
+                    logger.info("unbind : " + bindName);
+                }
             } catch (NotBoundException e) {
                 continue;
             } catch (NoSuchObjectException e) {
@@ -138,7 +142,9 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     public static synchronized ConsoleServer getInstance(Configer configer, Instrumentation inst) throws RemoteException, MalformedURLException, AlreadyBoundException {
         if (null == instance) {
             instance = new ConsoleServer(configer, inst);
-            logger.info(GaStringUtils.getLogo());
+            if(logger.isLoggable(Level.INFO)){
+                logger.info(GaStringUtils.getLogo());
+            }
         }
         return instance;
     }

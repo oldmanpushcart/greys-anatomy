@@ -1,7 +1,7 @@
 package com.googlecode.greysanatomy.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * JVM操作相关工具类
@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JvmUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
+    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     /**
      * 关闭钩子
@@ -36,16 +36,22 @@ public class JvmUtils {
      */
     public static void registShutdownHook(final String name, final ShutdownHook shutdownHook) {
 
-        logger.info("regist shutdown hook {}", name);
+        if(logger.isLoggable(Level.INFO)){
+            logger.info(String.format("regist shutdown hook %s", name));
+        }
         Runtime.getRuntime().addShutdownHook(new Thread() {
 
             @Override
             public void run() {
                 try {
                     shutdownHook.shutdown();
-                    logger.info("{} shutdown successed.", name);
+                    if(logger.isLoggable(Level.INFO)){
+                        logger.info(String.format("%s shutdown successed.", name));
+                    }
                 } catch (Throwable t) {
-                    logger.warn("{} shutdown failed, ignore it.", name, t);
+                    if(logger.isLoggable(Level.WARNING)){
+                        logger.log(Level.WARNING,String.format("%s shutdown failed, ignore it.", name),t);
+                    }
                 }
             }
 

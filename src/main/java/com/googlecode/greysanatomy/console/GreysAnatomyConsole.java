@@ -14,14 +14,14 @@ import com.googlecode.greysanatomy.exception.ConsoleException;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import jline.console.ConsoleReader;
 import jline.console.KeyMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.Writer;
 import java.rmi.NoSuchObjectException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.util.GaStringUtils.isBlank;
 import static com.googlecode.greysanatomy.util.GaStringUtils.EMPTY;
@@ -34,7 +34,7 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.EMPTY;
  */
 public class GreysAnatomyConsole {
 
-    private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
+    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private final Configer configer;
     private final ConsoleReader console;
@@ -83,7 +83,9 @@ public class GreysAnatomyConsole {
                     write("Please type help for more information...\n\n");
                 } catch (Exception e) {
                     // 这里是控制台，可能么？
-                    logger.warn("console read failed.", e);
+                    if(logger.isLoggable(Level.WARNING)){
+                        logger.log(Level.WARNING, "console read failed.", e);
+                    }
                 }
             }
         }
@@ -149,10 +151,15 @@ public class GreysAnatomyConsole {
                     Thread.sleep(500);
                 } catch (NoSuchObjectException nsoe) {
                     // 目标RMI关闭,需要退出控制台
-                    logger.warn("target RMI's server was closed, console will be exit.");
+                    if(logger.isLoggable(Level.WARNING)){
+                        logger.warning("target RMI's server was closed, console will be exit.");
+                    }
+
                     break;
                 } catch (Exception e) {
-                    logger.warn("console write failed.", e);
+                    if(logger.isLoggable(Level.WARNING)){
+                        logger.log(Level.WARNING, "console write failed.", e);
+                    }
                 }
             }
         }
@@ -177,7 +184,9 @@ public class GreysAnatomyConsole {
             write(resp);
 
             if (isQuit) {
-                logger.info("greys console will be shutdown.");
+                if(logger.isLoggable(Level.INFO)){
+                    logger.info("greys console will be shutdown.");
+                }
                 System.exit(0);
             }
 
@@ -203,7 +212,9 @@ public class GreysAnatomyConsole {
                         consoleServer.killJob(new ReqKillJob(sessionId, jobId));
                     } catch (Exception e1) {
                         // 这里是控制台，可能么？
-                        logger.warn("killJob failed.", e);
+                        if(logger.isLoggable(Level.WARNING)){
+                            logger.log(Level.WARNING, "killJob failed.", e);
+                        }
                     }
                 }
             }
@@ -252,7 +263,9 @@ public class GreysAnatomyConsole {
             writer.flush();
         } catch (IOException e) {
             // 控制台写失败，可能么？
-            logger.warn("console write failed.", e);
+            if(logger.isLoggable(Level.WARNING)){
+                logger.log(Level.WARNING, "console write failed.", e);
+            }
         }
 
     }

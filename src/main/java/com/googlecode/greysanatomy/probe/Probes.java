@@ -2,8 +2,9 @@ package com.googlecode.greysanatomy.probe;
 
 import com.googlecode.greysanatomy.probe.Advice.Target;
 import javassist.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.probe.ProbeJobs.getJobListeners;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.isListener;
@@ -32,7 +33,7 @@ import static javassist.Modifier.*;
  */
 public class Probes {
 
-    private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
+    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private static final String jobsClass = "com.googlecode.greysanatomy.probe.ProbeJobs";
     private static final String probesClass = "com.googlecode.greysanatomy.probe.Probes";
@@ -47,7 +48,9 @@ public class Probes {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
                 ((AdviceListener) getJobListeners(id)).onBefore(p);
             } catch (Throwable t) {
-                logger.warn("error at doBefore", t);
+                if(logger.isLoggable(Level.WARNING)){
+                    logger.log(Level.WARNING, "error at doBefore", t);
+                }
             }
         }
     }
@@ -59,7 +62,9 @@ public class Probes {
                 p.setReturnObj(returnObj);
                 ((AdviceListener) getJobListeners(id)).onSuccess(p);
             } catch (Throwable t) {
-                logger.warn("error at onSuccess", t);
+                if(logger.isLoggable(Level.WARNING)){
+                    logger.log(Level.WARNING, "error at onSuccess", t);
+                }
             }
             doFinish(id, targetClassName, targetBehaviorName, targetThis, args, returnObj, null);
         }
@@ -73,7 +78,9 @@ public class Probes {
                 p.setThrowException(throwException);
                 ((AdviceListener) getJobListeners(id)).onException(p);
             } catch (Throwable t) {
-                logger.warn("error at onException", t);
+                if(logger.isLoggable(Level.WARNING)){
+                    logger.log(Level.WARNING, "error at onException", t);
+                }
             }
             doFinish(id, targetClassName, targetBehaviorName, targetThis, args, null, throwException);
         }
@@ -88,7 +95,9 @@ public class Probes {
                 p.setReturnObj(returnObj);
                 ((AdviceListener) getJobListeners(id)).onFinish(p);
             } catch (Throwable t) {
-                logger.warn("error at onFinish", t);
+                if(logger.isLoggable(Level.WARNING)){
+                    logger.log(Level.WARNING, "error at onFinish", t);
+                }
             }
         }
     }

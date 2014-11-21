@@ -7,8 +7,6 @@ import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -21,6 +19,8 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
@@ -46,7 +46,7 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.*;
         })
 public class TimeTunnelCommand extends Command {
 
-    private final Logger logger = LoggerFactory.getLogger("greysanatomy");
+    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     // the TimeTunnels collection
     private static final Map<Integer, TimeTunnel> timeTunnels = new LinkedHashMap<Integer, TimeTunnel>();
@@ -307,7 +307,9 @@ public class TimeTunnelCommand extends Command {
                     sender.send(false, lineSB.toString());
 
                 } catch (Throwable t) {
-                    logger.warn("TimeTunnel failed.", t);
+                    if(logger.isLoggable(Level.WARNING)) {
+                        logger.log(Level.WARNING, "TimeTunnel failed.", t);
+                    }
                 }
 
             }

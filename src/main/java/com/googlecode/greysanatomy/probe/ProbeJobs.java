@@ -1,8 +1,6 @@
 package com.googlecode.greysanatomy.probe;
 
 import com.googlecode.greysanatomy.console.command.JavaScriptCommand.JLS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -11,10 +9,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class ProbeJobs {
 
-    private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
+    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private static final String REST_DIR = System.getProperty("java.io.tmpdir")//执行结果输出文件路径
             + File.separator + "greysdata"
@@ -135,14 +135,18 @@ public final class ProbeJobs {
                     job.listener.destroy();
                 }
             } catch (Throwable t) {
-                logger.warn("destroy job listener failed, jobId={}", id, t);
+                if(logger.isLoggable(Level.WARNING)){
+                    logger.log(Level.WARNING,String.format("destroy job listener failed, jobId=%s", id), t);
+                }
             }
             try {
                 job.jobReader.close();
                 job.jobWriter.close();
                 job.jobFile.deleteOnExit();
             }catch(IOException e) {
-                logger.warn("close jobFile failed. jobId={}",id, e);
+                if(logger.isLoggable(Level.WARNING)){
+                    logger.log(Level.WARNING,String.format("close jobFile failed. jobId=%s", id), e);
+                }
             }
             JLS.removeJob(id);
 

@@ -6,8 +6,6 @@ import com.googlecode.greysanatomy.probe.ProbeJobs;
 import com.googlecode.greysanatomy.probe.Probes;
 import com.googlecode.greysanatomy.util.GaReflectUtils;
 import javassist.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
@@ -18,12 +16,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.probe.ProbeJobs.register;
 
 public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
-    private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
+    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private final String prefClzRegex;
     private final String prefMthRegex;
@@ -88,8 +88,13 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
                 data = cc.toBytecode();
             } catch (Exception e) {
-                logger.debug("transform class failed. class={}, classloader={}", new Object[]{className, loader, e});
-                logger.info("transform class failed. class={}, classloader={}", className, loader);
+                if (logger.isLoggable(Level.FINEST)) {
+                    logger.log(Level.FINEST, String.format("transform class failed. class=%s, classloader=%s",
+                            className, loader), e);
+                }
+                if( logger.isLoggable(Level.INFO) ) {
+                    logger.info(String.format("transform class failed. class=%s, classloader=%s", className, loader));
+                }
                 data = null;
             } finally {
                 if (null != cc) {
@@ -184,13 +189,17 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                 int total = modifiedClasses.size();
                 for (final Class<?> clazz : modifiedClasses) {
                     try {
-                        if(ProbeJobs.isJobKilled(info.getJobId()) ) {
-                            logger.info("job[id={}] was killed, stop this retransform.",info.getJobId());
+                        if (ProbeJobs.isJobKilled(info.getJobId())) {
+                            if( logger.isLoggable(Level.INFO) ) {
+                                logger.info(String.format("job[id=%s] was killed, stop this retransform.", info.getJobId()));
+                            }
                             break;
                         }
                         instrumentation.retransformClasses(clazz);
                     } catch (Throwable t) {
-                        logger.warn("transform failed, class={}.", clazz, t);
+                        if( logger.isLoggable(Level.WARNING) ) {
+                            logger.log(Level.WARNING, String.format("transform failed, class=%s.", clazz), t);
+                        }
                     } finally {
                         if (null != progress) {
                             progress.progress(++index, total);

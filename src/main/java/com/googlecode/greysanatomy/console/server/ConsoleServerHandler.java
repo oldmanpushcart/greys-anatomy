@@ -14,8 +14,6 @@ import com.googlecode.greysanatomy.exception.SessionTimeOutException;
 import com.googlecode.greysanatomy.probe.ProbeJobs;
 import com.googlecode.greysanatomy.util.JvmUtils;
 import com.googlecode.greysanatomy.util.JvmUtils.ShutdownHook;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -25,6 +23,8 @@ import java.nio.CharBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.*;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.createJob;
@@ -36,7 +36,7 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.createJob;
  */
 public class ConsoleServerHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger("greysanatomy");
+    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private final ConsoleServer consoleServer;
     private final Instrumentation inst;
@@ -107,7 +107,9 @@ public class ConsoleServerHandler {
                     action.action(consoleServer, info, sender);
                 } catch (Throwable t) {
                     // ÷¥––√¸¡Ó ß∞‹
-                    logger.warn("do action failed.", t);
+                    if(logger.isLoggable(Level.WARNING)){
+                        logger.log(Level.WARNING,"do action failed.", t);
+                    }
                     write(respResult.getJobId(), true, "do action failed. cause : " + t.getMessage());
                     return;
                 }
@@ -184,7 +186,9 @@ public class ConsoleServerHandler {
                 writer.append(message);
                 writer.flush();
             } catch (IOException e) {
-                logger.warn("write job message failed, jobId={}.", jobId, e);
+                if(logger.isLoggable(Level.WARNING)){
+                    logger.log(Level.WARNING, String.format("write job message failed, jobId=%s.", jobId), e);
+                }
             }
         }
 
@@ -209,7 +213,9 @@ public class ConsoleServerHandler {
                 respResult.setPos(newPos);
                 respResult.setMessage(buffer.toString());
             } catch (IOException e) {
-                logger.warn("read job failed, jobId={}.", jobId, e);
+                if(logger.isLoggable(Level.WARNING)){
+                    logger.log(Level.WARNING, String.format("read job failed, jobId=%s.", jobId), e);
+                }
             }
         }
 
