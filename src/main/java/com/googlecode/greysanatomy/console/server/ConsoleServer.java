@@ -35,6 +35,17 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     private Registry registry;
     private boolean bind = false;
 
+    static {
+
+        // fix java.rmi.server.hostname, if it was invalid
+        final String javaRmiServerHostname = System.getProperty("java.rmi.server.hostname");
+        if( GaStringUtils.isNotBlank(javaRmiServerHostname)
+                && !HostUtils.getAllLocalHostIP().contains(javaRmiServerHostname)) {
+            System.setProperty("java.rmi.server.hostname", "127.0.0.1");
+        }
+
+    }
+
     /**
      * 构造控制台服务器
      *
@@ -63,6 +74,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
         for (String ip : HostUtils.getAllLocalHostIP()) {
             final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configer.getTargetPort());
             try {
+                logger.info("lookup for :"+bindName);
                 Naming.lookup(bindName);
                 bind = true;
             } catch (NotBoundException e) {
