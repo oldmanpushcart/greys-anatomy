@@ -54,7 +54,7 @@ public final class ProbeJobs {
             jobFile = new File(REST_DIR + id + REST_FILE_EXT);
             jobFile.createNewFile();
             jobReader = new BufferedReader(new FileReader(jobFile));
-            jobWriter = new BufferedWriter(new FileWriter(jobFile));
+            jobWriter = new FileWriter(jobFile);
         }
 
     }
