@@ -1,8 +1,9 @@
 package com.googlecode.greysanatomy.util;
 
-import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer;
+import com.googlecode.greysanatomy.console.command.MonitorCommand;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.CodeSource;
@@ -68,7 +69,7 @@ public class GaDetailUtils {
                 if (interfaceSB.length() > 0) {
                     interfaceSB.deleteCharAt(interfaceSB.length() - 1);
                 }
-                interfaceSB.append("\n");
+//                interfaceSB.append("\n");
             }
             detailSB.append(format("%16s : %s\n", "interfaces", interfaceSB.toString()));
         }
@@ -113,6 +114,53 @@ public class GaDetailUtils {
                 loaderSB.append(NULL).append("\n");
             }//if
             detailSB.append(format("%16s : %s", "class-loader", loaderSB.toString()));
+        }
+
+        // field
+        {
+            StringBuilder fieldSB = new StringBuilder();
+            Field[] fields = clazz.getDeclaredFields();
+            if (null != fields
+                    && fields.length > 0) {
+
+                for (Field field : fields) {
+
+                    fieldSB.append("\n");
+                    fieldSB.append(format("%24s : %s\n", "name", field.getName()));
+                    fieldSB.append(format("%24s : %s\n", "type", field.getType()));
+                    fieldSB.append(format("%24s : %s\n", "modifier", tranModifier(field.getModifiers())));
+
+                    StringBuilder annoSB = new StringBuilder();
+                    Annotation[] annos = field.getAnnotations();
+                    if (null != annos && annos.length > 0) {
+                        for (Annotation anno : annos) {
+                            annoSB.append(getClassName(anno.annotationType())).append(",");
+                        }
+                        if (annoSB.length() > 0) {
+                            annoSB.deleteCharAt(annoSB.length() - 1);
+                        }
+                        fieldSB.append(format("%24s : %s\n", "annotation", annoSB.toString()));
+                    }
+
+
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        // final boolean isAccessible =  field.isAccessible();
+                        try {
+                            field.setAccessible(true);
+                            fieldSB.append(format("%24s : %s\n", "value", field.get(null)));
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } finally {
+                            // field.setAccessible(isAccessible);
+                        }
+                    }//if
+
+                }//for
+
+                detailSB.append(format("%16s : %s", "fields", fieldSB.toString()));
+
+            }
+
         }
 
         return detailSB.toString();
@@ -229,7 +277,7 @@ public class GaDetailUtils {
 
     public static void main(String... args) {
 
-        Class<?> clazz = GreysAnatomyClassFileTransformer.class;
+        Class<?> clazz = MonitorCommand.class;
         System.out.println(detail(clazz));
 
 
