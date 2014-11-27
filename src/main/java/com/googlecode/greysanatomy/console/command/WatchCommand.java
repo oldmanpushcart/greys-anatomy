@@ -52,7 +52,7 @@ public class WatchCommand extends Command {
                     + "    \\+- target\n"
                     + "         \\+- targetThis  : the object entity\n"
                     + "         \\+- targetClassName : the object's class\n"
-                    + "         \\+- targetBehaviorName : the object's class\n"
+                    + "         \\+- targetBehaviorName : the constructor or method name\n"
     )
 
     private String expression;
