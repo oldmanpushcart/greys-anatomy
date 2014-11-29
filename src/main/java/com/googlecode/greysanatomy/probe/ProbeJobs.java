@@ -71,8 +71,8 @@ public final class ProbeJobs {
     public static void register(Integer id, JobListener listener) {
         Job job = jobs.get(id);
         if (null != job) {
-            job.listener = listener;
             listener.create();
+            job.listener = listener;
         }
     }
 

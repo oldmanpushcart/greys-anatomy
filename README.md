@@ -1,4 +1,4 @@
-![LOGO icon](http://ompc.oss.aliyuncs.com/greys/LOGO.png?timestamp=10001)
+![LOGO icon](https://raw.githubusercontent.com/oldmanpushcart/images/master/greys/greys-logo-readme.png)
 
 ## 最新版本
 
