@@ -124,8 +124,8 @@ public class Probes {
         }
 
         // ¹ýÂËµômainº¯Êý
-        if( isStatic(ccMod)
-                && isPublic(ccMod)
+        if( isStatic(cbMod)
+                && isPublic(cbMod)
                 && GaStringUtils.equals(cb.getName(),"main")) {
             return true;
         }
