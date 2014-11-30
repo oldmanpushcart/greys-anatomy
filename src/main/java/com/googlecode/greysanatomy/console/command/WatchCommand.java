@@ -47,13 +47,13 @@ public class WatchCommand extends Command {
                     + "    : target.targetThis.getClass()\n"
                     + " \n"
                     + "The structure of 'advice'\n"
-                    + "    \\params[0..n] : the parameters of methods\n"
-                    + "    \\returnObj    : the return object of methods\n"
-                    + "    \\throwExp     : the throw exception of methods\n"
-                    + "    \\target\n"
-                    + "      \\+- targetThis  : the object entity\n"
-                    + "      \\+- targetClassName : the object's class\n"
-                    + "      \\+- targetBehaviorName : the constructor or method name\n"
+                    + "    params[0..n] : the parameters of methods\n"
+                    + "    returnObj    : the return object of methods\n"
+                    + "    throwExp     : the throw exception of methods\n"
+                    + "    target\n"
+                    + "    \\+- targetThis  : the object entity\n"
+                    + "    \\+- targetClassName : the object's class\n"
+                    + "    \\+- targetBehaviorName : the constructor or method name\n"
     )
 
     private String expression;
