@@ -7,10 +7,8 @@ import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
+import ognl.Ognl;
 
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.instrument.Instrumentation;
@@ -25,9 +23,8 @@ import java.util.logging.Logger;
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
-import static com.googlecode.greysanatomy.util.GaStringUtils.summary;
-import static java.lang.String.format;
 import static com.googlecode.greysanatomy.util.GaStringUtils.*;
+import static java.lang.String.format;
 
 /**
  *  ±π‚ÀÌµ¿√¸¡Ó<br/>
@@ -39,7 +36,7 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.*;
                 "tt -t .*StringUtils isEmpty",
                 "tt -l",
                 "tt -D",
-                "tt -i 1000 -w p.params[0]",
+                "tt -i 1000 -w params[0]",
                 "tt -i 1000 -d",
                 "tt -i 1000",
 //                "tt -i 1000 -p"
@@ -79,25 +76,24 @@ public class TimeTunnelCommand extends Command {
     // watch the index TimeTunnel
     @RiscNamedArg(named = "w",
             hasValue = true,
-            description = "watch the TimeTunnel's data, like p.params[0], p.returnObj, p.throwExp and so on.",
+            description = "watch the TimeTunnel's data, like params[0], returnObj, throwExp and so on.",
             description2 = ""
                     + " \n"
                     + "For example\n"
-                    + "    : p.params[0]\n"
-                    + "    : p.params[0]+p.params[1]\n"
-                    + "    : p.returnObj\n"
-                    + "    : p.throwExp\n"
-                    + "    : p.target.targetThis.getClass()\n"
+                    + "    : params[0]\n"
+                    + "    : params[0]+params[1]\n"
+                    + "    : returnObj\n"
+                    + "    : throwExp\n"
+                    + "    : target.targetThis.getClass()\n"
                     + " \n"
-                    + "The structure of 'p'\n"
-                    + "    p.\n"
-                    + "    \\+- params[0..n] : the parameters of methods\n"
-                    + "    \\+- returnObj    : the return object of methods\n"
-                    + "    \\+- throwExp     : the throw exception of methods\n"
-                    + "    \\+- target\n"
-                    + "         \\+- targetThis  : the object entity\n"
-                    + "         \\+- targetClassName : the object's class\n"
-                    + "         \\+- targetBehaviorName : the object's class\n"
+                    + "The structure of 'advice'\n"
+                    + "    \\params[0..n] : the parameters of methods\n"
+                    + "    \\returnObj    : the return object of methods\n"
+                    + "    \\throwExp     : the throw exception of methods\n"
+                    + "    \\target\n"
+                    + "      \\+- targetThis  : the object entity\n"
+                    + "      \\+- targetClassName : the object's class\n"
+                    + "      \\+- targetBehaviorName : the object's class\n"
                     + " \n")
     private String watchExpress = EMPTY;
 
@@ -381,12 +377,17 @@ public class TimeTunnelCommand extends Command {
             return;
         }
 
-        final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
+//        final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
+//
+//        jsEngine.eval("function printWatch(p,o){try{o.send(true, " + watchExpress + "+'\\n');}catch(e){o.send(true, e.message+'\\n');}}");
+//        final Invocable invoke = (Invocable) jsEngine;
+//        final Advice p = timeTunnel.getAdvice();
+//        invoke.invokeFunction("printWatch", p, sender);
 
-        jsEngine.eval("function printWatch(p,o){try{o.send(true, " + watchExpress + "+'\\n');}catch(e){o.send(true, e.message+'\\n');}}");
-        final Invocable invoke = (Invocable) jsEngine;
         final Advice p = timeTunnel.getAdvice();
-        invoke.invokeFunction("printWatch", p, sender);
+        final Object value = Ognl.getValue(watchExpress, p);
+
+        sender.send(true, "" + value + "\n");
 
     }
 

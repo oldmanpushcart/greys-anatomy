@@ -8,11 +8,11 @@ import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
+import ognl.Ognl;
 
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import java.lang.instrument.Instrumentation;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
@@ -20,12 +20,14 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
 @RiscCmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
         eg = {
-                "watch -b org\\.apache\\.commons\\.lang\\.StringUtils isBlank p.params[0]",
-                "watch -f org\\.apache\\.commons\\.lang\\.StringUtils isBlank p.returnObj",
-                "watch -bf .*StringUtils isBlank p.params[0]",
-                "watch .*StringUtils isBlank p.params[0]",
+                "watch -b org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
+                "watch -f org\\.apache\\.commons\\.lang\\.StringUtils isBlank returnObj",
+                "watch -bf .*StringUtils isBlank params[0]",
+                "watch .*StringUtils isBlank params[0]",
         })
 public class WatchCommand extends Command {
+
+    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
@@ -34,25 +36,24 @@ public class WatchCommand extends Command {
     private String methodRegex;
 
     @RiscIndexArg(index = 2, name = "express",
-            description = "expression, write by javascript. use 'p.' before express",
+            description = "ognl expression, write by ognl.",
             description2 = ""
                     + " \n"
                     + "For example\n"
-                    + "    : p.params[0]\n"
-                    + "    : p.params[0]+p.params[1]\n"
-                    + "    : p.returnObj\n"
-                    + "    : p.throwExp\n"
-                    + "    : p.target.targetThis.getClass()\n"
+                    + "    : params[0]\n"
+                    + "    : params[0]+params[1]\n"
+                    + "    : returnObj\n"
+                    + "    : throwExp\n"
+                    + "    : target.targetThis.getClass()\n"
                     + " \n"
-                    + "The structure of 'p'\n"
-                    + "    p.\n"
-                    + "    \\+- params[0..n] : the parameters of methods\n"
-                    + "    \\+- returnObj    : the return object of methods\n"
-                    + "    \\+- throwExp     : the throw exception of methods\n"
-                    + "    \\+- target\n"
-                    + "         \\+- targetThis  : the object entity\n"
-                    + "         \\+- targetClassName : the object's class\n"
-                    + "         \\+- targetBehaviorName : the constructor or method name\n"
+                    + "The structure of 'advice'\n"
+                    + "    \\params[0..n] : the parameters of methods\n"
+                    + "    \\returnObj    : the return object of methods\n"
+                    + "    \\throwExp     : the throw exception of methods\n"
+                    + "    \\target\n"
+                    + "      \\+- targetThis  : the object entity\n"
+                    + "      \\+- targetClassName : the object's class\n"
+                    + "      \\+- targetBehaviorName : the constructor or method name\n"
     )
 
     private String expression;
@@ -75,10 +76,6 @@ public class WatchCommand extends Command {
 
             @Override
             public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
-                final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
-
-                jsEngine.eval("function printWatch(p,o){try{o.send(false, " + expression + "+'\\n');}catch(e){o.send(false, e.message+'\\n');}}");
-                final Invocable invoke = (Invocable) jsEngine;
 
                 final Instrumentation inst = info.getInst();
                 final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
@@ -87,8 +84,13 @@ public class WatchCommand extends Command {
                     public void onBefore(Advice p) {
                         if (isBefore) {
                             try {
-                                invoke.invokeFunction("printWatch", p, sender);
+                                final Object value = Ognl.getValue(expression, p);
+                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
+                                sender.send(false, e.getMessage()+"\n");
                             }
                         }
                     }
@@ -97,8 +99,13 @@ public class WatchCommand extends Command {
                     public void onFinish(Advice p) {
                         if (isFinish) {
                             try {
-                                invoke.invokeFunction("printWatch", p, sender);
+                                final Object value = Ognl.getValue(expression, p);
+                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
+                                sender.send(false, e.getMessage()+"\n");
                             }
                         }
                     }
@@ -107,8 +114,13 @@ public class WatchCommand extends Command {
                     public void onException(Advice p) {
                         if (isException) {
                             try {
-                                invoke.invokeFunction("printWatch", p, sender);
+                                final Object value = Ognl.getValue(expression, p);
+                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
+                                sender.send(false, e.getMessage()+"\n");
                             }
                         }
                     }
@@ -117,8 +129,13 @@ public class WatchCommand extends Command {
                     public void onSuccess(Advice p) {
                         if (isSuccess) {
                             try {
-                                invoke.invokeFunction("printWatch", p, sender);
+                                final Object value = Ognl.getValue(expression, p);
+                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
+                                sender.send(false, e.getMessage()+"\n");
                             }
                         }
                     }
