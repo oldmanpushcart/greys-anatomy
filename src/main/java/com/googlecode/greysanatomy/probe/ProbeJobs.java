@@ -1,7 +1,5 @@
 package com.googlecode.greysanatomy.probe;
 
-import com.googlecode.greysanatomy.console.command.JavaScriptCommand.JLS;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +17,7 @@ public final class ProbeJobs {
     private static final String REST_DIR = System.getProperty("java.io.tmpdir")//执行结果输出文件路径
             + File.separator + "greysdata"
             + File.separator + UUID.randomUUID().toString()
-            + File.separator
-            ;
+            + File.separator;
     private static final String REST_FILE_EXT = ".ga";                            //存储中间结果的临时文件后缀名
 
     /**
@@ -46,9 +43,9 @@ public final class ProbeJobs {
         Job(int id) throws IOException {
             this.id = id;
             final File dir = new File(REST_DIR);
-            if( !dir.exists() ) {
-                if(!dir.mkdirs()) {
-                    throw new IOException(String.format("create greys's temp dir:%s failed.",REST_DIR));
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    throw new IOException(String.format("create greys's temp dir:%s failed.", REST_DIR));
                 }
             }
             jobFile = new File(REST_DIR + id + REST_FILE_EXT);
@@ -105,7 +102,7 @@ public final class ProbeJobs {
      * 判断job是否还可以继续工作
      *
      * @param id
-     * @return true可以继续工作,false不可以
+     * @return true可以继续工作, false不可以
      */
     public static boolean isJobAlive(int id) {
         Job job = jobs.get(id);
@@ -114,6 +111,7 @@ public final class ProbeJobs {
 
     /**
      * 判断job是否已经被kill
+     *
      * @param id
      * @return
      */
@@ -131,25 +129,23 @@ public final class ProbeJobs {
         Job job = jobs.get(id);
         if (null != job) {
             try {
-                if( null != job.listener ) {
+                if (null != job.listener) {
                     job.listener.destroy();
                 }
             } catch (Throwable t) {
-                if(logger.isLoggable(Level.WARNING)){
-                    logger.log(Level.WARNING,String.format("destroy job listener failed, jobId=%s", id), t);
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, String.format("destroy job listener failed, jobId=%s", id), t);
                 }
             }
             try {
                 job.jobReader.close();
                 job.jobWriter.close();
                 job.jobFile.deleteOnExit();
-            }catch(IOException e) {
-                if(logger.isLoggable(Level.WARNING)){
-                    logger.log(Level.WARNING,String.format("close jobFile failed. jobId=%s", id), e);
+            } catch (IOException e) {
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, String.format("close jobFile failed. jobId=%s", id), e);
                 }
             }
-            JLS.removeJob(id);
-
             job.isAlive = false;
             job.isKilled = true;
 

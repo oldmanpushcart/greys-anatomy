@@ -1,7 +1,6 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
 import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
 import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
@@ -13,12 +12,8 @@ import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.lang.instrument.Instrumentation;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,11 +26,11 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
-@RiscCmd(named = "js", sort = 3, desc = "Let Greys use the JavaScript enhancement.",
-        eg = {
-                "js -f /tmp/debug.js org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
-                "js -f /tmp/debug.js .*StringUtils isEmpty",
-        })
+//@RiscCmd(named = "js", sort = 3, desc = "Let Greys use the JavaScript enhancement.",
+//        eg = {
+//                "js -f /tmp/debug.js org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
+//                "js -f /tmp/debug.js .*StringUtils isEmpty",
+//        })
 public class JavaScriptCommand extends Command {
 
     private static final Logger logger = Logger.getLogger("greysanatomy");
@@ -78,114 +73,28 @@ public class JavaScriptCommand extends Command {
     )
     private File scriptFile;
 
-    /**
-     * TLS = ThreadLocals
-     *
-     * @author vlinux
-     */
-    public static class TLS {
-
-        /**
-         * JLS中保存的TLS对象的key
-         */
-        public static final String TLS_JLSKEY = "greys-TLS" + (char) 29;
-
-        private final ThreadLocal<Map<String, Object>> tls = new ThreadLocal<Map<String, Object>>();
-
-        public void put(String name, Object value) {
-            if (tls.get() == null) {
-                tls.set(new HashMap<String, Object>());
-            }
-            tls.get().put(name, value);
-        }
-
-        public Object get(String name) {
-            if (tls.get() == null) {
-                return null;
-            }
-            return tls.get().get(name);
-        }
-
+    public static interface ScriptBeforeListener {
+        void before(Advice p);
     }
 
-    /**
-     * JobLocals
-     * 每个jobKill的时候清掉
-     *
-     * @author chengtongda
-     */
-    public static class JLS {
-
-        private static final Map<Integer, Map<String, Object>> jobLocals = new HashMap<Integer, Map<String, Object>>();
-
-        public static Map<String, Object> getJLS(int jobId) {
-            if (jobLocals.get(jobId) == null) {
-                jobLocals.put(jobId, new HashMap<String, Object>());
-            }
-            return jobLocals.get(jobId);
-        }
-
-        public static void removeJob(int jobId) {
-            jobLocals.remove(jobId);
-        }
-
-        public static void put(int jobId, String key, Object value) {
-            if (jobLocals.get(jobId) == null) {
-                jobLocals.put(jobId, new HashMap<String, Object>());
-            }
-            jobLocals.get(jobId).put(key, value);
-        }
-
-        public static Object get(int jobId, String key) {
-            if (jobLocals.get(jobId) == null) {
-                return null;
-            }
-            return jobLocals.get(jobId).get(key);
-        }
+    public static interface ScriptSuccessListener {
+        void success(Advice p);
     }
 
-    /**
-     * 给脚本使用的output，用以输出信息到ga-console-client
-     *
-     * @author vlinux
-     */
-    public static class Output {
-
-        private final Sender sender;
-
-        public Output(Sender sender) {
-            this.sender = sender;
-        }
-
-        public void print(String msg) {
-            sender.send(false, msg);
-        }
-
-        public void println(String msg) {
-            sender.send(false, msg+"\n");
-        }
-
+    public static interface ScriptExceptionListener {
+        void exception(Advice p);
     }
 
-    /**
-     * 脚本实现接口
-     *
-     * @author vlinux
-     */
-    public static interface ScriptListener {
+    public static interface ScriptFinishListener {
+        void finish(Advice p);
+    }
 
-        void before(Advice p, Output output, Map<String, Object> jls, TLS tls);
+    public static interface ScriptCreateListener {
+        void create();
+    }
 
-        void success(Advice p, Output output, Map<String, Object> jls, TLS tls);
-
-        void exception(Advice p, Output output, Map<String, Object> jls, TLS tls);
-
-        void finish(Advice p, Output output, Map<String, Object> jls, TLS tls);
-
-        void create(Output output, Map<String, Object> jls, TLS tls);
-
-        void destroy(Output output, Map<String, Object> jls, TLS tls);
-
+    public static interface ScriptDestroyListener {
+        void destroy();
     }
 
     @Override
@@ -202,26 +111,58 @@ public class JavaScriptCommand extends Command {
                     return;
                 }
 
-                JLS.put(info.getJobId(), TLS.TLS_JLSKEY, new TLS());
-                final Output output = new Output(sender);
                 final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
                 final Invocable invoke = (Invocable) jsEngine;
-                final ScriptListener scriptListener;
+
+                final ScriptBeforeListener scriptBeforeListener;
+                final ScriptSuccessListener scriptSuccessListener;
+                final ScriptExceptionListener scriptExceptionListener;
+                final ScriptFinishListener scriptFinishListener;
+                final ScriptCreateListener scriptCreateListener;
+                final ScriptDestroyListener scriptDestroyListener;
+
                 try {
-                    jsEngine.eval("var $field=com.googlecode.greysanatomy.util.GaReflectUtils.getFieldValueByFieldName;");
-                    jsEngine.eval("var $jstack=com.googlecode.greysanatomy.util.GaReflectUtils.jstack;");
+
+                    jsEngine.getContext().setWriter(new Writer() {
+                        @Override
+                        public void write(char[] cbuf, int off, int len) throws IOException {
+
+                            final char[] subCbuf = new char[len];
+                            System.arraycopy(cbuf, off, subCbuf, 0, len);
+                            sender.send(false, String.valueOf(subCbuf));
+
+                        }
+
+                        @Override
+                        public void flush() throws IOException {
+
+                        }
+
+                        @Override
+                        public void close() throws IOException {
+
+                        }
+                    });
+
                     jsEngine.eval(new FileReader(scriptFile));
-                    scriptListener = invoke.getInterface(ScriptListener.class);
+
+                    scriptBeforeListener = invoke.getInterface(ScriptBeforeListener.class);
+                    scriptSuccessListener = invoke.getInterface(ScriptSuccessListener.class);
+                    scriptExceptionListener = invoke.getInterface(ScriptExceptionListener.class);
+                    scriptFinishListener = invoke.getInterface(ScriptFinishListener.class);
+                    scriptCreateListener = invoke.getInterface(ScriptCreateListener.class);
+                    scriptDestroyListener = invoke.getInterface(ScriptDestroyListener.class);
+
                 } catch (FileNotFoundException e) {
                     final String msg = "script file not exist.";
-                    if(logger.isLoggable(Level.WARNING)) {
+                    if (logger.isLoggable(Level.WARNING)) {
                         logger.log(Level.WARNING, msg, e);
                     }
                     sender.send(true, msg);
                     return;
                 } catch (ScriptException e) {
                     final String msg = "script execute failed." + e.getMessage();
-                    if(logger.isLoggable(Level.WARNING)) {
+                    if (logger.isLoggable(Level.WARNING)) {
                         logger.log(Level.WARNING, msg, e);
                     }
                     sender.send(true, msg);
@@ -234,54 +175,66 @@ public class JavaScriptCommand extends Command {
                     @Override
                     public void onBefore(final Advice p) {
                         try {
-                            scriptListener.before(p, output, JLS.getJLS(info.getJobId()), (TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));
+                            if (null != scriptBeforeListener) {
+                                scriptBeforeListener.before(p);
+                            }
                         } catch (Throwable t) {
-                            output.println(t.getMessage());
+                            sender.send(false, t.getMessage());
                         }
                     }
 
                     @Override
                     public void onSuccess(final Advice p) {
                         try {
-                            scriptListener.success(p, output, JLS.getJLS(info.getJobId()), (TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));
+                            if (null != scriptSuccessListener) {
+                                scriptSuccessListener.success(p);
+                            }
                         } catch (Throwable t) {
-                            output.println(t.getMessage());
+                            sender.send(false, t.getMessage());
                         }
                     }
 
                     @Override
                     public void onException(final Advice p) {
                         try {
-                            scriptListener.exception(p, output, JLS.getJLS(info.getJobId()), (TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));
+                            if (null != scriptExceptionListener) {
+                                scriptExceptionListener.exception(p);
+                            }
                         } catch (Throwable t) {
-                            output.println(t.getMessage());
+                            sender.send(false, t.getMessage());
                         }
                     }
 
                     @Override
                     public void onFinish(final Advice p) {
                         try {
-                            scriptListener.finish(p, output, JLS.getJLS(info.getJobId()), (TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));
+                            if (null != scriptFinishListener) {
+                                scriptFinishListener.finish(p);
+                            }
                         } catch (Throwable t) {
-                            output.println(t.getMessage());
+                            sender.send(false, t.getMessage());
                         }
                     }
 
                     @Override
                     public void create() {
                         try {
-                            scriptListener.create(output, JLS.getJLS(info.getJobId()), (TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));
+                            if (null != scriptCreateListener) {
+                                scriptCreateListener.create();
+                            }
                         } catch (Throwable t) {
-                            output.println(t.getMessage());
+                            sender.send(false, t.getMessage());
                         }
                     }
 
                     @Override
                     public void destroy() {
                         try {
-                            scriptListener.destroy(output, JLS.getJLS(info.getJobId()), (TLS) JLS.get(info.getJobId(), TLS.TLS_JLSKEY));
+                            if (null != scriptDestroyListener) {
+                                scriptDestroyListener.destroy();
+                            }
                         } catch (Throwable t) {
-                            output.println(t.getMessage());
+                            sender.send(false, t.getMessage());
                         }
                     }
 
