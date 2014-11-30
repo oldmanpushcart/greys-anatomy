@@ -1,6 +1,7 @@
 package com.googlecode.greysanatomy.probe;
 
 import com.googlecode.greysanatomy.probe.Advice.Target;
+import com.googlecode.greysanatomy.util.GaStringUtils;
 import javassist.*;
 
 import java.util.logging.Level;
@@ -119,6 +120,13 @@ public class Probes {
                 || isAbstract(cbMod)
                 || cc.getName().startsWith("com.googlecode.greysanatomy.")
                 || cc.getName().startsWith("ognl.")) {
+            return true;
+        }
+
+        // ¹ýÂËµômainº¯Êý
+        if( isStatic(ccMod)
+                && isPublic(ccMod)
+                && GaStringUtils.equals(cb.getName(),"main")) {
             return true;
         }
 
