@@ -31,6 +31,7 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 //                "js -f /tmp/debug.js org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
 //                "js -f /tmp/debug.js .*StringUtils isEmpty",
 //        })
+@Deprecated
 public class JavaScriptCommand extends Command {
 
     private static final Logger logger = Logger.getLogger("greysanatomy");
