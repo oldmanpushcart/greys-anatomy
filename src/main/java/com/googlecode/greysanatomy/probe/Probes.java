@@ -117,7 +117,8 @@ public class Probes {
 
         if (isInterface(ccMod)
                 || isAbstract(cbMod)
-                || cc.getName().startsWith("com.googlecode.greysanatomy.")) {
+                || cc.getName().startsWith("com.googlecode.greysanatomy.")
+                || cc.getName().startsWith("ognl.")) {
             return true;
         }
 
