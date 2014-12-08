@@ -7,6 +7,7 @@ import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
+import com.googlecode.greysanatomy.util.GaObjectUtils;
 import ognl.Ognl;
 
 import java.io.PrintWriter;
@@ -72,6 +73,10 @@ public class TimeTunnelCommand extends Command {
     // index of TimeTunnel
     @RiscNamedArg(named = "i", hasValue = true, description = "appoint the index of TimeTunnel. If use only, show the TimeTunnel detail.")
     private Integer index;
+
+    // expend of TimeTunnel
+    @RiscNamedArg(named = "x", hasValue = true, description = "expend level of object. Default level-0")
+    private Integer expend;
 
     // watch the index TimeTunnel
     @RiscNamedArg(named = "w",
@@ -303,7 +308,7 @@ public class TimeTunnelCommand extends Command {
                     sender.send(false, lineSB.toString());
 
                 } catch (Throwable t) {
-                    if(logger.isLoggable(Level.WARNING)) {
+                    if (logger.isLoggable(Level.WARNING)) {
                         logger.log(Level.WARNING, "TimeTunnel failed.", t);
                     }
                 }
@@ -387,7 +392,14 @@ public class TimeTunnelCommand extends Command {
         final Advice p = timeTunnel.getAdvice();
         final Object value = Ognl.getValue(watchExpress, p);
 
-        sender.send(true, "" + value + "\n");
+        if( null != expend
+                && expend > 0) {
+            sender.send(true, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
+        } else {
+            sender.send(true, "" + value + "\n");
+        }
+
+
 
     }
 
@@ -471,7 +483,7 @@ public class TimeTunnelCommand extends Command {
                 .append(format(headFormat, "CLASS: ", className)).append("\n")
                 .append(format(headFormat, "METHOD: ", methodName)).append("\n")
                 .append(lineSplit)
-        .append("\n");
+                .append("\n");
 
 
         // fill the paramenters
@@ -479,7 +491,16 @@ public class TimeTunnelCommand extends Command {
 
             int paramIndex = 0;
             for (Object param : timeTunnel.getAdvice().getParameters()) {
-                detailSB.append("PARAMETERS[" + paramIndex++ + "]:\n").append(param).append("\n\n");
+
+                if( null != expend
+                        && expend > 0) {
+                    detailSB.append("PARAMETERS[" + paramIndex++ + "]:\n")
+                            .append(GaObjectUtils.toString(param, 0, expend))
+                            .append("\n\n");
+                } else {
+                    detailSB.append("PARAMETERS[" + paramIndex++ + "]:\n").append(param).append("\n\n");
+                }
+
             }
 
         }
@@ -487,17 +508,35 @@ public class TimeTunnelCommand extends Command {
 
         // fill the returnObj
         if (timeTunnel.getAdvice().isReturn()) {
-            detailSB.append("RETURN-OBJ:\n").append(timeTunnel.getAdvice().getReturnObj()).append("\n\n");
+
+            if( null != expend
+                    && expend > 0) {
+                detailSB.append("RETURN-OBJ:\n")
+                        .append(GaObjectUtils.toString(timeTunnel.getAdvice().getReturnObj(),0,expend))
+                        .append("\n\n");
+            } else {
+                detailSB.append("RETURN-OBJ:\n").append(timeTunnel.getAdvice().getReturnObj()).append("\n\n");
+            }
+
         }
 
 
         // fill the throw exception
         if (timeTunnel.getAdvice().isThrowException()) {
             final Throwable throwable = timeTunnel.getAdvice().getThrowException();
-            final StringWriter stringWriter = new StringWriter();
-            final PrintWriter printWriter = new PrintWriter(stringWriter);
-            throwable.printStackTrace(printWriter);
-            detailSB.append("THROW-EXCEPTION:\n").append(stringWriter.toString()).append("\n\n");
+
+            if( null != expend
+                    && expend > 0) {
+                detailSB.append("THROW-EXCEPTION:\n")
+                        .append(GaObjectUtils.toString(throwable, 0, expend))
+                        .append("\n\n");
+            } else {
+                final StringWriter stringWriter = new StringWriter();
+                final PrintWriter printWriter = new PrintWriter(stringWriter);
+                throwable.printStackTrace(printWriter);
+                detailSB.append("THROW-EXCEPTION:\n").append(stringWriter.toString()).append("\n\n");
+            }
+
         }
 
         sender.send(true, detailSB.toString());

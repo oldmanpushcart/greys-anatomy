@@ -1,7 +1,5 @@
 package com.googlecode.greysanatomy.util;
 
-import com.googlecode.greysanatomy.console.command.MonitorCommand;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -273,14 +271,6 @@ public class GaDetailUtils {
         } else {
             return clazz.getName();
         }
-    }
-
-    public static void main(String... args) {
-
-        Class<?> clazz = MonitorCommand.class;
-        System.out.println(detail(clazz));
-
-
     }
 
 }

@@ -28,24 +28,24 @@ public class GaCheckUtils {
         return false;
     }
 
-    /**
-     * 大小写无关的判断某个字符串是否在某片字符串值范围之内
-     *
-     * @param s
-     * @param strs
-     * @return
-     */
-    public static boolean isInIgnoreCase(String s, String... strs) {
-        if (null == strs || strs.length == 0) {
-            return false;
-        }//if
-        for (String str : strs) {
-            if ((null == str && null == s)
-                    || (null != s && null != str && str.equalsIgnoreCase(s))) {
-                return true;
-            }//if
-        }//for
-        return false;
-    }
+//    /**
+//     * 大小写无关的判断某个字符串是否在某片字符串值范围之内
+//     *
+//     * @param s
+//     * @param strs
+//     * @return
+//     */
+//    public static boolean isInIgnoreCase(String s, String... strs) {
+//        if (null == strs || strs.length == 0) {
+//            return false;
+//        }//if
+//        for (String str : strs) {
+//            if ((null == str && null == s)
+//                    || (null != s && null != str && str.equalsIgnoreCase(s))) {
+//                return true;
+//            }//if
+//        }//for
+//        return false;
+//    }
 
 }

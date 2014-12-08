@@ -7,6 +7,7 @@ import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
+import com.googlecode.greysanatomy.util.GaObjectUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import ognl.Ognl;
 
@@ -70,8 +71,12 @@ public class WatchCommand extends Command {
     @RiscNamedArg(named = "s", description = "is watch on success")
     private boolean isSuccess = false;
 
+    @RiscNamedArg(named = "x", hasValue = true, description = "expend level of object. Default level-0")
+    private Integer expend;
+
     @Override
     public Action getAction() {
+
         return new Action() {
 
             @Override
@@ -85,7 +90,13 @@ public class WatchCommand extends Command {
                         if (isBefore) {
                             try {
                                 final Object value = Ognl.getValue(expression, p);
-                                sender.send(false, "" + value + "\n");
+                                if( null != expend
+                                        && expend >= 0) {
+                                    sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
+                                } else {
+                                    sender.send(false, "" + value + "\n");
+                                }
+//                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 if (logger.isLoggable(Level.WARNING)) {
                                     logger.log(Level.WARNING, "watch failed.", e);
@@ -100,7 +111,13 @@ public class WatchCommand extends Command {
                         if (isFinish) {
                             try {
                                 final Object value = Ognl.getValue(expression, p);
-                                sender.send(false, "" + value + "\n");
+                                if( null != expend
+                                        && expend >= 0) {
+                                    sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
+                                } else {
+                                    sender.send(false, "" + value + "\n");
+                                }
+//                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 if (logger.isLoggable(Level.WARNING)) {
                                     logger.log(Level.WARNING, "watch failed.", e);
@@ -115,7 +132,13 @@ public class WatchCommand extends Command {
                         if (isException) {
                             try {
                                 final Object value = Ognl.getValue(expression, p);
-                                sender.send(false, "" + value + "\n");
+                                if( null != expend
+                                        && expend >= 0) {
+                                    sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
+                                } else {
+                                    sender.send(false, "" + value + "\n");
+                                }
+//                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 if (logger.isLoggable(Level.WARNING)) {
                                     logger.log(Level.WARNING, "watch failed.", e);
@@ -130,7 +153,13 @@ public class WatchCommand extends Command {
                         if (isSuccess) {
                             try {
                                 final Object value = Ognl.getValue(expression, p);
-                                sender.send(false, "" + value + "\n");
+                                if( null != expend
+                                        && expend >= 0) {
+                                    sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
+                                } else {
+                                    sender.send(false, "" + value + "\n");
+                                }
+//                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 if (logger.isLoggable(Level.WARNING)) {
                                     logger.log(Level.WARNING, "watch failed.", e);

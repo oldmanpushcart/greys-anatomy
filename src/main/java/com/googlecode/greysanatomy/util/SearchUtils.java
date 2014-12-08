@@ -18,13 +18,13 @@ public class SearchUtils {
      * @return
      */
     public static Set<Class<?>> searchClassByClassRegex(Instrumentation inst, String classRegex) {
-        final Set<Class<?>> matchs = new HashSet<Class<?>>();
+        final Set<Class<?>> matches = new HashSet<Class<?>>();
         for (Class<?> clazz : inst.getAllLoadedClasses()) {
             if (clazz.getName().matches(classRegex)) {
-                matchs.add(clazz);
+                matches.add(clazz);
             }
         }//for
-        return matchs;
+        return matches;
     }
 
     /**
@@ -35,16 +35,16 @@ public class SearchUtils {
      * @return
      */
     public static Set<Class<?>> searchClassBySupers(Instrumentation inst, Set<Class<?>> supers) {
-        final Set<Class<?>> matchs = new HashSet<Class<?>>();
+        final Set<Class<?>> matches = new HashSet<Class<?>>();
         for (Class<?> clazz : inst.getAllLoadedClasses()) {
             for (Class<?> superClass : supers) {
                 if (superClass.isAssignableFrom(clazz)) {
-                    matchs.add(clazz);
+                    matches.add(clazz);
                     break;
                 }
             }
         }//for
-        return matchs;
+        return matches;
     }
 
 }
