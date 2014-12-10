@@ -4,7 +4,9 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
@@ -125,7 +127,7 @@ public class GaObjectUtils {
             else if (obj.getClass().isArray()) {
 
 
-                final String typeName = obj.getClass().getTypeName();
+                final String typeName = obj.getClass().getSimpleName();
 
                 // int[]
                 if (typeName.equals("int[]")) {
@@ -409,6 +411,10 @@ public class GaObjectUtils {
 
             }
 
+            // Date ‰≥ˆ
+            else if( Date.class.isInstance(obj) ) {
+                buf.append(format("@%s[%s]", className, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS").format(obj)));
+            }
 
             // ∆’Õ®Object ‰≥ˆ
             else {
@@ -430,15 +436,16 @@ public class GaObjectUtils {
                                 final Object value = field.get(obj);
 
                                 bufOfObject.append("\n").append(TAB).append(field.getName())
-                                        .append("=\n")
-                                        .append(toString(value, deep + 1, expand))
-                                        .append(",\n");
+                                        .append("=")
+                                        .append(toString(value, deep + 1, expand).trim())
+                                        .append(",");
 
                             } catch (Throwable t) {
                                 //
                             }
 
                         }//for
+                        bufOfObject.append("\n");
                     }//if
                     bufOfObject.append("]");
                     buf.append(bufOfObject);
@@ -495,5 +502,12 @@ public class GaObjectUtils {
     private static boolean isExpand(int deep, int expand) {
         return deep < expand;
     }
+
+//    public static void main(String... args) {
+//
+//        System.out.println( toString(new Exception(),0,3) );
+//        System.out.println(int[].class.getSimpleName());
+//
+//    }
 
 }
