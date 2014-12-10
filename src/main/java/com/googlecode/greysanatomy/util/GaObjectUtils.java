@@ -412,7 +412,7 @@ public class GaObjectUtils {
             }
 
             // DateÊä³ö
-            else if( Date.class.isInstance(obj) ) {
+            else if (Date.class.isInstance(obj)) {
                 buf.append(format("@%s[%s]", className, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS").format(obj)));
             }
 
@@ -502,13 +502,5 @@ public class GaObjectUtils {
     private static boolean isExpand(int deep, int expand) {
         return deep < expand;
     }
-
-//    public static void main(String... args) {
-//
-//        System.out.println( toString(new int[]{1,2,3,4,5},0,3) );
-//        System.out.println(int[].class.getTypeName());
-//
-//
-//    }
 
 }
