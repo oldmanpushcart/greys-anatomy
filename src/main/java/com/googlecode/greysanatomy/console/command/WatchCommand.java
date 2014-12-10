@@ -8,8 +8,8 @@ import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaObjectUtils;
+import com.googlecode.greysanatomy.util.GaOgnlUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
-import ognl.Ognl;
 
 import java.lang.instrument.Instrumentation;
 import java.util.logging.Level;
@@ -89,7 +89,7 @@ public class WatchCommand extends Command {
                     public void onBefore(Advice p) {
                         if (isBefore) {
                             try {
-                                final Object value = Ognl.getValue(expression, p);
+                                final Object value = GaOgnlUtils.getValue(expression, p);
                                 if( null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
@@ -110,7 +110,7 @@ public class WatchCommand extends Command {
                     public void onFinish(Advice p) {
                         if (isFinish) {
                             try {
-                                final Object value = Ognl.getValue(expression, p);
+                                final Object value = GaOgnlUtils.getValue(expression, p);
                                 if( null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
@@ -131,7 +131,7 @@ public class WatchCommand extends Command {
                     public void onException(Advice p) {
                         if (isException) {
                             try {
-                                final Object value = Ognl.getValue(expression, p);
+                                final Object value = GaOgnlUtils.getValue(expression, p);
                                 if( null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
@@ -152,7 +152,7 @@ public class WatchCommand extends Command {
                     public void onSuccess(Advice p) {
                         if (isSuccess) {
                             try {
-                                final Object value = Ognl.getValue(expression, p);
+                                final Object value = GaOgnlUtils.getValue(expression, p);
                                 if( null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");

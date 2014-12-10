@@ -8,7 +8,7 @@ import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaObjectUtils;
-import ognl.Ognl;
+import com.googlecode.greysanatomy.util.GaOgnlUtils;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -390,7 +390,7 @@ public class TimeTunnelCommand extends Command {
 //        invoke.invokeFunction("printWatch", p, sender);
 
         final Advice p = timeTunnel.getAdvice();
-        final Object value = Ognl.getValue(watchExpress, p);
+        final Object value = GaOgnlUtils.getValue(watchExpress, p);
 
         if( null != expend
                 && expend > 0) {
