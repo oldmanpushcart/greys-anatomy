@@ -505,8 +505,9 @@ public class GaObjectUtils {
 
 //    public static void main(String... args) {
 //
-//        System.out.println( toString(new Exception(),0,3) );
-//        System.out.println(int[].class.getSimpleName());
+//        System.out.println( toString(new int[]{1,2,3,4,5},0,3) );
+//        System.out.println(int[].class.getTypeName());
+//
 //
 //    }
 
