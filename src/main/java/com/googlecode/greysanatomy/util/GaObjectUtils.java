@@ -5,11 +5,8 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Scanner;
 
 import static java.lang.String.format;
 
@@ -21,6 +18,44 @@ public class GaObjectUtils {
 
     private final static String TAB = "    ";
 
+
+    private final static Map<Byte,String> ASCII_MAP = new HashMap<Byte,String>();
+    static {
+        ASCII_MAP.put((byte)0,"NUL");
+        ASCII_MAP.put((byte)1,"SOH");
+        ASCII_MAP.put((byte)2,"STX");
+        ASCII_MAP.put((byte)3,"ETX");
+        ASCII_MAP.put((byte)4,"EOT");
+        ASCII_MAP.put((byte)5,"ENQ");
+        ASCII_MAP.put((byte)6,"ACK");
+        ASCII_MAP.put((byte)7,"BEL");
+        ASCII_MAP.put((byte)8,"BS");
+        ASCII_MAP.put((byte)9,"HT");
+        ASCII_MAP.put((byte)10,"LF");
+        ASCII_MAP.put((byte)11,"VT");
+        ASCII_MAP.put((byte)12,"FF");
+        ASCII_MAP.put((byte)13,"CR");
+        ASCII_MAP.put((byte)14,"SO");
+        ASCII_MAP.put((byte)15,"SI");
+        ASCII_MAP.put((byte)16,"DLE");
+        ASCII_MAP.put((byte)17,"DC1");
+        ASCII_MAP.put((byte)18,"DC2");
+        ASCII_MAP.put((byte)19,"DC3");
+        ASCII_MAP.put((byte)20,"DC4");
+        ASCII_MAP.put((byte)21,"NAK");
+        ASCII_MAP.put((byte)22,"SYN");
+        ASCII_MAP.put((byte)23,"ETB");
+        ASCII_MAP.put((byte)24,"CAN");
+        ASCII_MAP.put((byte)25,"EM");
+        ASCII_MAP.put((byte)26,"SUB");
+        ASCII_MAP.put((byte)27,"ESC");
+        ASCII_MAP.put((byte)28,"FS");
+        ASCII_MAP.put((byte)29,"GS");
+        ASCII_MAP.put((byte)30,"RS");
+        ASCII_MAP.put((byte)31,"US");
+        ASCII_MAP.put((byte)127,"DEL");
+    }
+
     public static String toString(Object obj, int deep, int expand) {
 
         final StringBuilder buf = new StringBuilder();
@@ -31,16 +66,39 @@ public class GaObjectUtils {
             final Class<?> clazz = obj.getClass();
             final String className = clazz.getSimpleName();
 
-            // 8种基础类型,直接输出@类型[值]
+            // 7种基础类型,直接输出@类型[值]
             if (Integer.class.isInstance(obj)
                     || Long.class.isInstance(obj)
                     || Float.class.isInstance(obj)
                     || Double.class.isInstance(obj)
-                    || Character.class.isInstance(obj)
+//                    || Character.class.isInstance(obj)
                     || Short.class.isInstance(obj)
                     || Byte.class.isInstance(obj)
                     || Boolean.class.isInstance(obj)) {
                 buf.append(format("@%s[%s]", className, obj));
+            }
+
+            // Char要特殊处理,因为有不可见字符的因素
+            else if( Character.class.isInstance(obj) ) {
+
+                final Character c = (Character)obj;
+
+                // ASCII的可见字符
+                if( c>=32
+                        && c<=126) {
+                    buf.append(format("@%s[%s]", className, c));
+                }
+
+                // ASCII的控制字符
+                else if(ASCII_MAP.containsKey(c)) {
+                    buf.append(format("@%s[%s]", className, ASCII_MAP.get(c)));
+                }
+
+                // 超过ASCII的编码范围
+                else {
+                    buf.append(format("@%s[%s]", className, c));
+                }
+
             }
 
             // 字符串类型单独处理
@@ -112,8 +170,8 @@ public class GaObjectUtils {
                     bufOfMap.append(format("@%s[", className));
                     for (Entry<Object, Object> entry : map.entrySet()) {
                         bufOfMap.append("\n").append(toString(entry.getKey(), deep + 1, expand))
-                                .append(":\n")
-                                .append(toString(entry.getValue(), deep + 1, expand))
+                                .append(":")
+                                .append(toString(entry.getValue(), deep + 1, expand).trim())
                                 .append(",\n");
                     }
                     bufOfMap.append("]");
