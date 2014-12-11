@@ -5,21 +5,11 @@
 ( (_| | |   | ____| |_| |___ |     / ___ | | | / ___ | | || |_| | | | | |_| |
  \___ |_|   |_____)\__  (___/      \_____|_| |_\_____|  \__)___/|_|_|_|\__  |
 (_____|           (____/                                              (____/
-<<<<<<< HEAD
-                                                      +-+-+-+-+-+-+-+-+-+-+-+
-                                                      |v|e|r|s|i|o|n|:|1|.|5|
-                                                      +-+-+-+-+-+-+-+-+-+-+-+
-=======
                                                   +-+-+-+-+-+-+-+-+-+-+-+-+-+
                                                   |v|e|r|s|i|o|n|:|1|.|5|.|3|
                                                   +-+-+-+-+-+-+-+-+-+-+-+-+-+
->>>>>>> pr/8
 ```
 [greys介绍](https://github.com/chengtongda/greys-anatomy/wiki/Greys-Anatomy)
 
 程序安装：
-<<<<<<< HEAD
-curl -sLk http://greys.oss-cn-hangzhou.aliyuncs.com/install.sh|ksh
-=======
 curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
->>>>>>> pr/8
