@@ -1,6 +1,6 @@
 package com.googlecode.greysanatomy.agent;
 
-import com.googlecode.greysanatomy.Configer;
+import com.googlecode.greysanatomy.Configure;
 import com.googlecode.greysanatomy.GreysAnatomyMain;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 
@@ -25,15 +25,15 @@ public class AgentMain {
             // 这里考虑下是否要破坏双亲委派
             URLClassLoader agentLoader = new URLClassLoader(new URL[]{new URL("file:" + GreysAnatomyMain.JARFILE)});
 
-            final Configer configer = Configer.toConfiger(args);
+            final Configure configure = Configure.toConfiger(args);
             final ConsoleServer consoleServer = (ConsoleServer) agentLoader
                     .loadClass("com.googlecode.greysanatomy.console.server.ConsoleServer")
-                    .getMethod("getInstance", Configer.class, Instrumentation.class)
-                    .invoke(null, configer, inst);
+                    .getMethod("getInstance", Configure.class, Instrumentation.class)
+                    .invoke(null, configure, inst);
 
             if (!consoleServer.isBind()) {
 //                consoleServer.getConfiger().setTargetIp(configer.getTargetIp());
-                consoleServer.getConfiger().setTargetPort(configer.getTargetPort());
+                consoleServer.getConfigure().setTargetPort(configure.getTargetPort());
                 consoleServer.rebind();
             }
 

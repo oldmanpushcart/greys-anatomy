@@ -1,6 +1,6 @@
 package com.googlecode.greysanatomy.console;
 
-import com.googlecode.greysanatomy.Configer;
+import com.googlecode.greysanatomy.Configure;
 import com.googlecode.greysanatomy.console.command.Command;
 import com.googlecode.greysanatomy.console.command.Commands;
 import com.googlecode.greysanatomy.console.command.QuitCommand;
@@ -36,7 +36,7 @@ public class GreysAnatomyConsole {
 
     private static final Logger logger = Logger.getLogger("greysanatomy");
 
-    private final Configer configer;
+    private final Configure configure;
     private final ConsoleReader console;
 
     private volatile boolean isF = true;
@@ -48,12 +48,12 @@ public class GreysAnatomyConsole {
     /**
      * 创建GA控制台
      *
-     * @param configer
+     * @param configure
      * @throws IOException
      */
-    public GreysAnatomyConsole(Configer configer, long sessionId) throws IOException {
+    public GreysAnatomyConsole(Configure configure, long sessionId) throws IOException {
         this.console = new ConsoleReader(System.in, System.out);
-        this.configer = configer;
+        this.configure = configure;
         this.sessionId = sessionId;
         write(GaStringUtils.getLogo());
         Commands.getInstance().registCompleter(console);
@@ -91,7 +91,7 @@ public class GreysAnatomyConsole {
         }
 
         private void doRead() throws Exception {
-            final String prompt = isF ? configer.getConsolePrompt() : EMPTY;
+            final String prompt = isF ? configure.getConsolePrompt() : EMPTY;
             final ReqCmd reqCmd = new ReqCmd(console.readLine(prompt), sessionId);
 
 			/*
@@ -225,7 +225,7 @@ public class GreysAnatomyConsole {
     }
 
     private synchronized void redrawLine() throws IOException {
-        final String prompt = isF ? configer.getConsolePrompt() : EMPTY;
+        final String prompt = isF ? configure.getConsolePrompt() : EMPTY;
         console.setPrompt(prompt);
         console.redrawLine();
         console.flush();

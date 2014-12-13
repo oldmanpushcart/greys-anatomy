@@ -1,6 +1,6 @@
 package com.googlecode.greysanatomy.console.server;
 
-import com.googlecode.greysanatomy.Configer;
+import com.googlecode.greysanatomy.Configure;
 import com.googlecode.greysanatomy.console.rmi.RespResult;
 import com.googlecode.greysanatomy.console.rmi.req.ReqCmd;
 import com.googlecode.greysanatomy.console.rmi.req.ReqGetResult;
@@ -30,7 +30,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private final ConsoleServerHandler serverHandler;
-    private final Configer configer;
+    private final Configure configure;
 
     private Registry registry;
     private boolean bind = false;
@@ -49,15 +49,15 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     /**
      * 构造控制台服务器
      *
-     * @param configer
+     * @param configure
      * @param inst
      * @throws RemoteException
      * @throws MalformedURLException
      */
-    private ConsoleServer(Configer configer, final Instrumentation inst) throws RemoteException, MalformedURLException, AlreadyBoundException {
+    private ConsoleServer(Configure configure, final Instrumentation inst) throws RemoteException, MalformedURLException, AlreadyBoundException {
         super();
         serverHandler = new ConsoleServerHandler(this, inst);
-        this.configer = configer;
+        this.configure = configure;
         rebind();
     }
 
@@ -70,9 +70,9 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
      */
     public synchronized void rebind() throws MalformedURLException, RemoteException, AlreadyBoundException {
 
-        registry = LocateRegistry.createRegistry(configer.getTargetPort());
+        registry = LocateRegistry.createRegistry(configure.getTargetPort());
         for (String ip : HostUtils.getAllLocalHostIP()) {
-            final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configer.getTargetPort());
+            final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configure.getTargetPort());
             try {
                 logger.info("lookup for :"+bindName);
                 Naming.lookup(bindName);
@@ -99,7 +99,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
 
         for (String ip : HostUtils.getAllLocalHostIP()) {
 
-            final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configer.getTargetPort());
+            final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configure.getTargetPort());
             try {
                 Naming.unbind(bindName);
                 if(logger.isLoggable(Level.INFO)){
@@ -147,13 +147,13 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     /**
      * 单例控制台服务器
      *
-     * @param configer
+     * @param configure
      * @throws MalformedURLException
      * @throws RemoteException
      */
-    public static synchronized ConsoleServer getInstance(Configer configer, Instrumentation inst) throws RemoteException, MalformedURLException, AlreadyBoundException {
+    public static synchronized ConsoleServer getInstance(Configure configure, Instrumentation inst) throws RemoteException, MalformedURLException, AlreadyBoundException {
         if (null == instance) {
-            instance = new ConsoleServer(configer, inst);
+            instance = new ConsoleServer(configure, inst);
             if(logger.isLoggable(Level.INFO)){
                 logger.info(GaStringUtils.getLogo());
             }
@@ -173,7 +173,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
 
     @Override
     public boolean checkPID(int pid) throws Exception {
-        return configer.getJavaPid() == pid;
+        return configure.getJavaPid() == pid;
     }
 
     @Override
@@ -191,7 +191,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
         return serverHandler.sessionHeartBeat(req);
     }
 
-    public Configer getConfiger() {
-        return configer;
+    public Configure getConfigure() {
+        return configure;
     }
 }
