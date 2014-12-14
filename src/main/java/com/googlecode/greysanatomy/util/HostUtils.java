@@ -53,11 +53,11 @@ public class HostUtils {
         ret.add("127.0.0.1");
         try {
             final String hostName = getLocalHostName();
-            final InetAddress[] address = InetAddress.getAllByName(hostName);
-            for (int i = 0; i < address.length; i++) {
-                final String ip = address[i].getHostAddress();
+            final InetAddress[] addresses = InetAddress.getAllByName(hostName);
+            for (InetAddress address : addresses) {
+                final String ip = address.getHostAddress();
                 if (ip.matches("^(\\d{1,3}\\.){3}\\d{1,3}$")) {
-                    ret.add(address[i].getHostAddress());
+                    ret.add(address.getHostAddress());
                 }
             }
 
