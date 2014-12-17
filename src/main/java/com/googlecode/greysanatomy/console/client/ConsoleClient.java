@@ -1,6 +1,6 @@
 package com.googlecode.greysanatomy.console.client;
 
-import com.googlecode.greysanatomy.Configer;
+import com.googlecode.greysanatomy.Configure;
 import com.googlecode.greysanatomy.console.GreysAnatomyConsole;
 import com.googlecode.greysanatomy.console.rmi.req.ReqHeart;
 import com.googlecode.greysanatomy.console.server.ConsoleServerService;
@@ -24,18 +24,18 @@ public class ConsoleClient {
     private final ConsoleServerService consoleServer;
     private final long sessionId;
 
-    private ConsoleClient(Configer configer) throws Exception {
+    private ConsoleClient(Configure configure) throws Exception {
         this.consoleServer = (ConsoleServerService) Naming.lookup(String.format("rmi://%s:%d/RMI_GREYS_ANATOMY",
-                configer.getTargetIp(),
-                configer.getTargetPort()));
+                configure.getTargetIp(),
+                configure.getTargetPort()));
 
         // 检查PID是否正确
-        if (!consoleServer.checkPID(configer.getJavaPid())) {
+        if (!consoleServer.checkPID(configure.getJavaPid())) {
             throw new PIDNotMatchException();
         }
 
         this.sessionId = this.consoleServer.register();
-        new GreysAnatomyConsole(configer, sessionId).start(consoleServer);
+        new GreysAnatomyConsole(configure, sessionId).start(consoleServer);
 //        new RISCGreysAnatomyConsole(configer, sessionId).start(consoleServer);
         heartBeat();
     }
@@ -90,13 +90,13 @@ public class ConsoleClient {
     /**
      * 单例控制台客户端
      *
-     * @param configer
+     * @param configure
      * @throws ConsoleException
      * @throws IOException
      */
-    public static synchronized void getInstance(Configer configer) throws Exception {
+    public static synchronized void getInstance(Configure configure) throws Exception {
         if (null == instance) {
-            instance = new ConsoleClient(configer);
+            instance = new ConsoleClient(configure);
         }
     }
 

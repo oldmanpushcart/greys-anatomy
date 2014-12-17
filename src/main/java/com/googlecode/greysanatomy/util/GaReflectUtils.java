@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -88,25 +89,21 @@ public class GaReflectUtils {
                                     packageName = name.substring(0, idx)
                                             .replace('/', '.');
                                 }
-                                // 如果可以迭代下去 并且是一个包
-                                if ((idx != -1) || recursive) {
-                                    // 如果是一个.class文件 而且不是目录
-                                    if (name.endsWith(".class")
-                                            && !entry.isDirectory()) {
-                                        // 去掉后面的".class" 获取真正的类名
-                                        String className = name.substring(
-                                                packageName.length() + 1,
-                                                name.length() - 6);
-                                        try {
-                                            // 添加到classes
-                                            classes.add(Class
-                                                    .forName(packageName + '.'
-                                                            + className));
-                                        } catch (ClassNotFoundException e) {
-                                            // log
-                                            // .error("添加用户自定义视图类错误 找不到此类的.class文件");
+                                // 如果是一个.class文件 而且不是目录
+                                if (name.endsWith(".class") && !entry.isDirectory()) {
+                                    // 去掉后面的".class" 获取真正的类名
+                                    String className = name.substring(
+                                            packageName.length() + 1,
+                                            name.length() - 6);
+                                    try {
+                                        // 添加到classes
+                                        classes.add(Class
+                                                .forName(packageName + '.'
+                                                        + className));
+                                    } catch (ClassNotFoundException e) {
+                                        // log
+                                        // .error("添加用户自定义视图类错误 找不到此类的.class文件");
 //											e.printStackTrace();
-                                        }
                                     }
                                 }
                             }
@@ -186,9 +183,7 @@ public class GaReflectUtils {
     public static Set<Field> getFields(Class<?> clazz) {
         final Set<Field> fields = new LinkedHashSet<Field>();
         final Class<?> parentClazz = clazz.getSuperclass();
-        for (Field field : clazz.getDeclaredFields()) {
-            fields.add(field);
-        }
+        Collections.addAll(fields, clazz.getDeclaredFields());
         if (null != parentClazz) {
             fields.addAll(getFields(parentClazz));
         }

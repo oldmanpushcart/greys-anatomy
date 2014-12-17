@@ -12,7 +12,7 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.*;
  *
  * @author vlinux
  */
-public class Configer {
+public class Configure {
 
     private String targetIp;                //目标主机IP
     private int targetPort;                 //目标进程号
@@ -26,7 +26,7 @@ public class Configer {
      */
     public String toString() {
         final StringBuilder strSB = new StringBuilder();
-        for (Field field : getFields(Configer.class)) {
+        for (Field field : getFields(Configure.class)) {
             try {
                 strSB.append(field.getName()).append("=").append(encode(newString(getFieldValueByField(this, field)))).append(";");
             } catch (Throwable t) {
@@ -42,21 +42,21 @@ public class Configer {
      * @param toString
      * @return
      */
-    public static Configer toConfiger(String toString) {
-        final Configer configer = new Configer();
+    public static Configure toConfiger(String toString) {
+        final Configure configure = new Configure();
         final String[] pvs = split(toString, ";");
         for (String pv : pvs) {
             try {
                 final String[] strs = split(pv, "=");
                 final String p = strs[0];
                 final String v = decode(strs[1]);
-                final Field field = getField(Configer.class, p);
-                set(field, valueOf(field.getType(), v), configer);
+                final Field field = getField(Configure.class, p);
+                set(field, valueOf(field.getType(), v), configure);
             } catch (Throwable t) {
                 //
             }
         }
-        return configer;
+        return configure;
     }
 
     public String getTargetIp() {
