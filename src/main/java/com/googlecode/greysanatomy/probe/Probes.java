@@ -111,7 +111,7 @@ public class Probes {
      * @param cb
      * @return
      */
-    private static boolean isIngore(CtClass cc, CtBehavior cb) {
+    private static boolean isIgnore(CtClass cc, CtBehavior cb) {
 
         final int ccMod = cc.getModifiers();
         final int cbMod = cb.getModifiers();
@@ -146,7 +146,7 @@ public class Probes {
      */
     public static void mine(int id, CtClass cc, CtBehavior cb) throws CannotCompileException, NotFoundException {
 
-        if (isIngore(cc, cb)) {
+        if (isIgnore(cc, cb)) {
             return;
         }
 
