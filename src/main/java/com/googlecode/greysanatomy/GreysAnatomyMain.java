@@ -102,12 +102,16 @@ public class GreysAnatomyMain {
         }
 
         if (null == attachVmdObj) {
-            throw new IllegalArgumentException("pid:" + configer.getJavaPid() + " not existed.");
+            // throw new IllegalArgumentException("pid:" + configer.getJavaPid() + " not existed.");
         }
 
         Object vmObj = null;
         try {
-            vmObj = vmClass.getMethod("attach", vmdClass).invoke(null, attachVmdObj);
+            if (null == attachVmdObj) { // 使用 attach(String pid) 这种方式
+                vmObj = vmClass.getMethod("attach", String.class).invoke(null, "" + configer.getJavaPid());
+            } else {
+                vmObj = vmClass.getMethod("attach", vmdClass).invoke(null, attachVmdObj);
+            }
             vmClass.getMethod("loadAgent", String.class, String.class).invoke(vmObj, JARFILE, configer.toString());
         } finally {
             if (null != vmObj) {
@@ -128,11 +132,11 @@ public class GreysAnatomyMain {
             ConsoleClient.getInstance(configer);
             return true;
         } catch (java.rmi.ConnectException ce) {
-            if(logger.isLoggable(Level.WARNING)){
+            if (logger.isLoggable(Level.WARNING)) {
                 logger.warning(String.format("target{%s:%s} RMI was shutdown, console will be exit.", configer.getTargetIp(), configer.getTargetPort()));
             }
         } catch (PIDNotMatchException pidnme) {
-            if(logger.isLoggable(Level.WARNING)){
+            if (logger.isLoggable(Level.WARNING)) {
                 logger.warning(String.format("target{%s:%s} PID was not match, console will be exit.", configer.getTargetIp(), configer.getTargetPort()));
             }
         }
@@ -145,8 +149,8 @@ public class GreysAnatomyMain {
         try {
             new GreysAnatomyMain(args);
         } catch (Throwable t) {
-            if(logger.isLoggable(Level.SEVERE)){
-                logger.log(Level.SEVERE,String.format("start greys-anatomy failed. because %s", t.getMessage()), t);
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, String.format("start greys-anatomy failed. because %s", t.getMessage()), t);
             }
             System.exit(-1);
         }
