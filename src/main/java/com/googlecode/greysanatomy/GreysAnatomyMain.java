@@ -102,12 +102,16 @@ public class GreysAnatomyMain {
         }
 
         if (null == attachVmdObj) {
-            throw new IllegalArgumentException("pid:" + configure.getJavaPid() + " not existed.");
+            // throw new IllegalArgumentException("pid:" + configure.getJavaPid() + " not existed.");
         }
 
         Object vmObj = null;
         try {
-            vmObj = vmClass.getMethod("attach", vmdClass).invoke(null, attachVmdObj);
+            if (null == attachVmdObj) { // 使用 attach(String pid) 这种方式
+                vmObj = vmClass.getMethod("attach", String.class).invoke(null, "" + configure.getJavaPid());
+            } else {
+                vmObj = vmClass.getMethod("attach", vmdClass).invoke(null, attachVmdObj);
+            }
             vmClass.getMethod("loadAgent", String.class, String.class).invoke(vmObj, JARFILE, configure.toString());
         } finally {
             if (null != vmObj) {
