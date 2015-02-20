@@ -23,8 +23,8 @@ import java.rmi.NoSuchObjectException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.googlecode.greysanatomy.util.GaStringUtils.isBlank;
 import static com.googlecode.greysanatomy.util.GaStringUtils.EMPTY;
+import static com.googlecode.greysanatomy.util.GaStringUtils.isBlank;
 
 
 /**
@@ -83,7 +83,7 @@ public class GreysAnatomyConsole {
                     write("Please type help for more information...\n\n");
                 } catch (Exception e) {
                     // 这里是控制台，可能么？
-                    if(logger.isLoggable(Level.WARNING)){
+                    if (logger.isLoggable(Level.WARNING)) {
                         logger.log(Level.WARNING, "console read failed.", e);
                     }
                 }
@@ -151,13 +151,13 @@ public class GreysAnatomyConsole {
                     Thread.sleep(500);
                 } catch (NoSuchObjectException nsoe) {
                     // 目标RMI关闭,需要退出控制台
-                    if(logger.isLoggable(Level.WARNING)){
+                    if (logger.isLoggable(Level.WARNING)) {
                         logger.warning("target RMI's server was closed, console will be exit.");
                     }
 
                     break;
                 } catch (Exception e) {
-                    if(logger.isLoggable(Level.WARNING)){
+                    if (logger.isLoggable(Level.WARNING)) {
                         logger.log(Level.WARNING, "console write failed.", e);
                     }
                 }
@@ -184,7 +184,7 @@ public class GreysAnatomyConsole {
             write(resp);
 
             if (isQuit) {
-                if(logger.isLoggable(Level.INFO)){
+                if (logger.isLoggable(Level.INFO)) {
                     logger.info("greys console will be shutdown.");
                 }
                 System.exit(0);
@@ -212,7 +212,7 @@ public class GreysAnatomyConsole {
                         consoleServer.killJob(new ReqKillJob(sessionId, jobId));
                     } catch (Exception e1) {
                         // 这里是控制台，可能么？
-                        if(logger.isLoggable(Level.WARNING)){
+                        if (logger.isLoggable(Level.WARNING)) {
                             logger.log(Level.WARNING, "killJob failed.", e);
                         }
                     }
@@ -246,7 +246,12 @@ public class GreysAnatomyConsole {
             }
             if (!GaStringUtils.isEmpty(content)) {
                 write(content);
-                redrawLine();
+
+                // 这里修复了输出内容被打断的BUG,需要更多的测试来验证这样的写法是正确的
+                // 之前这里必定会出现传输的字节数超过服务端的BUFFER时被redrawLine()方法打乱格式的尴尬
+                if (isF) {
+                    redrawLine();
+                }
             }
         }
     }
@@ -263,7 +268,7 @@ public class GreysAnatomyConsole {
             writer.flush();
         } catch (IOException e) {
             // 控制台写失败，可能么？
-            if(logger.isLoggable(Level.WARNING)){
+            if (logger.isLoggable(Level.WARNING)) {
                 logger.log(Level.WARNING, "console write failed.", e);
             }
         }
