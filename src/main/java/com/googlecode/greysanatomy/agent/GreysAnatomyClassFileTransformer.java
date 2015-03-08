@@ -64,12 +64,22 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
         synchronized (classBytesCache) {
             final ClassPool cp = new ClassPool(null);
 
+            // TODO : 这里利用loader.toString()作为key组成，很可能会造成key冲突以及内存泄漏，应该用WeakHashMap进行改造
             final String cacheKey = className + "@" + loader;
             if (classBytesCache.containsKey(cacheKey)) {
+                // 优先级1:
+                // 命中字节码缓存，有限从缓存加载
+                // 字节码缓存最重要的意义在于能让数个job同时渲染到一个Class上
                 cp.appendClassPath(new ByteArrayClassPath(className, classBytesCache.get(cacheKey)));
             }
 
+            // 优先级2: 使用ClassLoader加载
             cp.appendClassPath(new LoaderClassPath(loader));
+
+            //优先级3:
+            // 对于$Proxy之类使用JDKProxy动态生成的类，由于没有CodeSource，所以无法通过ClassLoader.getResources()
+            // 完成对字节码的获取，只能使用由transform传入的classFileBuffer（原JVM字节码）来完成渲染动作
+            cp.appendClassPath(new ByteArrayClassPath(className, classFileBuffer));
 
             CtClass cc = null;
             byte[] data;

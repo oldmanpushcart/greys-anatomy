@@ -187,7 +187,8 @@ public class ConsoleServerHandler {
                 writer.append(message);
                 writer.flush();
             } catch (IOException e) {
-                warn(e, "write job message failed, jobId=%s.", jobId);
+                debug(e, "write job message failed, jobId=%s.", jobId);
+                warn("write job message failed, jobId=%s.", jobId);
             }
         }
 
@@ -208,7 +209,8 @@ public class ConsoleServerHandler {
                 respResult.setPos(newPos);
                 respResult.setMessage(buffer.toString());
             } catch (IOException e) {
-                warn(e, "read job failed, jobId=%s.", jobId);
+                debug(e, "read job failed, jobId=%s.", jobId);
+                warn("read job failed, jobId=%s.", jobId);
             }
         }
 
