@@ -12,11 +12,7 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 import static com.googlecode.greysanatomy.probe.ProbeJobs.register;
 import static com.googlecode.greysanatomy.util.LogUtils.*;
@@ -32,7 +28,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     /*
      * 对之前做的类进行一个缓存
      */
-    private final static Map<String, byte[]> classBytesCache = new ConcurrentHashMap<String, byte[]>();
+    private final static Map<Class<?>, byte[]> classBytesCache = new WeakHashMap<Class<?>, byte[]>();
 
     private GreysAnatomyClassFileTransformer(
 //            final String prefClzRegex,
@@ -64,13 +60,12 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
         synchronized (classBytesCache) {
             final ClassPool cp = new ClassPool(null);
 
-            // TODO : 这里利用loader.toString()作为key组成，很可能会造成key冲突以及内存泄漏，应该用WeakHashMap进行改造
-            final String cacheKey = className + "@" + loader;
-            if (classBytesCache.containsKey(cacheKey)) {
+//            final String cacheKey = className + "@" + loader;
+            if (classBytesCache.containsKey(classBeingRedefined)) {
                 // 优先级1:
                 // 命中字节码缓存，有限从缓存加载
                 // 字节码缓存最重要的意义在于能让数个job同时渲染到一个Class上
-                cp.appendClassPath(new ByteArrayClassPath(className, classBytesCache.get(cacheKey)));
+                cp.appendClassPath(new ByteArrayClassPath(className, classBytesCache.get(classBeingRedefined)));
             }
 
             // 优先级2: 使用ClassLoader加载
@@ -114,7 +109,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                 }
             }
 
-            classBytesCache.put(cacheKey, data);
+            classBytesCache.put(classBeingRedefined, data);
             return data;
         }
 
