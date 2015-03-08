@@ -10,47 +10,47 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface RiscIndexArg {
+public @interface IndexArg {
 
     /**
      * 参数在命令中的位置
      *
-     * @return
+     * @return 参数在命令中的位置
      */
     public int index();
 
     /**
      * 参数名称
      *
-     * @return
+     * @return 参数名称
      */
     public String name();
 
     /**
      * 参数注释
      *
-     * @return
+     * @return 参数注释
      */
     public String description() default "";
 
     /**
      * 更详细的参数注释
      *
-     * @return
+     * @return 更详细的参数注释
      */
     public String description2() default "";
 
-    /**
-     * 参数校验
-     *
-     * @return
-     */
-    public ArgVerifier[] verify() default {};
+//    /**
+//     * 参数校验
+//     *
+//     * @return 参数校验
+//     */
+//    public ArgVerifier[] verify() default {};
 
     /**
      * 是否必填
      *
-     * @return
+     * @return 是否必填
      */
     public boolean isRequired() default true;
 

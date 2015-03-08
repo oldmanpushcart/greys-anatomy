@@ -13,19 +13,18 @@ import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.probe.ProbeJobs.register;
+import static com.googlecode.greysanatomy.util.LogUtils.*;
+import static java.lang.System.arraycopy;
 
 public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
-    private static final Logger logger = Logger.getLogger("greysanatomy");
-
-    private final String prefClzRegex;
+    //    private final String prefClzRegex;
     private final String prefMthRegex;
     private final int id;
     private final List<CtBehavior> modifiedBehaviors;
@@ -36,12 +35,12 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     private final static Map<String, byte[]> classBytesCache = new ConcurrentHashMap<String, byte[]>();
 
     private GreysAnatomyClassFileTransformer(
-            final String prefClzRegex,
+//            final String prefClzRegex,
             final String prefMthRegex,
             final JobListener listener,
             final List<CtBehavior> modifiedBehaviors,
             final Info info) {
-        this.prefClzRegex = prefClzRegex;
+//        this.prefClzRegex = prefClzRegex;
         this.prefMthRegex = prefMthRegex;
         this.modifiedBehaviors = modifiedBehaviors;
         this.id = info.getJobId();
@@ -49,15 +48,17 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     }
 
     @Override
-    public byte[] transform(final ClassLoader loader, String classNameForFilepath,
+    public byte[] transform(final ClassLoader loader, String classNameForFilePath,
                             Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
-                            byte[] classfileBuffer)
+                            byte[] classFileBuffer)
             throws IllegalClassFormatException {
 
-        final String className = GaReflectUtils.toClassPath(classNameForFilepath);
-        if (!className.matches(prefClzRegex)) {
-            return null;
-        }
+        final String className = GaReflectUtils.toClassPath(classNameForFilePath);
+
+//        // 这个判断可以去掉了，在外层已经进行过一次
+//        if (!className.matches(prefClzRegex)) {
+//            return null;
+//        }
 
         // 这里做一个并发控制，防止两边并发对类进行编译，影响缓存
         synchronized (classBytesCache) {
@@ -83,18 +84,19 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                             modifiedBehaviors.add(cb);
                             Probes.mine(id, cc, cb);
                         }
+
+                        //  方法名不匹配正则表达式
+                        else {
+                            debug("class=%s;method=%s was not matches regex=%s", className, cb.getMethodInfo().getName(), prefMthRegex);
+                        }
                     }
                 }
 
                 data = cc.toBytecode();
             } catch (Exception e) {
-                if (logger.isLoggable(Level.FINEST)) {
-                    logger.log(Level.FINEST, String.format("transform class failed. class=%s, classloader=%s",
-                            className, loader), e);
-                }
-                if( logger.isLoggable(Level.INFO) ) {
-                    logger.info(String.format("transform class failed. class=%s, classloader=%s", className, loader));
-                }
+                debug(e, "transform class failed. class=%s, ClassLoader=%s",
+                        className, loader);
+                info("transform class failed. class=%s, ClassLoader=%s", className, loader);
                 data = null;
             } finally {
                 if (null != cc) {
@@ -120,7 +122,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
         private final List<Class<?>> modifiedClasses;
         private final List<CtBehavior> modifiedBehaviors;
 
-        private TransformResult(int id, final List<Class<?>> modifiedClasses, final List<CtBehavior> modifiedBehaviors) {
+        private TransformResult(int id, final Collection<Class<?>> modifiedClasses, final List<CtBehavior> modifiedBehaviors) {
             this.id = id;
             this.modifiedClasses = new ArrayList<Class<?>>(modifiedClasses);
             this.modifiedBehaviors = new ArrayList<CtBehavior>(modifiedBehaviors);
@@ -153,18 +155,19 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                                             final String prefClzRegex,
                                             final String prefMthRegex,
                                             final JobListener listener,
-                                            final Info info) throws UnmodifiableClassException {
-        return transform(instrumentation, prefClzRegex, prefMthRegex, listener, info, null);
+                                            final Info info,
+                                            final boolean isForEach) throws UnmodifiableClassException {
+        return transform(instrumentation, prefClzRegex, prefMthRegex, listener, info, isForEach, null);
     }
 
     /**
      * 对类进行形变
      *
-     * @param instrumentation
-     * @param prefClzRegex
-     * @param prefMthRegex
-     * @param listener
-     * @return
+     * @param instrumentation instrumentation
+     * @param prefClzRegex    类名称正则表达式
+     * @param prefMthRegex    方法名正则表达式
+     * @param listener        任务监听器
+     * @return 渲染结果
      * @throws UnmodifiableClassException
      */
     public static TransformResult transform(final Instrumentation instrumentation,
@@ -172,48 +175,127 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                                             final String prefMthRegex,
                                             final JobListener listener,
                                             final Info info,
+                                            final boolean isForEach,
                                             final Progress progress) throws UnmodifiableClassException {
 
         final List<CtBehavior> modifiedBehaviors = new ArrayList<CtBehavior>();
-        GreysAnatomyClassFileTransformer jcft = new GreysAnatomyClassFileTransformer(prefClzRegex, prefMthRegex, listener, modifiedBehaviors, info);
-        instrumentation.addTransformer(jcft, true);
+        final GreysAnatomyClassFileTransformer transformer
+                = new GreysAnatomyClassFileTransformer(prefMthRegex, listener, modifiedBehaviors, info);
+        instrumentation.addTransformer(transformer, true);
+
+        final Collection<Class<?>> modifiedClasses = classesRegexMatch(instrumentation, prefClzRegex);
+        synchronized (GreysAnatomyClassFileTransformer.class) {
+            try {
+
+                if (isForEach) {
+                    forEachReTransformClasses(instrumentation, modifiedClasses, info, progress);
+                } else {
+                    batchReTransformClasses(instrumentation, modifiedClasses, info, progress);
+                }
+
+            } finally {
+                instrumentation.removeTransformer(transformer);
+            }//try
+        }//sync
+
+        return new TransformResult(transformer.id, modifiedClasses, modifiedBehaviors);
+
+    }
+
+
+    /**
+     * 找到符合正则表达式要求的类
+     *
+     * @param instrumentation instrumentation
+     * @param prefClzRegex    类名称正则表达式
+     * @return 符合正则表达式的类集合
+     */
+    private static Collection<Class<?>> classesRegexMatch(final Instrumentation instrumentation,
+                                                          final String prefClzRegex) {
         final List<Class<?>> modifiedClasses = new ArrayList<Class<?>>();
         for (Class<?> clazz : instrumentation.getAllLoadedClasses()) {
             if (clazz.getName().matches(prefClzRegex)) {
                 modifiedClasses.add(clazz);
+                debug("class:%s was matched;", clazz);
             }
-        }
-        synchronized (GreysAnatomyClassFileTransformer.class) {
-            try {
-                int index = 0;
-                int total = modifiedClasses.size();
-                for (final Class<?> clazz : modifiedClasses) {
-                    try {
-                        if (ProbeJobs.isJobKilled(info.getJobId())) {
-                            if( logger.isLoggable(Level.INFO) ) {
-                                logger.info(String.format("job[id=%s] was killed, stop this retransform.", info.getJobId()));
-                            }
-                            break;
-                        }
-                        instrumentation.retransformClasses(clazz);
-                    } catch (Throwable t) {
-                        if( logger.isLoggable(Level.WARNING) ) {
-                            logger.log(Level.WARNING, String.format("transform failed, class=%s.", clazz), t);
-                        }
-                    } finally {
-                        if (null != progress) {
-                            progress.progress(++index, total);
-                        }
-                    }
-                }//for
-            } finally {
-                instrumentation.removeTransformer(jcft);
-            }//try
-        }//sycn
+        }//for
 
-        return new TransformResult(jcft.id, modifiedClasses, modifiedBehaviors);
+        info("ClzRegex was %s, found size[%s] classes was matched.", prefClzRegex, modifiedClasses.size());
 
+        return modifiedClasses;
     }
 
+
+    /**
+     * 批量对类进行渲染
+     *
+     * @param instrumentation instrumentation
+     * @param modifiedClasses 需要渲染的类
+     * @param info            上下文
+     * @param progress        进度条
+     */
+    private static void batchReTransformClasses(final Instrumentation instrumentation,
+                                                final Collection<Class<?>> modifiedClasses,
+                                                final Info info,
+                                                final Progress progress) {
+        if (ProbeJobs.isJobKilled(info.getJobId())) {
+            info("job[id=%s] was killed, stop this reTransform.", info.getJobId());
+            return;
+        }
+
+        final int size = modifiedClasses.size();
+        final Class<?>[] classArray = new Class<?>[size];
+        final Object[] objectArray = modifiedClasses.toArray();
+        arraycopy(objectArray, 0, classArray, 0, size);
+
+        try {
+            instrumentation.retransformClasses(classArray);
+            info("reTransformClasses:size=[%s]", size);
+            debug("reTransformClasses:%s", modifiedClasses);
+        } catch (Throwable t) {
+            debug(t, "reTransformClasses failed, classes=%s.", modifiedClasses);
+            warn("reTransformClasses failed, size=%s.", size);
+        } finally {
+            if (null != progress) {
+                progress.progress(size, size);
+            }
+        }//try
+    }
+
+    /**
+     * forEach迭代对类进行渲染
+     *
+     * @param instrumentation instrumentation
+     * @param modifiedClasses 需要渲染的类
+     * @param info            上下文
+     * @param progress        进度条
+     */
+    private static void forEachReTransformClasses(final Instrumentation instrumentation,
+                                                  final Collection<Class<?>> modifiedClasses,
+                                                  final Info info,
+                                                  final Progress progress) {
+
+        int index = 0;
+        int total = modifiedClasses.size();
+
+        for (final Class<?> clazz : modifiedClasses) {
+            if (ProbeJobs.isJobKilled(info.getJobId())) {
+                info("job[id=%s] was killed, stop this reTransform.", info.getJobId());
+                break;
+            }
+            try {
+                instrumentation.retransformClasses(clazz);
+                debug("reTransformClasses, index=%s;total=%s;class=%s;", index, total, clazz);
+            } catch (Throwable t) {
+                debug(t, "reTransformClasses failed, index=%s;total=%s;class=%s;", index, total, clazz);
+                warn("reTransformClasses failed, index=%s;total=%s;class=%s;", index, total, clazz);
+            } finally {
+                if (null != progress) {
+                    progress.progress(++index, total);
+                }
+            }//try
+        }//for
+
+    }
 
 }

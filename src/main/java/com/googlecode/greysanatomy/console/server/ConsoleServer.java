@@ -15,8 +15,9 @@ import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import static com.googlecode.greysanatomy.util.LogUtils.debug;
+import static com.googlecode.greysanatomy.util.LogUtils.info;
 
 /**
  * 控制台服务器
@@ -27,7 +28,6 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
 
     private static final long serialVersionUID = 7625219488001802803L;
 
-    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private final ConsoleServerHandler serverHandler;
     private final Configure configure;
@@ -39,21 +39,13 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
 
         // fix java.rmi.server.hostname, if it was invalid
         final String javaRmiServerHostname = System.getProperty("java.rmi.server.hostname");
-        if( GaStringUtils.isNotBlank(javaRmiServerHostname)
+        if (GaStringUtils.isNotBlank(javaRmiServerHostname)
                 && !HostUtils.getAllLocalHostIP().contains(javaRmiServerHostname)) {
             System.setProperty("java.rmi.server.hostname", "127.0.0.1");
         }
 
     }
 
-    /**
-     * 构造控制台服务器
-     *
-     * @param configure
-     * @param inst
-     * @throws RemoteException
-     * @throws MalformedURLException
-     */
     private ConsoleServer(Configure configure, final Instrumentation inst) throws RemoteException, MalformedURLException, AlreadyBoundException {
         super();
         serverHandler = new ConsoleServerHandler(this, inst);
@@ -74,14 +66,12 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
         for (String ip : HostUtils.getAllLocalHostIP()) {
             final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configure.getTargetPort());
             try {
-                logger.info("lookup for :"+bindName);
+                info("lookup for : %s", bindName);
                 Naming.lookup(bindName);
                 bind = true;
             } catch (NotBoundException e) {
                 // 只有没有绑定才会去绑
-                if(logger.isLoggable(Level.INFO)) {
-                    logger.info("rebind : " + bindName);
-                }
+                info("rebind : %s", bindName);
                 Naming.bind(bindName, this);
             }
         }
@@ -90,10 +80,6 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
 
     /**
      * 解除绑定Naming
-     *
-     * @throws RemoteException
-     * @throws NotBoundException
-     * @throws MalformedURLException
      */
     private synchronized void unbind() throws RemoteException, NotBoundException, MalformedURLException {
 
@@ -102,19 +88,14 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
             final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configure.getTargetPort());
             try {
                 Naming.unbind(bindName);
-                if(logger.isLoggable(Level.INFO)){
-                    logger.info("unbind : " + bindName);
-                }
-            } catch (NotBoundException e) {
-                continue;
-            } catch (NoSuchObjectException e) {
-                continue;
+                info("unbind : %s", bindName);
+            } catch (Exception e) {
+                debug(e, "unbind failed : %s;", bindName);
             }
         }//for
 
         if (null != registry) {
             UnicastRemoteObject.unexportObject(registry, true);
-//            PortableRemoteObject.unexportObject(this);
         }
 
         bind = false;
@@ -122,9 +103,9 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     }
 
     /**
-     * 是否已被RMI.bind()
+     * 是否已被RMI绑定
      *
-     * @return
+     * @return 是否已被RMI绑定
      */
     public boolean isBind() {
         return bind;
@@ -145,18 +126,17 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     private static volatile ConsoleServer instance;
 
     /**
-     * 单例控制台服务器
+     * 单例控制台服务器<br/>
+     * 在AgentMain中通过反射来调用
      *
-     * @param configure
+     * @param configure 配置文件
      * @throws MalformedURLException
      * @throws RemoteException
      */
     public static synchronized ConsoleServer getInstance(Configure configure, Instrumentation inst) throws RemoteException, MalformedURLException, AlreadyBoundException {
         if (null == instance) {
             instance = new ConsoleServer(configure, inst);
-            if(logger.isLoggable(Level.INFO)){
-                logger.info(GaStringUtils.getLogo());
-            }
+            info(GaStringUtils.getLogo());
         }
         return instance;
     }

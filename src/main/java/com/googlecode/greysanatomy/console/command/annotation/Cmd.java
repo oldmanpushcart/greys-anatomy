@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface RiscCmd {
+public @interface Cmd {
 
     /**
      * 指定命令的名称<br/>

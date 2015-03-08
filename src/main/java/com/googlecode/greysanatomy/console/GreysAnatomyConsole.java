@@ -20,11 +20,11 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.Writer;
 import java.rmi.NoSuchObjectException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.util.GaStringUtils.EMPTY;
 import static com.googlecode.greysanatomy.util.GaStringUtils.isBlank;
+import static com.googlecode.greysanatomy.util.LogUtils.info;
+import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
 
 /**
@@ -34,7 +34,6 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.isBlank;
  */
 public class GreysAnatomyConsole {
 
-    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private final Configure configure;
     private final ConsoleReader console;
@@ -48,7 +47,8 @@ public class GreysAnatomyConsole {
     /**
      * 创建GA控制台
      *
-     * @param configure
+     * @param configure 配置文件
+     * @param sessionId 会话ID
      * @throws IOException
      */
     public GreysAnatomyConsole(Configure configure, long sessionId) throws IOException {
@@ -56,7 +56,7 @@ public class GreysAnatomyConsole {
         this.configure = configure;
         this.sessionId = sessionId;
         write(GaStringUtils.getLogo());
-        Commands.getInstance().registCompleter(console);
+        Commands.getInstance().regCompleter(console);
     }
 
     /**
@@ -64,17 +64,17 @@ public class GreysAnatomyConsole {
      *
      * @author vlinux
      */
-    private class GaConsoleInputer implements Runnable {
+    private class GaConsoleReader implements Runnable {
 
         private final ConsoleServerService consoleServer;
 
-        private GaConsoleInputer(ConsoleServerService consoleServer) {
+        private GaConsoleReader(ConsoleServerService consoleServer) {
             this.consoleServer = consoleServer;
         }
 
         @Override
         public void run() {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     //控制台读命令
                     doRead();
@@ -83,9 +83,7 @@ public class GreysAnatomyConsole {
                     write("Please type help for more information...\n\n");
                 } catch (Exception e) {
                     // 这里是控制台，可能么？
-                    if (logger.isLoggable(Level.WARNING)) {
-                        logger.log(Level.WARNING, "console read failed.", e);
-                    }
+                    warn(e, "console read failed.");
                 }
             }
         }
@@ -104,7 +102,7 @@ public class GreysAnatomyConsole {
 
             final Command command;
             try {
-                command = Commands.getInstance().newRiscCommand(reqCmd.getCommand());
+                command = Commands.getInstance().newCommand(reqCmd.getCommand());
             } catch (Exception e) {
                 throw new ConsoleException(e.getMessage());
             }
@@ -131,19 +129,19 @@ public class GreysAnatomyConsole {
      *
      * @author chengtongda
      */
-    private class GaConsoleOutputer implements Runnable {
+    private class GaConsoleWriter implements Runnable {
 
         private final ConsoleServerService consoleServer;
         private int currentJob;
         private int pos = 0;
 
-        private GaConsoleOutputer(ConsoleServerService consoleServer) {
+        private GaConsoleWriter(ConsoleServerService consoleServer) {
             this.consoleServer = consoleServer;
         }
 
         @Override
         public void run() {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     //控制台写数据
                     doWrite();
@@ -151,15 +149,10 @@ public class GreysAnatomyConsole {
                     Thread.sleep(500);
                 } catch (NoSuchObjectException nsoe) {
                     // 目标RMI关闭,需要退出控制台
-                    if (logger.isLoggable(Level.WARNING)) {
-                        logger.warning("target RMI's server was closed, console will be exit.");
-                    }
-
+                    warn("target RMI server was closed, console will be exit.");
                     break;
                 } catch (Exception e) {
-                    if (logger.isLoggable(Level.WARNING)) {
-                        logger.log(Level.WARNING, "console write failed.", e);
-                    }
+                    warn(e, "console write failed.");
                 }
             }
         }
@@ -184,9 +177,7 @@ public class GreysAnatomyConsole {
             write(resp);
 
             if (isQuit) {
-                if (logger.isLoggable(Level.INFO)) {
-                    logger.info("greys console will be shutdown.");
-                }
+                info("greys console will be shutdown.");
                 System.exit(0);
             }
 
@@ -212,16 +203,14 @@ public class GreysAnatomyConsole {
                         consoleServer.killJob(new ReqKillJob(sessionId, jobId));
                     } catch (Exception e1) {
                         // 这里是控制台，可能么？
-                        if (logger.isLoggable(Level.WARNING)) {
-                            logger.log(Level.WARNING, "killJob failed.", e);
-                        }
+                        warn(e1, "killJob failed. job=%s;", jobId);
                     }
                 }
             }
 
         });
-        new Thread(new GaConsoleInputer(consoleServer), "ga-console-inputer").start();
-        new Thread(new GaConsoleOutputer(consoleServer), "ga-console-outputer").start();
+        new Thread(new GaConsoleReader(consoleServer), "ga-console-reader").start();
+        new Thread(new GaConsoleWriter(consoleServer), "ga-console-writer").start();
     }
 
     private synchronized void redrawLine() throws IOException {
@@ -268,9 +257,7 @@ public class GreysAnatomyConsole {
             writer.flush();
         } catch (IOException e) {
             // 控制台写失败，可能么？
-            if (logger.isLoggable(Level.WARNING)) {
-                logger.log(Level.WARNING, "console write failed.", e);
-            }
+            warn(e, "console write failed.");
         }
 
     }

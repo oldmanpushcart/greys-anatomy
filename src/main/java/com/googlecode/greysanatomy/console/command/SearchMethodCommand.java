@@ -1,8 +1,8 @@
 package com.googlecode.greysanatomy.console.command;
 
-import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
-import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
-import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
+import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.IndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.util.GaDetailUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
@@ -18,20 +18,20 @@ import static java.lang.String.format;
  *
  * @author vlinux
  */
-@RiscCmd(named = "sm", sort = 1, desc = "Search all have been class method JVM loading.",
+@Cmd(named = "sm", sort = 1, desc = "Search all have been class method JVM loading.",
         eg = {
                 "sm org\\.apache\\.commons\\.lang\\.StringUtils .*",
                 "sm -d org\\.apache\\.commons\\.lang\\.StringUtils .*",
         })
 public class SearchMethodCommand extends Command {
 
-    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
+    @IndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
 
-    @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
+    @IndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
     private String methodRegex;
 
-    @RiscNamedArg(named = "d", description = "show the detail of method")
+    @NamedArg(named = "d", description = "show the detail of method")
     private boolean isDetail = false;
 
     @Override

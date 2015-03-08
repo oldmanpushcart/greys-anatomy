@@ -1,9 +1,9 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
-import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
-import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
+import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.IndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
-import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
+import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
 /**
@@ -67,16 +67,16 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
-@RiscCmd(named = "monitor", sort = 5, desc = "Buried point method for monitoring the operation.")
+@Cmd(named = "monitor", sort = 5, desc = "Buried point method for monitoring the operation.")
 public class MonitorCommand extends Command {
 
-    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
+    @IndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
     private String classRegex;
 
-    @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
+    @IndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
     private String methodRegex;
 
-    @RiscNamedArg(named = "c", hasValue = true, description = "the cycle of output")
+    @NamedArg(named = "c", hasValue = true, description = "the cycle of output")
     private int cycle = 120;
 
     /*
@@ -197,12 +197,11 @@ public class MonitorCommand extends Command {
                                 }
                                 final String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
                                 final StringBuilder monitorSB = new StringBuilder();
-                                final Iterator<Map.Entry<Key, AtomicReference<Data>>> it = monitorDatas.entrySet().iterator();
-                                while (it.hasNext()) {
-                                    final Map.Entry<Key, AtomicReference<Data>> entry = it.next();
+
+                                for( Map.Entry<Key, AtomicReference<Data>> entry : monitorDatas.entrySet() ) {
                                     final AtomicReference<Data> value = entry.getValue();
 
-                                    Data data = null;
+                                    Data data;
                                     while (true) {
                                         data = value.get();
                                         if (value.compareAndSet(data, new Data())) {
@@ -226,8 +225,7 @@ public class MonitorCommand extends Command {
                                         monitorSB.append(df.format(100.0d * div(data.failed, data.total))).append("%");
                                         monitorSB.append("\n");
                                     }
-
-                                }//while
+                                }
 
                                 sender.send(false, tableFormat(monitorSB.toString()));
                             }
@@ -235,12 +233,6 @@ public class MonitorCommand extends Command {
                         }, 0, cycle * 1000);
                     }
 
-                    /**
-                     * 绕过0的除法
-                     * @param a
-                     * @param b
-                     * @return
-                     */
                     private double div(double a, double b) {
                         if (b == 0) {
                             return 0;
@@ -255,10 +247,10 @@ public class MonitorCommand extends Command {
                         }
                     }
 
-                }, info);
+                }, info, false);
 
                 // 注册任务
-                registJob(info.getSessionId(), result.getId());
+                regJob(info.getSessionId(), result.getId());
 
                 // 激活任务
                 activeJob(result.getId());

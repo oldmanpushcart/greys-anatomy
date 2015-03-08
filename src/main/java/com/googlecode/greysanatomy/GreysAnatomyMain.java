@@ -9,15 +9,16 @@ import joptsimple.OptionSet;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import static com.googlecode.greysanatomy.util.LogUtils.error;
+import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
 /**
  * Hello world!
  */
 public class GreysAnatomyMain {
 
-    private static final Logger logger = Logger.getLogger("greysanatomy");
+
     public static final String JARFILE = GreysAnatomyMain.class.getProtectionDomain().getCodeSource().getLocation().getFile();
 
     public GreysAnatomyMain(String[] args) throws Exception {
@@ -132,13 +133,9 @@ public class GreysAnatomyMain {
             ConsoleClient.getInstance(configure);
             return true;
         } catch (java.rmi.ConnectException ce) {
-            if(logger.isLoggable(Level.WARNING)){
-                logger.warning(String.format("target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort()));
-            }
-        } catch (PIDNotMatchException pidnme) {
-            if(logger.isLoggable(Level.WARNING)){
-                logger.warning(String.format("target{%s:%s} PID was not match, console will be exit.", configure.getTargetIp(), configure.getTargetPort()));
-            }
+            warn(ce, "target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
+        } catch (PIDNotMatchException pe) {
+            warn(pe, "target{%s:%s} PID was not match, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
         }
         return false;
     }
@@ -149,9 +146,7 @@ public class GreysAnatomyMain {
         try {
             new GreysAnatomyMain(args);
         } catch (Throwable t) {
-            if(logger.isLoggable(Level.SEVERE)){
-                logger.log(Level.SEVERE,String.format("start greys-anatomy failed. because %s", t.getMessage()), t);
-            }
+            error(t, "start greys-anatomy failed. because %s", t.getMessage());
             System.exit(-1);
         }
 
