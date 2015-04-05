@@ -29,11 +29,11 @@ import static com.googlecode.greysanatomy.util.LogUtils.warn;
 public class WatchCommand extends Command {
 
 
-    @IndexArg(index = 0, name = "class-wildcard", description = "wildcard matching of classpath.classname")
-    private String classWildcard;
+    @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
+    private String classPattern;
 
-    @IndexArg(index = 1, name = "method-wildcard", description = "wildcard matching of method name")
-    private String methodWildcard;
+    @IndexArg(index = 1, name = "method-pattern", description = "pattern matching of method name")
+    private String methodPattern;
 
     @IndexArg(index = 2, name = "express",
             description = "ognl expression, write by ognl.",
@@ -94,7 +94,7 @@ public class WatchCommand extends Command {
             public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classWildcard, methodWildcard, isRegEx(), new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classPattern, methodPattern, isRegEx(), new AdviceListenerAdapter() {
 
                     @Override
                     public void onBefore(Advice p) {
