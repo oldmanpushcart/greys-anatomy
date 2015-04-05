@@ -10,7 +10,7 @@ package com.googlecode.greysanatomy.util;
  * This method uses recursive matching, as in linux or windows. regexp works the same.
  * This method is very fast, comparing to similar implementations.
  */
-public class WildcardUtils {
+public class PatternMatchingUtils {
 
     /**
      * Checks whether a string matches a given wildcard pattern.

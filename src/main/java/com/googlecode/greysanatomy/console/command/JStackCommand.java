@@ -22,16 +22,17 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  */
 @Cmd(named = "stack", sort = 7, desc = "The call stack output buried point method in each thread.",
         eg = {
+                "stack -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
                 "stack org.apache.commons.lang.StringUtils isBlank",
                 "stack *StringUtils isBlank"
         })
-public class StackCommand extends Command {
+public class JStackCommand extends RegexSupportCommand {
 
-    @IndexArg(index = 0, name = "class-wildcard", description = "wildcard match of classpath.classname")
-    private String classWildcard;
+    @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
+    private String classPattern;
 
-    @IndexArg(index = 1, name = "method-wildcard", description = "wildcard match of method name")
-    private String methodWildcard;
+    @IndexArg(index = 1, name = "method-pattern", description = "pattern matching of method name")
+    private String methodPattern;
 
     @Override
     public Action getAction() {
@@ -41,7 +42,7 @@ public class StackCommand extends Command {
             public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classWildcard, methodWildcard, new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classPattern, methodPattern, isRegEx(), new AdviceListenerAdapter() {
 
                     @Override
                     public void onBefore(Advice p) {
