@@ -20,20 +20,20 @@ import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
 @Cmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
         eg = {
-                "watch -b org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
-                "watch -f org\\.apache\\.commons\\.lang\\.StringUtils isBlank returnObj",
-                "watch -bf .*StringUtils isBlank params[0]",
-                "watch .*StringUtils isBlank params[0]",
+                "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
+                "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
+                "watch -bf *StringUtils isBlank params[0]",
+                "watch *StringUtils isBlank params[0]",
         })
 public class WatchCommand extends Command {
 
 
 
-    @IndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
-    private String classRegex;
+    @IndexArg(index = 0, name = "class-wildcard", description = "wildcard match of classpath.classname")
+    private String classWildcard;
 
-    @IndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
-    private String methodRegex;
+    @IndexArg(index = 1, name = "method-wildcard", description = "wildcard match of method name")
+    private String methodWildcard;
 
     @IndexArg(index = 2, name = "express",
             description = "ognl expression, write by ognl.",
@@ -82,7 +82,7 @@ public class WatchCommand extends Command {
             public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classWildcard, methodWildcard, new AdviceListenerAdapter() {
 
                     @Override
                     public void onBefore(Advice p) {

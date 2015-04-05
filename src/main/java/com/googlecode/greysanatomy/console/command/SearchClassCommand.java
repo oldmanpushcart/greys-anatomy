@@ -19,18 +19,18 @@ import static java.lang.String.format;
  */
 @Cmd(named = "sc", sort = 0, desc = "Search all have been loaded by the JVM class.",
         eg = {
-                "sc org\\.apache\\.commons\\.lang\\.StringUtils",
-                "sc -s org\\.apache\\.commons\\.lang\\.StringUtils",
-                "sc -d org\\.apache\\.commons\\.lang\\.StringUtils",
-                "sc -sd .*StringUtils"
+                "sc org.apache.commons.lang.StringUtils",
+//                "sc -s org.apache.commons.lang.StringUtils",
+                "sc -d org.apache.commons.lang.StringUtils",
+                "sc -sd *StringUtils"
         })
 public class SearchClassCommand extends Command {
 
-    @IndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
-    private String classRegex;
+    @IndexArg(index = 0, name = "class-wildcard", description = "wildcard match of classpath.classname")
+    private String classWildcard;
 
-    @NamedArg(named = "s", description = "including class's parents")
-    private boolean isSuper = false;
+//    @NamedArg(named = "s", description = "including class's parents")
+//    private boolean isSuper = false;
 
     @NamedArg(named = "d", description = "show the detail of class")
     private boolean isDetail = false;
@@ -44,11 +44,11 @@ public class SearchClassCommand extends Command {
 
                 final StringBuilder message = new StringBuilder();
                 final Set<Class<?>> matchedClassSet;
-                if (isSuper) {
+                if (/*isSuper*/ true ) {
 
-                    matchedClassSet = SearchUtils.searchClassBySupers(info.getInst(), SearchUtils.searchClassByClassRegex(info.getInst(), classRegex));
+                    matchedClassSet = SearchUtils.searchClassBySupers(info.getInst(), SearchUtils.searchClassByClassWildcard(info.getInst(), classWildcard));
                 } else {
-                    matchedClassSet = SearchUtils.searchClassByClassRegex(info.getInst(), classRegex);
+                    matchedClassSet = SearchUtils.searchClassByClassWildcard(info.getInst(), classWildcard);
                 }
 
                 for (Class<?> clazz : matchedClassSet) {

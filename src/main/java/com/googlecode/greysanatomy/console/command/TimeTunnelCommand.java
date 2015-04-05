@@ -33,7 +33,7 @@ import static java.lang.String.format;
  */
 @Cmd(named = "tt", sort = 8, desc = "TimeTunnel the method call.",
         eg = {
-                "tt -t .*StringUtils isEmpty",
+                "tt -t *StringUtils isEmpty",
                 "tt -l",
                 "tt -D",
                 "tt -i 1000 -w params[0]",
@@ -55,11 +55,11 @@ public class TimeTunnelCommand extends Command {
     @NamedArg(named = "t", description = "TimeTunnel the method called.")
     private boolean isTimeTunnel = false;
 
-    @IndexArg(index = 0, isRequired = false, name = "class-regex", description = "regex match of classpath.classname")
-    private String classRegex;
+    @IndexArg(index = 0, isRequired = false, name = "class-wildcard", description = "wildcard match of classpath.classname")
+    private String classWildcard;
 
-    @IndexArg(index = 1, isRequired = false, name = "method-regex", description = "regex match of methodname")
-    private String methodRegex;
+    @IndexArg(index = 1, isRequired = false, name = "method-wildcard", description = "wildcard match of method name")
+    private String methodWildcard;
 
     // list the TimeTunnel
     @NamedArg(named = "l", description = "list all the TimeTunnels.")
@@ -127,13 +127,13 @@ public class TimeTunnelCommand extends Command {
 
         }
 
-        // 在r参数下class-regex,method-regex由选填变成必填
+        // 在t参数下class-wildcard,method-wildcard
         if (isTimeTunnel) {
-            if (isBlank(classRegex)) {
-                throw new IllegalArgumentException("miss class-regex, please type the regex express to match class.");
+            if (isBlank(classWildcard)) {
+                throw new IllegalArgumentException("miss class-wildcard, please type the wildcard express to match class.");
             }
-            if (isBlank(methodRegex)) {
-                throw new IllegalArgumentException("miss method-regex, please type the regex express to match method.");
+            if (isBlank(methodWildcard)) {
+                throw new IllegalArgumentException("miss method-wildcard, please type the wildcard express to match method.");
             }
         }
 
@@ -158,7 +158,7 @@ public class TimeTunnelCommand extends Command {
 //                && !isPlay
                 ) {
 
-            throw new IllegalArgumentException("miss arguments, type help TimeTunnel to got usage.");
+            throw new IllegalArgumentException("miss arguments, type 'help tt' to got usage.");
 
         }
 
@@ -283,7 +283,7 @@ public class TimeTunnelCommand extends Command {
     private void doTimeTunnel(final Info info, final Sender sender) throws Throwable {
 
         final Instrumentation inst = info.getInst();
-        final GreysAnatomyClassFileTransformer.TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
+        final GreysAnatomyClassFileTransformer.TransformResult result = transform(inst, classWildcard, methodWildcard, new AdviceListenerAdapter() {
 
             boolean isFirst = true;
 

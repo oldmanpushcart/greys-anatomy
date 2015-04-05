@@ -5,6 +5,8 @@ import com.googlecode.greysanatomy.probe.JobListener;
 import com.googlecode.greysanatomy.probe.ProbeJobs;
 import com.googlecode.greysanatomy.probe.Probes;
 import com.googlecode.greysanatomy.util.GaReflectUtils;
+import com.googlecode.greysanatomy.util.SearchUtils;
+import com.googlecode.greysanatomy.util.WildcardUtils;
 import javassist.*;
 
 import java.lang.instrument.ClassFileTransformer;
@@ -20,8 +22,7 @@ import static java.lang.System.arraycopy;
 
 public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
-    //    private final String prefClzRegex;
-    private final String prefMthRegex;
+    private final String prefMthWildcard;
     private final int id;
     private final List<CtBehavior> modifiedBehaviors;
 
@@ -31,13 +32,11 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     private final static Map<Class<?>, byte[]> classBytesCache = new WeakHashMap<Class<?>, byte[]>();
 
     private GreysAnatomyClassFileTransformer(
-//            final String prefClzRegex,
-            final String prefMthRegex,
+            final String prefMthWildcard,
             final JobListener listener,
             final List<CtBehavior> modifiedBehaviors,
             final Info info) {
-//        this.prefClzRegex = prefClzRegex;
-        this.prefMthRegex = prefMthRegex;
+        this.prefMthWildcard = prefMthWildcard;
         this.modifiedBehaviors = modifiedBehaviors;
         this.id = info.getJobId();
         register(this.id, listener);
@@ -50,11 +49,6 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
             throws IllegalClassFormatException {
 
         final String className = GaReflectUtils.toClassPath(classNameForFilePath);
-
-//        // 这个判断可以去掉了，在外层已经进行过一次
-//        if (!className.matches(prefClzRegex)) {
-//            return null;
-//        }
 
         // 这里做一个并发控制，防止两边并发对类进行编译，影响缓存
         synchronized (classBytesCache) {
@@ -85,14 +79,14 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                 final CtBehavior[] cbs = cc.getDeclaredBehaviors();
                 if (null != cbs) {
                     for (CtBehavior cb : cbs) {
-                        if (cb.getMethodInfo().getName().matches(prefMthRegex)) {
+                        if (/*cb.getMethodInfo().getName().matches(prefMthWildcard)*/WildcardUtils.match(cb.getMethodInfo().getName(), prefMthWildcard)) {
                             modifiedBehaviors.add(cb);
                             Probes.mine(id, cc, cb);
                         }
 
                         //  方法名不匹配正则表达式
                         else {
-                            debug("class=%s;method=%s was not matches regex=%s", className, cb.getMethodInfo().getName(), prefMthRegex);
+                            debug("class=%s;method=%s was not matches wildcard=%s", className, cb.getMethodInfo().getName(), prefMthWildcard);
                         }
                     }
                 }
@@ -157,27 +151,27 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     }
 
     public static TransformResult transform(final Instrumentation instrumentation,
-                                            final String prefClzRegex,
-                                            final String prefMthRegex,
+                                            final String prefClzWildcard,
+                                            final String prefMthWildcard,
                                             final JobListener listener,
                                             final Info info,
                                             final boolean isForEach) throws UnmodifiableClassException {
-        return transform(instrumentation, prefClzRegex, prefMthRegex, listener, info, isForEach, null);
+        return transform(instrumentation, prefClzWildcard, prefMthWildcard, listener, info, isForEach, null);
     }
 
     /**
      * 对类进行形变
      *
      * @param instrumentation instrumentation
-     * @param prefClzRegex    类名称正则表达式
-     * @param prefMthRegex    方法名正则表达式
+     * @param prefClzWildcard 类名称正则表达式
+     * @param prefMthWildcard 方法名正则表达式
      * @param listener        任务监听器
      * @return 渲染结果
      * @throws UnmodifiableClassException
      */
     public static TransformResult transform(final Instrumentation instrumentation,
-                                            final String prefClzRegex,
-                                            final String prefMthRegex,
+                                            final String prefClzWildcard,
+                                            final String prefMthWildcard,
                                             final JobListener listener,
                                             final Info info,
                                             final boolean isForEach,
@@ -185,10 +179,12 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
         final List<CtBehavior> modifiedBehaviors = new ArrayList<CtBehavior>();
         final GreysAnatomyClassFileTransformer transformer
-                = new GreysAnatomyClassFileTransformer(prefMthRegex, listener, modifiedBehaviors, info);
+                = new GreysAnatomyClassFileTransformer(prefMthWildcard, listener, modifiedBehaviors, info);
         instrumentation.addTransformer(transformer, true);
 
-        final Collection<Class<?>> modifiedClasses = classesRegexMatch(instrumentation, prefClzRegex);
+        final Collection<Class<?>> modifiedClasses =
+                //classesWildcardMatch(instrumentation, prefClzWildcard);
+                SearchUtils.searchClassBySupers(instrumentation, SearchUtils.searchClassByClassWildcard(instrumentation, prefClzWildcard));
         synchronized (GreysAnatomyClassFileTransformer.class) {
             try {
 
@@ -205,29 +201,6 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
         return new TransformResult(transformer.id, modifiedClasses, modifiedBehaviors);
 
-    }
-
-
-    /**
-     * 找到符合正则表达式要求的类
-     *
-     * @param instrumentation instrumentation
-     * @param prefClzRegex    类名称正则表达式
-     * @return 符合正则表达式的类集合
-     */
-    private static Collection<Class<?>> classesRegexMatch(final Instrumentation instrumentation,
-                                                          final String prefClzRegex) {
-        final List<Class<?>> modifiedClasses = new ArrayList<Class<?>>();
-        for (Class<?> clazz : instrumentation.getAllLoadedClasses()) {
-            if (clazz.getName().matches(prefClzRegex)) {
-                modifiedClasses.add(clazz);
-                debug("class:%s was matched;", clazz);
-            }
-        }//for
-
-        info("ClzRegex was %s, found size[%s] classes was matched.", prefClzRegex, modifiedClasses.size());
-
-        return modifiedClasses;
     }
 
 

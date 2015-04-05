@@ -6,6 +6,7 @@ import com.googlecode.greysanatomy.console.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.util.GaDetailUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
+import com.googlecode.greysanatomy.util.WildcardUtils;
 
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -20,16 +21,19 @@ import static java.lang.String.format;
  */
 @Cmd(named = "sm", sort = 1, desc = "Search all have been class method JVM loading.",
         eg = {
-                "sm org\\.apache\\.commons\\.lang\\.StringUtils .*",
-                "sm -d org\\.apache\\.commons\\.lang\\.StringUtils .*",
+                "sm org.apache.commons.lang.StringUtils *",
+                "sm -d org.apache.commons.lang.StringUtils *",
+                "sm *String????s *",
+                "sm org.apache.*StringUtils is*",
+                "sm org.apache.*StringUtils",
         })
 public class SearchMethodCommand extends Command {
 
-    @IndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
-    private String classRegex;
+    @IndexArg(index = 0, name = "class-wildcard", description = "wildcard match of classpath.classname")
+    private String classWildcard;
 
-    @IndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
-    private String methodRegex;
+    @IndexArg(index = 1, name = "method-wildcard", isRequired = false, description = "wildcard match of method name")
+    private String methodWildcard = "*";
 
     @NamedArg(named = "d", description = "show the detail of method")
     private boolean isDetail = false;
@@ -46,14 +50,19 @@ public class SearchMethodCommand extends Command {
                 int mthCnt = 0;
                 for (Class<?> clazz : info.getInst().getAllLoadedClasses()) {
 
-                    if (!clazz.getName().matches(classRegex)) {
+//                    if (!clazz.getName().matches(classWildcard)) {
+//                        continue;
+//                    }
+
+                    if (!WildcardUtils.match(clazz.getName(), classWildcard)) {
                         continue;
                     }
 
                     boolean hasMethod = false;
                     for (Method method : clazz.getDeclaredMethods()) {
 
-                        if (method.getName().matches(methodRegex)) {
+                        if (/*method.getName().matches(methodWildcard)*/
+                                WildcardUtils.match(method.getName(), methodWildcard)) {
                             if (isDetail) {
                                 message.append(GaDetailUtils.detail(method)).append("\n");
                             } else {

@@ -70,11 +70,11 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 @Cmd(named = "monitor", sort = 5, desc = "Buried point method for monitoring the operation.")
 public class MonitorCommand extends Command {
 
-    @IndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
-    private String classRegex;
+    @IndexArg(index = 0, name = "class-wildcard", description = "wildcard match of classpath.classname")
+    private String classWildcard;
 
-    @IndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
-    private String methodRegex;
+    @IndexArg(index = 1, name = "method-wildcard", description = "wildcard match of methodname")
+    private String methodWildcard;
 
     @NamedArg(named = "c", hasValue = true, description = "the cycle of output")
     private int cycle = 120;
@@ -87,7 +87,7 @@ public class MonitorCommand extends Command {
     /*
      * 监控数据
      */
-    private ConcurrentHashMap<Key, AtomicReference<Data>> monitorDatas = new ConcurrentHashMap<Key, AtomicReference<Data>>();
+    private ConcurrentHashMap<Key, AtomicReference<Data>> monitorData = new ConcurrentHashMap<Key, AtomicReference<Data>>();
 
     /**
      * 数据监控用的Key
@@ -140,7 +140,7 @@ public class MonitorCommand extends Command {
             public void action(final ConsoleServer consoleServer, final Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classWildcard, methodWildcard, new AdviceListenerAdapter() {
 
                     private final ThreadLocal<Long> beginTimestamp = new ThreadLocal<Long>();
 
@@ -159,9 +159,9 @@ public class MonitorCommand extends Command {
                         final Key key = new Key(p.getTarget().getTargetClassName(), p.getTarget().getTargetBehaviorName());
 
                         while (true) {
-                            AtomicReference<Data> value = monitorDatas.get(key);
+                            AtomicReference<Data> value = monitorData.get(key);
                             if (null == value) {
-                                monitorDatas.putIfAbsent(key, new AtomicReference<Data>(new Data()));
+                                monitorData.putIfAbsent(key, new AtomicReference<Data>(new Data()));
                                 continue;
                             }
 
@@ -192,13 +192,13 @@ public class MonitorCommand extends Command {
 
                             @Override
                             public void run() {
-                                if (monitorDatas.isEmpty()) {
+                                if (monitorData.isEmpty()) {
                                     return;
                                 }
                                 final String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
                                 final StringBuilder monitorSB = new StringBuilder();
 
-                                for( Map.Entry<Key, AtomicReference<Data>> entry : monitorDatas.entrySet() ) {
+                                for( Map.Entry<Key, AtomicReference<Data>> entry : monitorData.entrySet() ) {
                                     final AtomicReference<Data> value = entry.getValue();
 
                                     Data data;

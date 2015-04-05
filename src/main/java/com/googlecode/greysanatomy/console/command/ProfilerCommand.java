@@ -11,6 +11,7 @@ import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.ProfilerUtils;
+import com.googlecode.greysanatomy.util.WildcardUtils;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
@@ -23,21 +24,21 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
 @Cmd(named = "profiler", sort = 6, desc = "The call stack output buried point method for rendering path of.",
         eg = {
-                "profiler -c 5 .*ibatis.* .* .*ibatis.*SqlMapClientImpl openSession",
+                "profiler -c 5 *.ibatis.* * *.ibatis.*SqlMapClientImpl openSession",
         })
 public class ProfilerCommand extends Command {
 
-    @IndexArg(index = 0, name = "rendering-class-regex", description = "regex match of rendering classpath.classname")
-    private String classRegex;
+    @IndexArg(index = 0, name = "rendering-class-wildcard", description = "wildcard match of rendering classpath.classname")
+    private String classWildcard;
 
-    @IndexArg(index = 1, name = "rendering-method-regex", description = "regex match of rendering methodname")
-    private String methodRegex;
+    @IndexArg(index = 1, name = "rendering-method-wildcard", description = "wildcard match of rendering method name")
+    private String methodWildcard;
 
-    @IndexArg(index = 2, name = "class-regex", description = "regex match of classpath.classname")
-    private String probeClassRegex;
+    @IndexArg(index = 2, name = "class-wildcard", description = "wildcard match of classpath.classname")
+    private String probeClassWildcard;
 
-    @IndexArg(index = 3, name = "method-regex", description = "regex match of methodname")
-    private String probeMethodRegex;
+    @IndexArg(index = 3, name = "method-wildcard", description = "wildcard match of method name")
+    private String probeMethodWildcard;
 
     @NamedArg(named = "c", hasValue = true, description = "the cost limit for output")
     private long cost;
@@ -132,8 +133,10 @@ public class ProfilerCommand extends Command {
                         if (cmCache.containsKey(cmKey)) {
                             return cmCache.get(cmKey);
                         } else {
-                            final boolean isProbe = p.getTarget().getTargetClassName().matches(probeClassRegex)
-                                    && p.getTarget().getTargetBehaviorName().matches(probeMethodRegex);
+//                            final boolean isProbe = p.getTarget().getTargetClassName().matches(probeClassWildcard)
+//                                    && p.getTarget().getTargetBehaviorName().matches(probeMethodWildcard);
+                            final boolean isProbe = WildcardUtils.match(p.getTarget().getTargetClassName(), probeClassWildcard)
+                                    && WildcardUtils.match(p.getTarget().getTargetBehaviorName(), probeMethodWildcard);
                             cmCache.put(cmKey, isProbe);
                             return isProbe;
                         }
@@ -148,7 +151,7 @@ public class ProfilerCommand extends Command {
                 final TransformResult result = transformForRendering(info, sender, inst, advice);
 
                 // 渲染入口
-                final TransformResult resultForProbe = transform(inst, probeClassRegex, probeMethodRegex, advice, info, false);
+                final TransformResult resultForProbe = transform(inst, probeClassWildcard, probeMethodWildcard, advice, info, false);
 
 //                // 注册任务
 //                regJob(info.getSessionId(), result.getId());
@@ -168,7 +171,7 @@ public class ProfilerCommand extends Command {
             }
 
             private TransformResult transformForRendering(Info info, final Sender sender, Instrumentation inst, AdviceListenerAdapter advice) throws UnmodifiableClassException {
-                return transform(inst, classRegex, methodRegex, advice, info, true, new GreysAnatomyClassFileTransformer.Progress() {
+                return transform(inst, classWildcard, methodWildcard, advice, info, true, new GreysAnatomyClassFileTransformer.Progress() {
 
                     int nextRate = 0;
 

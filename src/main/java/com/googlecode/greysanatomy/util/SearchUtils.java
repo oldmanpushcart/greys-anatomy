@@ -17,10 +17,10 @@ public class SearchUtils {
      * @param inst
      * @return
      */
-    public static Set<Class<?>> searchClassByClassRegex(Instrumentation inst, String classRegex) {
+    public static Set<Class<?>> searchClassByClassWildcard(Instrumentation inst, String classWildcard) {
         final Set<Class<?>> matches = new HashSet<Class<?>>();
         for (Class<?> clazz : inst.getAllLoadedClasses()) {
-            if (clazz.getName().matches(classRegex)) {
+            if (/*clazz.getName().matches(classRegex)*/WildcardUtils.match(clazz.getName(), classWildcard)) {
                 matches.add(clazz);
             }
         }//for

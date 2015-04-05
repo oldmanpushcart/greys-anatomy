@@ -20,18 +20,18 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
-@Cmd(named = "jstack", sort = 7, desc = "The call stack output buried point method in each thread.",
+@Cmd(named = "stack", sort = 7, desc = "The call stack output buried point method in each thread.",
         eg = {
-                "jstack org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
-                "jstack .*StringUtils isBlank"
+                "stack org.apache.commons.lang.StringUtils isBlank",
+                "stack *StringUtils isBlank"
         })
-public class JstackCommand extends Command {
+public class StackCommand extends Command {
 
-    @IndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
-    private String classRegex;
+    @IndexArg(index = 0, name = "class-wildcard", description = "wildcard match of classpath.classname")
+    private String classWildcard;
 
-    @IndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
-    private String methodRegex;
+    @IndexArg(index = 1, name = "method-wildcard", description = "wildcard match of method name")
+    private String methodWildcard;
 
     @Override
     public Action getAction() {
@@ -41,7 +41,7 @@ public class JstackCommand extends Command {
             public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classWildcard, methodWildcard, new AdviceListenerAdapter() {
 
                     @Override
                     public void onBefore(Advice p) {
