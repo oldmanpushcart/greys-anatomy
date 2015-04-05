@@ -90,7 +90,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
                         //  方法名不匹配正则表达式
                         else {
-                            debug("class=%s;method=%s was not matches wildcard=%s", className, cb.getMethodInfo().getName(), prefMthPattern);
+                            debug("class=%s;method=%s was not matches pattern=%s", className, cb.getMethodInfo().getName(), prefMthPattern);
                         }
                     }
                 }

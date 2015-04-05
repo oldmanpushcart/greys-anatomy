@@ -137,13 +137,13 @@ public class TimeTunnelCommand extends Command {
 
         }
 
-        // 在t参数下class-wildcard,method-wildcard
+        // 在t参数下class-pattern,method-pattern
         if (isTimeTunnel) {
             if (isBlank(classPattern)) {
-                throw new IllegalArgumentException("miss class-wildcard, please type the wildcard express to matching class.");
+                throw new IllegalArgumentException("miss class-pattern, please type the wildcard express to matching class.");
             }
             if (isBlank(methodPattern)) {
-                throw new IllegalArgumentException("miss method-wildcard, please type the wildcard express to matching method.");
+                throw new IllegalArgumentException("miss method-pattern, please type the wildcard express to matching method.");
             }
         }
 

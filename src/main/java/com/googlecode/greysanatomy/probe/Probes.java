@@ -147,8 +147,9 @@ public class Probes {
             return;
         }
 
+        final boolean isStatic = isStatic(cb.getModifiers());
         // 目标实例,如果是静态方法，则为null
-        final String javassistThis = isStatic(cb.getModifiers()) ? "null" : "this";
+        final String javassistThis = isStatic ? "null" : "this";
 
         // 埋点通知
         if (isListener(id, AdviceListener.class)) {
@@ -156,20 +157,22 @@ public class Probes {
             if (cb.getMethodInfo().isMethod()) {
                 mineProbeForMethod(cb, id, cc.getName(), cb.getName(), javassistThis);
             } else if (cb.getMethodInfo().isConstructor()) {
-                mineProbeForConstructor(cb, id, cc.getName(), cb.getName(), javassistThis);
+                final String targetBehaviorName = isStatic ? "<cinit>" : "<init>";
+                mineProbeForConstructor(cb, id, cc.getName(), targetBehaviorName, javassistThis);
             }
         }
 
     }
 
+
     private static void mineProbeForConstructor(CtBehavior cb, int id, String targetClassName, String targetBehaviorName, String javassistThis) throws CannotCompileException, NotFoundException {
+
         cb.addCatch(format("{if(%s.isJobAlive(%s)){%s.doBefore(%s,\"%s\",\"%s\",%s,$args);%s.doException(%s,\"%s\",\"%s\",%s,$args,$e);}throw $e;}",
                         jobsClass, id,
                         probesClass, id, targetClassName, targetBehaviorName, javassistThis,
                         probesClass, id, targetClassName, targetBehaviorName, javassistThis),
                 ClassPool.getDefault().get("java.lang.Throwable"));
 
-        // TODO : 奇怪，为啥这里要doBefore两次?
         cb.insertAfter(format("{if(%s.isJobAlive(%s)){%s.doBefore(%s,\"%s\",\"%s\",%s,$args);%s.doSuccess(%s,\"%s\",\"%s\",%s,$args,($w)$_);}}",
                 jobsClass, id,
                 probesClass, id, targetClassName, targetBehaviorName, javassistThis,
