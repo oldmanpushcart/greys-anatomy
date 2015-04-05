@@ -24,7 +24,7 @@ public class GreysAnatomyMain {
     public GreysAnatomyMain(String[] args) throws Exception {
 
         // 解析配置文件
-        Configure configure = analyzeConfiger(args);
+        Configure configure = analyzeConfigure(args);
 
         // 如果是本地IP,则尝试加载Agent
         if (HostUtils.isLocalHostIp(configure.getTargetIp())) {
@@ -51,7 +51,7 @@ public class GreysAnatomyMain {
      * @param args
      * @return
      */
-    private Configure analyzeConfiger(String[] args) {
+    private Configure analyzeConfigure(String[] args) {
         final OptionParser parser = new OptionParser();
         parser.accepts("pid").withRequiredArg().ofType(int.class).required();
         parser.accepts("target").withOptionalArg().ofType(String.class);
