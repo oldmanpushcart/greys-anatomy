@@ -5,8 +5,7 @@ import com.googlecode.greysanatomy.probe.JobListener;
 import com.googlecode.greysanatomy.probe.ProbeJobs;
 import com.googlecode.greysanatomy.probe.Probes;
 import com.googlecode.greysanatomy.util.GaReflectUtils;
-import com.googlecode.greysanatomy.util.SearchUtils;
-import com.googlecode.greysanatomy.util.WildcardUtils;
+import com.googlecode.greysanatomy.util.PatternMatchingUtils;
 import javassist.*;
 
 import java.lang.instrument.ClassFileTransformer;
@@ -18,11 +17,14 @@ import java.util.*;
 
 import static com.googlecode.greysanatomy.probe.ProbeJobs.register;
 import static com.googlecode.greysanatomy.util.LogUtils.*;
+import static com.googlecode.greysanatomy.util.SearchUtils.searchClassByClassPatternMatching;
 import static java.lang.System.arraycopy;
 
 public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
-    private final String prefMthWildcard;
+    private final String prefMthPattern;
+    private final boolean isRegEx;
+
     private final int id;
     private final List<CtBehavior> modifiedBehaviors;
 
@@ -32,11 +34,13 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     private final static Map<Class<?>, byte[]> classBytesCache = new WeakHashMap<Class<?>, byte[]>();
 
     private GreysAnatomyClassFileTransformer(
-            final String prefMthWildcard,
+            final String prefMthPattern,
+            final boolean isRegEx,
             final JobListener listener,
             final List<CtBehavior> modifiedBehaviors,
             final Info info) {
-        this.prefMthWildcard = prefMthWildcard;
+        this.prefMthPattern = prefMthPattern;
+        this.isRegEx = isRegEx;
         this.modifiedBehaviors = modifiedBehaviors;
         this.id = info.getJobId();
         register(this.id, listener);
@@ -79,14 +83,14 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                 final CtBehavior[] cbs = cc.getDeclaredBehaviors();
                 if (null != cbs) {
                     for (CtBehavior cb : cbs) {
-                        if (/*cb.getMethodInfo().getName().matches(prefMthWildcard)*/WildcardUtils.match(cb.getMethodInfo().getName(), prefMthWildcard)) {
+                        if (PatternMatchingUtils.matching(cb.getMethodInfo().getName(), prefMthPattern, isRegEx)) {
                             modifiedBehaviors.add(cb);
                             Probes.mine(id, cc, cb);
                         }
 
                         //  方法名不匹配正则表达式
                         else {
-                            debug("class=%s;method=%s was not matches wildcard=%s", className, cb.getMethodInfo().getName(), prefMthWildcard);
+                            debug("class=%s;method=%s was not matches wildcard=%s", className, cb.getMethodInfo().getName(), prefMthPattern);
                         }
                     }
                 }
@@ -151,27 +155,29 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     }
 
     public static TransformResult transform(final Instrumentation instrumentation,
-                                            final String prefClzWildcard,
-                                            final String prefMthWildcard,
+                                            final String prefClzPattern,
+                                            final String prefMthPattern,
+                                            final boolean isRegEx,
                                             final JobListener listener,
                                             final Info info,
                                             final boolean isForEach) throws UnmodifiableClassException {
-        return transform(instrumentation, prefClzWildcard, prefMthWildcard, listener, info, isForEach, null);
+        return transform(instrumentation, prefClzPattern, prefMthPattern, isRegEx, listener, info, isForEach, null);
     }
 
     /**
      * 对类进行形变
      *
      * @param instrumentation instrumentation
-     * @param prefClzWildcard 类名称正则表达式
-     * @param prefMthWildcard 方法名正则表达式
+     * @param prefClzPattern  类名称正则表达式
+     * @param prefMthPattern  方法名正则表达式
      * @param listener        任务监听器
      * @return 渲染结果
      * @throws UnmodifiableClassException
      */
     public static TransformResult transform(final Instrumentation instrumentation,
-                                            final String prefClzWildcard,
-                                            final String prefMthWildcard,
+                                            final String prefClzPattern,
+                                            final String prefMthPattern,
+                                            final boolean isRegEx,
                                             final JobListener listener,
                                             final Info info,
                                             final boolean isForEach,
@@ -179,12 +185,13 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
         final List<CtBehavior> modifiedBehaviors = new ArrayList<CtBehavior>();
         final GreysAnatomyClassFileTransformer transformer
-                = new GreysAnatomyClassFileTransformer(prefMthWildcard, listener, modifiedBehaviors, info);
+                = new GreysAnatomyClassFileTransformer(prefMthPattern, isRegEx, listener, modifiedBehaviors, info);
         instrumentation.addTransformer(transformer, true);
 
         final Collection<Class<?>> modifiedClasses =
                 //classesWildcardMatch(instrumentation, prefClzWildcard);
-                SearchUtils.searchClassBySupers(instrumentation, SearchUtils.searchClassByClassWildcard(instrumentation, prefClzWildcard));
+//                SearchUtils.searchClassBySupers(instrumentation, SearchUtils.searchClassByClassPatternMatching(instrumentation, prefClzWildcard));
+                searchClassByClassPatternMatching(instrumentation, prefClzPattern, isRegEx);
         synchronized (GreysAnatomyClassFileTransformer.class) {
             try {
 

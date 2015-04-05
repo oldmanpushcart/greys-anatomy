@@ -15,10 +15,10 @@ public class JavaScriptCommand /*extends Command*/ {
 
 
 
-//    @IndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
+//    @IndexArg(index = 0, name = "class-regex", description = "regex matching of classpath.classname")
 //    private String classRegex;
 //
-//    @IndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
+//    @IndexArg(index = 1, name = "method-regex", description = "regex matching of methodname")
 //    private String methodRegex;
 //
 //    @NamedArg(named = "f", hasValue = true, description = "the file of javascript",

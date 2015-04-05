@@ -14,15 +14,19 @@ public class SearchUtils {
     /**
      * 根据类名正则表达式搜
      *
-     * @param inst
+     * @param inst         inst
+     * @param classPattern classPattern
+     * @param isRegEx
      * @return
      */
-    public static Set<Class<?>> searchClassByClassWildcard(Instrumentation inst, String classWildcard) {
+    public static Set<Class<?>> searchClassByClassPatternMatching(Instrumentation inst, String classPattern, boolean isRegEx) {
         final Set<Class<?>> matches = new HashSet<Class<?>>();
         for (Class<?> clazz : inst.getAllLoadedClasses()) {
-            if (/*clazz.getName().matches(classRegex)*/WildcardUtils.match(clazz.getName(), classWildcard)) {
+
+            if( PatternMatchingUtils.matching(clazz.getName(), classPattern, isRegEx) ) {
                 matches.add(clazz);
             }
+
         }//for
         return matches;
     }

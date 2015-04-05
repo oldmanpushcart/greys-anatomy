@@ -70,14 +70,26 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 @Cmd(named = "monitor", sort = 5, desc = "Buried point method for monitoring the operation.")
 public class MonitorCommand extends Command {
 
-    @IndexArg(index = 0, name = "class-wildcard", description = "wildcard match of classpath.classname")
-    private String classWildcard;
+    @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
+    private String classPattern;
 
-    @IndexArg(index = 1, name = "method-wildcard", description = "wildcard match of methodname")
-    private String methodWildcard;
+    @IndexArg(index = 1, name = "method-pattern", description = "pattern matching of method name")
+    private String methodPattern;
 
     @NamedArg(named = "c", hasValue = true, description = "the cycle of output")
     private int cycle = 120;
+
+    @NamedArg(named = "E", description = "enable the regex pattern matching")
+    private boolean isRegEx = false;
+
+    /**
+     * 命令是否启用正则表达式匹配
+     *
+     * @return true启用正则表达式/false不启用
+     */
+    public boolean isRegEx() {
+        return isRegEx;
+    }
 
     /*
      * 输出定时任务
@@ -140,7 +152,7 @@ public class MonitorCommand extends Command {
             public void action(final ConsoleServer consoleServer, final Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classWildcard, methodWildcard, new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classPattern, methodPattern, isRegEx(), new AdviceListenerAdapter() {
 
                     private final ThreadLocal<Long> beginTimestamp = new ThreadLocal<Long>();
 

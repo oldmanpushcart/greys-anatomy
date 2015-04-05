@@ -20,6 +20,7 @@ import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
 @Cmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
         eg = {
+                "watch -Eb org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
                 "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
                 "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
                 "watch -bf *StringUtils isBlank params[0]",
@@ -28,11 +29,10 @@ import static com.googlecode.greysanatomy.util.LogUtils.warn;
 public class WatchCommand extends Command {
 
 
-
-    @IndexArg(index = 0, name = "class-wildcard", description = "wildcard match of classpath.classname")
+    @IndexArg(index = 0, name = "class-wildcard", description = "wildcard matching of classpath.classname")
     private String classWildcard;
 
-    @IndexArg(index = 1, name = "method-wildcard", description = "wildcard match of method name")
+    @IndexArg(index = 1, name = "method-wildcard", description = "wildcard matching of method name")
     private String methodWildcard;
 
     @IndexArg(index = 2, name = "express",
@@ -73,6 +73,18 @@ public class WatchCommand extends Command {
     @NamedArg(named = "x", hasValue = true, description = "expend level of object. Default level-0")
     private Integer expend;
 
+    @NamedArg(named = "E", description = "enable the regex pattern matching")
+    private boolean isRegEx = false;
+
+    /**
+     * 命令是否启用正则表达式匹配
+     *
+     * @return true启用正则表达式/false不启用
+     */
+    public boolean isRegEx() {
+        return isRegEx;
+    }
+
     @Override
     public Action getAction() {
 
@@ -82,14 +94,14 @@ public class WatchCommand extends Command {
             public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classWildcard, methodWildcard, new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classWildcard, methodWildcard, isRegEx(), new AdviceListenerAdapter() {
 
                     @Override
                     public void onBefore(Advice p) {
                         if (isBefore) {
                             try {
                                 final Object value = GaOgnlUtils.getValue(expression, p);
-                                if( null != expend
+                                if (null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
                                 } else {
@@ -98,7 +110,7 @@ public class WatchCommand extends Command {
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 warn(e, "watch failed.");
-                                sender.send(false, e.getMessage()+"\n");
+                                sender.send(false, e.getMessage() + "\n");
                             }
                         }
                     }
@@ -108,7 +120,7 @@ public class WatchCommand extends Command {
                         if (isFinish) {
                             try {
                                 final Object value = GaOgnlUtils.getValue(expression, p);
-                                if( null != expend
+                                if (null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
                                 } else {
@@ -117,7 +129,7 @@ public class WatchCommand extends Command {
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 warn(e, "watch failed.");
-                                sender.send(false, e.getMessage()+"\n");
+                                sender.send(false, e.getMessage() + "\n");
                             }
                         }
                     }
@@ -127,7 +139,7 @@ public class WatchCommand extends Command {
                         if (isException) {
                             try {
                                 final Object value = GaOgnlUtils.getValue(expression, p);
-                                if( null != expend
+                                if (null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
                                 } else {
@@ -136,7 +148,7 @@ public class WatchCommand extends Command {
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 warn(e, "watch failed.");
-                                sender.send(false, e.getMessage()+"\n");
+                                sender.send(false, e.getMessage() + "\n");
                             }
                         }
                     }
@@ -146,7 +158,7 @@ public class WatchCommand extends Command {
                         if (isSuccess) {
                             try {
                                 final Object value = GaOgnlUtils.getValue(expression, p);
-                                if( null != expend
+                                if (null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
                                 } else {
@@ -155,7 +167,7 @@ public class WatchCommand extends Command {
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 warn(e, "watch failed.");
-                                sender.send(false, e.getMessage()+"\n");
+                                sender.send(false, e.getMessage() + "\n");
                             }
                         }
                     }

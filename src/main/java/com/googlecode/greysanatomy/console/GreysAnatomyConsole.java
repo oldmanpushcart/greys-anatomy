@@ -195,16 +195,16 @@ public class GreysAnatomyConsole {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!isF) {
-                    try {
+                try {
+                    if (!isF) {
                         isF = true;
                         write("abort it.\n");
                         redrawLine();
                         consoleServer.killJob(new ReqKillJob(sessionId, jobId));
-                    } catch (Exception e1) {
-                        // 这里是控制台，可能么？
-                        warn(e1, "killJob failed. job=%s;", jobId);
                     }
+                } catch (Exception e1) {
+                    // 这里是控制台，可能么？
+                    warn(e1, "killJob failed. job=%s;", jobId);
                 }
             }
 

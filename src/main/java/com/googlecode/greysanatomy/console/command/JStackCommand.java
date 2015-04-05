@@ -3,6 +3,7 @@ package com.googlecode.greysanatomy.console.command;
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
 import com.googlecode.greysanatomy.console.command.annotation.Cmd;
 import com.googlecode.greysanatomy.console.command.annotation.IndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -20,19 +21,31 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
-@Cmd(named = "stack", sort = 7, desc = "The call stack output buried point method in each thread.",
+@Cmd(named = "jstack", sort = 7, desc = "The call stack output buried point method in each thread.",
         eg = {
                 "stack -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
                 "stack org.apache.commons.lang.StringUtils isBlank",
                 "stack *StringUtils isBlank"
         })
-public class JStackCommand extends RegexSupportCommand {
+public class JstackCommand extends Command {
 
     @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
     private String classPattern;
 
     @IndexArg(index = 1, name = "method-pattern", description = "pattern matching of method name")
     private String methodPattern;
+
+    @NamedArg(named = "E", description = "enable the regex pattern matching")
+    private boolean isRegEx = false;
+
+    /**
+     * 命令是否启用正则表达式匹配
+     *
+     * @return true启用正则表达式/false不启用
+     */
+    public boolean isRegEx() {
+        return isRegEx;
+    }
 
     @Override
     public Action getAction() {

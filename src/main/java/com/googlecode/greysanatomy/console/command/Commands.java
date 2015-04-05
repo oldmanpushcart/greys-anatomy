@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class Commands {
 
-    private final Map<String, Class<?>> riscCommands = new HashMap<String, Class<?>>();
+    private final Map<String, Class<?>> commands = new HashMap<String, Class<?>>();
 
     private Commands() {
 
@@ -35,7 +35,7 @@ public class Commands {
 
             if (clazz.isAnnotationPresent(Cmd.class)) {
                 final Cmd cmd = clazz.getAnnotation(Cmd.class);
-                riscCommands.put(cmd.named(), clazz);
+                commands.put(cmd.named(), clazz);
             }
 
 
@@ -55,7 +55,7 @@ public class Commands {
 
         final String[] splitOfLine = line.split("\\s+");
         final String cmdName = splitOfLine[0];
-        final Class<?> clazz = getInstance().riscCommands.get(cmdName);
+        final Class<?> clazz = getInstance().commands.get(cmdName);
         if (null == clazz) {
             return null;
         }
@@ -155,7 +155,7 @@ public class Commands {
      * @return 返回当前版本所支持的精简命令集合
      */
     public Map<String, Class<?>> listCommands() {
-        return new HashMap<String, Class<?>>(riscCommands);
+        return new HashMap<String, Class<?>>(commands);
     }
 
 
@@ -218,6 +218,5 @@ public class Commands {
     public static synchronized Commands getInstance() {
         return instance;
     }
-
 
 }

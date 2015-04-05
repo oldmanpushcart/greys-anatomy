@@ -135,7 +135,7 @@ public class GreysAnatomyMain {
         } catch (java.rmi.ConnectException ce) {
             warn(ce, "target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
         } catch (PIDNotMatchException pe) {
-            warn(pe, "target{%s:%s} PID was not match, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
+            warn(pe, "target{%s:%s} PID was not matching, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
         }
         return false;
     }
