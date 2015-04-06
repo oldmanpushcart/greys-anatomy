@@ -85,5 +85,5 @@ public class JstackCommand extends Command {
 
         };
     }
-    
+
 }
