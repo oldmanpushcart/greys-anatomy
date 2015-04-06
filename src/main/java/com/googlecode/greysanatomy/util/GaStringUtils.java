@@ -143,7 +143,7 @@ public class GaStringUtils {
     /**
      * 产生摘要
      *
-     * @param str 字符串内容
+     * @param str    字符串内容
      * @param length 摘要长度
      * @return 字符串的摘要信息
      */
@@ -646,5 +646,18 @@ public class GaStringUtils {
         return str == null ? 0 : str.length();
     }
 
+
+    /**
+     * 获取异常的原因描述
+     *
+     * @param t 异常
+     * @return 异常原因
+     */
+    public static String getCauseMessage(Throwable t) {
+        if (null != t.getCause()) {
+            return getCauseMessage(t.getCause());
+        }
+        return t.getMessage();
+    }
 
 }

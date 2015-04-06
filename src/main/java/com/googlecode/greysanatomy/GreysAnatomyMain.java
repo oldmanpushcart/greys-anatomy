@@ -2,6 +2,7 @@ package com.googlecode.greysanatomy;
 
 import com.googlecode.greysanatomy.console.client.ConsoleClient;
 import com.googlecode.greysanatomy.exception.PIDNotMatchException;
+import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.HostUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -10,8 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import static com.googlecode.greysanatomy.util.LogUtils.error;
-import static com.googlecode.greysanatomy.util.LogUtils.warn;
+import static java.lang.String.format;
 
 /**
  * Hello world!
@@ -133,9 +133,11 @@ public class GreysAnatomyMain {
             ConsoleClient.getInstance(configure);
             return true;
         } catch (java.rmi.ConnectException ce) {
-            warn(ce, "target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
+//            warn(ce, "target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
+            System.err.println(format("target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort()));
         } catch (PIDNotMatchException pe) {
-            warn(pe, "target{%s:%s} PID was not matching, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
+//            warn(pe, "target{%s:%s} PID was not matching, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
+            System.err.println(format("target{%s:%s} PID was not matching, console will be exit.", configure.getTargetIp(), configure.getTargetPort()));
         }
         return false;
     }
@@ -146,7 +148,8 @@ public class GreysAnatomyMain {
         try {
             new GreysAnatomyMain(args);
         } catch (Throwable t) {
-            error(t, "start greys-anatomy failed. because %s", t.getMessage());
+//            error(t, "start greys-anatomy failed. because %s", t.getMessage());
+            System.err.println("start greys failed, because : " + GaStringUtils.getCauseMessage(t));
             System.exit(-1);
         }
 

@@ -26,6 +26,7 @@ import java.util.concurrent.ThreadFactory;
 
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.*;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.createJob;
+import static com.googlecode.greysanatomy.util.GaStringUtils.getCauseMessage;
 import static com.googlecode.greysanatomy.util.LogUtils.debug;
 import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
@@ -110,7 +111,7 @@ public class ConsoleServerHandler {
                 catch (Throwable t) {
                     debug(t, "do action failed. job=%s;comLine=%s;", respResult.getJobId(), cmd.getCommand());
                     warn("do action failed. job=%s;", respResult.getJobId());
-                    write(respResult.getJobId(), true, "do action failed. cause : " + t.getMessage());
+                    write(respResult.getJobId(), true, "do action failed. cause : " + getCauseMessage(t));
                     return;
                 }
             }
