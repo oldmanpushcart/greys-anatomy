@@ -667,9 +667,16 @@ public class GaStringUtils {
         Matcher matcher = compile.matcher(argumentString);
 
         final ArrayList<String> stringList = new ArrayList<String>();
-        while( matcher.find() ) {
-            stringList.add(matcher.group()
-                    .replaceAll("(^['|\"])|(['|\"]$)",""));
+        while (matcher.find()) {
+
+            final String segment = matcher.group();
+            if (segment.length() > 1
+                    && ((segment.startsWith("'") && segment.endsWith("'")) || (segment.startsWith("\"") && segment.endsWith("\"")))) {
+                stringList.add(segment.replaceAll("(^['|\"])|(['|\"]$)", ""));
+            } else {
+                stringList.add(segment);
+            }
+
         }
 
         return stringList.toArray(new String[stringList.size()]);

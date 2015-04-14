@@ -16,12 +16,6 @@ public class LogUtils {
     private static final Logger logger = Logger.getLogger("greys-anatomy");
 
     static {
-        final Handler[] handlers = logger.getHandlers();
-        if( null != handlers ) {
-            for( Handler handler : handlers ) {
-                logger.removeHandler(handler);
-            }
-        }
         logger.addHandler(new ConsoleHandler());
         setLevel(INFO);
     }
