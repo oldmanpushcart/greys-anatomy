@@ -23,11 +23,12 @@ import java.nio.CharBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.*;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.createJob;
+import static com.googlecode.greysanatomy.util.GaStringUtils.getCauseMessage;
+import static com.googlecode.greysanatomy.util.LogUtils.debug;
+import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
 /**
  * 控制台服务端处理器
@@ -36,7 +37,6 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.createJob;
  */
 public class ConsoleServerHandler {
 
-    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private final ConsoleServer consoleServer;
     private final Instrumentation inst;
@@ -77,9 +77,9 @@ public class ConsoleServerHandler {
 
         // bugfix reg job when an job was created.
         try {
-            SessionJobsHolder.registJob(cmd.getGaSessionId(), respResult.getJobId());
+            SessionJobsHolder.regJob(cmd.getGaSessionId(), respResult.getJobId());
         } catch (SessionTimeOutException e) {
-            throw new IOException(String.format("session[sessionId=%s] was timeout.",cmd.getGaSessionId()), e);
+            throw new IOException(String.format("session[sessionId=%s] was timeout.", cmd.getGaSessionId()), e);
         }
 
         workers.execute(new Runnable() {
@@ -97,7 +97,7 @@ public class ConsoleServerHandler {
                 };
 
                 try {
-                    final Command command = Commands.getInstance().newRiscCommand(cmd.getCommand());
+                    final Command command = Commands.getInstance().newCommand(cmd.getCommand());
                     // 命令不存在
                     if (null == command) {
                         write(respResult.getJobId(), true, "command not found!");
@@ -105,12 +105,13 @@ public class ConsoleServerHandler {
                     }
                     final Action action = command.getAction();
                     action.action(consoleServer, info, sender);
-                } catch (Throwable t) {
-                    // 执行命令失败
-                    if(logger.isLoggable(Level.WARNING)){
-                        logger.log(Level.WARNING,"do action failed.", t);
-                    }
-                    write(respResult.getJobId(), true, "do action failed. cause : " + t.getMessage());
+                }
+
+                // 执行命令失败
+                catch (Throwable t) {
+                    debug(t, "do action failed. job=%s;comLine=%s;", respResult.getJobId(), cmd.getCommand());
+                    warn("do action failed. job=%s;", respResult.getJobId());
+                    write(respResult.getJobId(), true, "do action failed. cause : " + getCauseMessage(t));
                     return;
                 }
             }
@@ -120,7 +121,7 @@ public class ConsoleServerHandler {
     }
 
     public long register() {
-        return registSession();
+        return regSession();
     }
 
     public RespResult getCmdExecuteResult(ReqGetResult req) {
@@ -135,7 +136,7 @@ public class ConsoleServerHandler {
 //        logger.info("debug for req={},respResult.message={}",req,respResult.getMessage());
 
         // bugfix, when got an finish flag, kill this job
-        if( respResult.isFinish() ) {
+        if (respResult.isFinish()) {
             SessionJobsHolder.unRegistJob(req.getGaSessionId(), req.getJobId());
         }
 
@@ -145,7 +146,7 @@ public class ConsoleServerHandler {
     /**
      * 干掉一个Job
      *
-     * @param req
+     * @param req 杀任务请求
      */
     public void killJob(ReqKillJob req) {
         unRegistJob(req.getGaSessionId(), req.getJobId());
@@ -154,25 +155,26 @@ public class ConsoleServerHandler {
     /**
      * 会话心跳
      *
-     * @param req
-     * @return
+     * @param req 任务心跳请求
+     * @return 是否活着
      */
     public boolean sessionHeartBeat(ReqHeart req) {
         return heartBeatSession(req.getGaSessionId());
     }
 
-    private final String END_MASK = "" + (char) 29;                        //用于标记文件结束的标识符
+    /**
+     * //用于标记文件结束的标识符
+     */
+    private final String END_MASK = "" + (char) 29;
 
     /**
      * 写结果
-     *
-     * @param jobId
-     * @param isF
-     * @param message
+     * TODO 这里用队列来做缓存，改善写文件性能，否则可能会影响被probe代码的效率
      */
     private void write(int jobId, boolean isF, String message) {
-        //TODO 这里用队列来做缓存，改善写文件性能，否则可能会影响被probe代码的效率
+
         if (isF) {
+            // 这里用END_MASK的方式来标明一个命令返回的结束
             message += END_MASK;
         }
 
@@ -186,9 +188,8 @@ public class ConsoleServerHandler {
                 writer.append(message);
                 writer.flush();
             } catch (IOException e) {
-                if(logger.isLoggable(Level.WARNING)){
-                    logger.log(Level.WARNING, String.format("write job message failed, jobId=%s.", jobId), e);
-                }
+                debug(e, "write job message failed, jobId=%s.", jobId);
+                warn("write job message failed, jobId=%s.", jobId);
             }
         }
 
@@ -196,11 +197,7 @@ public class ConsoleServerHandler {
     }
 
     /**
-     * 读job的结果
-     *
-     * @param jobId
-     * @param pos
-     * @param respResult
+     * 读结果
      */
     private void read(int jobId, int pos, RespResult respResult) {
 
@@ -213,22 +210,17 @@ public class ConsoleServerHandler {
                 respResult.setPos(newPos);
                 respResult.setMessage(buffer.toString());
             } catch (IOException e) {
-                if(logger.isLoggable(Level.WARNING)){
-                    logger.log(Level.WARNING, String.format("read job failed, jobId=%s.", jobId), e);
-                }
+                debug(e, "read job failed, jobId=%s.", jobId);
+                warn("read job failed, jobId=%s.", jobId);
             }
         }
 
     }
 
     private boolean isFinish(String message) {
-
-        if( null != message
-                && message.length() > 0) {
-            return message.endsWith(END_MASK);
-        }
-
-        return false;
+        return null != message
+                && message.length() > 0
+                && message.endsWith(END_MASK);
 
     }
 }

@@ -2,6 +2,7 @@ package com.googlecode.greysanatomy;
 
 import com.googlecode.greysanatomy.console.client.ConsoleClient;
 import com.googlecode.greysanatomy.exception.PIDNotMatchException;
+import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.HostUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -9,21 +10,21 @@ import joptsimple.OptionSet;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import static java.lang.String.format;
 
 /**
  * Hello world!
  */
 public class GreysAnatomyMain {
 
-    private static final Logger logger = Logger.getLogger("greysanatomy");
+
     public static final String JARFILE = GreysAnatomyMain.class.getProtectionDomain().getCodeSource().getLocation().getFile();
 
     public GreysAnatomyMain(String[] args) throws Exception {
 
         // 解析配置文件
-        Configure configure = analyzeConfiger(args);
+        Configure configure = analyzeConfigure(args);
 
         // 如果是本地IP,则尝试加载Agent
         if (HostUtils.isLocalHostIp(configure.getTargetIp())) {
@@ -50,7 +51,7 @@ public class GreysAnatomyMain {
      * @param args
      * @return
      */
-    private Configure analyzeConfiger(String[] args) {
+    private Configure analyzeConfigure(String[] args) {
         final OptionParser parser = new OptionParser();
         parser.accepts("pid").withRequiredArg().ofType(int.class).required();
         parser.accepts("target").withOptionalArg().ofType(String.class);
@@ -102,12 +103,16 @@ public class GreysAnatomyMain {
         }
 
         if (null == attachVmdObj) {
-            throw new IllegalArgumentException("pid:" + configure.getJavaPid() + " not existed.");
+            // throw new IllegalArgumentException("pid:" + configure.getJavaPid() + " not existed.");
         }
 
         Object vmObj = null;
         try {
-            vmObj = vmClass.getMethod("attach", vmdClass).invoke(null, attachVmdObj);
+            if (null == attachVmdObj) { // 使用 attach(String pid) 这种方式
+                vmObj = vmClass.getMethod("attach", String.class).invoke(null, "" + configure.getJavaPid());
+            } else {
+                vmObj = vmClass.getMethod("attach", vmdClass).invoke(null, attachVmdObj);
+            }
             vmClass.getMethod("loadAgent", String.class, String.class).invoke(vmObj, JARFILE, configure.toString());
         } finally {
             if (null != vmObj) {
@@ -128,13 +133,11 @@ public class GreysAnatomyMain {
             ConsoleClient.getInstance(configure);
             return true;
         } catch (java.rmi.ConnectException ce) {
-            if(logger.isLoggable(Level.WARNING)){
-                logger.warning(String.format("target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort()));
-            }
-        } catch (PIDNotMatchException pidnme) {
-            if(logger.isLoggable(Level.WARNING)){
-                logger.warning(String.format("target{%s:%s} PID was not match, console will be exit.", configure.getTargetIp(), configure.getTargetPort()));
-            }
+//            warn(ce, "target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
+            System.err.println(format("target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort()));
+        } catch (PIDNotMatchException pe) {
+//            warn(pe, "target{%s:%s} PID was not matching, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
+            System.err.println(format("target{%s:%s} PID was not matching, console will be exit.", configure.getTargetIp(), configure.getTargetPort()));
         }
         return false;
     }
@@ -145,9 +148,8 @@ public class GreysAnatomyMain {
         try {
             new GreysAnatomyMain(args);
         } catch (Throwable t) {
-            if(logger.isLoggable(Level.SEVERE)){
-                logger.log(Level.SEVERE,String.format("start greys-anatomy failed. because %s", t.getMessage()), t);
-            }
+//            error(t, "start greys-anatomy failed. because %s", t.getMessage());
+            System.err.println("start greys failed, because : " + GaStringUtils.getCauseMessage(t));
             System.exit(-1);
         }
 

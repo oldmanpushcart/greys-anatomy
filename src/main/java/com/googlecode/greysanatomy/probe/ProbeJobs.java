@@ -7,12 +7,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
 public final class ProbeJobs {
-
-    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     private static final String REST_DIR = System.getProperty("java.io.tmpdir")//执行结果输出文件路径
             + File.separator + "greysdata"
@@ -133,18 +131,14 @@ public final class ProbeJobs {
                     job.listener.destroy();
                 }
             } catch (Throwable t) {
-                if (logger.isLoggable(Level.WARNING)) {
-                    logger.log(Level.WARNING, String.format("destroy job listener failed, jobId=%s", id), t);
-                }
+                warn(t, "destroy job listener failed, jobId=%s", id);
             }
             try {
                 job.jobReader.close();
                 job.jobWriter.close();
                 job.jobFile.deleteOnExit();
             } catch (IOException e) {
-                if (logger.isLoggable(Level.WARNING)) {
-                    logger.log(Level.WARNING, String.format("close jobFile failed. jobId=%s", id), e);
-                }
+                warn(e, "close jobFile failed. jobId=%s", id);
             }
             job.isAlive = false;
             job.isKilled = true;

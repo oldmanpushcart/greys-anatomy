@@ -4,11 +4,10 @@ import com.googlecode.greysanatomy.probe.Advice.Target;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import javassist.*;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import static com.googlecode.greysanatomy.probe.ProbeJobs.getJobListeners;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.isListener;
+import static com.googlecode.greysanatomy.util.LogUtils.debug;
+import static com.googlecode.greysanatomy.util.LogUtils.warn;
 import static java.lang.String.format;
 import static javassist.Modifier.*;
 
@@ -34,8 +33,6 @@ import static javassist.Modifier.*;
  */
 public class Probes {
 
-    private static final Logger logger = Logger.getLogger("greysanatomy");
-
     private static final String jobsClass = "com.googlecode.greysanatomy.probe.ProbeJobs";
     private static final String probesClass = "com.googlecode.greysanatomy.probe.Probes";
 
@@ -49,9 +46,7 @@ public class Probes {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
                 ((AdviceListener) getJobListeners(id)).onBefore(p);
             } catch (Throwable t) {
-                if(logger.isLoggable(Level.WARNING)){
-                    logger.log(Level.WARNING, "error at doBefore", t);
-                }
+                warn(t, "error at doBefore.");
             }
         }
     }
@@ -63,9 +58,7 @@ public class Probes {
                 p.setReturnObj(returnObj);
                 ((AdviceListener) getJobListeners(id)).onSuccess(p);
             } catch (Throwable t) {
-                if(logger.isLoggable(Level.WARNING)){
-                    logger.log(Level.WARNING, "error at onSuccess", t);
-                }
+                warn(t, "error at onSuccess.");
             }
             doFinish(id, targetClassName, targetBehaviorName, targetThis, args, returnObj, null);
         }
@@ -79,9 +72,7 @@ public class Probes {
                 p.setThrowException(throwException);
                 ((AdviceListener) getJobListeners(id)).onException(p);
             } catch (Throwable t) {
-                if(logger.isLoggable(Level.WARNING)){
-                    logger.log(Level.WARNING, "error at onException", t);
-                }
+                warn(t, "error at onException.");
             }
             doFinish(id, targetClassName, targetBehaviorName, targetThis, args, null, throwException);
         }
@@ -96,9 +87,7 @@ public class Probes {
                 p.setReturnObj(returnObj);
                 ((AdviceListener) getJobListeners(id)).onFinish(p);
             } catch (Throwable t) {
-                if(logger.isLoggable(Level.WARNING)){
-                    logger.log(Level.WARNING, "error at onFinish", t);
-                }
+                warn(t, "error at onFinish.");
             }
         }
     }
@@ -111,15 +100,23 @@ public class Probes {
      * @param cb
      * @return
      */
-    private static boolean isIngore(CtClass cc, CtBehavior cb) {
+    private static boolean isIgnore(CtClass cc, CtBehavior cb) {
 
         final int ccMod = cc.getModifiers();
         final int cbMod = cb.getModifiers();
 
-        if (isInterface(ccMod)
-                || isAbstract(cbMod)
+        final boolean isInterface = isInterface(ccMod);
+        final boolean isAbstract = isAbstract(cbMod);
+
+        if (isInterface
+                || isAbstract
                 || cc.getName().startsWith("com.googlecode.greysanatomy.")
                 || cc.getName().startsWith("ognl.")) {
+            debug("ignore class:%s;behavior=%s;isInterface=%s;isAbstract=%s;",
+                    cc.getName(),
+                    cb.getName(),
+                    isInterface,
+                    isAbstract);
             return true;
         }
 
@@ -146,12 +143,13 @@ public class Probes {
      */
     public static void mine(int id, CtClass cc, CtBehavior cb) throws CannotCompileException, NotFoundException {
 
-        if (isIngore(cc, cb)) {
+        if (isIgnore(cc, cb)) {
             return;
         }
 
+        final boolean isStatic = isStatic(cb.getModifiers());
         // 目标实例,如果是静态方法，则为null
-        final String javassistThis = isStatic(cb.getModifiers()) ? "null" : "this";
+        final String javassistThis = isStatic ? "null" : "this";
 
         // 埋点通知
         if (isListener(id, AdviceListener.class)) {
@@ -159,20 +157,22 @@ public class Probes {
             if (cb.getMethodInfo().isMethod()) {
                 mineProbeForMethod(cb, id, cc.getName(), cb.getName(), javassistThis);
             } else if (cb.getMethodInfo().isConstructor()) {
-                mineProbeForConstructor(cb, id, cc.getName(), cb.getName(), javassistThis);
+                final String targetBehaviorName = isStatic ? "<cinit>" : "<init>";
+                mineProbeForConstructor(cb, id, cc.getName(), targetBehaviorName, javassistThis);
             }
         }
 
     }
 
+
     private static void mineProbeForConstructor(CtBehavior cb, int id, String targetClassName, String targetBehaviorName, String javassistThis) throws CannotCompileException, NotFoundException {
+
         cb.addCatch(format("{if(%s.isJobAlive(%s)){%s.doBefore(%s,\"%s\",\"%s\",%s,$args);%s.doException(%s,\"%s\",\"%s\",%s,$args,$e);}throw $e;}",
                         jobsClass, id,
                         probesClass, id, targetClassName, targetBehaviorName, javassistThis,
                         probesClass, id, targetClassName, targetBehaviorName, javassistThis),
                 ClassPool.getDefault().get("java.lang.Throwable"));
 
-        // TODO : 奇怪，为啥这里要doBefore两次?
         cb.insertAfter(format("{if(%s.isJobAlive(%s)){%s.doBefore(%s,\"%s\",\"%s\",%s,$args);%s.doSuccess(%s,\"%s\",\"%s\",%s,$args,($w)$_);}}",
                 jobsClass, id,
                 probesClass, id, targetClassName, targetBehaviorName, javassistThis,

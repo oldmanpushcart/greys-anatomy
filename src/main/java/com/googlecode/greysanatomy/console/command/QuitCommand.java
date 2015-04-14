@@ -1,13 +1,13 @@
 package com.googlecode.greysanatomy.console.command;
 
-import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
+import com.googlecode.greysanatomy.console.command.annotation.Cmd;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 
 /**
  * ÍË³öÃüÁî
  * Created by vlinux on 14/11/1.
  */
-@RiscCmd(named = "quit", sort = 8, desc = "Quit the Greys console.",
+@Cmd(named = "quit", sort = 8, desc = "Quit the Greys console.",
         eg = {
                 "quit"
         })

@@ -10,16 +10,16 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @author vlinux
  */
-public class Clocker implements Runnable {
+public class Timer implements Runnable {
 
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition condition = lock.newCondition();
     private final AtomicLong timestamp = new AtomicLong(System.currentTimeMillis());
 
-    private Clocker() {
-        final Thread clockerT = new Thread(this, "ga-clocker");
-        clockerT.setDaemon(true);
-        clockerT.start();
+    private Timer() {
+        final Thread timer = new Thread(this, "ga-timer");
+        timer.setDaemon(true);
+        timer.start();
     }
 
     @Override
@@ -53,15 +53,15 @@ public class Clocker implements Runnable {
     }
 
 
-    private static volatile Clocker clocker = new Clocker();
+    private static volatile Timer timer = new Timer();
 
     /**
      * 获取单例的clocker
      *
      * @return
      */
-    public static Clocker current() {
-        return clocker;
+    public static Timer current() {
+        return timer;
     }
 
 }

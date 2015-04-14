@@ -1,8 +1,6 @@
 package com.googlecode.greysanatomy;
 
 import java.lang.reflect.Field;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import static com.googlecode.greysanatomy.util.GaReflectUtils.*;
 import static com.googlecode.greysanatomy.util.GaStringUtils.*;
@@ -22,7 +20,7 @@ public class Configure {
     private String consolePrompt = "ga?>";  //控制台提示符
 
     /**
-     * 将Configer对象转换为字符串
+     * 将Configure对象转换为字符串
      */
     public String toString() {
         final StringBuilder strSB = new StringBuilder();
@@ -37,19 +35,19 @@ public class Configure {
     }
 
     /**
-     * 将toString的内容转换为Configer对象
+     * 将toString的内容转换为Configure对象
      *
      * @param toString
      * @return
      */
-    public static Configure toConfiger(String toString) {
+    public static Configure toConfigure(String toString) {
         final Configure configure = new Configure();
         final String[] pvs = split(toString, ";");
         for (String pv : pvs) {
             try {
-                final String[] strs = split(pv, "=");
-                final String p = strs[0];
-                final String v = decode(strs[1]);
+                final String[] stringSplitArray = split(pv, "=");
+                final String p = stringSplitArray[0];
+                final String v = decode(stringSplitArray[1]);
                 final Field field = getField(Configure.class, p);
                 set(field, valueOf(field.getType(), v), configure);
             } catch (Throwable t) {
@@ -105,10 +103,6 @@ public class Configure {
 
     public void setConsolePrompt(String consolePrompt) {
         this.consolePrompt = consolePrompt;
-    }
-
-    public static void main(String... args) throws UnknownHostException {
-        System.out.println(InetAddress.getLocalHost().toString());
     }
 
 }

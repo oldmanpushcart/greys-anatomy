@@ -1,20 +1,23 @@
 package com.googlecode.greysanatomy.console.command;
 
-import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
-import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
-import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
+import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.IndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
-import static com.googlecode.greysanatomy.util.GaStringUtils.*;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static com.googlecode.greysanatomy.util.GaStringUtils.isBlank;
+import static com.googlecode.greysanatomy.util.GaStringUtils.split;
+
 /**
  * 帮助明令<br/>
  * 这个类的代码丑得一B啊，我都不想看
+ *
  * Created by vlinux on 14/10/26.
  */
-@RiscCmd(named = "help", sort = 10, desc = "List of the Greys command list.",
+@Cmd(named = "help", sort = 10, desc = "List of the Greys command list.",
         eg = {
                 "help",
                 "help sc",
@@ -23,7 +26,7 @@ import java.util.*;
         })
 public class HelpCommand extends Command {
 
-    @RiscIndexArg(index = 0, isRequired = false, name = "command-name", description = "the name of command")
+    @IndexArg(index = 0, isRequired = false, name = "command-name", description = "the name of command")
     private String cmd;
 
     @Override
@@ -35,11 +38,11 @@ public class HelpCommand extends Command {
 //                sender.send(true, GaStringUtils.getLogo());
 
                 if (isBlank(cmd)
-                        || !Commands.getInstance().listRiscCommands().containsKey(cmd)) {
+                        || !Commands.getInstance().listCommands().containsKey(cmd)) {
                     sender.send(true, mainHelp());
                 } else {
 
-                    final Class<?> clazz = Commands.getInstance().listRiscCommands().get(cmd);
+                    final Class<?> clazz = Commands.getInstance().listCommands().get(cmd);
                     sender.send(true, commandHelp(clazz));
 
                 }
@@ -51,7 +54,7 @@ public class HelpCommand extends Command {
 
     private String commandHelp(Class<?> clazz) {
 //        final Class<?> clazz= MonitorCommand.class;
-        final RiscCmd cmd = clazz.getAnnotation(RiscCmd.class);
+        final Cmd cmd = clazz.getAnnotation(Cmd.class);
         final StringBuilder sb = new StringBuilder("\nUseage of ")
                 .append(cmd.named())
                 .append(" :\n\n");
@@ -61,8 +64,8 @@ public class HelpCommand extends Command {
         final StringBuilder sbOp = new StringBuilder();
         for (Field f : clazz.getDeclaredFields()) {
 
-            if (f.isAnnotationPresent(RiscNamedArg.class)) {
-                final RiscNamedArg namedArg = f.getAnnotation(RiscNamedArg.class);
+            if (f.isAnnotationPresent(NamedArg.class)) {
+                final NamedArg namedArg = f.getAnnotation(NamedArg.class);
                 sbOp.append(namedArg.named());
                 if (namedArg.hasValue()) {
                     sbOp.append(":");
@@ -75,8 +78,8 @@ public class HelpCommand extends Command {
         }
 
         for (Field f : clazz.getDeclaredFields()) {
-            if (f.isAnnotationPresent(RiscIndexArg.class)) {
-                final RiscIndexArg indexArg = f.getAnnotation(RiscIndexArg.class);
+            if (f.isAnnotationPresent(IndexArg.class)) {
+                final IndexArg indexArg = f.getAnnotation(IndexArg.class);
                 sb.append(indexArg.name()).append(" ");
             }
         }
@@ -88,13 +91,13 @@ public class HelpCommand extends Command {
         int maxCol = 10;
         boolean hasOptions = false;
         for (Field f : clazz.getDeclaredFields()) {
-            if (f.isAnnotationPresent(RiscIndexArg.class)) {
-                final RiscIndexArg indexArg = f.getAnnotation(RiscIndexArg.class);
+            if (f.isAnnotationPresent(IndexArg.class)) {
+                final IndexArg indexArg = f.getAnnotation(IndexArg.class);
                 maxCol = Math.max(indexArg.name().length(), maxCol);
                 hasOptions = true;
             }
-            if (f.isAnnotationPresent(RiscNamedArg.class)) {
-                final RiscNamedArg namedArg = f.getAnnotation(RiscNamedArg.class);
+            if (f.isAnnotationPresent(NamedArg.class)) {
+                final NamedArg namedArg = f.getAnnotation(NamedArg.class);
                 maxCol = Math.max(namedArg.named().length(), maxCol);
                 hasOptions = true;
             }
@@ -105,8 +108,8 @@ public class HelpCommand extends Command {
 
             sb.append("\nOptions :\n\n");
             for (Field f : clazz.getDeclaredFields()) {
-                if (f.isAnnotationPresent(RiscNamedArg.class)) {
-                    final RiscNamedArg namedArg = f.getAnnotation(RiscNamedArg.class);
+                if (f.isAnnotationPresent(NamedArg.class)) {
+                    final NamedArg namedArg = f.getAnnotation(NamedArg.class);
                     final String named = "[" + namedArg.named() + (namedArg.hasValue() ? ":" : "") + "]";
                     final int diff = Math.max(maxCol, named.length()) - named.length();
                     for (int i = 0; i < diff + 2; i++) {
@@ -132,8 +135,8 @@ public class HelpCommand extends Command {
             }
 
             for (Field f : clazz.getDeclaredFields()) {
-                if (f.isAnnotationPresent(RiscIndexArg.class)) {
-                    final RiscIndexArg indexArg = f.getAnnotation(RiscIndexArg.class);
+                if (f.isAnnotationPresent(IndexArg.class)) {
+                    final IndexArg indexArg = f.getAnnotation(IndexArg.class);
                     final int diff = Math.max(maxCol, indexArg.name().length()) - indexArg.name().length();
                     for (int i = 0; i < diff + 2; i++) {
                         sb.append(" ");
@@ -178,15 +181,15 @@ public class HelpCommand extends Command {
      */
     private String mainHelp() {
 
-        final Map<String, Class<?>> commandMap = Commands.getInstance().listRiscCommands();
+        final Map<String, Class<?>> commandMap = Commands.getInstance().listCommands();
         int maxCommandColLen = 9;
         final StringBuilder sb = new StringBuilder();
 
         sb.append("\nUsage for Greys : \n\n");
 
         for (Class<?> clazz : commandMap.values()) {
-            if (clazz.isAnnotationPresent(RiscCmd.class)) {
-                final RiscCmd cmd = clazz.getAnnotation(RiscCmd.class);
+            if (clazz.isAnnotationPresent(Cmd.class)) {
+                final Cmd cmd = clazz.getAnnotation(Cmd.class);
                 final String name = cmd.named();
                 maxCommandColLen = Math.max(maxCommandColLen, name.length());
             }
@@ -198,15 +201,15 @@ public class HelpCommand extends Command {
 
             @Override
             public int compare(Class<?> o1, Class<?> o2) {
-                return new Integer(o1.getAnnotation(RiscCmd.class).sort()).compareTo(new Integer(o2.getAnnotation(RiscCmd.class).sort()));
+                return new Integer(o1.getAnnotation(Cmd.class).sort()).compareTo(new Integer(o2.getAnnotation(Cmd.class).sort()));
             }
 
         });
         for (Class<?> clazz : classes) {
 
-            if (clazz.isAnnotationPresent(RiscCmd.class)) {
+            if (clazz.isAnnotationPresent(Cmd.class)) {
 
-                final RiscCmd cmd = clazz.getAnnotation(RiscCmd.class);
+                final Cmd cmd = clazz.getAnnotation(Cmd.class);
                 final String name = cmd.named();
                 final String desc = cmd.desc();
                 final int diff = maxCommandColLen - name.length();

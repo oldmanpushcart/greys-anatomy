@@ -2,10 +2,10 @@ package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer;
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-import com.googlecode.greysanatomy.clocker.Clocker;
-import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
-import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
-import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
+import com.googlecode.greysanatomy.clocker.Timer;
+import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.IndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -13,33 +13,48 @@ import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.ProfilerUtils;
 
 import java.lang.instrument.Instrumentation;
+import java.lang.instrument.UnmodifiableClassException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
-import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
+import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
+import static com.googlecode.greysanatomy.util.PatternMatchingUtils.matching;
 
-@RiscCmd(named = "profiler", sort = 6, desc = "The call stack output buried point method for rendering path of.",
+@Cmd(named = "profiler", sort = 6, desc = "The call stack output buried point method for rendering path of.",
         eg = {
-                "profiler -c 5 .*ibatis.* .* .*ibatis.*SqlMapClientImpl openSession",
+                "profiler -c 5 *.ibatis.* * *.ibatis.*SqlMapClientImpl openSession",
+                "profiler -E -c 5 .*\\.ibatis\\..* .* .*\\.ibatis\\..*SqlMapClientImpl openSession",
         })
 public class ProfilerCommand extends Command {
 
-    @RiscIndexArg(index = 0, name = "rendering-class-regex", description = "regex match of rendering classpath.classname")
-    private String classRegex;
+    @IndexArg(index = 0, name = "rendering-class-pattern", description = "pattern matching of rendering classpath.classname")
+    private String classPattern;
 
-    @RiscIndexArg(index = 1, name = "rendering-method-regex", description = "regex match of rendering methodname")
-    private String methodRegex;
+    @IndexArg(index = 1, name = "rendering-method-pattern", description = "pattern matching of rendering method name")
+    private String methodPattern;
 
-    @RiscIndexArg(index = 2, name = "class-regex", description = "regex match of classpath.classname")
-    private String probeClassRegex;
+    @IndexArg(index = 2, name = "class-pattern", description = "pattern matching of classpath.classname")
+    private String probeClassWildcard;
 
-    @RiscIndexArg(index = 3, name = "method-regex", description = "regex match of methodname")
-    private String probeMethodRegex;
+    @IndexArg(index = 3, name = "method-pattern", description = "pattern matching of method name")
+    private String probeMethodWildcard;
 
-    @RiscNamedArg(named = "c", hasValue = true, description = "the cost limit for output")
+    @NamedArg(named = "c", hasValue = true, description = "the cost limit for output")
     private long cost;
+
+    @NamedArg(named = "E", description = "enable the regex pattern matching")
+    private boolean isRegEx = false;
+
+    /**
+     * 命令是否启用正则表达式匹配
+     *
+     * @return true启用正则表达式/false不启用
+     */
+    public boolean isRegEx() {
+        return isRegEx;
+    }
 
     @Override
     public Action getAction() {
@@ -81,7 +96,7 @@ public class ProfilerCommand extends Command {
                             return;
                         }
                         if (0 == deep.get()) {
-                            beginTimestamp.set(Clocker.current().getCurrentTimeMillis());
+                            beginTimestamp.set(Timer.current().getCurrentTimeMillis());
                             isEntered.set(true);
                             ProfilerUtils.start("");
                         }
@@ -97,7 +112,7 @@ public class ProfilerCommand extends Command {
                         deep.set(deep.get() - 1);
                         ProfilerUtils.release();
                         if (0 == deep.get()) {
-                            final long cost = Clocker.current().getCurrentTimeMillis() - beginTimestamp.get();
+                            final long cost = Timer.current().getCurrentTimeMillis() - beginTimestamp.get();
                             final String dump = ProfilerUtils.dump();
                             if (cost >= ProfilerCommand.this.cost) {
                                 final StringBuilder dumpSB = new StringBuilder()
@@ -131,8 +146,9 @@ public class ProfilerCommand extends Command {
                         if (cmCache.containsKey(cmKey)) {
                             return cmCache.get(cmKey);
                         } else {
-                            final boolean isProbe = p.getTarget().getTargetClassName().matches(probeClassRegex)
-                                    && p.getTarget().getTargetBehaviorName().matches(probeMethodRegex);
+                            final boolean isProbe =
+                                    matching(p.getTarget().getTargetClassName(), probeClassWildcard, isRegEx())
+                                            && matching(p.getTarget().getTargetBehaviorName(), probeMethodWildcard, isRegEx());
                             cmCache.put(cmKey, isProbe);
                             return isProbe;
                         }
@@ -141,9 +157,33 @@ public class ProfilerCommand extends Command {
                 };
 
                 // 将注册提前
-                registJob(info.getSessionId(), info.getJobId());
+                regJob(info.getSessionId(), info.getJobId());
 
-                final TransformResult result = transform(inst, classRegex, methodRegex, advice, info, new GreysAnatomyClassFileTransformer.Progress() {
+                // 渲染路径
+                final TransformResult result = transformForRendering(info, sender, inst, advice);
+
+                // 渲染入口
+                final TransformResult resultForProbe = transform(inst, probeClassWildcard, probeMethodWildcard, isRegEx(), advice, info, false);
+
+//                // 注册任务
+//                regJob(info.getSessionId(), result.getId());
+//                regJob(info.getSessionId(), resultForProbe.getId());
+
+                // 激活任务
+                activeJob(result.getId());
+                activeJob(resultForProbe.getId());
+
+                final StringBuilder message = new StringBuilder();
+                message.append(GaStringUtils.LINE);
+                message.append(String.format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
+                        result.getModifiedClasses().size(),
+                        result.getModifiedBehaviors().size()));
+                message.append(GaStringUtils.ABORT_MSG).append("\n");
+                sender.send(false, message.toString());
+            }
+
+            private TransformResult transformForRendering(Info info, final Sender sender, Instrumentation inst, AdviceListenerAdapter advice) throws UnmodifiableClassException {
+                return transform(inst, classPattern, methodPattern, isRegEx(), advice, info, true, new GreysAnatomyClassFileTransformer.Progress() {
 
                     int nextRate = 0;
 
@@ -174,24 +214,8 @@ public class ProfilerCommand extends Command {
                     }
 
                 });
-                final TransformResult resultForProbe = transform(inst, probeClassRegex, probeMethodRegex, advice, info);
-
-//                // 注册任务
-//                registJob(info.getSessionId(), result.getId());
-//                registJob(info.getSessionId(), resultForProbe.getId());
-
-                // 激活任务
-                activeJob(result.getId());
-                activeJob(resultForProbe.getId());
-
-                final StringBuilder message = new StringBuilder();
-                message.append(GaStringUtils.LINE);
-                message.append(String.format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
-                        result.getModifiedClasses().size(),
-                        result.getModifiedBehaviors().size()));
-                message.append(GaStringUtils.ABORT_MSG).append("\n");
-                sender.send(false, message.toString());
             }
+
 
         };
     }

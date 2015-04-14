@@ -1,9 +1,9 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer;
-import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
-import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
-import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
+import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.IndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -18,13 +18,12 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
-import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
+import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 import static com.googlecode.greysanatomy.util.GaStringUtils.*;
+import static com.googlecode.greysanatomy.util.LogUtils.warn;
 import static java.lang.String.format;
 
 /**
@@ -32,9 +31,9 @@ import static java.lang.String.format;
  * 参数w/d依赖于参数i所传递的记录编号<br/>
  * Created by vlinux on 14/11/15.
  */
-@RiscCmd(named = "tt", sort = 8, desc = "TimeTunnel the method call.",
+@Cmd(named = "tt", sort = 8, desc = "TimeTunnel the method call.",
         eg = {
-                "tt -t .*StringUtils isEmpty",
+                "tt -t *StringUtils isEmpty",
                 "tt -l",
                 "tt -D",
                 "tt -i 1000 -w params[0]",
@@ -44,7 +43,6 @@ import static java.lang.String.format;
         })
 public class TimeTunnelCommand extends Command {
 
-    private static final Logger logger = Logger.getLogger("greysanatomy");
 
     // the TimeTunnels collection
     private static final Map<Integer, TimeTunnel> timeTunnels = new LinkedHashMap<Integer, TimeTunnel>();
@@ -53,33 +51,33 @@ public class TimeTunnelCommand extends Command {
     private static final AtomicInteger sequence = new AtomicInteger(1000);
 
     // TimeTunnel the method call
-    @RiscNamedArg(named = "t", description = "TimeTunnel the method called.")
+    @NamedArg(named = "t", description = "TimeTunnel the method called.")
     private boolean isTimeTunnel = false;
 
-    @RiscIndexArg(index = 0, isRequired = false, name = "class-regex", description = "regex match of classpath.classname")
-    private String classRegex;
+    @IndexArg(index = 0, isRequired = false, name = "class-pattern", description = "pattern matching of classpath.classname")
+    private String classPattern;
 
-    @RiscIndexArg(index = 1, isRequired = false, name = "method-regex", description = "regex match of methodname")
-    private String methodRegex;
+    @IndexArg(index = 1, isRequired = false, name = "method-pattern", description = "pattern matching of method name")
+    private String methodPattern;
 
     // list the TimeTunnel
-    @RiscNamedArg(named = "l", description = "list all the TimeTunnels.")
+    @NamedArg(named = "l", description = "list all the TimeTunnels.")
     private boolean isList = false;
 
-    @RiscNamedArg(named = "D", description = "delete all TimeTunnels.")
+    @NamedArg(named = "D", description = "delete all TimeTunnels.")
     private boolean isDeleteAll = false;
 
 
     // index of TimeTunnel
-    @RiscNamedArg(named = "i", hasValue = true, description = "appoint the index of TimeTunnel. If use only, show the TimeTunnel detail.")
+    @NamedArg(named = "i", hasValue = true, description = "appoint the index of TimeTunnel. If use only, show the TimeTunnel detail.")
     private Integer index;
 
     // expend of TimeTunnel
-    @RiscNamedArg(named = "x", hasValue = true, description = "expend level of object. Default level-0")
+    @NamedArg(named = "x", hasValue = true, description = "expend level of object. Default level-0")
     private Integer expend;
 
     // watch the index TimeTunnel
-    @RiscNamedArg(named = "w",
+    @NamedArg(named = "w",
             hasValue = true,
             description = "watch the TimeTunnel's data, like params[0], returnObj, throwExp and so on.",
             description2 = ""
@@ -108,9 +106,20 @@ public class TimeTunnelCommand extends Command {
 //    private boolean isPlay = false;
 
     // delete the index TimeTunnel
-    @RiscNamedArg(named = "d", description = "delete the index TimeTunnel.")
+    @NamedArg(named = "d", description = "delete the index TimeTunnel.")
     private boolean isDelete = false;
 
+    @NamedArg(named = "E", description = "enable the regex pattern matching")
+    private boolean isRegEx = false;
+
+    /**
+     * 命令是否启用正则表达式匹配
+     *
+     * @return true启用正则表达式/false不启用
+     */
+    public boolean isRegEx() {
+        return isRegEx;
+    }
 
     /**
      * 检查参数是否合法
@@ -128,13 +137,13 @@ public class TimeTunnelCommand extends Command {
 
         }
 
-        // 在r参数下class-regex,method-regex由选填变成必填
+        // 在t参数下class-pattern,method-pattern
         if (isTimeTunnel) {
-            if (isBlank(classRegex)) {
-                throw new IllegalArgumentException("miss class-regex, please type the regex express to match class.");
+            if (isBlank(classPattern)) {
+                throw new IllegalArgumentException("miss class-pattern, please type the wildcard express to matching class.");
             }
-            if (isBlank(methodRegex)) {
-                throw new IllegalArgumentException("miss method-regex, please type the regex express to match method.");
+            if (isBlank(methodPattern)) {
+                throw new IllegalArgumentException("miss method-pattern, please type the wildcard express to matching method.");
             }
         }
 
@@ -159,7 +168,7 @@ public class TimeTunnelCommand extends Command {
 //                && !isPlay
                 ) {
 
-            throw new IllegalArgumentException("miss arguments, type help TimeTunnel to got usage.");
+            throw new IllegalArgumentException("miss arguments, type 'help tt' to got usage.");
 
         }
 
@@ -284,7 +293,7 @@ public class TimeTunnelCommand extends Command {
     private void doTimeTunnel(final Info info, final Sender sender) throws Throwable {
 
         final Instrumentation inst = info.getInst();
-        final GreysAnatomyClassFileTransformer.TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
+        final GreysAnatomyClassFileTransformer.TransformResult result = transform(inst, classPattern, methodPattern, isRegEx(), new AdviceListenerAdapter() {
 
             boolean isFirst = true;
 
@@ -308,16 +317,14 @@ public class TimeTunnelCommand extends Command {
                     sender.send(false, lineSB.toString());
 
                 } catch (Throwable t) {
-                    if (logger.isLoggable(Level.WARNING)) {
-                        logger.log(Level.WARNING, "TimeTunnel failed.", t);
-                    }
+                    warn(t, "TimeTunnel failed.");
                 }
 
             }
-        }, info);
+        }, info, false);
 
         // 注册任务
-        registJob(info.getSessionId(), result.getId());
+        regJob(info.getSessionId(), result.getId());
 
         // 激活任务
         activeJob(result.getId());
@@ -392,13 +399,12 @@ public class TimeTunnelCommand extends Command {
         final Advice p = timeTunnel.getAdvice();
         final Object value = GaOgnlUtils.getValue(watchExpress, p);
 
-        if( null != expend
+        if (null != expend
                 && expend > 0) {
             sender.send(true, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
         } else {
             sender.send(true, "" + value + "\n");
         }
-
 
 
     }
@@ -492,7 +498,7 @@ public class TimeTunnelCommand extends Command {
             int paramIndex = 0;
             for (Object param : timeTunnel.getAdvice().getParameters()) {
 
-                if( null != expend
+                if (null != expend
                         && expend > 0) {
                     detailSB.append("PARAMETERS[" + paramIndex++ + "]:\n")
                             .append(GaObjectUtils.toString(param, 0, expend))
@@ -509,10 +515,10 @@ public class TimeTunnelCommand extends Command {
         // fill the returnObj
         if (timeTunnel.getAdvice().isReturn()) {
 
-            if( null != expend
+            if (null != expend
                     && expend > 0) {
                 detailSB.append("RETURN-OBJ:\n")
-                        .append(GaObjectUtils.toString(timeTunnel.getAdvice().getReturnObj(),0,expend))
+                        .append(GaObjectUtils.toString(timeTunnel.getAdvice().getReturnObj(), 0, expend))
                         .append("\n\n");
             } else {
                 detailSB.append("RETURN-OBJ:\n").append(timeTunnel.getAdvice().getReturnObj()).append("\n\n");
@@ -525,7 +531,7 @@ public class TimeTunnelCommand extends Command {
         if (timeTunnel.getAdvice().isThrowException()) {
             final Throwable throwable = timeTunnel.getAdvice().getThrowException();
 
-            if( null != expend
+            if (null != expend
                     && expend > 0) {
                 detailSB.append("THROW-EXCEPTION:\n")
                         .append(GaObjectUtils.toString(throwable, 0, expend))

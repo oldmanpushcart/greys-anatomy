@@ -1,9 +1,9 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
-import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
-import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
+import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.IndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -12,31 +12,30 @@ import com.googlecode.greysanatomy.util.GaOgnlUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 
 import java.lang.instrument.Instrumentation;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
-import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.registJob;
+import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
+import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
-@RiscCmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
+@Cmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
         eg = {
-                "watch -b org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
-                "watch -f org\\.apache\\.commons\\.lang\\.StringUtils isBlank returnObj",
-                "watch -bf .*StringUtils isBlank params[0]",
-                "watch .*StringUtils isBlank params[0]",
+                "watch -Eb org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
+                "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
+                "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
+                "watch -bf *StringUtils isBlank params[0]",
+                "watch *StringUtils isBlank params[0]",
         })
 public class WatchCommand extends Command {
 
-    private static final Logger logger = Logger.getLogger("greysanatomy");
 
-    @RiscIndexArg(index = 0, name = "class-regex", description = "regex match of classpath.classname")
-    private String classRegex;
+    @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
+    private String classPattern;
 
-    @RiscIndexArg(index = 1, name = "method-regex", description = "regex match of methodname")
-    private String methodRegex;
+    @IndexArg(index = 1, name = "method-pattern", description = "pattern matching of method name")
+    private String methodPattern;
 
-    @RiscIndexArg(index = 2, name = "express",
+    @IndexArg(index = 2, name = "express",
             description = "ognl expression, write by ognl.",
             description2 = ""
                     + " \n"
@@ -59,20 +58,32 @@ public class WatchCommand extends Command {
 
     private String expression;
 
-    @RiscNamedArg(named = "b", description = "is watch on before")
+    @NamedArg(named = "b", description = "is watch on before")
     private boolean isBefore = true;
 
-    @RiscNamedArg(named = "f", description = "is watch on finish")
+    @NamedArg(named = "f", description = "is watch on finish")
     private boolean isFinish = false;
 
-    @RiscNamedArg(named = "e", description = "is watch on exception")
+    @NamedArg(named = "e", description = "is watch on exception")
     private boolean isException = false;
 
-    @RiscNamedArg(named = "s", description = "is watch on success")
+    @NamedArg(named = "s", description = "is watch on success")
     private boolean isSuccess = false;
 
-    @RiscNamedArg(named = "x", hasValue = true, description = "expend level of object. Default level-0")
+    @NamedArg(named = "x", hasValue = true, description = "expend level of object. Default level-0")
     private Integer expend;
+
+    @NamedArg(named = "E", description = "enable the regex pattern matching")
+    private boolean isRegEx = false;
+
+    /**
+     * 命令是否启用正则表达式匹配
+     *
+     * @return true启用正则表达式/false不启用
+     */
+    public boolean isRegEx() {
+        return isRegEx;
+    }
 
     @Override
     public Action getAction() {
@@ -83,14 +94,14 @@ public class WatchCommand extends Command {
             public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classRegex, methodRegex, new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classPattern, methodPattern, isRegEx(), new AdviceListenerAdapter() {
 
                     @Override
                     public void onBefore(Advice p) {
                         if (isBefore) {
                             try {
                                 final Object value = GaOgnlUtils.getValue(expression, p);
-                                if( null != expend
+                                if (null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
                                 } else {
@@ -98,10 +109,8 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                if (logger.isLoggable(Level.WARNING)) {
-                                    logger.log(Level.WARNING, "watch failed.", e);
-                                }
-                                sender.send(false, e.getMessage()+"\n");
+                                warn(e, "watch failed.");
+                                sender.send(false, e.getMessage() + "\n");
                             }
                         }
                     }
@@ -111,7 +120,7 @@ public class WatchCommand extends Command {
                         if (isFinish) {
                             try {
                                 final Object value = GaOgnlUtils.getValue(expression, p);
-                                if( null != expend
+                                if (null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
                                 } else {
@@ -119,10 +128,8 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                if (logger.isLoggable(Level.WARNING)) {
-                                    logger.log(Level.WARNING, "watch failed.", e);
-                                }
-                                sender.send(false, e.getMessage()+"\n");
+                                warn(e, "watch failed.");
+                                sender.send(false, e.getMessage() + "\n");
                             }
                         }
                     }
@@ -132,7 +139,7 @@ public class WatchCommand extends Command {
                         if (isException) {
                             try {
                                 final Object value = GaOgnlUtils.getValue(expression, p);
-                                if( null != expend
+                                if (null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
                                 } else {
@@ -140,10 +147,8 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                if (logger.isLoggable(Level.WARNING)) {
-                                    logger.log(Level.WARNING, "watch failed.", e);
-                                }
-                                sender.send(false, e.getMessage()+"\n");
+                                warn(e, "watch failed.");
+                                sender.send(false, e.getMessage() + "\n");
                             }
                         }
                     }
@@ -153,7 +158,7 @@ public class WatchCommand extends Command {
                         if (isSuccess) {
                             try {
                                 final Object value = GaOgnlUtils.getValue(expression, p);
-                                if( null != expend
+                                if (null != expend
                                         && expend >= 0) {
                                     sender.send(false, "" + GaObjectUtils.toString(value, 0, expend) + "\n");
                                 } else {
@@ -161,18 +166,16 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                if (logger.isLoggable(Level.WARNING)) {
-                                    logger.log(Level.WARNING, "watch failed.", e);
-                                }
-                                sender.send(false, e.getMessage()+"\n");
+                                warn(e, "watch failed.");
+                                sender.send(false, e.getMessage() + "\n");
                             }
                         }
                     }
 
-                }, info);
+                }, info, false);
 
                 // 注册任务
-                registJob(info.getSessionId(), result.getId());
+                regJob(info.getSessionId(), result.getId());
 
                 // 激活任务
                 activeJob(result.getId());

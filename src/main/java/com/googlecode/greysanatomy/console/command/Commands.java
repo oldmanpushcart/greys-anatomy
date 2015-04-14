@@ -2,9 +2,9 @@ package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.console.FileValueConverter;
 import com.googlecode.greysanatomy.console.InputCompleter;
-import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
-import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
-import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
+import com.googlecode.greysanatomy.console.command.annotation.Cmd;
+import com.googlecode.greysanatomy.console.command.annotation.IndexArg;
+import com.googlecode.greysanatomy.console.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.util.GaReflectUtils;
 import jline.console.ConsoleReader;
 import jline.console.completer.*;
@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class Commands {
 
-    private final Map<String, Class<?>> riscCommands = new HashMap<String, Class<?>>();
+    private final Map<String, Class<?>> commands = new HashMap<String, Class<?>>();
 
     private Commands() {
 
@@ -33,9 +33,9 @@ public class Commands {
                 continue;
             }
 
-            if (clazz.isAnnotationPresent(RiscCmd.class)) {
-                final RiscCmd cmd = clazz.getAnnotation(RiscCmd.class);
-                riscCommands.put(cmd.named(), clazz);
+            if (clazz.isAnnotationPresent(Cmd.class)) {
+                final Cmd cmd = clazz.getAnnotation(Cmd.class);
+                commands.put(cmd.named(), clazz);
             }
 
 
@@ -43,21 +43,31 @@ public class Commands {
 
     }
 
-    public Command newRiscCommand(String line) throws IllegalAccessException, InstantiationException {
+    /**
+     * 根据命令行所输入的内容构建一个命令
+     *
+     * @param line 命令行输入的一行命令
+     * @return 解析出的命令
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     */
+    public Command newCommand(String line) throws IllegalAccessException, InstantiationException {
 
-        final String[] strs = line.split("\\s+");
-        final String cmdName = strs[0];
-        final Class<?> clazz = getInstance().riscCommands.get(cmdName);
+        final String[] splitOfLine = line.split("\\s+");
+        final String cmdName = splitOfLine[0];
+        final Class<?> clazz = getInstance().commands.get(cmdName);
         if (null == clazz) {
             return null;
         }
 
         final Command command = (Command) clazz.newInstance();
-        final OptionSet opt = getRiscOptionParser(clazz).parse(strs);
+        final OptionSet opt = getOptionParser(clazz).parse(splitOfLine);
 
-        for (Field field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(RiscNamedArg.class)) {
-                final RiscNamedArg arg = field.getAnnotation(RiscNamedArg.class);
+        for (final Field field : clazz.getDeclaredFields()) {
+
+            // 处理命名参数
+            if (field.isAnnotationPresent(NamedArg.class)) {
+                final NamedArg arg = field.getAnnotation(NamedArg.class);
 
                 if (arg.hasValue()) {
                     if (opt.has(arg.named())) {
@@ -65,7 +75,7 @@ public class Commands {
 
                         //如果是枚举类型，则根据枚举信息赋值
                         if (field.getType().isEnum()) {
-                            Enum<?>[] enums = (Enum[]) field.getType().getEnumConstants();
+                            final Enum<?>[] enums = (Enum[]) field.getType().getEnumConstants();
                             if (enums != null) {
                                 for (Enum<?> e : enums) {
                                     if (e.name().equals(value)) {
@@ -77,15 +87,19 @@ public class Commands {
                         }
                         GaReflectUtils.set(field, value, command);
                     }
-                } else {
+                }
 
+                // 设置boolean类型,一般只有boolean类型hasValue才为false
+                else {
                     GaReflectUtils.set(field, opt.has(arg.named()), command);
-
                 }
 
 
-            } else if (field.isAnnotationPresent(RiscIndexArg.class)) {
-                final RiscIndexArg arg = field.getAnnotation(RiscIndexArg.class);
+            }
+
+            // 处理顺序参数
+            else if (field.isAnnotationPresent(IndexArg.class)) {
+                final IndexArg arg = field.getAnnotation(IndexArg.class);
                 final int index = arg.index() + 1;
                 if (arg.isRequired()
                         && opt.nonOptionArguments().size() <= index) {
@@ -104,12 +118,12 @@ public class Commands {
         return command;
     }
 
-    private static OptionParser getRiscOptionParser(Class<?> clazz) {
+    private static OptionParser getOptionParser(Class<?> clazz) {
 
         final StringBuilder sb = new StringBuilder();
         for (Field field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(RiscNamedArg.class)) {
-                final RiscNamedArg arg = field.getAnnotation(RiscNamedArg.class);
+            if (field.isAnnotationPresent(NamedArg.class)) {
+                final NamedArg arg = field.getAnnotation(NamedArg.class);
                 if (arg.hasValue()) {
                     sb.append(arg.named()).append(":");
                 } else {
@@ -121,8 +135,8 @@ public class Commands {
         final OptionParser parser
                 = sb.length() == 0 ? new OptionParser() : new OptionParser(sb.toString());
         for (Field field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(RiscNamedArg.class)) {
-                final RiscNamedArg arg = field.getAnnotation(RiscNamedArg.class);
+            if (field.isAnnotationPresent(NamedArg.class)) {
+                final NamedArg arg = field.getAnnotation(NamedArg.class);
                 if (arg.hasValue()) {
                     final OptionSpecBuilder osb = parser.accepts(arg.named(), arg.description());
                     osb.withOptionalArg()
@@ -138,35 +152,40 @@ public class Commands {
     /**
      * 列出所有精简命令
      *
-     * @return
+     * @return 返回当前版本所支持的精简命令集合
      */
-    public Map<String, Class<?>> listRiscCommands() {
-        return new HashMap<String, Class<?>>(riscCommands);
+    public Map<String, Class<?>> listCommands() {
+        return new HashMap<String, Class<?>>(commands);
     }
 
 
-    private Collection<Completer> getRiscCommandCompleters() {
-        final Collection<Completer> completers = new ArrayList<Completer>();
+    private Collection<Completer> getCommandCompleterList() {
+        final Collection<Completer> completerList = new ArrayList<Completer>();
 
-        for (Map.Entry<String, Class<?>> entry : Commands.getInstance().listRiscCommands().entrySet()) {
+        for (Map.Entry<String, Class<?>> entry : Commands.getInstance().listCommands().entrySet()) {
             ArgumentCompleter argCompleter = new ArgumentCompleter();
-            completers.add(argCompleter);
+            completerList.add(argCompleter);
             argCompleter.getCompleters().add(new StringsCompleter(entry.getKey()));
 
             if (entry.getKey().equals("help")) {
-                argCompleter.getCompleters().add(new StringsCompleter(Commands.getInstance().listRiscCommands().keySet()));
+                argCompleter.getCompleters().add(new StringsCompleter(Commands.getInstance().listCommands().keySet()));
             }
 
             for (Field field : GaReflectUtils.getFields(entry.getValue())) {
-                if (field.isAnnotationPresent(RiscNamedArg.class)) {
-                    RiscNamedArg arg = field.getAnnotation(RiscNamedArg.class);
+                if (field.isAnnotationPresent(NamedArg.class)) {
+                    NamedArg arg = field.getAnnotation(NamedArg.class);
                     argCompleter.getCompleters().add(new StringsCompleter("-" + arg.named()));
                     if (File.class.isAssignableFrom(field.getType())) {
                         argCompleter.getCompleters().add(new FileNameCompleter());
-                    } else if (Boolean.class.isAssignableFrom(field.getType())
-                            || boolean.class.isAssignableFrom(field.getType())) {
+                    }
+
+//                    // boolean类型的已经通过自动识别的方式进行补充，不再需要用户主动填写
+//                    else if (Boolean.class.isAssignableFrom(field.getType())
+//                            || boolean.class.isAssignableFrom(field.getType())) {
 //                        argCompleter.getCompleters().add(new StringsCompleter("true", "false"));
-                    } else if (field.getType().isEnum()) {
+//                    }
+
+                    else if (field.getType().isEnum()) {
                         Enum<?>[] enums = (Enum[]) field.getType().getEnumConstants();
                         String[] enumArgs = new String[enums.length];
                         for (int i = 0; i < enums.length; i++) {
@@ -181,29 +200,23 @@ public class Commands {
             argCompleter.getCompleters().add(new NullCompleter());
         }
 
-        return completers;
+        return completerList;
     }
 
     /**
      * 注册提示信息
      *
-     * @param console
+     * @param console 控制台
      */
-    public void registCompleter(ConsoleReader console) {
-        console.addCompleter(new AggregateCompleter(getRiscCommandCompleters()));
+    public void regCompleter(ConsoleReader console) {
+        console.addCompleter(new AggregateCompleter(getCommandCompleterList()));
 
     }
 
     private static final Commands instance = new Commands();
 
-    /**
-     * 获取单例
-     *
-     * @return
-     */
     public static synchronized Commands getInstance() {
         return instance;
     }
-
 
 }

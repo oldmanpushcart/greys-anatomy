@@ -1,6 +1,6 @@
 package com.googlecode.greysanatomy.util;
 
-import com.googlecode.greysanatomy.clocker.Clocker;
+import com.googlecode.greysanatomy.clocker.Timer;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -126,7 +126,7 @@ public class ProfilerUtils {
          */
         private Entry(String message, Entry parentEntry, Entry firstEntry) {
             this.message = message;
-            this.startTime = Clocker.current().getCurrentTimeMillis();
+            this.startTime = Timer.current().getCurrentTimeMillis();
             this.parentEntry = parentEntry;
             this.firstEntry = (Entry) defaultIfNull(firstEntry, this);
             this.baseTime = (firstEntry == null) ? 0 : firstEntry.startTime;
@@ -227,7 +227,7 @@ public class ProfilerUtils {
          * 结束当前entry，并记录结束时间。
          */
         private void release() {
-            endTime = Clocker.current().getCurrentTimeMillis();
+            endTime = Timer.current().getCurrentTimeMillis();
         }
 
         /**
