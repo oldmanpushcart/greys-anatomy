@@ -6,6 +6,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 字符串操作工具类
@@ -659,5 +661,19 @@ public class GaStringUtils {
         }
         return t.getMessage();
     }
+
+    public static String[] splitForArgument(String argumentString) {
+        Pattern compile = Pattern.compile("(\"[^\"]*\")|('[^']*')|([^\\s+]+)");
+        Matcher matcher = compile.matcher(argumentString);
+
+        final ArrayList<String> stringList = new ArrayList<String>();
+        while( matcher.find() ) {
+            stringList.add(matcher.group()
+                    .replaceAll("(^['|\"])|(['|\"]$)",""));
+        }
+
+        return stringList.toArray(new String[stringList.size()]);
+    }
+
 
 }

@@ -1,5 +1,7 @@
 package com.googlecode.greysanatomy.probe;
 
+import com.googlecode.greysanatomy.util.LogUtils;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,11 +9,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.googlecode.greysanatomy.util.LogUtils.warn;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class ProbeJobs {
 
+    private static final Logger logger = LogUtils.getLogger();
     private static final String REST_DIR = System.getProperty("java.io.tmpdir")//执行结果输出文件路径
             + File.separator + "greysdata"
             + File.separator + UUID.randomUUID().toString()
@@ -131,14 +134,22 @@ public final class ProbeJobs {
                     job.listener.destroy();
                 }
             } catch (Throwable t) {
-                warn(t, "destroy job listener failed, jobId=%s", id);
+
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, String.format("destroy job listener failed, jobId=%s", id), t);
+                }
+
             }
             try {
                 job.jobReader.close();
                 job.jobWriter.close();
                 job.jobFile.deleteOnExit();
             } catch (IOException e) {
-                warn(e, "close jobFile failed. jobId=%s", id);
+
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, String.format("close jobFile failed. jobId=%s", id), e);
+                }
+
             }
             job.isAlive = false;
             job.isKilled = true;

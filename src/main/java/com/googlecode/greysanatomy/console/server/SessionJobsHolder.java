@@ -2,15 +2,17 @@ package com.googlecode.greysanatomy.console.server;
 
 import com.googlecode.greysanatomy.console.rmi.req.GaSession;
 import com.googlecode.greysanatomy.exception.SessionTimeOutException;
+import com.googlecode.greysanatomy.util.LogUtils;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.probe.ProbeJobs.killJob;
-import static com.googlecode.greysanatomy.util.LogUtils.info;
 
 /**
  * 服务端当前连接上session的job持有信息
@@ -20,6 +22,7 @@ import static com.googlecode.greysanatomy.util.LogUtils.info;
 public class SessionJobsHolder {
 
 
+    private static final Logger logger = LogUtils.getLogger();
     // 会话信息
     private final static Map<Long, GaSession> sessionHolder = new ConcurrentHashMap<Long, GaSession>();
 
@@ -63,7 +66,11 @@ public class SessionJobsHolder {
     public static synchronized long regSession() {
         GaSession session = new GaSession();
         sessionHolder.put(session.getSessionId(), session);
-        info("reg session=%s;", session.getSessionId());
+
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, String.format("reg session=%s;", session.getSessionId()));
+        }
+
         return session.getSessionId();
     }
 
@@ -100,7 +107,11 @@ public class SessionJobsHolder {
                 if (id == jobId) {
                     killJob(id);
                     it.remove();
-                    info("unReg job=%s for session=%s;", id, gaSessionId);
+
+                    if (logger.isLoggable(Level.INFO)) {
+                        logger.log(Level.INFO, String.format("unReg job=%s for session=%s;", id, gaSessionId));
+                    }
+
                 }
             }
         }
@@ -119,7 +130,11 @@ public class SessionJobsHolder {
             throw new SessionTimeOutException("session is not exsit!");
         }
         holderSession.getJobIds().add(jobId);
-        info("reg job=%s for session=%s;", jobId, sessionId);
+
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, String.format("reg job=%s for session=%s;", jobId, sessionId));
+        }
+
     }
 
     /**
@@ -137,6 +152,10 @@ public class SessionJobsHolder {
             killJob(jobId);
         }
         sessionHolder.remove(gaSessionId);
-        info("unReg session=%s;", gaSessionId);
+
+        if (logger.isLoggable(Level.INFO)) {
+            logger.log(Level.INFO, String.format("unReg session=%s;", gaSessionId));
+        }
+
     }
 }

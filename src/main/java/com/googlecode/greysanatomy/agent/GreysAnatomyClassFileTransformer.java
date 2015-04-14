@@ -5,6 +5,7 @@ import com.googlecode.greysanatomy.probe.JobListener;
 import com.googlecode.greysanatomy.probe.ProbeJobs;
 import com.googlecode.greysanatomy.probe.Probes;
 import com.googlecode.greysanatomy.util.GaReflectUtils;
+import com.googlecode.greysanatomy.util.LogUtils;
 import com.googlecode.greysanatomy.util.PatternMatchingUtils;
 import javassist.*;
 
@@ -14,14 +15,16 @@ import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.probe.ProbeJobs.register;
-import static com.googlecode.greysanatomy.util.LogUtils.*;
 import static com.googlecode.greysanatomy.util.SearchUtils.searchClassByClassPatternMatching;
 import static java.lang.System.arraycopy;
 
 public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
+    private static final Logger logger = LogUtils.getLogger();
     private final String prefMthPattern;
     private final boolean isRegEx;
 
@@ -90,16 +93,30 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
                         //  方法名不匹配正则表达式
                         else {
-                            debug("class=%s;method=%s was not matches pattern=%s", className, cb.getMethodInfo().getName(), prefMthPattern);
+                            if (logger.isLoggable(Level.FINE)) {
+                                logger.log(Level.FINE, String.format(
+                                                "class=%s;method=%s was not matches pattern=%s",
+                                                className,
+                                                cb.getMethodInfo().getName(),
+                                                prefMthPattern)
+                                );
+                            }
                         }
                     }
                 }
 
                 data = cc.toBytecode();
             } catch (Exception e) {
-                debug(e, "transform class failed. class=%s, ClassLoader=%s",
-                        className, loader);
-                info("transform class failed. class=%s, ClassLoader=%s", className, loader);
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, String.format(
+                                    "transform class failed. class=%s, ClassLoader=%s",
+                                    className, loader)
+                            , e
+                    );
+                }
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, String.format("transform class failed. class=%s, ClassLoader=%s", className, loader));
+                }
                 data = null;
             } finally {
                 if (null != cc) {
@@ -224,7 +241,9 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                                                 final Info info,
                                                 final Progress progress) {
         if (ProbeJobs.isJobKilled(info.getJobId())) {
-            info("job[id=%s] was killed, stop this reTransform.", info.getJobId());
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, String.format("job[id=%s] was killed, stop this reTransform.", info.getJobId()));
+            }
             return;
         }
 
@@ -235,11 +254,19 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
         try {
             instrumentation.retransformClasses(classArray);
-            info("reTransformClasses:size=[%s]", size);
-            debug("reTransformClasses:%s", modifiedClasses);
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, String.format("reTransformClasses:size=[%s]", size));
+            }
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, String.format("reTransformClasses:%s", modifiedClasses));
+            }
         } catch (Throwable t) {
-            debug(t, "reTransformClasses failed, classes=%s.", modifiedClasses);
-            warn("reTransformClasses failed, size=%s.", size);
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, String.format("reTransformClasses failed, classes=%s.", modifiedClasses), t);
+            }
+            if (logger.isLoggable(Level.WARNING)) {
+                logger.log(Level.WARNING, String.format("reTransformClasses failed, size=%s.", size));
+            }
         } finally {
             if (null != progress) {
                 progress.progress(size, size);
@@ -265,15 +292,23 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 
         for (final Class<?> clazz : modifiedClasses) {
             if (ProbeJobs.isJobKilled(info.getJobId())) {
-                info("job[id=%s] was killed, stop this reTransform.", info.getJobId());
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, String.format("job[id=%s] was killed, stop this reTransform.", info.getJobId()));
+                }
                 break;
             }
             try {
                 instrumentation.retransformClasses(clazz);
-                debug("reTransformClasses, index=%s;total=%s;class=%s;", index, total, clazz);
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, String.format("reTransformClasses, index=%s;total=%s;class=%s;", index, total, clazz));
+                }
             } catch (Throwable t) {
-                debug(t, "reTransformClasses failed, index=%s;total=%s;class=%s;", index, total, clazz);
-                warn("reTransformClasses failed, index=%s;total=%s;class=%s;", index, total, clazz);
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, String.format("reTransformClasses failed, index=%s;total=%s;class=%s;", index, total, clazz), t);
+                }
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, String.format("reTransformClasses failed, index=%s;total=%s;class=%s;", index, total, clazz), t);
+                }
             } finally {
                 if (null != progress) {
                     progress.progress(++index, total);

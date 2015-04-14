@@ -9,6 +9,7 @@ import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaObjectUtils;
 import com.googlecode.greysanatomy.util.GaOgnlUtils;
+import com.googlecode.greysanatomy.util.LogUtils;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -18,13 +19,15 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 import static com.googlecode.greysanatomy.util.GaStringUtils.*;
-import static com.googlecode.greysanatomy.util.LogUtils.warn;
 import static java.lang.String.format;
+import static java.util.logging.Level.WARNING;
 
 /**
  *  ±π‚ÀÌµ¿√¸¡Ó<br/>
@@ -43,6 +46,7 @@ import static java.lang.String.format;
         })
 public class TimeTunnelCommand extends Command {
 
+    private final Logger logger = LogUtils.getLogger();
 
     // the TimeTunnels collection
     private static final Map<Integer, TimeTunnel> timeTunnels = new LinkedHashMap<Integer, TimeTunnel>();
@@ -317,7 +321,9 @@ public class TimeTunnelCommand extends Command {
                     sender.send(false, lineSB.toString());
 
                 } catch (Throwable t) {
-                    warn(t, "TimeTunnel failed.");
+                    if (logger.isLoggable(WARNING)) {
+                        logger.log(WARNING, "TimeTunnel failed.", t);
+                    }
                 }
 
             }
@@ -551,6 +557,19 @@ public class TimeTunnelCommand extends Command {
 
     @Override
     public Action getAction() {
+
+        if(logger.isLoggable(Level.FINE)) {
+            logger.log(Level.FINE,String.format("classPattern=%s;expend=%s;index=%s;isDelete=%s;isDeleteAll=%s;isList=%s;isRegEx=%s;watchExpress=%s;",
+                    this.classPattern,
+                    this.expend,
+                    this.index,
+                    this.isDelete,
+                    this.isDeleteAll,
+                    this.isList,
+                    this.isRegEx,
+                    this.watchExpress));
+        }
+
         return new Action() {
 
             @Override

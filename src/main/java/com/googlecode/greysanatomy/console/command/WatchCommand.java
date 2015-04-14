@@ -10,13 +10,15 @@ import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaObjectUtils;
 import com.googlecode.greysanatomy.util.GaOgnlUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
+import com.googlecode.greysanatomy.util.LogUtils;
 
 import java.lang.instrument.Instrumentation;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
-import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
 @Cmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
         eg = {
@@ -28,6 +30,7 @@ import static com.googlecode.greysanatomy.util.LogUtils.warn;
         })
 public class WatchCommand extends Command {
 
+    private final Logger logger = LogUtils.getLogger();
 
     @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
     private String classPattern;
@@ -109,7 +112,9 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                warn(e, "watch failed.");
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
                                 sender.send(false, e.getMessage() + "\n");
                             }
                         }
@@ -128,7 +133,9 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                warn(e, "watch failed.");
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
                                 sender.send(false, e.getMessage() + "\n");
                             }
                         }
@@ -147,7 +154,9 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                warn(e, "watch failed.");
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
                                 sender.send(false, e.getMessage() + "\n");
                             }
                         }
@@ -166,7 +175,9 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                warn(e, "watch failed.");
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
                                 sender.send(false, e.getMessage() + "\n");
                             }
                         }

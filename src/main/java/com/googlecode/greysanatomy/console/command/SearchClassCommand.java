@@ -36,6 +36,9 @@ public class SearchClassCommand extends Command {
     @NamedArg(named = "d", description = "show the detail of class")
     private boolean isDetail = false;
 
+    @NamedArg(named = "f", description = "show the fields of class")
+    private boolean isField = false;
+
     @NamedArg(named = "E", description = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
@@ -68,7 +71,7 @@ public class SearchClassCommand extends Command {
 
                 for (Class<?> clazz : matchedClassSet) {
                     if (isDetail) {
-                        message.append(GaDetailUtils.detail(clazz)).append("\n");
+                        message.append(GaDetailUtils.detail(clazz, isField)).append("\n");
                     } else {
                         message.append(clazz.getName()).append("\n");
                     }

@@ -14,6 +14,7 @@ import com.googlecode.greysanatomy.exception.SessionTimeOutException;
 import com.googlecode.greysanatomy.probe.ProbeJobs;
 import com.googlecode.greysanatomy.util.JvmUtils;
 import com.googlecode.greysanatomy.util.JvmUtils.ShutdownHook;
+import com.googlecode.greysanatomy.util.LogUtils;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -23,12 +24,12 @@ import java.nio.CharBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.*;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.createJob;
 import static com.googlecode.greysanatomy.util.GaStringUtils.getCauseMessage;
-import static com.googlecode.greysanatomy.util.LogUtils.debug;
-import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
 /**
  * 控制台服务端处理器
@@ -37,7 +38,7 @@ import static com.googlecode.greysanatomy.util.LogUtils.warn;
  */
 public class ConsoleServerHandler {
 
-
+    private final Logger logger = LogUtils.getLogger();
     private final ConsoleServer consoleServer;
     private final Instrumentation inst;
     private final ExecutorService workers;
@@ -109,8 +110,15 @@ public class ConsoleServerHandler {
 
                 // 执行命令失败
                 catch (Throwable t) {
-                    debug(t, "do action failed. job=%s;comLine=%s;", respResult.getJobId(), cmd.getCommand());
-                    warn("do action failed. job=%s;", respResult.getJobId());
+
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, String.format("do action failed. job=%s;comLine=%s;", respResult.getJobId(), cmd.getCommand()), t);
+                    }
+
+                    if (logger.isLoggable(Level.WARNING)) {
+                        logger.log(Level.WARNING, String.format("do action failed. job=%s;", respResult.getJobId()), t);
+                    }
+
                     write(respResult.getJobId(), true, "do action failed. cause : " + getCauseMessage(t));
                     return;
                 }
@@ -188,8 +196,15 @@ public class ConsoleServerHandler {
                 writer.append(message);
                 writer.flush();
             } catch (IOException e) {
-                debug(e, "write job message failed, jobId=%s.", jobId);
-                warn("write job message failed, jobId=%s.", jobId);
+
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, String.format("write job message failed, jobId=%s.", jobId), e);
+                }
+
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, String.format("write job message failed, jobId=%s.", jobId), e);
+                }
+
             }
         }
 
@@ -210,8 +225,15 @@ public class ConsoleServerHandler {
                 respResult.setPos(newPos);
                 respResult.setMessage(buffer.toString());
             } catch (IOException e) {
-                debug(e, "read job failed, jobId=%s.", jobId);
-                warn("read job failed, jobId=%s.", jobId);
+
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, String.format("read job failed, jobId=%s.", jobId), e);
+                }
+
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, String.format("read job failed, jobId=%s.", jobId), e);
+                }
+
             }
         }
 
