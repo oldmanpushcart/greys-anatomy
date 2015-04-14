@@ -16,7 +16,7 @@ curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
 
 ## 最新版本
 
-### **VERSION :** 1.5.4.6
+### **VERSION :** 1.5.4.7
 
 ### 改动说明
 
