@@ -10,9 +10,17 @@
 
 # 程序安装：
 
-```shell
-curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
-```
+- KSH
+
+  ```shell
+  curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
+  ```
+
+- BASH
+
+  ```
+  curl -sLk http://ompc.oss.aliyuncs.com/greys/install.bash|bash
+  ```
 
 ## 最新版本
 
