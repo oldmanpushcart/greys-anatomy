@@ -12,6 +12,7 @@ fi
 unzip $GREYS_FILE
 rm -rf $GREYS_FILE
 chmod +x greys/greys
+chmod +x greys/greys.bash
 
 echo "done. enjoy yourself.^_^"
 
