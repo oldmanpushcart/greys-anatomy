@@ -30,7 +30,7 @@ public class SearchClassCommand extends Command {
     @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
     private String classPattern;
 
-    @NamedArg(named = "s", description = "including class's parents")
+    @NamedArg(named = "S", description = "including sub class")
     private boolean isSuper = false;
 
     @NamedArg(named = "d", description = "show the detail of class")

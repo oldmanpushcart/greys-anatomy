@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.probe.ProbeJobs.register;
 import static com.googlecode.greysanatomy.util.SearchUtils.searchClassByClassPatternMatching;
+import static com.googlecode.greysanatomy.util.SearchUtils.searchClassBySupers;
 import static java.lang.System.arraycopy;
 
 public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
@@ -174,11 +175,12 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     public static TransformResult transform(final Instrumentation instrumentation,
                                             final String prefClzPattern,
                                             final String prefMthPattern,
+                                            final boolean isSuper,
                                             final boolean isRegEx,
                                             final JobListener listener,
                                             final Info info,
                                             final boolean isForEach) throws UnmodifiableClassException {
-        return transform(instrumentation, prefClzPattern, prefMthPattern, isRegEx, listener, info, isForEach, null);
+        return transform(instrumentation, prefClzPattern, prefMthPattern, isSuper, isRegEx, listener, info, isForEach, null);
     }
 
     /**
@@ -194,6 +196,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     public static TransformResult transform(final Instrumentation instrumentation,
                                             final String prefClzPattern,
                                             final String prefMthPattern,
+                                            final boolean isSuper,
                                             final boolean isRegEx,
                                             final JobListener listener,
                                             final Info info,
@@ -206,9 +209,12 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
         instrumentation.addTransformer(transformer, true);
 
         final Collection<Class<?>> modifiedClasses =
-                //classesWildcardMatch(instrumentation, prefClzWildcard);
-//                SearchUtils.searchClassBySupers(instrumentation, SearchUtils.searchClassByClassPatternMatching(instrumentation, prefClzWildcard));
-                searchClassByClassPatternMatching(instrumentation, prefClzPattern, isRegEx);
+
+                isSuper
+                        ? searchClassBySupers(instrumentation, searchClassByClassPatternMatching(instrumentation, prefClzPattern, isRegEx))
+                        : searchClassByClassPatternMatching(instrumentation, prefClzPattern, isRegEx);
+
+
         synchronized (GreysAnatomyClassFileTransformer.class) {
             try {
 

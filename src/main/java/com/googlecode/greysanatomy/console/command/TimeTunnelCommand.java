@@ -113,6 +113,9 @@ public class TimeTunnelCommand extends Command {
     @NamedArg(named = "d", description = "delete the index TimeTunnel.")
     private boolean isDelete = false;
 
+    @NamedArg(named = "S", description = "including sub class")
+    private boolean isSuper = false;
+
     @NamedArg(named = "E", description = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
@@ -297,7 +300,7 @@ public class TimeTunnelCommand extends Command {
     private void doTimeTunnel(final Info info, final Sender sender) throws Throwable {
 
         final Instrumentation inst = info.getInst();
-        final GreysAnatomyClassFileTransformer.TransformResult result = transform(inst, classPattern, methodPattern, isRegEx(), new AdviceListenerAdapter() {
+        final GreysAnatomyClassFileTransformer.TransformResult result = transform(inst, classPattern, methodPattern, isSuper, isRegEx(), new AdviceListenerAdapter() {
 
             boolean isFirst = true;
 

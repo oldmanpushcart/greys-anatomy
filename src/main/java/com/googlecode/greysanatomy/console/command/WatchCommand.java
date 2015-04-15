@@ -58,7 +58,6 @@ public class WatchCommand extends Command {
                     + "    \\+- targetClassName : the object's class\n"
                     + "    \\+- targetBehaviorName : the constructor or method name\n"
     )
-
     private String expression;
 
     @NamedArg(named = "b", description = "is watch on before")
@@ -75,6 +74,9 @@ public class WatchCommand extends Command {
 
     @NamedArg(named = "x", hasValue = true, description = "expend level of object. Default level-0")
     private Integer expend;
+
+    @NamedArg(named = "S", description = "including sub class")
+    private boolean isSuper = false;
 
     @NamedArg(named = "E", description = "enable the regex pattern matching")
     private boolean isRegEx = false;
@@ -97,7 +99,7 @@ public class WatchCommand extends Command {
             public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classPattern, methodPattern, isRegEx(), new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classPattern, methodPattern, isSuper, isRegEx(), new AdviceListenerAdapter() {
 
                     @Override
                     public void onBefore(Advice p) {
