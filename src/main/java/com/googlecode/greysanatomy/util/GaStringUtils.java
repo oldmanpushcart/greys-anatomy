@@ -662,6 +662,11 @@ public class GaStringUtils {
         return t.getMessage();
     }
 
+    /**
+     * 拆分参数，要求能将命令行字符串拆分成为多个数组
+     * @param argumentString
+     * @return
+     */
     public static String[] splitForArgument(String argumentString) {
         Pattern compile = Pattern.compile("(\"[^\"]*\")|('[^']*')|([^\\s+]+)");
         Matcher matcher = compile.matcher(argumentString);
