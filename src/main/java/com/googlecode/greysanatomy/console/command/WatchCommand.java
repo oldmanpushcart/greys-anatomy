@@ -10,13 +10,15 @@ import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.util.GaObjectUtils;
 import com.googlecode.greysanatomy.util.GaOgnlUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
+import com.googlecode.greysanatomy.util.LogUtils;
 
 import java.lang.instrument.Instrumentation;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
 import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regJob;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
-import static com.googlecode.greysanatomy.util.LogUtils.warn;
 
 @Cmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
         eg = {
@@ -28,6 +30,7 @@ import static com.googlecode.greysanatomy.util.LogUtils.warn;
         })
 public class WatchCommand extends Command {
 
+    private final Logger logger = LogUtils.getLogger();
 
     @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
     private String classPattern;
@@ -55,7 +58,6 @@ public class WatchCommand extends Command {
                     + "    \\+- targetClassName : the object's class\n"
                     + "    \\+- targetBehaviorName : the constructor or method name\n"
     )
-
     private String expression;
 
     @NamedArg(named = "b", description = "is watch on before")
@@ -72,6 +74,9 @@ public class WatchCommand extends Command {
 
     @NamedArg(named = "x", hasValue = true, description = "expend level of object. Default level-0")
     private Integer expend;
+
+    @NamedArg(named = "S", description = "including sub class")
+    private boolean isSuper = false;
 
     @NamedArg(named = "E", description = "enable the regex pattern matching")
     private boolean isRegEx = false;
@@ -94,7 +99,7 @@ public class WatchCommand extends Command {
             public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classPattern, methodPattern, isRegEx(), new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classPattern, methodPattern, isSuper, isRegEx(), new AdviceListenerAdapter() {
 
                     @Override
                     public void onBefore(Advice p) {
@@ -109,7 +114,9 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                warn(e, "watch failed.");
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
                                 sender.send(false, e.getMessage() + "\n");
                             }
                         }
@@ -128,7 +135,9 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                warn(e, "watch failed.");
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
                                 sender.send(false, e.getMessage() + "\n");
                             }
                         }
@@ -147,7 +156,9 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                warn(e, "watch failed.");
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
                                 sender.send(false, e.getMessage() + "\n");
                             }
                         }
@@ -166,7 +177,9 @@ public class WatchCommand extends Command {
                                 }
 //                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
-                                warn(e, "watch failed.");
+                                if (logger.isLoggable(Level.WARNING)) {
+                                    logger.log(Level.WARNING, "watch failed.", e);
+                                }
                                 sender.send(false, e.getMessage() + "\n");
                             }
                         }

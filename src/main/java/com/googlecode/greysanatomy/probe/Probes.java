@@ -2,12 +2,14 @@ package com.googlecode.greysanatomy.probe;
 
 import com.googlecode.greysanatomy.probe.Advice.Target;
 import com.googlecode.greysanatomy.util.GaStringUtils;
+import com.googlecode.greysanatomy.util.LogUtils;
 import javassist.*;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.probe.ProbeJobs.getJobListeners;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.isListener;
-import static com.googlecode.greysanatomy.util.LogUtils.debug;
-import static com.googlecode.greysanatomy.util.LogUtils.warn;
 import static java.lang.String.format;
 import static javassist.Modifier.*;
 
@@ -33,6 +35,7 @@ import static javassist.Modifier.*;
  */
 public class Probes {
 
+    private static final Logger logger = LogUtils.getLogger();
     private static final String jobsClass = "com.googlecode.greysanatomy.probe.ProbeJobs";
     private static final String probesClass = "com.googlecode.greysanatomy.probe.Probes";
 
@@ -46,7 +49,11 @@ public class Probes {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
                 ((AdviceListener) getJobListeners(id)).onBefore(p);
             } catch (Throwable t) {
-                warn(t, "error at doBefore.");
+
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, "error at doBefore.", t);
+                }
+
             }
         }
     }
@@ -58,7 +65,11 @@ public class Probes {
                 p.setReturnObj(returnObj);
                 ((AdviceListener) getJobListeners(id)).onSuccess(p);
             } catch (Throwable t) {
-                warn(t, "error at onSuccess.");
+
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, "error at onSuccess.", t);
+                }
+
             }
             doFinish(id, targetClassName, targetBehaviorName, targetThis, args, returnObj, null);
         }
@@ -72,7 +83,11 @@ public class Probes {
                 p.setThrowException(throwException);
                 ((AdviceListener) getJobListeners(id)).onException(p);
             } catch (Throwable t) {
-                warn(t, "error at onException.");
+
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, "error at onException.", t);
+                }
+
             }
             doFinish(id, targetClassName, targetBehaviorName, targetThis, args, null, throwException);
         }
@@ -87,7 +102,11 @@ public class Probes {
                 p.setReturnObj(returnObj);
                 ((AdviceListener) getJobListeners(id)).onFinish(p);
             } catch (Throwable t) {
-                warn(t, "error at onFinish.");
+
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, "error at onFinish.", t);
+                }
+
             }
         }
     }
@@ -112,11 +131,15 @@ public class Probes {
                 || isAbstract
                 || cc.getName().startsWith("com.googlecode.greysanatomy.")
                 || cc.getName().startsWith("ognl.")) {
-            debug("ignore class:%s;behavior=%s;isInterface=%s;isAbstract=%s;",
-                    cc.getName(),
-                    cb.getName(),
-                    isInterface,
-                    isAbstract);
+
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, String.format("ignore class:%s;behavior=%s;isInterface=%s;isAbstract=%s;",
+                        cc.getName(),
+                        cb.getName(),
+                        isInterface,
+                        isAbstract));
+            }
+
             return true;
         }
 

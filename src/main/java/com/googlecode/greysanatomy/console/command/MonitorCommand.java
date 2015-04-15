@@ -79,6 +79,9 @@ public class MonitorCommand extends Command {
     @NamedArg(named = "c", hasValue = true, description = "the cycle of output")
     private int cycle = 120;
 
+    @NamedArg(named = "S", description = "including sub class")
+    private boolean isSuper = false;
+
     @NamedArg(named = "E", description = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
@@ -152,7 +155,7 @@ public class MonitorCommand extends Command {
             public void action(final ConsoleServer consoleServer, final Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classPattern, methodPattern, isRegEx(), new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classPattern, methodPattern, isSuper, isRegEx(), new AdviceListenerAdapter() {
 
                     private final ThreadLocal<Long> beginTimestamp = new ThreadLocal<Long>();
 

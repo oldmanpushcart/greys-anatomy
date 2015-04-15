@@ -1,8 +1,10 @@
 package com.googlecode.greysanatomy.util;
 
-import java.util.logging.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import static java.lang.String.format;
 import static java.util.logging.Level.*;
 
 /**
@@ -18,7 +20,7 @@ public class LogUtils {
         setLevel(INFO);
     }
 
-    public static enum LogLevel {
+    public enum LogLevel {
         DEBUG,
         INFO,
         WARN,
@@ -79,46 +81,50 @@ public class LogUtils {
         }
     }
 
-    public static void info(String format, Object... args) {
-        if (logger.isLoggable(INFO)) {
-            logger.log(INFO, format(format, args));
-        }
+    public static Logger getLogger() {
+        return logger;
     }
 
-    public static void trace(String format, Object... args) {
-        if (logger.isLoggable(FINEST)) {
-            logger.log(FINEST, format(format, args));
-        }
-    }
-
-    public static void debug(String format, Object... args) {
-        if (logger.isLoggable(FINE)) {
-            logger.log(FINE, format(format, args));
-        }
-    }
-
-    public static void debug(Throwable t, String format, Object... args) {
-        if (logger.isLoggable(FINE)) {
-            logger.log(FINE, format(format, args), t);
-        }
-    }
-
-    public static void warn(String format, Object... args) {
-        if (logger.isLoggable(WARNING)) {
-            logger.log(WARNING, format(format, args));
-        }
-    }
-
-    public static void warn(Throwable t, String format, Object... args) {
-        if (logger.isLoggable(WARNING)) {
-            logger.log(WARNING, format(format, args), t);
-        }
-    }
-
-    public static void error(Throwable t, String format, Object... args) {
-        if (logger.isLoggable(SEVERE)) {
-            logger.log(SEVERE, format(format, args), t);
-        }
-    }
+//    public static void info(String format, Object... args) {
+//        if (logger.isLoggable(INFO)) {
+//            logger.log(INFO, format(format, args));
+//        }
+//    }
+//
+//    public static void trace(String format, Object... args) {
+//        if (logger.isLoggable(FINEST)) {
+//            logger.log(FINEST, format(format, args));
+//        }
+//    }
+//
+//    public static void debug(String format, Object... args) {
+//        if (logger.isLoggable(FINE)) {
+//            logger.log(FINE, format(format, args));
+//        }
+//    }
+//
+//    public static void debug(Throwable t, String format, Object... args) {
+//        if (logger.isLoggable(FINE)) {
+//            logger.log(FINE, format(format, args), t);
+//        }
+//    }
+//
+//    public static void warn(String format, Object... args) {
+//        if (logger.isLoggable(WARNING)) {
+//            logger.log(WARNING, format(format, args));
+//        }
+//    }
+//
+//    public static void warn(Throwable t, String format, Object... args) {
+//        if (logger.isLoggable(WARNING)) {
+//            logger.log(WARNING, format(format, args), t);
+//        }
+//    }
+//
+//    public static void error(Throwable t, String format, Object... args) {
+//        if (logger.isLoggable(SEVERE)) {
+//            logger.log(SEVERE, format(format, args), t);
+//        }
+//    }
 
 }

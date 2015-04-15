@@ -6,6 +6,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 字符串操作工具类
@@ -659,5 +661,31 @@ public class GaStringUtils {
         }
         return t.getMessage();
     }
+
+    /**
+     * 拆分参数，要求能将命令行字符串拆分成为多个数组
+     * @param argumentString
+     * @return
+     */
+    public static String[] splitForArgument(String argumentString) {
+        Pattern compile = Pattern.compile("(\"[^\"]*\")|('[^']*')|([^\\s+]+)");
+        Matcher matcher = compile.matcher(argumentString);
+
+        final ArrayList<String> stringList = new ArrayList<String>();
+        while (matcher.find()) {
+
+            final String segment = matcher.group();
+            if (segment.length() > 1
+                    && ((segment.startsWith("'") && segment.endsWith("'")) || (segment.startsWith("\"") && segment.endsWith("\"")))) {
+                stringList.add(segment.replaceAll("(^['|\"])|(['|\"]$)", ""));
+            } else {
+                stringList.add(segment);
+            }
+
+        }
+
+        return stringList.toArray(new String[stringList.size()]);
+    }
+
 
 }

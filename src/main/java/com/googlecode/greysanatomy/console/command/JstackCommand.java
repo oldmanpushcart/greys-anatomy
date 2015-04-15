@@ -35,6 +35,9 @@ public class JstackCommand extends Command {
     @IndexArg(index = 1, name = "method-pattern", description = "pattern matching of method name")
     private String methodPattern;
 
+    @NamedArg(named = "S", description = "including sub class")
+    private boolean isSuper = false;
+
     @NamedArg(named = "E", description = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
@@ -55,7 +58,7 @@ public class JstackCommand extends Command {
             public void action(final ConsoleServer consoleServer, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
-                final TransformResult result = transform(inst, classPattern, methodPattern, isRegEx(), new AdviceListenerAdapter() {
+                final TransformResult result = transform(inst, classPattern, methodPattern, isSuper, isRegEx(), new AdviceListenerAdapter() {
 
                     @Override
                     public void onBefore(Advice p) {

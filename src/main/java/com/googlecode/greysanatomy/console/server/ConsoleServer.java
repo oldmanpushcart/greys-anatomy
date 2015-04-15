@@ -8,16 +8,19 @@ import com.googlecode.greysanatomy.console.rmi.req.ReqHeart;
 import com.googlecode.greysanatomy.console.rmi.req.ReqKillJob;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.HostUtils;
+import com.googlecode.greysanatomy.util.LogUtils;
 
 import java.lang.instrument.Instrumentation;
 import java.net.MalformedURLException;
-import java.rmi.*;
+import java.rmi.AlreadyBoundException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-
-import static com.googlecode.greysanatomy.util.LogUtils.debug;
-import static com.googlecode.greysanatomy.util.LogUtils.info;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * 控制台服务器
@@ -28,7 +31,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
 
     private static final long serialVersionUID = 7625219488001802803L;
 
-
+    private static final Logger logger = LogUtils.getLogger();
     private final ConsoleServerHandler serverHandler;
     private final Configure configure;
 
@@ -66,12 +69,16 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
         for (String ip : HostUtils.getAllLocalHostIP()) {
             final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configure.getTargetPort());
             try {
-                info("lookup for : %s", bindName);
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, String.format("lookup for : %s", bindName));
+                }
                 Naming.lookup(bindName);
                 bind = true;
             } catch (NotBoundException e) {
                 // 只有没有绑定才会去绑
-                info("rebind : %s", bindName);
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, String.format("rebind : %s", bindName));
+                }
                 Naming.bind(bindName, this);
             }
         }
@@ -88,9 +95,13 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
             final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configure.getTargetPort());
             try {
                 Naming.unbind(bindName);
-                info("unbind : %s", bindName);
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, String.format("unbind : %s", bindName));
+                }
             } catch (Exception e) {
-                debug(e, "unbind failed : %s;", bindName);
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, String.format("unbind failed : %s;", bindName), e);
+                }
             }
         }//for
 
@@ -136,7 +147,9 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
     public static synchronized ConsoleServer getInstance(Configure configure, Instrumentation inst) throws RemoteException, MalformedURLException, AlreadyBoundException {
         if (null == instance) {
             instance = new ConsoleServer(configure, inst);
-            info(GaStringUtils.getLogo());
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, GaStringUtils.getLogo());
+            }
         }
         return instance;
     }

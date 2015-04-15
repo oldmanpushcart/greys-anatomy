@@ -163,7 +163,7 @@ public class ProfilerCommand extends Command {
                 final TransformResult result = transformForRendering(info, sender, inst, advice);
 
                 // 渲染入口
-                final TransformResult resultForProbe = transform(inst, probeClassWildcard, probeMethodWildcard, isRegEx(), advice, info, false);
+                final TransformResult resultForProbe = transform(inst, probeClassWildcard, probeMethodWildcard, false, isRegEx(), advice, info, false);
 
 //                // 注册任务
 //                regJob(info.getSessionId(), result.getId());
@@ -183,7 +183,7 @@ public class ProfilerCommand extends Command {
             }
 
             private TransformResult transformForRendering(Info info, final Sender sender, Instrumentation inst, AdviceListenerAdapter advice) throws UnmodifiableClassException {
-                return transform(inst, classPattern, methodPattern, isRegEx(), advice, info, true, new GreysAnatomyClassFileTransformer.Progress() {
+                return transform(inst, classPattern, methodPattern, false, isRegEx(), advice, info, true, new GreysAnatomyClassFileTransformer.Progress() {
 
                     int nextRate = 0;
 

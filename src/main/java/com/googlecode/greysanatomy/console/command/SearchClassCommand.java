@@ -30,11 +30,14 @@ public class SearchClassCommand extends Command {
     @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
     private String classPattern;
 
-    @NamedArg(named = "s", description = "including class's parents")
+    @NamedArg(named = "S", description = "including sub class")
     private boolean isSuper = false;
 
     @NamedArg(named = "d", description = "show the detail of class")
     private boolean isDetail = false;
+
+    @NamedArg(named = "f", description = "show the fields of class")
+    private boolean isField = false;
 
     @NamedArg(named = "E", description = "enable the regex pattern matching")
     private boolean isRegEx = false;
@@ -68,7 +71,7 @@ public class SearchClassCommand extends Command {
 
                 for (Class<?> clazz : matchedClassSet) {
                     if (isDetail) {
-                        message.append(GaDetailUtils.detail(clazz)).append("\n");
+                        message.append(GaDetailUtils.detail(clazz, isField)).append("\n");
                     } else {
                         message.append(clazz.getName()).append("\n");
                     }

@@ -5,10 +5,11 @@ import com.googlecode.greysanatomy.console.GreysAnatomyConsole;
 import com.googlecode.greysanatomy.console.rmi.req.ReqHeart;
 import com.googlecode.greysanatomy.console.server.ConsoleServerService;
 import com.googlecode.greysanatomy.exception.PIDNotMatchException;
+import com.googlecode.greysanatomy.util.LogUtils;
 
 import java.rmi.Naming;
-
-import static com.googlecode.greysanatomy.util.LogUtils.info;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * 控制台客户端
@@ -17,6 +18,7 @@ import static com.googlecode.greysanatomy.util.LogUtils.info;
  */
 public class ConsoleClient {
 
+    private final Logger logger = LogUtils.getLogger();
     private final ConsoleServerService consoleServer;
     private final long sessionId;
 
@@ -51,7 +53,9 @@ public class ConsoleClient {
                     }
                     if (null == consoleServer) {
                         // 链接已关闭，客户端留着也没啥意思了，在这里退出JVM
-                        info("disconnect to ga-console-server, shutdown jvm.");
+                        if (logger.isLoggable(Level.INFO)) {
+                            logger.log(Level.INFO, "disconnect to ga-console-server, shutdown jvm.");
+                        }
                         System.exit(0);
                         break;
                     } else {
@@ -63,7 +67,9 @@ public class ConsoleClient {
                         }
                         //如果心跳失败，则说明超时了，那就gg吧
                         if (!hearBeatResult) {
-                            info("session time out to ga-console-server, shutdown jvm.");
+                            if (logger.isLoggable(Level.INFO)) {
+                                logger.log(Level.INFO, "session time out to ga-console-server, shutdown jvm.");
+                            }
                             System.exit(0);
                             break;
                         }

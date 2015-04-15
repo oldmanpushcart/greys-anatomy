@@ -16,7 +16,7 @@ public class GaDetailUtils {
     private static final String FLOW_TAB = "                  ";
     private static final String NULL = GaStringUtils.EMPTY;
 
-    public static String detail(Class<?> clazz) {
+    public static String detail(Class<?> clazz, boolean isShowFields) {
 
         StringBuilder detailSB = new StringBuilder();
         detailSB.append("class info : ").append(getClassName(clazz)).append("\n");
@@ -114,8 +114,10 @@ public class GaDetailUtils {
             detailSB.append(format("%16s : %s", "class-loader", loaderSB.toString()));
         }
 
+
+
         // field
-        {
+        if (isShowFields) {
             StringBuilder fieldSB = new StringBuilder();
             Field[] fields = clazz.getDeclaredFields();
             if (null != fields

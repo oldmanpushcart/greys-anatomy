@@ -6,6 +6,8 @@ import com.googlecode.greysanatomy.console.command.annotation.Cmd;
 import com.googlecode.greysanatomy.console.command.annotation.IndexArg;
 import com.googlecode.greysanatomy.console.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.util.GaReflectUtils;
+import com.googlecode.greysanatomy.util.GaStringUtils;
+import com.googlecode.greysanatomy.util.LogUtils;
 import jline.console.ConsoleReader;
 import jline.console.completer.*;
 import joptsimple.OptionParser;
@@ -19,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class Commands {
 
+    private final Logger logger = LogUtils.getLogger();
     private final Map<String, Class<?>> commands = new HashMap<String, Class<?>>();
 
     private Commands() {
@@ -53,7 +57,9 @@ public class Commands {
      */
     public Command newCommand(String line) throws IllegalAccessException, InstantiationException {
 
-        final String[] splitOfLine = line.split("\\s+");
+        final String[] splitOfLine =
+//                line.split("\\s+");
+                GaStringUtils.splitForArgument(line);
         final String cmdName = splitOfLine[0];
         final Class<?> clazz = getInstance().commands.get(cmdName);
         if (null == clazz) {
