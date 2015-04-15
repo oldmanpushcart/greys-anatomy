@@ -64,8 +64,11 @@ main()
 	# fix BOOT_CLASSPATH
     [[ -f $JAVA_HOME/lib/tools.jar ]]&&BOOT_CLASSPATH=-Xbootclasspath/a:$JAVA_HOME/lib/tools.jar
 
+    # fix CHARSET for alibaba opts, we use GBK
+    [[ -x /opt/taobao/java ]]&&JVM_OPTS="-Dinput.encoding=GBK"
+
 	typeset local GREYS_ROOT=$(dirname  ${0})
-	$JAVA_HOME/bin/java $BOOT_CLASSPATH -jar $GREYS_ROOT/greys.jar -pid ${pid} -target ${ip}":"${port} -multi 0
+	$JAVA_HOME/bin/java ${BOOT_CLASSPATH} ${JVM_OPTS} -jar ${GREYS_ROOT}/greys.jar -pid ${pid} -target ${ip}":"${port} -multi 0
 }
 
 main ${@}
