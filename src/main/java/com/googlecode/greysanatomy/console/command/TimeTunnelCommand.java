@@ -49,7 +49,7 @@ public class TimeTunnelCommand extends Command {
     private final Logger logger = LogUtils.getLogger();
 
     // the TimeTunnels collection
-    private static final Map<Integer, TimeTunnel> timeTunnels = new LinkedHashMap<Integer, TimeTunnel>();
+    private static final Map<Integer, TimeTunnel> timeTunnelMap = new LinkedHashMap<Integer, TimeTunnel>();
 
     // the TimeTunnel's index sequence
     private static final AtomicInteger sequence = new AtomicInteger(1000);
@@ -71,7 +71,6 @@ public class TimeTunnelCommand extends Command {
     @NamedArg(named = "D", description = "delete all TimeTunnels.")
     private boolean isDeleteAll = false;
 
-
     // index of TimeTunnel
     @NamedArg(named = "i", hasValue = true, description = "appoint the index of TimeTunnel. If use only, show the TimeTunnel detail.")
     private Integer index;
@@ -83,7 +82,7 @@ public class TimeTunnelCommand extends Command {
     // watch the index TimeTunnel
     @NamedArg(named = "w",
             hasValue = true,
-            description = "watch the TimeTunnel's data, like params[0], returnObj, throwExp and so on.",
+            description = "watchExpress, watch the TimeTunnel's data by OGNL-express, like params[0], returnObj, throwExp and so on.",
             description2 = ""
                     + " \n"
                     + "For example\n"
@@ -101,8 +100,16 @@ public class TimeTunnelCommand extends Command {
                     + "    \\+- targetThis  : the object entity\n"
                     + "    \\+- targetClassName : the object's class\n"
                     + "    \\+- targetBehaviorName : the object's class\n"
-                    + " \n")
+                    + " \n"
+    )
     private String watchExpress = EMPTY;
+
+
+    @NamedArg(named = "s",
+            hasValue = true,
+            description = "searchExpress, searching the TimeTunnels by OGNL-express"
+    )
+    private String searchExpress = EMPTY;
 
 
 //    // play the index TimeTunnel
@@ -110,7 +117,7 @@ public class TimeTunnelCommand extends Command {
 //    private boolean isPlay = false;
 
     // delete the index TimeTunnel
-    @NamedArg(named = "d", description = "delete the index TimeTunnel.")
+    @NamedArg(named = "d", description = "delete the index TimeTunnel")
     private boolean isDelete = false;
 
     @NamedArg(named = "S", description = "including sub class")
@@ -133,10 +140,8 @@ public class TimeTunnelCommand extends Command {
      */
     private void checkArguments() {
 
-        // 检查p/w/d参数是否有i参数配套
-        if (isNotBlank(watchExpress)
-//                || isPlay
-                || isDelete) {
+        // 检查d参数是否有i参数配套
+        if (isDelete) {
 
             if (null == index) {
                 throw new IllegalArgumentException("miss TimeTunnel index, please type -i to appoint it.");
@@ -172,6 +177,7 @@ public class TimeTunnelCommand extends Command {
                 && !isDeleteAll
                 && isBlank(watchExpress)
                 && !isList
+                && isBlank(searchExpress)
 //                && !isPlay
                 ) {
 
@@ -189,7 +195,7 @@ public class TimeTunnelCommand extends Command {
      */
     private int putTimeTunnel(TimeTunnel timeTunnel) {
         final int index = sequence.getAndIncrement();
-        timeTunnels.put(index, timeTunnel);
+        timeTunnelMap.put(index, timeTunnel);
         return index;
     }
 
@@ -350,7 +356,7 @@ public class TimeTunnelCommand extends Command {
 
 
     /**
-     * do list timeTunnels
+     * do list timeTunnelMap
      *
      * @param sender
      * @throws Throwable
@@ -358,11 +364,11 @@ public class TimeTunnelCommand extends Command {
     private void doList(final Sender sender) throws Throwable {
 
         final StringBuilder lineSB = new StringBuilder();
-        if (timeTunnels.isEmpty()) {
-            lineSB.append("timeTunnels is empty.\n");
+        if (timeTunnelMap.isEmpty()) {
+            lineSB.append("TimeTunnels was empty.\n");
         } else {
             printTableHead(lineSB);
-            for (Map.Entry<Integer, TimeTunnel> entry : timeTunnels.entrySet()) {
+            for (Map.Entry<Integer, TimeTunnel> entry : timeTunnelMap.entrySet()) {
                 printTimeTunnel(lineSB, entry.getKey(), entry.getValue());
             }
             printLineSplit(lineSB);
@@ -374,13 +380,74 @@ public class TimeTunnelCommand extends Command {
     }
 
     /**
+     * do search timeTunnelMap
+     *
+     * @param sender
+     * @throws Throwable
+     */
+    private void doSearch(final Sender sender) throws Throwable {
+
+        final Map<Integer, TimeTunnel> matchedTimeTunnelMap = new LinkedHashMap<Integer, TimeTunnel>();
+
+        // search TimeTunnels
+        for (Map.Entry<Integer, TimeTunnel> entry : timeTunnelMap.entrySet()) {
+            final int index = entry.getKey();
+            final TimeTunnel timeTunnel = entry.getValue();
+
+            if (GaOgnlUtils.is(searchExpress, timeTunnel)) {
+                matchedTimeTunnelMap.put(index, timeTunnel);
+            }
+
+        }
+
+        final StringBuilder lineSB = new StringBuilder();
+
+        // 执行watchExpress
+        if( isNotBlank(watchExpress) ) {
+            for (Map.Entry<Integer, TimeTunnel> entry : matchedTimeTunnelMap.entrySet()) {
+
+                final TimeTunnel timeTunnel = entry.getValue();
+                final Advice p = timeTunnel.getAdvice();
+                final Object value = GaOgnlUtils.getValue(watchExpress, p);
+
+                if (null != expend
+                        && expend > 0) {
+                    lineSB.append("" + GaObjectUtils.toString(value, 0, expend) + "\n");
+                } else {
+                    lineSB.append("" + value + "\n");
+                }
+
+            }
+        }
+
+        // 单纯的列表格
+        else {
+            if (matchedTimeTunnelMap.isEmpty()) {
+                lineSB.append("not match record found.\n");
+            } else {
+                printTableHead(lineSB);
+                for (Map.Entry<Integer, TimeTunnel> entry : matchedTimeTunnelMap.entrySet()) {
+                    printTimeTunnel(lineSB, entry.getKey(), entry.getValue());
+                }
+                printLineSplit(lineSB);
+
+            }
+        }
+
+        lineSB.append("\n").append(matchedTimeTunnelMap.size() + " record matched.\n");
+
+        sender.send(true, lineSB.toString());
+
+    }
+
+    /**
      * 清除所有的记录
      *
      * @param sender
      */
     private void doDeleteAll(final Sender sender) {
-        timeTunnels.clear();
-        sender.send(true, "All timeTunnels was deleted.\n");
+        timeTunnelMap.clear();
+        sender.send(true, "All TimeTunnels was deleted.\n");
     }
 
     /**
@@ -392,18 +459,11 @@ public class TimeTunnelCommand extends Command {
     private void doWatch(final Sender sender) throws Throwable {
 
         // find the TimeTunnel
-        final TimeTunnel timeTunnel = timeTunnels.get(index);
+        final TimeTunnel timeTunnel = timeTunnelMap.get(index);
         if (null == timeTunnel) {
             sender.send(true, format("TimeTunnel %s not found.", index));
             return;
         }
-
-//        final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByExtension("js");
-//
-//        jsEngine.eval("function printWatch(p,o){try{o.send(true, " + watchExpress + "+'\\n');}catch(e){o.send(true, e.message+'\\n');}}");
-//        final Invocable invoke = (Invocable) jsEngine;
-//        final Advice p = timeTunnel.getAdvice();
-//        invoke.invokeFunction("printWatch", p, sender);
 
         final Advice p = timeTunnel.getAdvice();
         final Object value = GaOgnlUtils.getValue(watchExpress, p);
@@ -415,7 +475,6 @@ public class TimeTunnelCommand extends Command {
             sender.send(true, "" + value + "\n");
         }
 
-
     }
 
 
@@ -426,7 +485,7 @@ public class TimeTunnelCommand extends Command {
      */
     private void doDelete(final Sender sender) {
 
-        timeTunnels.remove(index);
+        timeTunnelMap.remove(index);
         sender.send(true, format("delete %s successed.", index));
 
     }
@@ -440,7 +499,7 @@ public class TimeTunnelCommand extends Command {
 //    private void doPlay(final Sender sender) throws Throwable {
 //
 //        // find the record
-//        final Record record = timeTunnels.get(index);
+//        final Record record = timeTunnelMap.get(index);
 //        if (null == record) {
 //            sender.send(true, format("record %s not found.", index));
 //            return;
@@ -467,7 +526,7 @@ public class TimeTunnelCommand extends Command {
     private void doShow(final Sender sender) {
 
         // find the TimeTunnel
-        final TimeTunnel timeTunnel = timeTunnels.get(index);
+        final TimeTunnel timeTunnel = timeTunnelMap.get(index);
         if (null == timeTunnel) {
             sender.send(true, format("TimeTunnel %s not found.", index));
             return;
@@ -501,7 +560,7 @@ public class TimeTunnelCommand extends Command {
                 .append("\n");
 
 
-        // fill the paramenters
+        // fill the parameters
         if (null != timeTunnel.getAdvice().getParameters()) {
 
             int paramIndex = 0;
@@ -561,8 +620,8 @@ public class TimeTunnelCommand extends Command {
     @Override
     public Action getAction() {
 
-        if(logger.isLoggable(Level.FINE)) {
-            logger.log(Level.FINE,String.format("classPattern=%s;expend=%s;index=%s;isDelete=%s;isDeleteAll=%s;isList=%s;isRegEx=%s;watchExpress=%s;",
+        if (logger.isLoggable(Level.FINE)) {
+            logger.log(Level.FINE, String.format("classPattern=%s;expend=%s;index=%s;isDelete=%s;isDeleteAll=%s;isList=%s;isRegEx=%s;watchExpress=%s;",
                     this.classPattern,
                     this.expend,
                     this.index,
@@ -595,11 +654,6 @@ public class TimeTunnelCommand extends Command {
                     // delete all the TimeTunnel
                     doDeleteAll(sender);
 
-                } else if (isNotBlank(watchExpress)) {
-
-                    // watch TimeTunnel by js express
-                    doWatch(sender);
-
                 } else if (isDelete) {
 
                     // delete index TimeTunnel
@@ -607,8 +661,24 @@ public class TimeTunnelCommand extends Command {
 
                 } else if (null != index) {
 
-                    // show the TimeTunnel
-                    doShow(sender);
+                    if (isNotBlank(watchExpress)) {
+
+                        // watch TimeTunnel by js express
+                        doWatch(sender);
+
+                    }
+
+                    else {
+
+                        // show the TimeTunnel
+                        doShow(sender);
+
+                    }
+
+                } else if (isNotBlank(searchExpress)) {
+
+                    // search
+                    doSearch(sender);
 
                 }
 //                else if (isPlay) {

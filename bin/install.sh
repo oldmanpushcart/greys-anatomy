@@ -1,18 +1,21 @@
-#! /bin/ksh
+#! /bin/sh
 
-typeset GREYS_FILE="greys.zip";
+GREYS_FILE="greys.zip";
+
+if [[ ! -w ./ ]]; then
+    echo "permission denied, current direct not writable." >> /dev/stderr
+    exit -1;
+fi
 
 echo "Download... greys.zip";
-curl -sLk "http://ompc.oss-cn-hangzhou.aliyuncs.com/greys/greys.zip" -o $GREYS_FILE;
+curl -sLk "http://ompc.oss.aliyuncs.com/greys/greys.zip" -o ${GREYS_FILE};
 if [[ ! $? -eq  0 ]]; then
-    echo "download file failed!";
+    echo "download file failed!" >> /dev/stderr
     exit -1;
-fi 
+fi
 
-unzip $GREYS_FILE
-rm -rf $GREYS_FILE
-chmod +x greys/greys
-chmod +x greys/greys.bash
+unzip ${GREYS_FILE}
+rm -rf ${GREYS_FILE}
+chmod +x greys/greys.sh
 
-echo "done. enjoy yourself.^_^"
-
+echo "greys install successed."

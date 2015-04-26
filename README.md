@@ -10,47 +10,33 @@
 
 # 程序安装：
 
-- KSH
-
-  ```shell
-  curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
-  ```
-
-- BASH
+- SH
 
   ```
-  curl -sLk http://ompc.oss.aliyuncs.com/greys/install.bash|bash
+  curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|sh
   ```
 
 ## 最新版本
 
-### **VERSION :** 1.5.4.7
+### **VERSION :** 1.5.4.8
 
 ### 改动说明
 
-本次升级改变`sc`命令有一个`-s`参数无法继续向下兼容变成了`-S`，但由于这个参数使用频率和变化不大（从小写变成大写），所以仍然以小版本升级迭代上来。
+本次是一个常规维护版本升级，主要是增强现有功能。
 
-之所以要发布这个升级版主要是解决昨天协助测试排查线上问题时，有一个接口返回了几十条信息，本来想用OGNL表达式酷炫一把，但由于Greys在解析参数编写有BUG，导致无法生效，这次发布重点解决的是这个问题。
+脚本全面拥抱BASH，降低维护成本，毕竟现在看来BASH的用户群体还是比KSH多啊，我不能老是抱着KSH的大腿不放。
 
 ### 改动清单
 
-- 以下命令将支持参数`-S`，开启之后将能主动匹配上对应类及其子类。
-  
-  - `jstack`
-  - `monitor`
-  - `sc`
-  - `tt`
-  - `watch`
-  
-- `sc`命令的`-s`(小写)参数变更为`-S`(大写)  
+- 安装脚本、启动脚本从KSH全面切换到BASH
 
-- OGNL表达式支持引号`'`或`"`的复杂写法，比如
+- 不在维护BAT脚本
 
-  ```
-  tt -i 1000 -w 'params[0].addresses.{? 500 == #this.addressId}'
-  ```
+- 废弃`greys`的启动命令，转为`greys.sh`，更精准的表达启动含义
 
-- 增加`bash`的安装和启动脚本，感谢同事简离的贡献，这下齐昊不会笑我土了。
+- 更友好的错误信息提示内容
+
+- `tt`命令增加`-s`参数，现在你可以搜索所有的tt内容啦
 
 ### 版本号说明
 

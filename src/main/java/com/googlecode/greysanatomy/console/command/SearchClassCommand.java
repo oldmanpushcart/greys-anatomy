@@ -23,7 +23,7 @@ import static java.lang.String.format;
                 "sc -E org\\.apache\\.commons\\.lang\\.StringUtils",
 //                "sc -s org.apache.commons.lang.StringUtils",
                 "sc -d org.apache.commons.lang.StringUtils",
-                "sc -sd *StringUtils"
+                "sc -Sd *StringUtils"
         })
 public class SearchClassCommand extends Command {
 
