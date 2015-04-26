@@ -394,7 +394,7 @@ public class TimeTunnelCommand extends Command {
             final int index = entry.getKey();
             final TimeTunnel timeTunnel = entry.getValue();
 
-            if (GaOgnlUtils.is(searchExpress, timeTunnel)) {
+            if (GaOgnlUtils.is(searchExpress, timeTunnel.getAdvice())) {
                 matchedTimeTunnelMap.put(index, timeTunnel);
             }
 
