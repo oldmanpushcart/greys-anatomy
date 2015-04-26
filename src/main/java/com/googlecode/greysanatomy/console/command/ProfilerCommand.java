@@ -25,7 +25,7 @@ import static com.googlecode.greysanatomy.util.PatternMatchingUtils.matching;
 @Cmd(named = "profiler", sort = 6, desc = "The call stack output buried point method for rendering path of.",
         eg = {
                 "profiler -c 5 *.ibatis.* * *.ibatis.*SqlMapClientImpl openSession",
-                "profiler -E -c 5 .*\\.ibatis\\..* .* .*\\.ibatis\\..*SqlMapClientImpl openSession",
+                "profiler -E -c 5 .*\\.ibatis\\..* .* .*\\.ibatis\\..*SqlMapClientImpl openSession"
         })
 public class ProfilerCommand extends Command {
 

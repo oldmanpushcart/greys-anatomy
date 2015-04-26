@@ -22,7 +22,7 @@ public class GaOgnlUtils {
      * @throws OgnlException ªÒ»°“Ï≥£
      */
     public static Object getValue(String express, Object object) throws OgnlException {
-        final Map<String, Object> context = Ognl.createDefaultContext(null);
+        @SuppressWarnings("unchecked") final Map<String, Object> context = Ognl.createDefaultContext(null);
         context.put(OgnlContext.MEMBER_ACCESS_CONTEXT_KEY, new DefaultMemberAccess(true, true, true));
         return Ognl.getValue(express, context, object);
     }

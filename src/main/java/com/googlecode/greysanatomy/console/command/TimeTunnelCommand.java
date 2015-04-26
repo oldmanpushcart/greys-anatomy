@@ -41,7 +41,7 @@ import static java.util.logging.Level.WARNING;
                 "tt -D",
                 "tt -i 1000 -w params[0]",
                 "tt -i 1000 -d",
-                "tt -i 1000",
+                "tt -i 1000"
 //                "tt -i 1000 -p"
         })
 public class TimeTunnelCommand extends Command {

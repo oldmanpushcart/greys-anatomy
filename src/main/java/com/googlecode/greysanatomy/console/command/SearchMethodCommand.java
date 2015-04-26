@@ -24,7 +24,7 @@ import static java.lang.String.format;
                 "sm -Ed org\\.apache\\.commons\\.lang\\.StringUtils .*",
                 "sm org.apache.commons.????.StringUtils *",
                 "sm -d org.apache.commons.lang.StringUtils",
-                "sm *String????s *",
+                "sm *String????s *"
         })
 public class SearchMethodCommand extends Command {
 

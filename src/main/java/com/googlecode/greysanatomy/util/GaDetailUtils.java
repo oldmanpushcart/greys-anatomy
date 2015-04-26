@@ -150,9 +150,10 @@ public class GaDetailUtils {
                             fieldSB.append(format("%24s : %s\n", "value", field.get(null)));
                         } catch (IllegalAccessException e) {
                             //
-                        } finally {
-                            // field.setAccessible(isAccessible);
                         }
+                        //finally {
+                            // field.setAccessible(isAccessible);
+                        //}
                     }//if
 
                 }//for

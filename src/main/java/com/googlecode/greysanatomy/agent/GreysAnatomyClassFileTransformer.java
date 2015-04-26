@@ -166,7 +166,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     /**
      * ½ø¶È
      */
-    public static interface Progress {
+    public interface Progress {
 
         void progress(int index, int total);
 

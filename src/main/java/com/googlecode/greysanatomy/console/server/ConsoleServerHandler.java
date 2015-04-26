@@ -61,9 +61,7 @@ public class ConsoleServerHandler {
 
             @Override
             public void shutdown() throws Throwable {
-                if (null != workers) {
-                    workers.shutdown();
-                }
+                workers.shutdown();
             }
 
         });
@@ -120,7 +118,6 @@ public class ConsoleServerHandler {
                     }
 
                     write(respResult.getJobId(), true, "do action failed. cause : " + getCauseMessage(t));
-                    return;
                 }
             }
 

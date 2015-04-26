@@ -253,7 +253,8 @@ public class GaStringUtils {
      * @return an array of parsed Strings, <code>null</code> if null String input
      */
     public static String[] split(String str, String separatorChars) {
-        return splitWorker(str, separatorChars, -1, false);
+        final String[] stringSegments = splitWorker(str, separatorChars, -1, false);
+        return null == stringSegments ? new String[]{} : stringSegments;
     }
 
     /**
@@ -664,6 +665,7 @@ public class GaStringUtils {
 
     /**
      * 拆分参数，要求能将命令行字符串拆分成为多个数组
+     *
      * @param argumentString
      * @return
      */

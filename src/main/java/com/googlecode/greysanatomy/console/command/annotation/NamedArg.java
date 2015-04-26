@@ -17,28 +17,28 @@ public @interface NamedArg {
      *
      * @return 参数在命令中的位置
      */
-    public String named();
+    String named();
 
     /**
      * 参数注释
      *
      * @return 参数注释
      */
-    public String description() default "";
+    String description() default "";
 
     /**
      * 参数注释2
      *
      * @return 参数注释2
      */
-    public String description2() default "";
+    String description2() default "";
 
     /**
      * 是否有值
      *
      * @return 是否有值
      */
-    public boolean hasValue() default false;
+    boolean hasValue() default false;
 
 //    /**
 //     * 参数校验

@@ -17,7 +17,7 @@ public class JvmUtils {
      *
      * @author vlinux
      */
-    public static interface ShutdownHook {
+    public interface ShutdownHook {
 
         /**
          * ≥¢ ‘πÿ±’

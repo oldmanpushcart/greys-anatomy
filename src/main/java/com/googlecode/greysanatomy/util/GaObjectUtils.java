@@ -60,7 +60,7 @@ public class GaObjectUtils {
 
         final StringBuilder buf = new StringBuilder();
         if (null == obj) {
-            buf.append(obj);
+            buf.append("null");
         } else {
 
             final Class<?> clazz = obj.getClass();
@@ -122,7 +122,7 @@ public class GaObjectUtils {
             // 集合类输出
             else if (Collection.class.isInstance(obj)) {
 
-                final Collection<Object> collection = (Collection<Object>) obj;
+                @SuppressWarnings("unchecked") final Collection<Object> collection = (Collection<Object>) obj;
 
                 // 非根节点或空集合只展示摘要信息
                 if (!isExpand(deep, expand)
@@ -153,7 +153,7 @@ public class GaObjectUtils {
             // Map类输出
             else if (Map.class.isInstance(obj)) {
 
-                final Map<Object, Object> map = (Map<Object, Object>) obj;
+                @SuppressWarnings("unchecked") final Map<Object, Object> map = (Map<Object, Object>) obj;
 
                 // 非根节点或空集合只展示摘要信息
                 if (!isExpand(deep, expand)
