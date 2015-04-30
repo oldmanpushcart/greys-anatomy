@@ -410,6 +410,16 @@ public class TimeTunnelCommand extends Command {
                 final Advice p = timeTunnel.getAdvice();
                 final Object value = GaOgnlUtils.getValue(watchExpress, p);
 
+                // ´òÓ¡INDEX±êÌâ
+                /*
+                  +--------------------+
+                  |INDEX:1005          |
+                  +--------------------+
+                 */
+                lineSB.append("\n+----------------+\n");
+                lineSB.append(format("|INDEX:%-10s|\n", entry.getKey()));
+                lineSB.append("+----------------+\n");
+
                 if (null != expend
                         && expend > 0) {
                     lineSB.append("" + GaObjectUtils.toString(value, 0, expend) + "\n");

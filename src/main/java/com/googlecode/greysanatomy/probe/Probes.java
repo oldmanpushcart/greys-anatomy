@@ -159,6 +159,11 @@ public class Probes {
         if( isStatic(cbMod)
                 && isPublic(cbMod)
                 && GaStringUtils.equals(cb.getName(),"main")) {
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, String.format("ignore class:%s;behavior=%s;because it is main;",
+                        cc.getName(),
+                        cb.getName()));
+            }
             return true;
         }
 
