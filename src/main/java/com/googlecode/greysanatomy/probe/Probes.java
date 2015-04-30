@@ -47,7 +47,10 @@ public class Probes {
         if (isListener(id, AdviceListener.class)) {
             try {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
-                ((AdviceListener) getJobListeners(id)).onBefore(p);
+                final AdviceListener listener = ((AdviceListener) getJobListeners(id));
+                if( null != listener ) {
+                    listener.onBefore(p);
+                }
             } catch (Throwable t) {
 
                 if (logger.isLoggable(Level.WARNING)) {
@@ -63,7 +66,10 @@ public class Probes {
             try {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
                 p.setReturnObj(returnObj);
-                ((AdviceListener) getJobListeners(id)).onSuccess(p);
+                final AdviceListener listener = ((AdviceListener) getJobListeners(id));
+                if( null != listener ) {
+                    listener.onSuccess(p);
+                }
             } catch (Throwable t) {
 
                 if (logger.isLoggable(Level.WARNING)) {
@@ -81,7 +87,10 @@ public class Probes {
             try {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
                 p.setThrowException(throwException);
-                ((AdviceListener) getJobListeners(id)).onException(p);
+                final AdviceListener listener = ((AdviceListener) getJobListeners(id));
+                if( null != listener ) {
+                    listener.onException(p);
+                }
             } catch (Throwable t) {
 
                 if (logger.isLoggable(Level.WARNING)) {
@@ -100,7 +109,10 @@ public class Probes {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, true);
                 p.setThrowException(throwException);
                 p.setReturnObj(returnObj);
-                ((AdviceListener) getJobListeners(id)).onFinish(p);
+                final AdviceListener listener = ((AdviceListener) getJobListeners(id));
+                if( null != listener ) {
+                    listener.onFinish(p);
+                }
             } catch (Throwable t) {
 
                 if (logger.isLoggable(Level.WARNING)) {
@@ -147,6 +159,11 @@ public class Probes {
         if( isStatic(cbMod)
                 && isPublic(cbMod)
                 && GaStringUtils.equals(cb.getName(),"main")) {
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, String.format("ignore class:%s;behavior=%s;because it is main;",
+                        cc.getName(),
+                        cb.getName()));
+            }
             return true;
         }
 

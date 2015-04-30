@@ -16,7 +16,7 @@ public abstract class Command {
      *
      * @author vlinux
      */
-    public static interface Sender {
+    public interface Sender {
 
         /**
          * ·¢ËÍĞÅÏ¢

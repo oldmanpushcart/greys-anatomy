@@ -17,28 +17,28 @@ public @interface IndexArg {
      *
      * @return 参数在命令中的位置
      */
-    public int index();
+    int index();
 
     /**
      * 参数名称
      *
      * @return 参数名称
      */
-    public String name();
+    String name();
 
     /**
      * 参数注释
      *
      * @return 参数注释
      */
-    public String description() default "";
+    String description() default "";
 
     /**
      * 更详细的参数注释
      *
      * @return 更详细的参数注释
      */
-    public String description2() default "";
+    String description2() default "";
 
 //    /**
 //     * 参数校验
@@ -52,6 +52,6 @@ public @interface IndexArg {
      *
      * @return 是否必填
      */
-    public boolean isRequired() default true;
+    boolean isRequired() default true;
 
 }

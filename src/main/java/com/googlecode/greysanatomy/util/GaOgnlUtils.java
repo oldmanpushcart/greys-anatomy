@@ -22,9 +22,27 @@ public class GaOgnlUtils {
      * @throws OgnlException 获取异常
      */
     public static Object getValue(String express, Object object) throws OgnlException {
-        final Map<String, Object> context = Ognl.createDefaultContext(null);
+        @SuppressWarnings("unchecked") final Map<String, Object> context = Ognl.createDefaultContext(null);
         context.put(OgnlContext.MEMBER_ACCESS_CONTEXT_KEY, new DefaultMemberAccess(true, true, true));
         return Ognl.getValue(express, context, object);
+    }
+
+
+    /**
+     * 使用ognl表达式做条件匹配
+     *
+     * @param conditionExpress OGNL条件表达式
+     * @param object           进行条件匹配的对象
+     * @return 匹配结果
+     * @throws OgnlException 匹配异常
+     */
+    public static boolean is(String conditionExpress, Object object) throws OgnlException {
+        final Object ret =  getValue(conditionExpress, object);
+
+        return null != ret
+                && ret instanceof Boolean
+                && (Boolean)ret;
+
     }
 
 }

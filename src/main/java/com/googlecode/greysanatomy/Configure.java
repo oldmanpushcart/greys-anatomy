@@ -49,7 +49,9 @@ public class Configure {
                 final String p = stringSplitArray[0];
                 final String v = decode(stringSplitArray[1]);
                 final Field field = getField(Configure.class, p);
-                set(field, valueOf(field.getType(), v), configure);
+                if( null != field ) {
+                    set(field, valueOf(field.getType(), v), configure);
+                }
             } catch (Throwable t) {
                 //
             }

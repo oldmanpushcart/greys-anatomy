@@ -26,7 +26,7 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
                 "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
                 "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
                 "watch -bf *StringUtils isBlank params[0]",
-                "watch *StringUtils isBlank params[0]",
+                "watch *StringUtils isBlank params[0]"
         })
 public class WatchCommand extends Command {
 

@@ -88,6 +88,16 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                 if (null != cbs) {
                     for (CtBehavior cb : cbs) {
                         if (PatternMatchingUtils.matching(cb.getMethodInfo().getName(), prefMthPattern, isRegEx)) {
+
+                            if (logger.isLoggable(Level.FINE)) {
+                                logger.log(Level.FINE, String.format(
+                                                "class=%s;method=%s was matches pattern=%s",
+                                                className,
+                                                cb.getMethodInfo().getName(),
+                                                prefMthPattern)
+                                );
+                            }
+
                             modifiedBehaviors.add(cb);
                             Probes.mine(id, cc, cb);
                         }
@@ -166,7 +176,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
     /**
      * ½ø¶È
      */
-    public static interface Progress {
+    public interface Progress {
 
         void progress(int index, int total);
 
