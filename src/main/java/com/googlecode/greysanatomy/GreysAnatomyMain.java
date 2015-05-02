@@ -1,7 +1,5 @@
 package com.googlecode.greysanatomy;
 
-import com.googlecode.greysanatomy.console.client.ConsoleClient;
-import com.googlecode.greysanatomy.exception.PIDNotMatchException;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.HostUtils;
 import joptsimple.OptionParser;
@@ -10,8 +8,6 @@ import joptsimple.OptionSet;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-
-import static java.lang.String.format;
 
 /**
  * Hello world!
@@ -30,17 +26,6 @@ public class GreysAnatomyMain {
         if (HostUtils.isLocalHostIp(configure.getTargetIp())) {
             // 加载agent
             attachAgent(configure);
-        }
-
-        // 激活控制台
-        if (activeConsoleClient(configure)) {
-
-//            logger.info("attach done! pid={}; host={}; JarFile={}", new Object[]{
-//                    configer.getJavaPid(),
-//                    configer.getTargetIp() + ":" + configer.getTargetPort(),
-//                    JARFILE});
-
-
         }
 
     }
@@ -66,12 +51,12 @@ public class GreysAnatomyMain {
             configure.setTargetPort(Integer.valueOf(strSplit[1]));
         }
 
-        if (os.has("multi")
-                && (Integer) os.valueOf("multi") == 1) {
-            configure.setMulti(true);
-        } else {
-            configure.setMulti(false);
-        }
+//        if (os.has("multi")
+//                && (Integer) os.valueOf("multi") == 1) {
+//            configure.setMulti(true);
+//        } else {
+//            configure.setMulti(false);
+//        }
 
         configure.setJavaPid((Integer) os.valueOf("pid"));
         return configure;
@@ -121,27 +106,6 @@ public class GreysAnatomyMain {
         }
 
     }
-
-    /**
-     * 激活控制台客户端
-     *
-     * @param configure
-     * @throws Exception
-     */
-    private boolean activeConsoleClient(Configure configure) throws Exception {
-        try {
-            ConsoleClient.getInstance(configure);
-            return true;
-        } catch (java.rmi.ConnectException ce) {
-//            warn(ce, "target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
-            System.err.println(format("target{%s:%s} RMI was shutdown, console will be exit.", configure.getTargetIp(), configure.getTargetPort()));
-        } catch (PIDNotMatchException pe) {
-//            warn(pe, "target{%s:%s} PID was not matching, console will be exit.", configure.getTargetIp(), configure.getTargetPort());
-            System.err.println(format("target{%s:%s} PID was not matching, console will be exit.", configure.getTargetIp(), configure.getTargetPort()));
-        }
-        return false;
-    }
-
 
     public static void main(String[] args) {
 

@@ -12,12 +12,11 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.*;
  */
 public class Configure {
 
-    private String targetIp;                //目标主机IP
-    private int targetPort;                 //目标进程号
-    private int javaPid;                    //对方java进程号
-    private long connectTimeout = 6000;     //连接超时时间(ms)
-    private boolean multi;                  //多用户模式
-    private String consolePrompt = "ga?>";  //控制台提示符
+    private String targetIp;                // 目标主机IP
+    private int targetPort;                 // 目标进程号
+    private int javaPid;                    // 对方java进程号
+    private int connectTimeout = 6000;      // 连接超时时间(ms)
+    private String consolePrompt = "ga?>";  // 控制台提示符
 
     /**
      * 将Configure对象转换为字符串
@@ -49,7 +48,7 @@ public class Configure {
                 final String p = stringSplitArray[0];
                 final String v = decode(stringSplitArray[1]);
                 final Field field = getField(Configure.class, p);
-                if( null != field ) {
+                if (null != field) {
                     set(field, valueOf(field.getType(), v), configure);
                 }
             } catch (Throwable t) {
@@ -83,28 +82,16 @@ public class Configure {
         this.javaPid = javaPid;
     }
 
-    public long getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    public void setConnectTimeout(long connectTimeout) {
-        this.connectTimeout = connectTimeout;
-    }
-
-    public boolean isMulti() {
-        return multi;
-    }
-
-    public void setMulti(boolean multi) {
-        this.multi = multi;
-    }
-
     public String getConsolePrompt() {
         return consolePrompt;
     }
 
-    public void setConsolePrompt(String consolePrompt) {
-        this.consolePrompt = consolePrompt;
+    public int getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public void setConnectTimeout(int connectTimeout) {
+        this.connectTimeout = connectTimeout;
     }
 
 }

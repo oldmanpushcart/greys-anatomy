@@ -1,6 +1,6 @@
 package com.googlecode.greysanatomy.agent;
 
-import com.googlecode.greysanatomy.console.command.Command.Info;
+import com.googlecode.greysanatomy.command.Command.Info;
 import com.googlecode.greysanatomy.probe.JobListener;
 import com.googlecode.greysanatomy.probe.ProbeJobs;
 import com.googlecode.greysanatomy.probe.Probes;
