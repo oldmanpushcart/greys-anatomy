@@ -7,7 +7,7 @@ import com.googlecode.greysanatomy.server.GaSession;
  * πÿ±’√¸¡Ó
  * Created by vlinux on 14/10/23.
  */
-@Cmd(named = "shutdown", sort = 9, desc = "Shutdown the greys's RMI service, and exit the console.",
+@Cmd(named = "shutdown", sort = 11, desc = "Shutdown the greys's RMI service, and exit the console.",
         eg = {
                 "shutdown"
         })

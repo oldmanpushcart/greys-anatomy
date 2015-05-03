@@ -66,7 +66,7 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
-@Cmd(named = "monitor", sort = 5, desc = "Buried point method for monitoring the operation.")
+@Cmd(named = "monitor", sort = 2, desc = "Buried point method for monitoring the operation.")
 public class MonitorCommand extends Command {
 
     @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")

@@ -17,7 +17,7 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.split;
  *
  * Created by vlinux on 14/10/26.
  */
-@Cmd(named = "help", sort = 10, desc = "List of the Greys command list.",
+@Cmd(named = "help", sort = 12, desc = "List of the Greys command list.",
         eg = {
                 "help",
                 "help sc",

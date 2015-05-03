@@ -21,7 +21,7 @@ import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 import static com.googlecode.greysanatomy.util.PatternMatchingUtils.matching;
 
-@Cmd(named = "profiler", sort = 6, desc = "The call stack output buried point method for rendering path of.",
+@Cmd(named = "profiler", sort = 3, desc = "The call stack output buried point method for rendering path of.",
         eg = {
                 "profiler -c 5 *.ibatis.* * *.ibatis.*SqlMapClientImpl openSession",
                 "profiler -E -c 5 .*\\.ibatis\\..* .* .*\\.ibatis\\..*SqlMapClientImpl openSession"

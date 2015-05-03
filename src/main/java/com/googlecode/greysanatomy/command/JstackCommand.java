@@ -20,7 +20,7 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  *
  * @author vlinux
  */
-@Cmd(named = "jstack", sort = 7, desc = "The call stack output buried point method in each thread.",
+@Cmd(named = "jstack", sort = 6, desc = "The call stack output buried point method in each thread.",
         eg = {
                 "stack -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
                 "stack org.apache.commons.lang.StringUtils isBlank",

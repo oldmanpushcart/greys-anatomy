@@ -33,7 +33,7 @@ import static java.util.logging.Level.WARNING;
  * 参数w/d依赖于参数i所传递的记录编号<br/>
  * Created by vlinux on 14/11/15.
  */
-@Cmd(named = "tt", sort = 8, desc = "TimeTunnel the method call.",
+@Cmd(named = "tt", sort = 5, desc = "TimeTunnel the method call.",
         eg = {
                 "tt -t *StringUtils isEmpty",
                 "tt -l",

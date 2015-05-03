@@ -126,7 +126,7 @@ public class GaServer {
                         configure.getConnectTimeout()));
             }
 
-            activeDoSelectDaemon(selector, configure);
+            activeSelectorDaemon(selector, configure);
 
         } catch (IOException e) {
             unbind();
@@ -135,7 +135,7 @@ public class GaServer {
 
     }
 
-    private void activeDoSelectDaemon(final Selector selector, final Configure configure) {
+    private void activeSelectorDaemon(final Selector selector, final Configure configure) {
 
         final ByteBuffer byteBuffer = ByteBuffer.allocate(BUFFER_SIZE);
 
@@ -169,8 +169,7 @@ public class GaServer {
 
                     } catch (IOException e) {
                         if (logger.isLoggable(Level.WARNING)) {
-                            logger.log(Level.WARNING, format("%s selector failed.",
-                                    GaServer.this), e);
+                            logger.log(Level.WARNING, "selector failed.", e);
                         }
                     } catch (ClosedSelectorException e) {
                         //
@@ -187,6 +186,17 @@ public class GaServer {
 
     private void doAccept(SelectionKey key, Selector selector, Configure configure) throws IOException {
         final ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+        final SocketChannel socketChannel = acceptSocketChannel(selector, serverSocketChannel, configure);
+
+        // 这里输出Logo
+        socketChannel.write(ByteBuffer.wrap(GaStringUtils.getLogo().getBytes(DEFAULT_CHARSET)));
+
+        // 绘制提示符
+        reDrawPrompt(socketChannel, DEFAULT_CHARSET);
+
+    }
+
+    private SocketChannel acceptSocketChannel(Selector selector, ServerSocketChannel serverSocketChannel, Configure configure) throws IOException {
         final SocketChannel socketChannel = serverSocketChannel.accept();
         socketChannel.configureBlocking(false);
         socketChannel.socket().setSoTimeout(configure.getConnectTimeout());
@@ -200,13 +210,7 @@ public class GaServer {
                     GaServer.this,
                     socketChannel));
         }
-
-        // 这里输出Logo
-        socketChannel.write(ByteBuffer.wrap(GaStringUtils.getLogo().getBytes(DEFAULT_CHARSET)));
-
-        // 绘制提示符
-        reDrawPrompt(socketChannel, DEFAULT_CHARSET);
-
+        return socketChannel;
     }
 
     private void doRead(final ByteBuffer byteBuffer, SelectionKey key) {
@@ -215,112 +219,83 @@ public class GaServer {
         final GaSession gaSession = attachment.getGaSession();
         try {
 
-            final int n = socketChannel.read(byteBuffer);
-
             // 若读到-1，则说明SocketChannel已经关闭
-            if (n == -1) {
+            if (-1 == socketChannel.read(byteBuffer)) {
                 if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, format("client=%s was closed, for %s",
                             socketChannel,
                             GaServer.this));
                 }
                 closeSocketChannel(key, socketChannel);
+
+                return;
             }
 
-            // 读出的数据大于0，说明读到了数据
-            else {
-                byteBuffer.flip();
 
-                while (true) {
-                    if (!byteBuffer.hasRemaining()) {
-                        break;
-                    }
-                    switch (attachment.getLineDecodeState()) {
-                        case READ_CHAR: {
-                            final byte data = byteBuffer.get();
-                            if ('\n' == data) {
-                                attachment.setLineDecodeState(LineDecodeState.READ_EOL);
-                            }
-
-                            // 遇到中止命令(CTRL_D)，则标记会话为不可写，让后台任务停下
-                            else if (CTRL_D == data
-                                    || CTRL_X == data) {
-                                gaSession.markJobRunning(false);
-
-//                                // 任务中止的时候不会有任何刷新，所以需要重新绘制提示符
-//                                // 而且在部分终端实现的时候，CTRL_D不依赖于回车发送，可能在按下的同时就发送过来
-//                                // 所以这里需要在提示符之间先输出一个换行符
-//                                socketChannel.write(ByteBuffer.wrap("\n".getBytes(gaSession.getCharset())));
-//                                reDrawPrompt(socketChannel, gaSession.getCharset());
-                                break;
-                            }
-
-                            // 普通byte则持续放入到缓存中
-                            else {
-                                if ('\r' != data) {
-                                    attachment.put(data);
-                                }
-                                break;
-                            }
+            // decode for line
+            byteBuffer.flip();
+            while (byteBuffer.hasRemaining()) {
+                switch (attachment.getLineDecodeState()) {
+                    case READ_CHAR: {
+                        final byte data = byteBuffer.get();
+                        if ('\n' == data) {
+                            attachment.setLineDecodeState(LineDecodeState.READ_EOL);
                         }
 
-                        case READ_EOL: {
-                            final String line = attachment.clearAndGetLine(gaSession.getCharset());
-
-                            // 只有没有任务在后台运行的时候才能接受服务端响应
-                            if (!gaSession.hasJobRunning()) {
-
-                                // 只有输入了有效字符才进行命令解析
-                                if (GaStringUtils.isNotBlank(line)) {
-
-                                    executorService.execute(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            try {
-                                                commandHandler.executeCommand(line, gaSession);
-                                            } catch (IOException e) {
-                                                final String message = String.format("command execute failed, sessionId=%d;", gaSession.getSessionId());
-                                                if (logger.isLoggable(Level.WARNING)) {
-                                                    logger.log(Level.WARNING, message);
-                                                }
-                                                if (logger.isLoggable(Level.INFO)) {
-                                                    logger.log(Level.INFO, message, e);
-                                                }
-                                                gaSession.destroy();
-                                            }
-                                        }
-                                    });
-
-
-                                }
-
-                                // 否则仅仅重绘提示符
-                                else {
-                                    reDrawPrompt(socketChannel, gaSession.getCharset());
-                                }
-
-                            }
-
-                            attachment.setLineDecodeState(LineDecodeState.READ_CHAR);
+                        // 遇到中止命令(CTRL_D)，则标记会话为不可写，让后台任务停下
+                        else if (CTRL_D == data
+                                || CTRL_X == data) {
+                            gaSession.markJobRunning(false);
                             break;
                         }
+
+                        // 普通byte则持续放入到缓存中
+                        else {
+                            if ('\r' != data) {
+                                attachment.put(data);
+                            }
+                            break;
+                        }
+
                     }
-                }//while for line decode
 
-                byteBuffer.clear();
+                    case READ_EOL: {
+                        final String line = attachment.clearAndGetLine(gaSession.getCharset());
 
-            }
+                        executorService.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    commandHandler.executeCommand(line, gaSession);
+                                } catch (IOException e) {
+                                    final String message = format("network communicate failed, sessionId=%d;",
+                                            gaSession.getSessionId());
+                                    if (logger.isLoggable(Level.WARNING)) {
+                                        logger.log(Level.WARNING, message, e);
+                                    }
+                                    gaSession.destroy();
+                                }
+                            }
+                        });
 
-        } catch (IOException e) {
+                        attachment.setLineDecodeState(LineDecodeState.READ_CHAR);
+                        break;
+                    }
+                }
+            }//while for line decode
+
+            byteBuffer.clear();
+
+        }
+
+        // 处理
+        catch (IOException e) {
+            final String message = format("read/write data failed, client=%s will be close", socketChannel);
             if (logger.isLoggable(Level.WARNING)) {
-                logger.log(Level.WARNING, format("read/write data failed, client=%s will be close, for %s",
-                        socketChannel,
-                        GaServer.this));
+                logger.log(Level.WARNING, message);
             }
             if (logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, format("read/write data failed, client=%s will be close, for %s",
-                        socketChannel,
-                        GaServer.this), e);
+                logger.log(Level.FINE, message, e);
             }
             closeSocketChannel(key, socketChannel);
             gaSession.destroy();
