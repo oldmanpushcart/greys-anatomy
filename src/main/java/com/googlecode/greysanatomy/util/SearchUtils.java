@@ -23,7 +23,7 @@ public class SearchUtils {
         final Set<Class<?>> matches = new HashSet<Class<?>>();
         for (Class<?> clazz : inst.getAllLoadedClasses()) {
 
-            if( PatternMatchingUtils.matching(clazz.getName(), classPattern, isRegEx) ) {
+            if (PatternMatchingUtils.matching(clazz.getName(), classPattern, isRegEx)) {
                 matches.add(clazz);
             }
 

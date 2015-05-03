@@ -39,7 +39,7 @@ public class AgentMain {
                 gaServer.bind(configure);
             } else {
                 if (logger.isLoggable(Level.INFO)) {
-                    logger.log(Level.INFO, "greys server already bind : "+gaServer);
+                    logger.log(Level.INFO, "greys server already bind : " + gaServer);
                 }
             }
 

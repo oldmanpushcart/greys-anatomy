@@ -37,11 +37,11 @@ public class GaOgnlUtils {
      * @throws OgnlException ∆•≈‰“Ï≥£
      */
     public static boolean is(String conditionExpress, Object object) throws OgnlException {
-        final Object ret =  getValue(conditionExpress, object);
+        final Object ret = getValue(conditionExpress, object);
 
         return null != ret
                 && ret instanceof Boolean
-                && (Boolean)ret;
+                && (Boolean) ret;
 
     }
 

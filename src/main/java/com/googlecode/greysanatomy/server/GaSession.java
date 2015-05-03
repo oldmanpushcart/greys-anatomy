@@ -107,6 +107,7 @@ public class GaSession {
 
     /**
      * 标记是否有任务在运行
+     *
      * @param isRunning true:任务正在运行;false:没有任务在运行
      */
     public void markJobRunning(boolean isRunning) {
@@ -127,6 +128,7 @@ public class GaSession {
 
     /**
      * 当前是否有任务正在运行
+     *
      * @return
      */
     public boolean hasJobRunning() {

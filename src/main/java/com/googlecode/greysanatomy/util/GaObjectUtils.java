@@ -19,41 +19,42 @@ public class GaObjectUtils {
     private final static String TAB = "    ";
 
 
-    private final static Map<Byte,String> ASCII_MAP = new HashMap<Byte,String>();
+    private final static Map<Byte, String> ASCII_MAP = new HashMap<Byte, String>();
+
     static {
-        ASCII_MAP.put((byte)0,"NUL");
-        ASCII_MAP.put((byte)1,"SOH");
-        ASCII_MAP.put((byte)2,"STX");
-        ASCII_MAP.put((byte)3,"ETX");
-        ASCII_MAP.put((byte)4,"EOT");
-        ASCII_MAP.put((byte)5,"ENQ");
-        ASCII_MAP.put((byte)6,"ACK");
-        ASCII_MAP.put((byte)7,"BEL");
-        ASCII_MAP.put((byte)8,"BS");
-        ASCII_MAP.put((byte)9,"HT");
-        ASCII_MAP.put((byte)10,"LF");
-        ASCII_MAP.put((byte)11,"VT");
-        ASCII_MAP.put((byte)12,"FF");
-        ASCII_MAP.put((byte)13,"CR");
-        ASCII_MAP.put((byte)14,"SO");
-        ASCII_MAP.put((byte)15,"SI");
-        ASCII_MAP.put((byte)16,"DLE");
-        ASCII_MAP.put((byte)17,"DC1");
-        ASCII_MAP.put((byte)18,"DC2");
-        ASCII_MAP.put((byte)19,"DC3");
-        ASCII_MAP.put((byte)20,"DC4");
-        ASCII_MAP.put((byte)21,"NAK");
-        ASCII_MAP.put((byte)22,"SYN");
-        ASCII_MAP.put((byte)23,"ETB");
-        ASCII_MAP.put((byte)24,"CAN");
-        ASCII_MAP.put((byte)25,"EM");
-        ASCII_MAP.put((byte)26,"SUB");
-        ASCII_MAP.put((byte)27,"ESC");
-        ASCII_MAP.put((byte)28,"FS");
-        ASCII_MAP.put((byte)29,"GS");
-        ASCII_MAP.put((byte)30,"RS");
-        ASCII_MAP.put((byte)31,"US");
-        ASCII_MAP.put((byte)127,"DEL");
+        ASCII_MAP.put((byte) 0, "NUL");
+        ASCII_MAP.put((byte) 1, "SOH");
+        ASCII_MAP.put((byte) 2, "STX");
+        ASCII_MAP.put((byte) 3, "ETX");
+        ASCII_MAP.put((byte) 4, "EOT");
+        ASCII_MAP.put((byte) 5, "ENQ");
+        ASCII_MAP.put((byte) 6, "ACK");
+        ASCII_MAP.put((byte) 7, "BEL");
+        ASCII_MAP.put((byte) 8, "BS");
+        ASCII_MAP.put((byte) 9, "HT");
+        ASCII_MAP.put((byte) 10, "LF");
+        ASCII_MAP.put((byte) 11, "VT");
+        ASCII_MAP.put((byte) 12, "FF");
+        ASCII_MAP.put((byte) 13, "CR");
+        ASCII_MAP.put((byte) 14, "SO");
+        ASCII_MAP.put((byte) 15, "SI");
+        ASCII_MAP.put((byte) 16, "DLE");
+        ASCII_MAP.put((byte) 17, "DC1");
+        ASCII_MAP.put((byte) 18, "DC2");
+        ASCII_MAP.put((byte) 19, "DC3");
+        ASCII_MAP.put((byte) 20, "DC4");
+        ASCII_MAP.put((byte) 21, "NAK");
+        ASCII_MAP.put((byte) 22, "SYN");
+        ASCII_MAP.put((byte) 23, "ETB");
+        ASCII_MAP.put((byte) 24, "CAN");
+        ASCII_MAP.put((byte) 25, "EM");
+        ASCII_MAP.put((byte) 26, "SUB");
+        ASCII_MAP.put((byte) 27, "ESC");
+        ASCII_MAP.put((byte) 28, "FS");
+        ASCII_MAP.put((byte) 29, "GS");
+        ASCII_MAP.put((byte) 30, "RS");
+        ASCII_MAP.put((byte) 31, "US");
+        ASCII_MAP.put((byte) 127, "DEL");
     }
 
     public static String toString(Object obj, int deep, int expand) {
@@ -79,18 +80,18 @@ public class GaObjectUtils {
             }
 
             // Char要特殊处理,因为有不可见字符的因素
-            else if( Character.class.isInstance(obj) ) {
+            else if (Character.class.isInstance(obj)) {
 
-                final Character c = (Character)obj;
+                final Character c = (Character) obj;
 
                 // ASCII的可见字符
-                if( c>=32
-                        && c<=126) {
+                if (c >= 32
+                        && c <= 126) {
                     buf.append(format("@%s[%s]", className, c));
                 }
 
                 // ASCII的控制字符
-                else if(ASCII_MAP.containsKey(c)) {
+                else if (ASCII_MAP.containsKey(c)) {
                     buf.append(format("@%s[%s]", className, ASCII_MAP.get(c)));
                 }
 

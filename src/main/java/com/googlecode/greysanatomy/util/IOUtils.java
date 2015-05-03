@@ -35,10 +35,10 @@ public class IOUtils {
 
     public static void close(SocketChannel socketChannel) {
 
-        if( null != socketChannel ) {
+        if (null != socketChannel) {
             try {
                 socketChannel.close();
-            } catch(Throwable t) {
+            } catch (Throwable t) {
                 if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, String.format("close failed, SocketChannel=%s", socketChannel));
                 }
@@ -49,10 +49,10 @@ public class IOUtils {
 
     public static void close(ServerSocketChannel serverSocketChannel) {
 
-        if( null != serverSocketChannel ) {
+        if (null != serverSocketChannel) {
             try {
                 serverSocketChannel.close();
-            } catch(Throwable t) {
+            } catch (Throwable t) {
                 if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, String.format("close failed, ServerSocketChannel=%s", serverSocketChannel));
                 }
@@ -60,7 +60,6 @@ public class IOUtils {
         }
 
     }
-
 
 
 }

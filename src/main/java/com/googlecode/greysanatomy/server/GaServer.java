@@ -118,7 +118,7 @@ public class GaServer {
             serverSocketChannel.register(selector, OP_ACCEPT);
 
             // ·þÎñÆ÷¹ÒÔØ¶Ë¿Ú
-            serverSocketChannel.bind(new InetSocketAddress(configure.getTargetIp(), configure.getTargetPort()), 24);
+            serverSocketChannel.socket().bind(new InetSocketAddress(configure.getTargetIp(), configure.getTargetPort()), 24);
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, format("GaServer listened on network=%s;port=%d;timeout=%d;",
                         configure.getTargetIp(),

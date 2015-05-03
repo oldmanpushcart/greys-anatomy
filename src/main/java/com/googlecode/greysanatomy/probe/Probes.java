@@ -48,7 +48,7 @@ public class Probes {
             try {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
                 final AdviceListener listener = ((AdviceListener) getJobListeners(id));
-                if( null != listener ) {
+                if (null != listener) {
                     listener.onBefore(p);
                 }
             } catch (Throwable t) {
@@ -67,7 +67,7 @@ public class Probes {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
                 p.setReturnObj(returnObj);
                 final AdviceListener listener = ((AdviceListener) getJobListeners(id));
-                if( null != listener ) {
+                if (null != listener) {
                     listener.onSuccess(p);
                 }
             } catch (Throwable t) {
@@ -88,7 +88,7 @@ public class Probes {
                 Advice p = new Advice(newTarget(targetClassName, targetBehaviorName, targetThis), args, false);
                 p.setThrowException(throwException);
                 final AdviceListener listener = ((AdviceListener) getJobListeners(id));
-                if( null != listener ) {
+                if (null != listener) {
                     listener.onException(p);
                 }
             } catch (Throwable t) {
@@ -110,7 +110,7 @@ public class Probes {
                 p.setThrowException(throwException);
                 p.setReturnObj(returnObj);
                 final AdviceListener listener = ((AdviceListener) getJobListeners(id));
-                if( null != listener ) {
+                if (null != listener) {
                     listener.onFinish(p);
                 }
             } catch (Throwable t) {
@@ -156,9 +156,9 @@ public class Probes {
         }
 
         // ¹ýÂËµômainº¯Êý
-        if( isStatic(cbMod)
+        if (isStatic(cbMod)
                 && isPublic(cbMod)
-                && GaStringUtils.equals(cb.getName(),"main")) {
+                && GaStringUtils.equals(cb.getName(), "main")) {
             if (logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, String.format("ignore class:%s;behavior=%s;because it is main;",
                         cc.getName(),

@@ -115,7 +115,6 @@ public class GaDetailUtils {
         }
 
 
-
         // field
         if (isShowFields) {
             StringBuilder fieldSB = new StringBuilder();
@@ -152,7 +151,7 @@ public class GaDetailUtils {
                             //
                         }
                         //finally {
-                            // field.setAccessible(isAccessible);
+                        // field.setAccessible(isAccessible);
                         //}
                     }//if
 

@@ -399,7 +399,7 @@ public class TimeTunnelCommand extends Command {
         final StringBuilder lineSB = new StringBuilder();
 
         // Ö´ÐÐwatchExpress
-        if( isNotBlank(watchExpress) ) {
+        if (isNotBlank(watchExpress)) {
             for (Map.Entry<Integer, TimeTunnel> entry : matchedTimeTunnelMap.entrySet()) {
 
                 final TimeTunnel timeTunnel = entry.getValue();
@@ -672,9 +672,7 @@ public class TimeTunnelCommand extends Command {
                         // watch TimeTunnel by js express
                         doWatch(sender);
 
-                    }
-
-                    else {
+                    } else {
 
                         // show the TimeTunnel
                         doShow(sender);

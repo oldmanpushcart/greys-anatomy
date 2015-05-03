@@ -696,6 +696,4 @@ public class GaStringUtils {
     public static final String DEFAULT_PROMPT = "ga?>";
 
 
-
-
 }

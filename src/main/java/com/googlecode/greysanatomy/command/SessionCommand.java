@@ -5,7 +5,6 @@ import com.googlecode.greysanatomy.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.server.GaSession;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 
@@ -45,7 +44,7 @@ public class SessionCommand extends Command {
                                 beforeCharset,
                                 newCharset));
 
-                    } catch(UnsupportedCharsetException e) {
+                    } catch (UnsupportedCharsetException e) {
                         sender.send(true, format("unsupported charset : \"%s\"", charsetString));
                     }
 
@@ -67,24 +66,13 @@ public class SessionCommand extends Command {
      */
     private String sessionToString(GaSession gaSession) {
 
-        final StringBuilder sessionSB = new StringBuilder();
-
-        sessionSB.append(
-                format("javaPid=%s;sessionId=%s;duration=%s;charset=%s;",
-                        gaSession.getJavaPid(),
-                        gaSession.getSessionId(),
-                        gaSession.getSessionDuration(),
-                        gaSession.getCharset().displayName()));
-
-        try {
-            sessionSB.append("from=").append(gaSession.getSocketChannel().getRemoteAddress()).append(";");
-            sessionSB.append("to=").append(gaSession.getSocketChannel().getLocalAddress()).append(";");
-        } catch (IOException ioe) {
-            // ignore
-        }
-
-
-        return sessionSB.toString();
+        return format("javaPid=%s;sessionId=%s;duration=%s;charset=%s;from=%s;to=%s;",
+                gaSession.getJavaPid(),
+                gaSession.getSessionId(),
+                gaSession.getSessionDuration(),
+                gaSession.getCharset().displayName(),
+                gaSession.getSocketChannel().socket().getRemoteSocketAddress(),
+                gaSession.getSocketChannel().socket().getLocalSocketAddress());
 
     }
 

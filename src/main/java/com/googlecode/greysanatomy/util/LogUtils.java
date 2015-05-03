@@ -30,8 +30,8 @@ public class LogUtils {
     private static void setLevel(final Level level) {
         logger.setLevel(level);
         final Handler[] handlers = logger.getHandlers();
-        if( null != handlers ) {
-            for( Handler handler : handlers ) {
+        if (null != handlers) {
+            for (Handler handler : handlers) {
                 handler.setLevel(level);
             }
         }
