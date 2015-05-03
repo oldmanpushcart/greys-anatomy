@@ -690,4 +690,12 @@ public class GaStringUtils {
     }
 
 
+    /**
+     * ÃüÁîÌáÊ¾·û
+     */
+    public static final String DEFAULT_PROMPT = "ga?>";
+
+
+
+
 }

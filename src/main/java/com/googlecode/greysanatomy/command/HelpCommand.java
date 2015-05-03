@@ -3,7 +3,7 @@ package com.googlecode.greysanatomy.command;
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.command.annotation.IndexArg;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
-import com.googlecode.greysanatomy.server.GaServer;
+import com.googlecode.greysanatomy.server.GaSession;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -34,7 +34,7 @@ public class HelpCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(final GaServer gaServer, final Info info, final Sender sender) throws Throwable {
+            public void action(final GaSession gaSession, final Info info, final Sender sender) throws Throwable {
 //                sender.send(true, GaStringUtils.getLogo());
 
                 if (isBlank(cmd)

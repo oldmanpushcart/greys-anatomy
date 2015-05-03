@@ -3,7 +3,7 @@ package com.googlecode.greysanatomy.command;
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.command.annotation.IndexArg;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
-import com.googlecode.greysanatomy.server.GaServer;
+import com.googlecode.greysanatomy.server.GaSession;
 import com.googlecode.greysanatomy.util.GaDetailUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.PatternMatchingUtils;
@@ -54,7 +54,7 @@ public class SearchMethodCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(final GaServer gaServer, Info info, Sender sender) throws Throwable {
+            public void action(final GaSession gaSession, Info info, Sender sender) throws Throwable {
 
                 // auto fix default methodPattern
                 if (GaStringUtils.isBlank(methodPattern)) {

@@ -32,21 +32,16 @@ public class AgentMain {
             final Configure configure = Configure.toConfigure(args);
             final GaServer gaServer = (GaServer) agentLoader
                     .loadClass("com.googlecode.greysanatomy.server.GaServer")
-                    .getMethod("getInstance", Configure.class, Instrumentation.class)
-                    .invoke(null, configure, inst);
+                    .getMethod("getInstance", Instrumentation.class)
+                    .invoke(null, inst);
 
             if (!gaServer.isBind()) {
-                gaServer.bind();
+                gaServer.bind(configure);
             } else {
                 if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, "greys server already bind : "+gaServer);
                 }
             }
-
-//            if (!consoleServer.isBind()) {
-//                consoleServer.getConfigure().setTargetPort(configure.getTargetPort());
-//                consoleServer.rebind();
-//            }
 
         } catch (Throwable t) {
 

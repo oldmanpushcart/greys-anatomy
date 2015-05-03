@@ -2,6 +2,8 @@ package com.googlecode.greysanatomy.server;
 
 import com.googlecode.greysanatomy.util.LogUtils;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Map;
@@ -68,7 +70,7 @@ public class DefaultGaSessionManager implements GaSessionManager {
      * 激活会话过期管理守护线程
      */
     private void activeGaSessionExpireDaemon() {
-        final Thread gaSessionExpireDaemon = new Thread("GaSession-Expire-Daemon"){
+        final Thread gaSessionExpireDaemon = new Thread("GaSession-Expire-Daemon") {
 
             @Override
             public void run() {
@@ -93,6 +95,20 @@ public class DefaultGaSessionManager implements GaSessionManager {
                             }
 
                             if (null != gaSession) {
+
+                                try {
+                                    // 会话超时，关闭之前输出超时信息
+                                    gaSession.getSocketChannel().write(ByteBuffer.wrap("session expired.\n".getBytes()));
+                                } catch (IOException e) {
+                                    final String message = format("write expired message failed. sessionId=%d;", gaSession.getSessionId());
+                                    if (logger.isLoggable(Level.FINE)) {
+                                        logger.log(Level.FINE, message, e);
+                                    }
+                                    if (logger.isLoggable(Level.INFO)) {
+                                        logger.log(Level.INFO, message);
+                                    }
+                                }
+
                                 gaSession.destroy();
                             }
 
@@ -122,7 +138,7 @@ public class DefaultGaSessionManager implements GaSessionManager {
     public void destroy() {
 
         if (!isDestroyRef.compareAndSet(false, true)) {
-            throw new IllegalStateException("GaSessionManager was already destroy");
+            throw new IllegalStateException("already destroy");
         }
 
         clean();

@@ -8,7 +8,7 @@ import com.googlecode.greysanatomy.command.annotation.IndexArg;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
-import com.googlecode.greysanatomy.server.GaServer;
+import com.googlecode.greysanatomy.server.GaSession;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.ProfilerUtils;
 
@@ -83,7 +83,7 @@ public class ProfilerCommand extends Command {
             private final Map<String, Boolean> cmCache = new ConcurrentHashMap<String, Boolean>();
 
             @Override
-            public void action(final GaServer gaServer, Info info, final Sender sender) throws Throwable {
+            public void action(final GaSession gaSession, Info info, final Sender sender) throws Throwable {
 
                 final Instrumentation inst = info.getInst();
                 final AdviceListenerAdapter advice = new AdviceListenerAdapter() {

@@ -1,7 +1,7 @@
 package com.googlecode.greysanatomy.command;
 
 import com.googlecode.greysanatomy.command.annotation.Cmd;
-import com.googlecode.greysanatomy.server.GaServer;
+import com.googlecode.greysanatomy.server.GaSession;
 
 /**
  * πÿ±’√¸¡Ó
@@ -18,8 +18,8 @@ public class ShutdownCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(final GaServer gaServer, final Info info, final Sender sender) throws Throwable {
-                sender.send(true, "Greys shutdown completed.\n");
+            public void action(final GaSession gaSession, final Info info, final Sender sender) throws Throwable {
+                sender.send(true, "Greys shutdown completed.");
             }
 
         };

@@ -99,15 +99,13 @@ public class GaServer {
     private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
     private static final byte CTRL_D = 0x04;
 
-    private final Configure configure;
     private final AtomicBoolean isBindRef = new AtomicBoolean(false);
     private final GaSessionManager gaSessionManager;
     private final CommandHandler commandHandler;
 
-    private GaServer(Configure configure, Instrumentation instrumentation) {
-        this.configure = configure;
+    private GaServer(Instrumentation instrumentation) {
         this.gaSessionManager = new DefaultGaSessionManager();
-        this.commandHandler = new CommandHandler(this, instrumentation);
+        this.commandHandler = new DefaultCommandHandler(this, instrumentation);
 
         Runtime.getRuntime().addShutdownHook(new Thread("GaServer-ShutdownHook-Thread") {
 
@@ -115,7 +113,7 @@ public class GaServer {
             public void run() {
                 commandHandler.destroy();
                 gaSessionManager.destroy();
-                if( isBind() ) {
+                if (isBind()) {
                     unbind();
                 }
             }
@@ -138,10 +136,10 @@ public class GaServer {
 
     /**
      * 启动Greys服务端
-     *
+     * @param configure
      * @throws IOException
      */
-    public void bind() throws IOException {
+    public void bind(Configure configure) throws IOException {
         if (!isBindRef.compareAndSet(false, true)) {
             throw new IllegalStateException("already bind");
         }
@@ -165,7 +163,7 @@ public class GaServer {
                         configure.getConnectTimeout()));
             }
 
-            activeDoSelectDaemon(selector);
+            activeDoSelectDaemon(selector, configure);
 
         } catch (IOException e) {
             unbind();
@@ -174,7 +172,7 @@ public class GaServer {
 
     }
 
-    private void activeDoSelectDaemon(final Selector selector) {
+    private void activeDoSelectDaemon(final Selector selector, final Configure configure) {
 
         final ByteBuffer byteBuffer = ByteBuffer.allocate(BUFFER_SIZE);
 
@@ -195,7 +193,7 @@ public class GaServer {
 
                                 // do ssc accept
                                 if (key.isValid() && key.isAcceptable()) {
-                                    doAccept(key, selector);
+                                    doAccept(key, selector, configure);
                                 }
 
                                 // do sc read
@@ -211,7 +209,7 @@ public class GaServer {
                             logger.log(Level.WARNING, format("%s selector failed.",
                                     GaServer.this), e);
                         }
-                    } catch(ClosedSelectorException e) {
+                    } catch (ClosedSelectorException e) {
                         //
                     }
 
@@ -224,11 +222,12 @@ public class GaServer {
         gaServerSelectorDaemon.start();
     }
 
-    private void doAccept(SelectionKey key, Selector selector) throws IOException {
+    private void doAccept(SelectionKey key, Selector selector, Configure configure) throws IOException {
         final ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
         final SocketChannel socketChannel = serverSocketChannel.accept();
         socketChannel.configureBlocking(false);
         socketChannel.socket().setSoTimeout(configure.getConnectTimeout());
+        socketChannel.socket().setTcpNoDelay(true);
 
         socketChannel.register(selector, OP_READ, new Attachment(
                 BUFFER_SIZE,
@@ -238,6 +237,13 @@ public class GaServer {
                     GaServer.this,
                     socketChannel));
         }
+
+        // 这里输出Logo
+        socketChannel.write(ByteBuffer.wrap(GaStringUtils.getLogo().getBytes(DEFAULT_CHARSET)));
+
+        // 绘制提示符
+        reDrawPrompt(socketChannel, DEFAULT_CHARSET);
+
     }
 
     private void doRead(final ByteBuffer byteBuffer, SelectionKey key) {
@@ -275,7 +281,13 @@ public class GaServer {
 
                             // 遇到中止命令(CTRL_D)，则标记会话为不可写，让后台任务停下
                             else if (CTRL_D == data) {
-                                gaSession.markWritable(false);
+                                gaSession.markJobRunning(false);
+
+                                // 任务中止的时候不会有任何刷新，所以需要重新绘制提示符
+                                // 而且在部分终端实现的时候，CTRL_D不依赖于回车发送，可能在按下的同时就发送过来
+                                // 所以这里需要在提示符之间先输出一个换行符
+                                socketChannel.write(ByteBuffer.wrap("\n".getBytes(gaSession.getCharset())));
+                                reDrawPrompt(socketChannel, gaSession.getCharset());
                                 break;
                             }
 
@@ -290,9 +302,22 @@ public class GaServer {
 
                         case READ_EOL: {
                             final String line = attachment.clearAndGetLine(gaSession.getCharset());
-                            if (GaStringUtils.isNotBlank(line)) {
-                                commandHandler.executeCommand(line, gaSession);
+
+                            // 只有没有任务在后台运行的时候才能接受服务端响应
+                            if (!gaSession.hasJobRunning()) {
+
+                                // 只有输入了有效字符才进行命令解析
+                                if (GaStringUtils.isNotBlank(line)) {
+                                    commandHandler.executeCommand(line, gaSession);
+                                }
+
+                                // 否则仅仅重绘提示符
+                                else {
+                                    reDrawPrompt(socketChannel, gaSession.getCharset());
+                                }
+
                             }
+
                             attachment.setLineDecodeState(LineDecodeState.READ_CHAR);
                             break;
                         }
@@ -318,6 +343,14 @@ public class GaServer {
         }
     }
 
+
+    /*
+     * 绘制提示符
+     */
+    private void reDrawPrompt(SocketChannel socketChannel, Charset charset) throws IOException {
+        socketChannel.write(ByteBuffer.wrap(GaStringUtils.DEFAULT_PROMPT.getBytes(charset)));
+    }
+
     private void closeSocketChannel(SelectionKey key, SocketChannel socketChannel) {
         IOUtils.close(socketChannel);
         key.cancel();
@@ -325,7 +358,6 @@ public class GaServer {
 
     /**
      * 关闭Greys服务端
-     *
      */
     public void unbind() {
 
@@ -339,25 +371,19 @@ public class GaServer {
         }
     }
 
-    @Override
-    public String toString() {
-        return configure.getJavaPid() + "@" + configure.getTargetIp() + ":" + configure.getTargetPort();
-    }
-
     private static volatile GaServer gaServer;
 
     /**
      * 单例
      *
-     * @param configure       配置
      * @param instrumentation JVM增强
      * @return GaServer单例
      */
-    public static GaServer getInstance(final Configure configure, final Instrumentation instrumentation) {
+    public static GaServer getInstance(final Instrumentation instrumentation) {
         if (null == gaServer) {
             synchronized (GaServer.class) {
                 if (null == gaServer) {
-                    gaServer = new GaServer(configure, instrumentation);
+                    gaServer = new GaServer(instrumentation);
                 }
             }
         }

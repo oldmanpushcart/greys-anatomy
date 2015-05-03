@@ -1,7 +1,7 @@
 package com.googlecode.greysanatomy.command;
 
 import com.googlecode.greysanatomy.command.annotation.Cmd;
-import com.googlecode.greysanatomy.server.GaServer;
+import com.googlecode.greysanatomy.server.GaSession;
 
 /**
  * ÍË³öÃüÁî
@@ -17,8 +17,8 @@ public class QuitCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(final GaServer gaServer, final Info info, final Sender sender) throws Throwable {
-                sender.send(true, "Bye bye!\n");
+            public void action(final GaSession gaSession, final Info info, final Sender sender) throws Throwable {
+                sender.send(true, "Bye bye!");
             }
 
         };

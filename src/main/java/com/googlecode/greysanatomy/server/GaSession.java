@@ -45,7 +45,7 @@ public class GaSession {
     private final AtomicBoolean isDestroyRef = new AtomicBoolean(false);
 
     // 会话的写标记，写打开的会话将会完整的输出currentJobId所对应的内容
-    private volatile boolean writable = false;
+    private volatile boolean jobRunning = false;
 
     public GaSession(int sessionId, long sessionDuration, SocketChannel socketChannel, Charset charset) {
         this.sessionId = sessionId;
@@ -89,15 +89,6 @@ public class GaSession {
      * @return true:会话到期;false:会话尚未到期
      */
     public boolean isExpired() {
-//        final long now = currentTimeMillis();
-//        final boolean isExpired = sessionDuration <= now - gmtLastTouch;
-//        if( isExpired ) {
-//            logger.log(Level.INFO, format("sessionDuration=%s;currentTimeMillis()=%s;gmtLastTouch=%s;",
-//                    sessionDuration,
-//                    now,
-//                    gmtLastTouch));
-//        }
-//        return isExpired;
         return sessionDuration <= currentTimeMillis() - gmtLastTouch;
     }
 
@@ -111,11 +102,11 @@ public class GaSession {
     }
 
     /**
-     * 标记会话是否可以写
-     * @param isWritable true:可写;false:不可写
+     * 标记是否有任务在运行
+     * @param isRunning true:任务正在运行;false:没有任务在运行
      */
-    public void markWritable(boolean isWritable) {
-        this.writable = isWritable;
+    public void markJobRunning(boolean isRunning) {
+        this.jobRunning = isRunning;
     }
 
     public int getSessionId() {
@@ -130,8 +121,12 @@ public class GaSession {
         return currentJobId;
     }
 
-    public boolean isWritable() {
-        return writable;
+    /**
+     * 当前是否有任务正在运行
+     * @return
+     */
+    public boolean hasJobRunning() {
+        return jobRunning;
     }
 
     public boolean isDestroy() {

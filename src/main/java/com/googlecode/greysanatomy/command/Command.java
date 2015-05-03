@@ -1,6 +1,6 @@
 package com.googlecode.greysanatomy.command;
 
-import com.googlecode.greysanatomy.server.GaServer;
+import com.googlecode.greysanatomy.server.GaSession;
 
 import java.lang.instrument.Instrumentation;
 
@@ -71,12 +71,12 @@ public abstract class Command {
         /**
          * Ö´ÐÐ¶¯×÷
          *
-         * @param gaServer
+         * @param gaSession
          * @param info
          * @param sender
          * @throws Throwable
          */
-        void action(GaServer gaServer, Info info, Sender sender) throws Throwable;
+        void action(GaSession gaSession, Info info, Sender sender) throws Throwable;
 
     }
 

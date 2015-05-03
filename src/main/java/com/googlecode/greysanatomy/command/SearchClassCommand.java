@@ -3,7 +3,7 @@ package com.googlecode.greysanatomy.command;
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.command.annotation.IndexArg;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
-import com.googlecode.greysanatomy.server.GaServer;
+import com.googlecode.greysanatomy.server.GaSession;
 import com.googlecode.greysanatomy.util.GaDetailUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 
@@ -56,7 +56,7 @@ public class SearchClassCommand extends Command {
         return new Action() {
 
             @Override
-            public void action(final GaServer gaServer, final Info info, final Sender sender) throws Throwable {
+            public void action(final GaSession gaSession, final Info info, final Sender sender) throws Throwable {
 
                 final StringBuilder message = new StringBuilder();
                 final Set<Class<?>> matchedClassSet;
