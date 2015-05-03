@@ -123,6 +123,7 @@ public class DefaultCommandHandler implements CommandHandler {
                 logger.log(Level.WARNING, message, e);
             }
             write(socketChannel, message, gaSession.getCharset());
+            reDrawPrompt(socketChannel, gaSession.getCharset());
         }
 
     }

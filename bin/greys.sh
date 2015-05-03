@@ -97,12 +97,12 @@ attach_jvm()
 active_console()
 {
 
-    if type telnet 1>>/dev/null 2>>/dev/null; then
+    if type telnet 2>&1 >> /dev/null; then
 
         # use telnet
         telnet ${TARGET_IP} ${TARGET_PORT}
 
-    elif type nc 1>>/dev/null 2>/dev/null; then
+    elif type nc 2>&1 >> /dev/null; then
 
         # use netcat
         nc ${TARGET_IP} ${TARGET_PORT}
