@@ -418,9 +418,9 @@ public class TimeTunnelCommand extends Command {
 
                 if (null != expend
                         && expend > 0) {
-                    lineSB.append("" + GaObjectUtils.toString(value, 0, expend) + "\n");
+                    lineSB.append("" + GaObjectUtils.toString(value, 0, expend));
                 } else {
-                    lineSB.append("" + value + "\n");
+                    lineSB.append("" + value);
                 }
 
             }
@@ -440,7 +440,7 @@ public class TimeTunnelCommand extends Command {
             }
         }
 
-        lineSB.append("\n").append(matchedTimeTunnelMap.size() + " record matched.\n");
+        lineSB.append(matchedTimeTunnelMap.size() + " record matched.");
 
         sender.send(true, lineSB.toString());
 
@@ -453,7 +453,7 @@ public class TimeTunnelCommand extends Command {
      */
     private void doDeleteAll(final Sender sender) {
         timeTunnelMap.clear();
-        sender.send(true, "All TimeTunnels was deleted.\n");
+        sender.send(true, "All TimeTunnels was deleted.");
     }
 
     /**

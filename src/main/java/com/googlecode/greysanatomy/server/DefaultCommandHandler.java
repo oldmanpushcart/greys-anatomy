@@ -161,26 +161,34 @@ public class DefaultCommandHandler implements CommandHandler {
 
         final CharBuffer buffer = CharBuffer.allocate(BUFFER_SIZE);
 
+
+        try {
+            action.action(gaSession, info, sender);
+        }
+
+        // 命令执行错误必须纪录
+        catch (Throwable t) {
+            final String message = format("command execute failed, %s\n",
+                    GaStringUtils.getCauseMessage(t));
+            if (logger.isLoggable(Level.WARNING)) {
+                logger.log(Level.WARNING, message, t);
+            }
+            write(socketChannel, message, gaSession);
+
+            return;
+        }
+
+        // 跑任务
+        jobRunning(gaSession, isFinishRef, jobId, buffer);
+
+
+    }
+
+    private void jobRunning(GaSession gaSession, AtomicBoolean isFinishRef, int jobId, CharBuffer buffer) throws IOException {
         // 先将会话的写打开
         gaSession.markJobRunning(true);
 
         try {
-
-            try {
-                action.action(gaSession, info, sender);
-            }
-
-            // 命令执行错误必须纪录
-            catch (Throwable t) {
-                final String message = format("command execute failed, %s\n",
-                        GaStringUtils.getCauseMessage(t));
-                if (logger.isLoggable(Level.WARNING)) {
-                    logger.log(Level.WARNING, message, t);
-                }
-
-                write(socketChannel, message, gaSession);
-            }
-
 
             final Thread currentThread = Thread.currentThread();
             try {
@@ -269,7 +277,6 @@ public class DefaultCommandHandler implements CommandHandler {
             ProbeJobs.killJob(jobId);
 
         }
-
     }
 
     private void write(SocketChannel socketChannel, String message, GaSession gaSession) throws IOException {
