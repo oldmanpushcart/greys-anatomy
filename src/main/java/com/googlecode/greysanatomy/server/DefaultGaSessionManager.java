@@ -47,9 +47,9 @@ public class DefaultGaSessionManager implements GaSessionManager {
     }
 
     @Override
-    public GaSession newGaSession(SocketChannel socketChannel, Charset charset) {
+    public GaSession newGaSession(int javaPid, SocketChannel socketChannel, Charset charset) {
         final int gaSessionId = gaSessionIndexSequence.getAndIncrement();
-        final GaSession gaSession = new GaSession(gaSessionId, DEFAULT_SESSION_DURATION, socketChannel, charset) {
+        final GaSession gaSession = new GaSession(javaPid, gaSessionId, DEFAULT_SESSION_DURATION, socketChannel, charset) {
             @Override
             public void destroy() {
                 super.destroy();

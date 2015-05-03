@@ -16,7 +16,6 @@ public class Configure {
     private int targetPort;                 // 目标进程号
     private int javaPid;                    // 对方java进程号
     private int connectTimeout = 6000;      // 连接超时时间(ms)
-    private String consolePrompt = "ga?>";  // 控制台提示符
 
     /**
      * 将Configure对象转换为字符串
@@ -80,10 +79,6 @@ public class Configure {
 
     public void setJavaPid(int javaPid) {
         this.javaPid = javaPid;
-    }
-
-    public String getConsolePrompt() {
-        return consolePrompt;
     }
 
     public int getConnectTimeout() {

@@ -45,11 +45,14 @@ public class GaServer {
 
     private static final int BUFFER_SIZE = 4 * 1024;
     private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+
     private static final byte CTRL_D = 0x04;
+    private static final byte CTRL_X = 0x18;
 
     private final AtomicBoolean isBindRef = new AtomicBoolean(false);
     private final GaSessionManager gaSessionManager;
     private final CommandHandler commandHandler;
+    private final int javaPid;
 
     private final ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactory() {
         @Override
@@ -60,7 +63,8 @@ public class GaServer {
         }
     });
 
-    private GaServer(Instrumentation instrumentation) {
+    private GaServer(int javaPid, Instrumentation instrumentation) {
+        this.javaPid = javaPid;
         this.gaSessionManager = new DefaultGaSessionManager();
         this.commandHandler = new DefaultCommandHandler(this, instrumentation);
 
@@ -190,7 +194,7 @@ public class GaServer {
 
         socketChannel.register(selector, OP_READ, new GaAttachment(
                 BUFFER_SIZE,
-                gaSessionManager.newGaSession(socketChannel, DEFAULT_CHARSET)));
+                gaSessionManager.newGaSession(javaPid, socketChannel, DEFAULT_CHARSET)));
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, format("%s accept an connection, client=%s;",
                     GaServer.this,
@@ -239,7 +243,8 @@ public class GaServer {
                             }
 
                             // 遇到中止命令(CTRL_D)，则标记会话为不可写，让后台任务停下
-                            else if (CTRL_D == data) {
+                            else if (CTRL_D == data
+                                    || CTRL_X == data) {
                                 gaSession.markJobRunning(false);
 
 //                                // 任务中止的时候不会有任何刷新，所以需要重新绘制提示符
@@ -358,11 +363,11 @@ public class GaServer {
      * @param instrumentation JVM增强
      * @return GaServer单例
      */
-    public static GaServer getInstance(final Instrumentation instrumentation) {
+    public static GaServer getInstance(final int javaPid, final Instrumentation instrumentation) {
         if (null == gaServer) {
             synchronized (GaServer.class) {
                 if (null == gaServer) {
-                    gaServer = new GaServer(instrumentation);
+                    gaServer = new GaServer(javaPid, instrumentation);
                 }
             }
         }

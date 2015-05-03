@@ -22,6 +22,9 @@ public class GaSession {
 
     private final Logger logger = LogUtils.getLogger();
 
+    // Java进程ID
+    private final int javaPid;
+
     // 会话ID
     private final int sessionId;
 
@@ -47,7 +50,8 @@ public class GaSession {
     // 会话的写标记，写打开的会话将会完整的输出currentJobId所对应的内容
     private volatile boolean jobRunning = false;
 
-    public GaSession(int sessionId, long sessionDuration, SocketChannel socketChannel, Charset charset) {
+    public GaSession(int javaPid, int sessionId, long sessionDuration, SocketChannel socketChannel, Charset charset) {
+        this.javaPid = javaPid;
         this.sessionId = sessionId;
         this.sessionDuration = sessionDuration;
         this.socketChannel = socketChannel;
@@ -139,5 +143,13 @@ public class GaSession {
 
     public void setCharset(Charset charset) {
         this.charset = charset;
+    }
+
+    public long getSessionDuration() {
+        return sessionDuration;
+    }
+
+    public int getJavaPid() {
+        return javaPid;
     }
 }

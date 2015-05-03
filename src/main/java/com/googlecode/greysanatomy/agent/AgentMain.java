@@ -32,8 +32,8 @@ public class AgentMain {
             final Configure configure = Configure.toConfigure(args);
             final GaServer gaServer = (GaServer) agentLoader
                     .loadClass("com.googlecode.greysanatomy.server.GaServer")
-                    .getMethod("getInstance", Instrumentation.class)
-                    .invoke(null, inst);
+                    .getMethod("getInstance", int.class, Instrumentation.class)
+                    .invoke(null, configure.getJavaPid(), inst);
 
             if (!gaServer.isBind()) {
                 gaServer.bind(configure);
