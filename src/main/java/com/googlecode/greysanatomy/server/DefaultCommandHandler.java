@@ -4,6 +4,7 @@ import com.googlecode.greysanatomy.command.Command;
 import com.googlecode.greysanatomy.command.Commands;
 import com.googlecode.greysanatomy.command.QuitCommand;
 import com.googlecode.greysanatomy.command.ShutdownCommand;
+import com.googlecode.greysanatomy.exception.CommandException;
 import com.googlecode.greysanatomy.exception.CommandInitializationException;
 import com.googlecode.greysanatomy.exception.CommandNotFoundException;
 import com.googlecode.greysanatomy.probe.ProbeJobs;
@@ -18,9 +19,6 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,14 +38,6 @@ public class DefaultCommandHandler implements CommandHandler {
 
     private final GaServer gaServer;
     private final Instrumentation instrumentation;
-    private final ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-            final Thread t = new Thread(r, "GaCommand-execute-daemon");
-            t.setDaemon(true);
-            return t;
-        }
-    });
 
     public DefaultCommandHandler(GaServer gaServer, Instrumentation instrumentation) {
         this.gaServer = gaServer;
@@ -60,13 +50,31 @@ public class DefaultCommandHandler implements CommandHandler {
         final SocketChannel socketChannel = gaSession.getSocketChannel();
 
         try {
-            execute(gaSession, socketChannel, Commands.getInstance().newCommand(line));
+            final Command command = Commands.getInstance().newCommand(line);
+            execute(gaSession, socketChannel, command);
+
+            // 退出命令，需要关闭Socket
+            if (command instanceof QuitCommand) {
+                gaSession.destroy();
+            }
+
+            // 关闭命令，需要关闭整个服务端
+            else if (command instanceof ShutdownCommand) {
+                DefaultCommandHandler.this.gaServer.unbind();
+            }
+
+            // 其他命令需要重新绘制提示符
+            else {
+                write(socketChannel, GaStringUtils.DEFAULT_PROMPT, gaSession);
+            }
+
         }
 
         // 命令不存在
         catch (CommandNotFoundException e) {
             final String message = format("command \"%s\" not found.\n", e.getCommand());
             write(socketChannel, message, gaSession);
+            write(socketChannel, GaStringUtils.DEFAULT_PROMPT, gaSession);
             if (logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, message, e);
             }
@@ -74,17 +82,20 @@ public class DefaultCommandHandler implements CommandHandler {
 
         // 命令初始化失败
         catch (CommandInitializationException e) {
-            final String message = format("command \"%s\"init failed.\n", e.getCommand());
+            final String message = format("command \"%s\" init failed.\n", e.getCommand());
             write(socketChannel, message, gaSession);
+            write(socketChannel, GaStringUtils.DEFAULT_PROMPT, gaSession);
             if (logger.isLoggable(Level.WARNING)) {
                 logger.log(Level.WARNING, message, e);
             }
         }
 
         // 命令准备错误(参数校验等)
-        catch (Throwable t) {
-            final String message = format("command execute failed : %s\n", GaStringUtils.getCauseMessage(t));
+        catch (CommandException t) {
+            final String message = format("command \"%s\" execute failed : %s\n",
+                    t.getCommand(), GaStringUtils.getCauseMessage(t));
             write(socketChannel, message, gaSession);
+            write(socketChannel, GaStringUtils.DEFAULT_PROMPT, gaSession);
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, message);
             }
@@ -93,6 +104,7 @@ public class DefaultCommandHandler implements CommandHandler {
                 logger.log(Level.FINE, message, t);
             }
         }
+
     }
 
 
@@ -121,7 +133,6 @@ public class DefaultCommandHandler implements CommandHandler {
                         // 这里为了美观，在每个命令输出最后一行的时候换行
                         if (isF) {
                             writer.write("\n");
-                            writer.flush();
                         }
 
                         writer.flush();
@@ -147,157 +158,127 @@ public class DefaultCommandHandler implements CommandHandler {
 
         };
 
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
 
-                final CharBuffer buffer = CharBuffer.allocate(BUFFER_SIZE);
+        final CharBuffer buffer = CharBuffer.allocate(BUFFER_SIZE);
 
-                // 先将会话的写打开
-                gaSession.markJobRunning(true);
+        // 先将会话的写打开
+        gaSession.markJobRunning(true);
 
-                try {
+        try {
 
-                    final Thread currentThread = Thread.currentThread();
-                    action.action(gaSession, info, sender);
+            try {
+                action.action(gaSession, info, sender);
+            }
 
-                    while (!gaSession.isDestroy()
-                            && gaSession.hasJobRunning()
-                            && !currentThread.isInterrupted()) {
+            // 命令执行错误必须纪录
+            catch (Throwable t) {
+                final String message = format("command execute failed, %s\n",
+                        GaStringUtils.getCauseMessage(t));
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, message, t);
+                }
 
-                        final Reader reader = ProbeJobs.getJobReader(jobId);
-                        if (null != reader) {
-
-                            // touch the session
-                            gaSession.touch();
-
-                            // 首先将一部分数据读取到buffer中
-                            if (-1 == reader.read(buffer)) {
-
-                                // 当读到EOF的时候，同时Sender标记为isFinished
-                                // 说明整个命令结束了，标记整个会话为不可写，结束命令循环
-                                if (isFinishRef.get()) {
-                                    gaSession.markJobRunning(false);
-                                    break;
-                                }
-
-                                // 若已经让文件到达EOF，说明读取比写入快，需要休息下
-                                // 间隔500ms，人类操作无感知
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException e) {
-                                    currentThread.interrupt();
-                                }
-
-                            }
-
-                            // 读出了点东西
-                            else {
-
-                                buffer.flip();
-
-                                final ByteBuffer writeByteBuffer = gaSession.getCharset().encode(buffer);
-
-                                while (writeByteBuffer.hasRemaining()) {
-
-                                    if (-1 == gaSession.getSocketChannel().write(writeByteBuffer)) {
-                                        // socket broken
-                                        if (logger.isLoggable(Level.INFO)) {
-                                            logger.log(Level.INFO, format("JobId[%d] write failed, because socket broken, GaSession[%d] will be destroy.",
-                                                    jobId,
-                                                    gaSession.getSessionId()));
-                                            gaSession.destroy();
-                                        }
-                                    }
-
-                                }//while for write
+                write(socketChannel, message, gaSession);
+            }
 
 
-                                buffer.clear();
+            final Thread currentThread = Thread.currentThread();
+            try {
 
-                            }
+                while (!gaSession.isDestroy()
+                        && gaSession.hasJobRunning()
+                        && !currentThread.isInterrupted()) {
 
+                    final Reader reader = ProbeJobs.getJobReader(jobId);
+                    if( null == reader ) {
+                        break;
+                    }
 
+                    // touch the session
+                    gaSession.touch();
+
+                    // 首先将一部分数据读取到buffer中
+                    if (-1 == reader.read(buffer)) {
+
+                        // 当读到EOF的时候，同时Sender标记为isFinished
+                        // 说明整个命令结束了，标记整个会话为不可写，结束命令循环
+                        if (isFinishRef.get()) {
+                            gaSession.markJobRunning(false);
+                            break;
                         }
 
-                    }//while command running
+                        // 若已经让文件到达EOF，说明读取比写入快，需要休息下
+                        // 间隔200ms，人类操作无感知
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            currentThread.interrupt();
+                        }
 
-                }
-
-                // 遇到关闭的链接可以忽略
-                catch (ClosedChannelException e) {
-
-                    final String message = format("write failed, because socket broken. sessionId=%d;jobId=%d;\n",
-                            gaSession.getSessionId(),
-                            jobId);
-                    if (logger.isLoggable(Level.FINE)) {
-                        logger.log(Level.FINE, message, e);
                     }
 
-                }
-
-                // 其他错误必须纪录
-                catch (Throwable t) {
-                    final String message = format("command execute failed, %s\n",
-                            GaStringUtils.getCauseMessage(t));
-                    if (logger.isLoggable(Level.WARNING)) {
-                        logger.log(Level.WARNING, message, t);
-                    }
-
-                    write(socketChannel, message, gaSession);
-                }
-
-                // 后续的一些处理
-                finally {
-
-                    // 无论命令的结局如何，必须要关闭掉会话的写
-                    gaSession.markJobRunning(false);
-
-                    // 杀死后台JOB
-                    final Integer jobId = gaSession.getCurrentJobId();
-                    if (null != jobId) {
-                        ProbeJobs.killJob(jobId);
-                    }
-
-
-                    // 退出命令，需要关闭Socket
-                    if (command instanceof QuitCommand) {
-                        gaSession.destroy();
-                    }
-
-                    // 关闭命令，需要关闭整个服务端
-                    else if (command instanceof ShutdownCommand) {
-                        DefaultCommandHandler.this.gaServer.unbind();
-                    }
-
-                    // 其他命令需要重新绘制提示符
+                    // 读出了点东西
                     else {
 
-                        write(socketChannel, GaStringUtils.DEFAULT_PROMPT, gaSession);
+                        buffer.flip();
+                        final ByteBuffer writeByteBuffer = gaSession.getCharset().encode(buffer);
+                        while (writeByteBuffer.hasRemaining()) {
+
+                            if (-1 == gaSession.getSocketChannel().write(writeByteBuffer)) {
+                                // socket broken
+                                if (logger.isLoggable(Level.INFO)) {
+                                    logger.log(Level.INFO, format("write failed, because socket broken, session will be destroy. sessionId=%d;jobId=%d;",
+                                            gaSession.getSessionId(),
+                                            jobId));
+                                    gaSession.destroy();
+                                }
+                            }
+
+                        }//while for write
+
+
+                        buffer.clear();
 
                     }
 
+                }//while command running
+
+            }
+
+            // 遇到关闭的链接可以忽略
+            catch (ClosedChannelException e) {
+
+                final String message = format("write failed, because socket broken. sessionId=%d;jobId=%d;\n",
+                        gaSession.getSessionId(),
+                        jobId);
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, message, e);
                 }
 
             }
-        });
-    }
 
-    private void write(SocketChannel socketChannel, String message, GaSession gaSession) {
-        try {
-            socketChannel.write(ByteBuffer.wrap((message).getBytes(gaSession.getCharset())));
-        } catch (IOException e) {
-            if (logger.isLoggable(Level.WARNING)) {
-                logger.log(Level.WARNING, format("write failed, will be destroy. sessionId=%d;", gaSession.getSessionId()), e);
-            }
-            gaSession.destroy();
+        }
+
+        // 后续的一些处理
+        finally {
+
+            // 无论命令的结局如何，必须要关闭掉会话的写
+            gaSession.markJobRunning(false);
+
+            // 杀死后台JOB
+            ProbeJobs.killJob(jobId);
+
         }
 
     }
 
+    private void write(SocketChannel socketChannel, String message, GaSession gaSession) throws IOException {
+        socketChannel.write(ByteBuffer.wrap((message).getBytes(gaSession.getCharset())));
+    }
+
     @Override
     public void destroy() {
-        executorService.shutdown();
+        //
     }
 
 

@@ -12,6 +12,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,6 +51,15 @@ public class GaServer {
     private final GaSessionManager gaSessionManager;
     private final CommandHandler commandHandler;
 
+    private final ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            final Thread t = new Thread(r, "GaCommand-execute-daemon");
+            t.setDaemon(true);
+            return t;
+        }
+    });
+
     private GaServer(Instrumentation instrumentation) {
         this.gaSessionManager = new DefaultGaSessionManager();
         this.commandHandler = new DefaultCommandHandler(this, instrumentation);
@@ -56,6 +68,7 @@ public class GaServer {
 
             @Override
             public void run() {
+                executorService.shutdown();
                 commandHandler.destroy();
                 gaSessionManager.destroy();
                 if (isBind()) {
@@ -81,6 +94,7 @@ public class GaServer {
 
     /**
      * 启动Greys服务端
+     *
      * @param configure
      * @throws IOException
      */
@@ -228,11 +242,11 @@ public class GaServer {
                             else if (CTRL_D == data) {
                                 gaSession.markJobRunning(false);
 
-                                // 任务中止的时候不会有任何刷新，所以需要重新绘制提示符
-                                // 而且在部分终端实现的时候，CTRL_D不依赖于回车发送，可能在按下的同时就发送过来
-                                // 所以这里需要在提示符之间先输出一个换行符
-                                socketChannel.write(ByteBuffer.wrap("\n".getBytes(gaSession.getCharset())));
-                                reDrawPrompt(socketChannel, gaSession.getCharset());
+//                                // 任务中止的时候不会有任何刷新，所以需要重新绘制提示符
+//                                // 而且在部分终端实现的时候，CTRL_D不依赖于回车发送，可能在按下的同时就发送过来
+//                                // 所以这里需要在提示符之间先输出一个换行符
+//                                socketChannel.write(ByteBuffer.wrap("\n".getBytes(gaSession.getCharset())));
+//                                reDrawPrompt(socketChannel, gaSession.getCharset());
                                 break;
                             }
 
@@ -253,7 +267,26 @@ public class GaServer {
 
                                 // 只有输入了有效字符才进行命令解析
                                 if (GaStringUtils.isNotBlank(line)) {
-                                    commandHandler.executeCommand(line, gaSession);
+
+                                    executorService.execute(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                commandHandler.executeCommand(line, gaSession);
+                                            } catch (IOException e) {
+                                                final String message = String.format("command execute failed, sessionId=%d;", gaSession.getSessionId());
+                                                if (logger.isLoggable(Level.WARNING)) {
+                                                    logger.log(Level.WARNING, message);
+                                                }
+                                                if (logger.isLoggable(Level.INFO)) {
+                                                    logger.log(Level.INFO, message, e);
+                                                }
+                                                gaSession.destroy();
+                                            }
+                                        }
+                                    });
+
+
                                 }
 
                                 // 否则仅仅重绘提示符
@@ -285,6 +318,7 @@ public class GaServer {
                         GaServer.this), e);
             }
             closeSocketChannel(key, socketChannel);
+            gaSession.destroy();
         }
     }
 
