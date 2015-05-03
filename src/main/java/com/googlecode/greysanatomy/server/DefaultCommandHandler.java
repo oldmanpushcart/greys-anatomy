@@ -18,7 +18,6 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -67,7 +66,7 @@ public class DefaultCommandHandler implements CommandHandler {
         // 命令不存在
         catch (CommandNotFoundException e) {
             final String message = format("command \"%s\" not found.\n", e.getCommand());
-            write(socketChannel, message, gaSession.getCharset());
+            write(socketChannel, message, gaSession);
             if (logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, message, e);
             }
@@ -76,16 +75,16 @@ public class DefaultCommandHandler implements CommandHandler {
         // 命令初始化失败
         catch (CommandInitializationException e) {
             final String message = format("command \"%s\"init failed.\n", e.getCommand());
-            write(socketChannel, message, gaSession.getCharset());
+            write(socketChannel, message, gaSession);
             if (logger.isLoggable(Level.WARNING)) {
                 logger.log(Level.WARNING, message, e);
             }
         }
 
-        // 命令内部执行错误
+        // 命令准备错误(参数校验等)
         catch (Throwable t) {
             final String message = format("command execute failed : %s\n", GaStringUtils.getCauseMessage(t));
-            write(socketChannel, message, gaSession.getCharset());
+            write(socketChannel, message, gaSession);
             if (logger.isLoggable(Level.INFO)) {
                 logger.log(Level.INFO, message);
             }
@@ -245,14 +244,7 @@ public class DefaultCommandHandler implements CommandHandler {
                         logger.log(Level.WARNING, message, t);
                     }
 
-                    try {
-                        write(socketChannel, message, gaSession.getCharset());
-                    } catch (IOException e) {
-                        if (logger.isLoggable(Level.WARNING)) {
-                            logger.log(Level.WARNING, format("write failed, will be destroy. sessionId=%d;", gaSession.getSessionId()), e);
-                        }
-                        gaSession.destroy();
-                    }
+                    write(socketChannel, message, gaSession);
                 }
 
                 // 后续的一些处理
@@ -281,15 +273,7 @@ public class DefaultCommandHandler implements CommandHandler {
                     // 其他命令需要重新绘制提示符
                     else {
 
-                        try {
-                            write(socketChannel, GaStringUtils.DEFAULT_PROMPT, gaSession.getCharset());
-                        } catch (IOException e) {
-                            if (logger.isLoggable(Level.WARNING)) {
-                                logger.log(Level.WARNING, format("write failed, will be destroy. sessionId=%d;", gaSession.getSessionId()), e);
-                            }
-                            gaSession.destroy();
-                        }
-
+                        write(socketChannel, GaStringUtils.DEFAULT_PROMPT, gaSession);
 
                     }
 
@@ -299,8 +283,16 @@ public class DefaultCommandHandler implements CommandHandler {
         });
     }
 
-    private void write(SocketChannel socketChannel, String message, Charset charset) throws IOException {
-        socketChannel.write(ByteBuffer.wrap((message).getBytes(charset)));
+    private void write(SocketChannel socketChannel, String message, GaSession gaSession) {
+        try {
+            socketChannel.write(ByteBuffer.wrap((message).getBytes(gaSession.getCharset())));
+        } catch (IOException e) {
+            if (logger.isLoggable(Level.WARNING)) {
+                logger.log(Level.WARNING, format("write failed, will be destroy. sessionId=%d;", gaSession.getSessionId()), e);
+            }
+            gaSession.destroy();
+        }
+
     }
 
     @Override
