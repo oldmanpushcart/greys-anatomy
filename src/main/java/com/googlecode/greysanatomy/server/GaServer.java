@@ -57,7 +57,7 @@ public class GaServer {
     private final ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
-            final Thread t = new Thread(r, "GaCommand-execute-daemon");
+            final Thread t = new Thread(r, "ga-command-execute-daemon");
             t.setDaemon(true);
             return t;
         }
@@ -68,7 +68,7 @@ public class GaServer {
         this.gaSessionManager = new DefaultGaSessionManager();
         this.commandHandler = new DefaultCommandHandler(this, instrumentation);
 
-        Runtime.getRuntime().addShutdownHook(new Thread("GaServer-ShutdownHook-Thread") {
+        Runtime.getRuntime().addShutdownHook(new Thread("ga-shutdown-hooker") {
 
             @Override
             public void run() {
@@ -139,7 +139,7 @@ public class GaServer {
 
         final ByteBuffer byteBuffer = ByteBuffer.allocate(BUFFER_SIZE);
 
-        final Thread gaServerSelectorDaemon = new Thread("GaServer-Selector-Daemon") {
+        final Thread gaServerSelectorDaemon = new Thread("ga-selector-daemon") {
             @Override
             public void run() {
 

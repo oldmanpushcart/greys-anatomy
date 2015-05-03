@@ -70,7 +70,7 @@ public class DefaultGaSessionManager implements GaSessionManager {
      * 激活会话过期管理守护线程
      */
     private void activeGaSessionExpireDaemon() {
-        final Thread gaSessionExpireDaemon = new Thread("GaSession-Expire-Daemon") {
+        final Thread gaSessionExpireDaemon = new Thread("ga-session-expire-daemon") {
 
             @Override
             public void run() {
