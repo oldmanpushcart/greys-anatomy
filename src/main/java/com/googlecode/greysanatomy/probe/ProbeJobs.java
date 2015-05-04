@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.lang.String.format;
+
 public final class ProbeJobs {
 
     private static final Logger logger = LogUtils.getLogger();
@@ -46,7 +48,7 @@ public final class ProbeJobs {
             final File dir = new File(REST_DIR);
             if (!dir.exists()) {
                 if (!dir.mkdirs()) {
-                    throw new IOException(String.format("create greys's temp dir:%s failed.", REST_DIR));
+                    throw new IOException(format("create greys's temp dir:%s failed.", REST_DIR));
                 }
             }
             jobFile = new File(REST_DIR + id + REST_FILE_EXT);
@@ -136,7 +138,7 @@ public final class ProbeJobs {
             } catch (Throwable t) {
 
                 if (logger.isLoggable(Level.WARNING)) {
-                    logger.log(Level.WARNING, String.format("destroy job listener failed, jobId=%s", id), t);
+                    logger.log(Level.WARNING, format("destroy job listener failed, jobId=%s", id), t);
                 }
 
             }
@@ -147,7 +149,7 @@ public final class ProbeJobs {
             } catch (IOException e) {
 
                 if (logger.isLoggable(Level.WARNING)) {
-                    logger.log(Level.WARNING, String.format("close jobFile failed. jobId=%s", id), e);
+                    logger.log(Level.WARNING, format("close jobFile failed. jobId=%s", id), e);
                 }
 
             }
