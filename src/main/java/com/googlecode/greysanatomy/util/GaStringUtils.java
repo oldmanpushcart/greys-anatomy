@@ -18,7 +18,7 @@ public class GaStringUtils {
 
     public static final String LINE = "---------------------------------------------------------------\n";
 
-    public static final String ABORT_MSG = "Press Ctrl+D to abort this job.";
+    public static final String ABORT_MSG = "Press Ctrl+D or Ctrl+X to abort current job.";
 
     /**
      * 进行URL-ENCODE
@@ -693,7 +693,7 @@ public class GaStringUtils {
     /**
      * 命令提示符
      */
-    public static final String DEFAULT_PROMPT = "ga?>";
+    public static final String DEFAULT_PROMPT = "\rga?>";
 
 
 }

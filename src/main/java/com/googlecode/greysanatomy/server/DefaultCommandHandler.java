@@ -64,6 +64,15 @@ public class DefaultCommandHandler implements CommandHandler {
         // 只有输入了有效字符才进行命令解析
         // 否则仅仅重绘提示符
         if (GaStringUtils.isBlank(line)) {
+
+            // 这里因为控制不好，造成了输出两次提示符的问题
+            // 第一次是因为这里，第二次则是下边（命令结束重绘提示符）
+            // 这里做了一次取巧，虽然依旧是重绘了两次提示符，但在提示符之间增加了\r
+            // 这样两次重绘都是在同一个位置，这样就没有人能发现，其实他们是被绘制了两次
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, "reDrawPrompt for blank line.");
+            }
+
             reDrawPrompt(socketChannel, gaSession.getCharset());
             return;
         }
@@ -84,6 +93,11 @@ public class DefaultCommandHandler implements CommandHandler {
 
             // 其他命令需要重新绘制提示符
             else {
+
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, "reDrawPrompt for command execute finished.");
+                }
+
                 reDrawPrompt(socketChannel, gaSession.getCharset());
             }
 
