@@ -65,7 +65,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
 //            final String cacheKey = className + "@" + loader;
             if (classBytesCache.containsKey(classBeingRedefined)) {
                 // 优先级1:
-                // 命中字节码缓存，有限从缓存加载
+                // 命中字节码缓存，优先从缓存加载
                 // 字节码缓存最重要的意义在于能让数个job同时渲染到一个Class上
                 cp.appendClassPath(new ByteArrayClassPath(className, classBytesCache.get(classBeingRedefined)));
             }
