@@ -4,6 +4,7 @@ import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.Transf
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.command.annotation.IndexArg;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
+import com.googlecode.greysanatomy.command.view.TableView;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.server.GaSession;
@@ -12,7 +13,10 @@ import com.googlecode.greysanatomy.util.GaStringUtils;
 import java.lang.instrument.Instrumentation;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -69,10 +73,10 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 @Cmd(named = "monitor", sort = 2, desc = "Buried point method for monitoring the operation.")
 public class MonitorCommand extends Command {
 
-    @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", description = "pattern matching of method name")
+    @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
     private String methodPattern;
 
     @NamedArg(named = "c", hasValue = true, description = "the cycle of output")
@@ -210,7 +214,18 @@ public class MonitorCommand extends Command {
                                     return;
                                 }
                                 final String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-                                final StringBuilder monitorSB = new StringBuilder();
+
+                                final TableView tableView = new TableView(8)
+                                        .addRow(
+                                                "timestamp",
+                                                "class",
+                                                "behavior",
+                                                "total",
+                                                "success",
+                                                "fail",
+                                                "rt",
+                                                "fail-rate"
+                                        );
 
                                 for (Map.Entry<Key, AtomicReference<Data>> entry : monitorData.entrySet()) {
                                     final AtomicReference<Data> value = entry.getValue();
@@ -223,25 +238,28 @@ public class MonitorCommand extends Command {
                                         }
                                     }
 
-//                                    final Data data = value.get();
-//                                    value.set(new Data());
-
                                     if (null != data) {
-                                        monitorSB.append(timestamp).append("\t");
-                                        monitorSB.append(entry.getKey().className).append("\t");
-                                        monitorSB.append(entry.getKey().behaviorName).append("\t");
-                                        monitorSB.append(data.total).append("\t");
-                                        monitorSB.append(data.success).append("\t");
-                                        monitorSB.append(data.failed).append("\t");
 
                                         final DecimalFormat df = new DecimalFormat("0.00");
-                                        monitorSB.append(df.format(div(data.cost, data.total))).append("\t");
-                                        monitorSB.append(df.format(100.0d * div(data.failed, data.total))).append("%");
-                                        monitorSB.append("\n");
+
+                                        tableView.addRow(
+                                                timestamp,
+                                                entry.getKey().className,
+                                                entry.getKey().behaviorName,
+                                                data.total,
+                                                data.success,
+                                                data.failed,
+                                                df.format(div(data.cost, data.total)),
+                                                df.format(100.0d * div(data.failed, data.total))
+                                        );
+
                                     }
                                 }
 
-                                sender.send(false, tableFormat(monitorSB.toString()));
+                                tableView.setPadding(1);
+                                tableView.setDrawBorder(true);
+
+                                sender.send(false, tableView.draw()+"\n");
                             }
 
                         }, 0, cycle * 1000);
@@ -278,76 +296,5 @@ public class MonitorCommand extends Command {
         };
     }
 
-    private String tableFormat(String output) {
-
-        final StringBuilder outputSB = new StringBuilder();
-        final List<String> outputs = new ArrayList<String>();
-        final List<StringBuilder> lines = new ArrayList<StringBuilder>();
-        final StringBuilder titleSB = new StringBuilder();
-        final List<String[]> datas = new ArrayList<String[]>();
-        final int[] colMaxWidths = new int[]{9, 5, 8, 5, 7, 4, 2, 9};
-        datas.add(new String[]{"timestamp", "class", "behavior", "total", "success", "fail", "rt", "fail-rate"});
-        lines.add(new StringBuilder());
-
-        final Scanner scan = new Scanner(output);
-        while (scan.hasNextLine()) {
-            final String[] strs = scan.nextLine().split("\\s+");
-            final String[] cols = new String[]{
-                    strs[0] + " " + strs[1],    // timestamp
-                    strs[2],                // classname
-                    strs[3],                // behavior
-                    strs[4],                // total
-                    strs[5],                // success
-                    strs[6],                // failed
-                    strs[7],                // rt
-                    strs[8],                // fail-rate
-            };
-            for (int c = 0; c < 8; c++) {
-                colMaxWidths[c] = Math.max(colMaxWidths[c], cols[c].length());
-            }
-
-            datas.add(cols);
-            lines.add(new StringBuilder());
-
-        }//while
-
-        for (int c = 0; c < 8; c++) {
-            titleSB.append("+");
-            GaStringUtils.rightFill(titleSB, colMaxWidths[c] + 2, "-");
-        }
-        titleSB.append("+").append("\n");
-
-        // 遍历行
-        for (int i = 0; i < lines.size(); i++) {
-
-            final StringBuilder lineSB = lines.get(i);
-            final String[] cols = datas.get(i);
-
-            // 遍历列
-            for (int c = 0; c < 8; c++) {
-                lineSB.append("|");
-                int diff = colMaxWidths[c] - cols[c].length() + 1;
-                GaStringUtils.rightFill(lineSB, diff, " ");
-                lineSB.append(cols[c]).append(" ");
-            }
-
-            lineSB.append("|");
-            outputs.add(lineSB.toString());
-        }//for
-
-        outputSB.append(titleSB.toString());
-        boolean isTitle = true;
-        for (String o : outputs) {
-            outputSB.append(o).append("\n");
-            if (isTitle) {
-                outputSB.append(titleSB.toString());
-                isTitle = false;
-            }
-        }
-        outputSB.append(titleSB.toString());
-
-        return outputSB.toString();
-
-    }
 
 }

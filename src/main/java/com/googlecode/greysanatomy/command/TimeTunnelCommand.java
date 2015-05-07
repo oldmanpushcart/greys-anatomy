@@ -57,10 +57,10 @@ public class TimeTunnelCommand extends Command {
     @NamedArg(named = "t", description = "TimeTunnel the method called.")
     private boolean isTimeTunnel = false;
 
-    @IndexArg(index = 0, isRequired = false, name = "class-pattern", description = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, isRequired = false, name = "class-pattern", summary = "pattern matching of classpath.classname")
     private String classPattern;
 
-    @IndexArg(index = 1, isRequired = false, name = "method-pattern", description = "pattern matching of method name")
+    @IndexArg(index = 1, isRequired = false, name = "method-pattern", summary = "pattern matching of method name")
     private String methodPattern;
 
     // list the TimeTunnel
@@ -112,7 +112,7 @@ public class TimeTunnelCommand extends Command {
 
 
 //    // play the index TimeTunnel
-//    @RiscNamedArg(named = "p", description = "play the TimeTunnel of method called.")
+//    @RiscNamedArg(named = "p", summary = "play the TimeTunnel of method called.")
 //    private boolean isPlay = false;
 
     // delete the index TimeTunnel

@@ -168,7 +168,11 @@ public class DefaultCommandHandler implements CommandHandler {
                 final Writer writer = ProbeJobs.getJobWriter(jobId);
                 if (null != writer) {
                     try {
-                        writer.write(message);
+
+                        if( null != message ) {
+                            writer.write(message);
+                        }
+
 
                         // 这里为了美观，在每个命令输出最后一行的时候换行
                         if (isF) {

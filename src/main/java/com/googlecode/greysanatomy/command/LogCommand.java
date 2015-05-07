@@ -36,7 +36,7 @@ public class LogCommand extends Command {
         logLevelMapping.put("ERROR", LogLevel.ERROR);
     }
 
-    @IndexArg(index = 0, name = "log-level", description = "the log level, debug/info/warn/error.", isRequired = false)
+    @IndexArg(index = 0, name = "log-level", summary = "the log level, debug/info/warn/error.", isRequired = false)
     private String level;
 
     private boolean isShowLevel() {

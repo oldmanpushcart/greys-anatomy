@@ -27,25 +27,18 @@ public @interface IndexArg {
     String name();
 
     /**
-     * 参数注释
+     * 参数摘要
      *
-     * @return 参数注释
+     * @return 参数摘要
      */
-    String description() default "";
+    String summary() default "";
 
     /**
      * 更详细的参数注释
      *
      * @return 更详细的参数注释
      */
-    String description2() default "";
-
-//    /**
-//     * 参数校验
-//     *
-//     * @return 参数校验
-//     */
-//    public ArgVerifier[] verify() default {};
+    String description() default "";
 
     /**
      * 是否必填

@@ -3,13 +3,18 @@ package com.googlecode.greysanatomy.command;
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.command.annotation.IndexArg;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
+import com.googlecode.greysanatomy.command.view.TableView;
+import com.googlecode.greysanatomy.command.view.TableView.ColumnDefine;
 import com.googlecode.greysanatomy.server.GaSession;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static com.googlecode.greysanatomy.command.view.TableView.Align.LEFT;
+import static com.googlecode.greysanatomy.command.view.TableView.Align.RIGHT;
 import static com.googlecode.greysanatomy.util.GaStringUtils.isBlank;
 import static com.googlecode.greysanatomy.util.GaStringUtils.split;
+import static java.lang.String.format;
 
 /**
  * °ïÖúÃ÷Áî<br/>
@@ -26,7 +31,7 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.split;
         })
 public class HelpCommand extends Command {
 
-    @IndexArg(index = 0, isRequired = false, name = "command-name", description = "the name of command")
+    @IndexArg(index = 0, isRequired = false, name = "command-name", summary = "the name of command")
     private String cmd;
 
     @Override
@@ -35,7 +40,6 @@ public class HelpCommand extends Command {
 
             @Override
             public void action(final GaSession gaSession, final Info info, final Sender sender) throws Throwable {
-//                sender.send(true, GaStringUtils.getLogo());
 
                 if (isBlank(cmd)
                         || !Commands.getInstance().listCommands().containsKey(cmd)) {
@@ -53,11 +57,8 @@ public class HelpCommand extends Command {
     }
 
     private String commandHelp(Class<?> clazz) {
-//        final Class<?> clazz= MonitorCommand.class;
         final Cmd cmd = clazz.getAnnotation(Cmd.class);
-        final StringBuilder sb = new StringBuilder("\nUseage of ")
-                .append(cmd.named())
-                .append(" :\n\n");
+        final StringBuilder sb = new StringBuilder("\nUseage:\n\n");
 
         sb.append("\t");
 
@@ -142,13 +143,13 @@ public class HelpCommand extends Command {
                         sb.append(" ");
                     }
                     sb.append(indexArg.name()).append(" : ");
-                    sb.append(indexArg.description());
+                    sb.append(indexArg.summary());
                     sb.append("\n");
 
                     int len = diff + 2 + indexArg.name().length() + 3;
-                    if (!isBlank(indexArg.description2())) {
+                    if (!isBlank(indexArg.description())) {
 
-                        for (String split : split(indexArg.description2(), "\n")) {
+                        for (String split : split(indexArg.description(), "\n")) {
                             for (int j = 0; j < len; j++) {
                                 sb.append(" ");
                             }
@@ -181,21 +182,14 @@ public class HelpCommand extends Command {
      */
     private String mainHelp() {
 
+        final TableView tableView = new TableView(new ColumnDefine[]{
+                new ColumnDefine(4, false, RIGHT),
+                new ColumnDefine(RIGHT),
+                new ColumnDefine(1, false, RIGHT),
+                new ColumnDefine(LEFT)
+        });
+
         final Map<String, Class<?>> commandMap = Commands.getInstance().listCommands();
-        int maxCommandColLen = 9;
-        final StringBuilder sb = new StringBuilder();
-
-        sb.append("\nUsage for Greys : \n\n");
-
-        for (Class<?> clazz : commandMap.values()) {
-            if (clazz.isAnnotationPresent(Cmd.class)) {
-                final Cmd cmd = clazz.getAnnotation(Cmd.class);
-                final String name = cmd.named();
-                maxCommandColLen = Math.max(maxCommandColLen, name.length());
-            }
-        }
-
-
         final List<Class<?>> classes = new ArrayList<Class<?>>(commandMap.values());
         Collections.sort(classes, new Comparator<Class<?>>() {
 
@@ -210,19 +204,20 @@ public class HelpCommand extends Command {
             if (clazz.isAnnotationPresent(Cmd.class)) {
 
                 final Cmd cmd = clazz.getAnnotation(Cmd.class);
-                final String name = cmd.named();
-                final String desc = cmd.desc();
-                final int diff = maxCommandColLen - name.length();
-                for (int i = 0; i < diff; i++) {
-                    sb.append(" ");
-                }
-                sb.append(name).append(" : ").append(desc).append("\n");
+                tableView.addRow(
+                        "    ",
+                        cmd.named(),
+                        " : ",
+                        cmd.desc());
 
             }
 
         }
 
-        return sb.toString();
+        tableView.setDrawBorder(false);
+        tableView.setPadding(0);
+
+        return format("\nGreys usage:\n\n%s", tableView.draw());
 
     }
 

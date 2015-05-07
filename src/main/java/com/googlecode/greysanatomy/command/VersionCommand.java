@@ -2,7 +2,8 @@ package com.googlecode.greysanatomy.command;
 
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.server.GaSession;
-import com.googlecode.greysanatomy.util.GaStringUtils;
+
+import static com.googlecode.greysanatomy.util.GaStringUtils.getLogo;
 
 /**
  * Êä³ö°æ±¾
@@ -21,7 +22,7 @@ public class VersionCommand extends Command {
 
             @Override
             public void action(final GaSession gaSession, final Info info, final Sender sender) throws Throwable {
-                sender.send(true, GaStringUtils.getLogo());
+                sender.send(true, getLogo());
             }
 
         };

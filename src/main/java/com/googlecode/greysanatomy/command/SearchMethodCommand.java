@@ -28,10 +28,10 @@ import static java.lang.String.format;
         })
 public class SearchMethodCommand extends Command {
 
-    @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", isRequired = false, description = "pattern matching of method name")
+    @IndexArg(index = 1, name = "method-pattern", isRequired = false, summary = "pattern matching of method name")
     private String methodPattern;
 
     @NamedArg(named = "d", description = "show the detail of method")

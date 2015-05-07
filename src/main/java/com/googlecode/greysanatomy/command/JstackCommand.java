@@ -28,10 +28,10 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
         })
 public class JstackCommand extends Command {
 
-    @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", description = "pattern matching of method name")
+    @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
     private String methodPattern;
 
     @NamedArg(named = "S", description = "including sub class")

@@ -31,15 +31,15 @@ public class WatchCommand extends Command {
 
     private final Logger logger = LogUtils.getLogger();
 
-    @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", description = "pattern matching of method name")
+    @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
     private String methodPattern;
 
     @IndexArg(index = 2, name = "express",
-            description = "ognl expression, write by ognl.",
-            description2 = ""
+            summary = "ognl expression, write by ognl.",
+            description = ""
                     + " \n"
                     + "For example\n"
                     + "    : params[0]\n"

@@ -28,16 +28,16 @@ import static com.googlecode.greysanatomy.util.PatternMatchingUtils.matching;
         })
 public class ProfilerCommand extends Command {
 
-    @IndexArg(index = 0, name = "rendering-class-pattern", description = "pattern matching of rendering classpath.classname")
+    @IndexArg(index = 0, name = "rendering-class-pattern", summary = "pattern matching of rendering classpath.classname")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "rendering-method-pattern", description = "pattern matching of rendering method name")
+    @IndexArg(index = 1, name = "rendering-method-pattern", summary = "pattern matching of rendering method name")
     private String methodPattern;
 
-    @IndexArg(index = 2, name = "class-pattern", description = "pattern matching of classpath.classname")
+    @IndexArg(index = 2, name = "class-pattern", summary = "pattern matching of classpath.classname")
     private String probeClassWildcard;
 
-    @IndexArg(index = 3, name = "method-pattern", description = "pattern matching of method name")
+    @IndexArg(index = 3, name = "method-pattern", summary = "pattern matching of method name")
     private String probeMethodWildcard;
 
     @NamedArg(named = "c", hasValue = true, description = "the cost limit for output")

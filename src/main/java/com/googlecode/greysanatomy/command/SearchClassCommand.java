@@ -27,7 +27,7 @@ import static java.lang.String.format;
         })
 public class SearchClassCommand extends Command {
 
-    @IndexArg(index = 0, name = "class-pattern", description = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
     private String classPattern;
 
     @NamedArg(named = "S", description = "including sub class")
