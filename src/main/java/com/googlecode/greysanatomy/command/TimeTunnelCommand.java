@@ -4,6 +4,8 @@ import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer;
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.command.annotation.IndexArg;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
+import com.googlecode.greysanatomy.command.view.TableView;
+import com.googlecode.greysanatomy.command.view.TableView.ColumnDefine;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
 import com.googlecode.greysanatomy.server.GaSession;
@@ -23,8 +25,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.transform;
+import static com.googlecode.greysanatomy.command.view.TableView.Align.LEFT;
+import static com.googlecode.greysanatomy.command.view.TableView.Align.RIGHT;
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 import static com.googlecode.greysanatomy.util.GaStringUtils.*;
+import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
 import static java.util.logging.Level.WARNING;
 
@@ -204,12 +209,11 @@ public class TimeTunnelCommand extends Command {
      */
     private static final int[] TABLE_COL_WIDTH = new int[]{
 
-            8, // index
+            8,  // index
             20, // timestamp
-            8, // isRet
-            8, // isExp
+            8,  // isRet
+            8,  // isExp
             15, // object address
-//            20, // class loader
             30, // class
             30, // method
 
@@ -225,7 +229,6 @@ public class TimeTunnelCommand extends Command {
             "IS-RET",
             "IS-EXP",
             "OBJECT",
-//            "CLASS-LOADER",
             "CLASS",
             "METHOD"
 
@@ -287,7 +290,7 @@ public class TimeTunnelCommand extends Command {
                 sdf.format(timeTunnel.getGmtCreate()),
                 timeTunnel.getAdvice().isReturn(),
                 timeTunnel.getAdvice().isThrowException(),
-                timeTunnel.getAdvice().getTarget().getTargetThis() == null ? "NULL" : "0x" + Integer.toHexString(timeTunnel.getAdvice().getTarget().getTargetThis().hashCode()),
+                timeTunnel.getAdvice().getTarget().getTargetThis() == null ? "NULL" : "0x" + toHexString(timeTunnel.getAdvice().getTarget().getTargetThis().hashCode()),
 //                substring(TimeTunnel.getTargetClassLoader().getClass().getSimpleName(), 0, TABLE_COL_WIDTH[4]),
                 summary(substring(substringAfterLast(timeTunnel.getAdvice().getTarget().getTargetClassName(), "."), 0, TABLE_COL_WIDTH[5]), TABLE_COL_WIDTH[5]),
                 summary(substring(timeTunnel.getAdvice().getTarget().getTargetBehaviorName(), 0, TABLE_COL_WIDTH[6]), TABLE_COL_WIDTH[6])
@@ -361,14 +364,9 @@ public class TimeTunnelCommand extends Command {
 
         final StringBuilder lineSB = new StringBuilder();
         if (timeTunnelMap.isEmpty()) {
-            lineSB.append("TimeTunnels was empty.\n");
+            lineSB.append("TimeTunnels was empty.");
         } else {
-            printTableHead(lineSB);
-            for (Map.Entry<Integer, TimeTunnel> entry : timeTunnelMap.entrySet()) {
-                printTimeTunnel(lineSB, entry.getKey(), entry.getValue());
-            }
-            printLineSplit(lineSB);
-
+            lineSB.append(drawTimeTunnelTable(timeTunnelMap));
         }
 
         sender.send(true, lineSB.toString());
@@ -400,30 +398,32 @@ public class TimeTunnelCommand extends Command {
 
         // 执行watchExpress
         if (isNotBlank(watchExpress)) {
+
+            final TableView view = new TableView(new ColumnDefine[]{
+                    new ColumnDefine(RIGHT),
+                    new ColumnDefine(LEFT)
+            })
+                    .setDrawBorder(true)
+                    .setPadding(1)
+                    .addRow("INDEX", "SEARCH-RESULT");
+
             for (Map.Entry<Integer, TimeTunnel> entry : matchedTimeTunnelMap.entrySet()) {
 
                 final TimeTunnel timeTunnel = entry.getValue();
                 final Advice p = timeTunnel.getAdvice();
                 final Object value = GaOgnlUtils.getValue(watchExpress, p);
 
-                // 打印INDEX标题
-                /*
-                  +--------------------+
-                  |INDEX:1005          |
-                  +--------------------+
-                 */
-                lineSB.append("\n+----------------+\n");
-                lineSB.append(format("|INDEX:%-10s|\n", entry.getKey()));
-                lineSB.append("+----------------+\n");
-
                 if (null != expend
                         && expend > 0) {
-                    lineSB.append("" + GaObjectUtils.toString(value, 0, expend));
+                    view.addRow(entry.getKey(), GaObjectUtils.toString(value, 0, expend));
                 } else {
-                    lineSB.append("" + value);
+                    view.addRow(entry.getKey(), value);
                 }
 
             }
+
+            lineSB.append(view.draw());
+
         }
 
         // 单纯的列表格
@@ -431,20 +431,68 @@ public class TimeTunnelCommand extends Command {
             if (matchedTimeTunnelMap.isEmpty()) {
                 lineSB.append("not match record found.\n");
             } else {
-                printTableHead(lineSB);
-                for (Map.Entry<Integer, TimeTunnel> entry : matchedTimeTunnelMap.entrySet()) {
-                    printTimeTunnel(lineSB, entry.getKey(), entry.getValue());
-                }
-                printLineSplit(lineSB);
-
+                lineSB.append(drawTimeTunnelTable(matchedTimeTunnelMap));
             }
         }
 
-        lineSB.append(matchedTimeTunnelMap.size() + " record matched.");
+        lineSB.append("\n" + matchedTimeTunnelMap.size() + " record matched.");
 
         sender.send(true, lineSB.toString());
 
     }
+
+
+    private TableView createTableView() {
+        return new TableView(new ColumnDefine[]{
+                new ColumnDefine(TABLE_COL_WIDTH[0], false, RIGHT),
+                new ColumnDefine(TABLE_COL_WIDTH[1], false, RIGHT),
+                new ColumnDefine(TABLE_COL_WIDTH[2], false, RIGHT),
+                new ColumnDefine(TABLE_COL_WIDTH[3], false, RIGHT),
+                new ColumnDefine(TABLE_COL_WIDTH[4], false, RIGHT),
+                new ColumnDefine(TABLE_COL_WIDTH[5], false, RIGHT),
+                new ColumnDefine(TABLE_COL_WIDTH[6], false, RIGHT),
+        })
+                .setDrawBorder(true)
+                .setPadding(1)
+                .addRow(
+                        TABLE_COL_TITLE[0],
+                        TABLE_COL_TITLE[1],
+                        TABLE_COL_TITLE[2],
+                        TABLE_COL_TITLE[3],
+                        TABLE_COL_TITLE[4],
+                        TABLE_COL_TITLE[5],
+                        TABLE_COL_TITLE[6]
+                );
+    }
+
+    /*
+     * 绘制TimeTunnel表格
+     */
+    private String drawTimeTunnelTable(final Map<Integer, TimeTunnel> timeTunnelMap) {
+
+        final TableView view = createTableView();
+
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        for (Map.Entry<Integer, TimeTunnel> entry : timeTunnelMap.entrySet()) {
+            final int index = entry.getKey();
+            final TimeTunnel timeTunnel = entry.getValue();
+            view.addRow(
+                    index,
+                    sdf.format(timeTunnel.getGmtCreate()),
+                    timeTunnel.getAdvice().isReturn(),
+                    timeTunnel.getAdvice().isThrowException(),
+                    timeTunnel.getAdvice().getTarget().getTargetThis() == null
+                            ? "NULL"
+                            : "0x" + toHexString(timeTunnel.getAdvice().getTarget().getTargetThis().hashCode()),
+                    substringAfterLast("." + timeTunnel.getAdvice().getTarget().getTargetClassName(), "."),
+                    timeTunnel.getAdvice().getTarget().getTargetBehaviorName()
+            );
+        }
+
+        return view.draw();
+
+    }
+
 
     /**
      * 清除所有的记录
@@ -540,30 +588,25 @@ public class TimeTunnelCommand extends Command {
 
         final String className = timeTunnel.getAdvice().getTarget().getTargetClassName();
         final String methodName = timeTunnel.getAdvice().getTarget().getTargetBehaviorName();
-        final String objectAddress = timeTunnel.getAdvice().getTarget().getTargetThis() == null ? "NULL" : "0x" + Integer.toHexString(timeTunnel.getAdvice().getTarget().getTargetThis().hashCode());
+        final String objectAddress = timeTunnel.getAdvice().getTarget().getTargetThis() == null
+                ? "NULL"
+                : "0x" + toHexString(timeTunnel.getAdvice().getTarget().getTargetThis().hashCode());
         final int maxColLen = Math.max(Math.max(className.length(), methodName.length()), 50);
-
-        final StringBuilder detailSB = new StringBuilder();
-        final String headFormat = "|%20s|%-" + maxColLen + "s|";
-        final String lineSplit = new StringBuilder()
-                .append("+").append(repeat("-", 20))
-                .append("+").append(repeat("-", maxColLen))
-                .append("+\n")
-                .toString();
-
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        // fill the head
-        detailSB.append(lineSplit)
-                .append(format(headFormat, "INDEX: ", index)).append("\n")
-                .append(format(headFormat, "GMT-CREATE: ", sdf.format(timeTunnel.getGmtCreate()))).append("\n")
-                .append(format(headFormat, "IS-RETURN: ", timeTunnel.getAdvice().isReturn())).append("\n")
-                .append(format(headFormat, "IS-EXCEPTION: ", timeTunnel.getAdvice().isThrowException())).append("\n")
-                .append(format(headFormat, "OBJECT: ", objectAddress)).append("\n")
-                .append(format(headFormat, "CLASS: ", className)).append("\n")
-                .append(format(headFormat, "METHOD: ", methodName)).append("\n")
-                .append(lineSplit)
-                .append("\n");
+        final TableView view = new TableView(new ColumnDefine[]{
+                new ColumnDefine(RIGHT),
+                new ColumnDefine(LEFT)
+        })
+                .setDrawBorder(true)
+                .setPadding(1)
+                .addRow("INDEX", index)
+                .addRow("GMT-CREATE", sdf.format(timeTunnel.getGmtCreate()))
+                .addRow("IS-RETURN", timeTunnel.getAdvice().isReturn())
+                .addRow("IS-EXCEPTION", timeTunnel.getAdvice().isThrowException())
+                .addRow("OBJECT", objectAddress)
+                .addRow("CLASS", className)
+                .addRow("METHOD", methodName);
 
 
         // fill the parameters
@@ -574,11 +617,9 @@ public class TimeTunnelCommand extends Command {
 
                 if (null != expend
                         && expend > 0) {
-                    detailSB.append("PARAMETERS[" + paramIndex++ + "]:\n")
-                            .append(GaObjectUtils.toString(param, 0, expend))
-                            .append("\n\n");
+                    view.addRow("PARAMETERS[" + paramIndex++ + "]", GaObjectUtils.toString(param, 0, expend));
                 } else {
-                    detailSB.append("PARAMETERS[" + paramIndex++ + "]:\n").append(param).append("\n\n");
+                    view.addRow("PARAMETERS[" + paramIndex++ + "]", param);
                 }
 
             }
@@ -591,11 +632,9 @@ public class TimeTunnelCommand extends Command {
 
             if (null != expend
                     && expend > 0) {
-                detailSB.append("RETURN-OBJ:\n")
-                        .append(GaObjectUtils.toString(timeTunnel.getAdvice().getReturnObj(), 0, expend))
-                        .append("\n\n");
+                view.addRow("RETURN-OBJ", GaObjectUtils.toString(timeTunnel.getAdvice().getReturnObj(), 0, expend));
             } else {
-                detailSB.append("RETURN-OBJ:\n").append(timeTunnel.getAdvice().getReturnObj()).append("\n\n");
+                view.addRow("RETURN-OBJ", timeTunnel.getAdvice().getReturnObj());
             }
 
         }
@@ -607,19 +646,22 @@ public class TimeTunnelCommand extends Command {
 
             if (null != expend
                     && expend > 0) {
-                detailSB.append("THROW-EXCEPTION:\n")
-                        .append(GaObjectUtils.toString(throwable, 0, expend))
-                        .append("\n\n");
+                view.addRow("THROW-EXCEPTION", GaObjectUtils.toString(throwable, 0, expend));
             } else {
                 final StringWriter stringWriter = new StringWriter();
                 final PrintWriter printWriter = new PrintWriter(stringWriter);
-                throwable.printStackTrace(printWriter);
-                detailSB.append("THROW-EXCEPTION:\n").append(stringWriter.toString()).append("\n\n");
+                try {
+                    throwable.printStackTrace(printWriter);
+                    view.addRow("THROW-EXCEPTION", stringWriter.toString());
+                } finally {
+                    printWriter.close();
+                }
+
             }
 
         }
 
-        sender.send(true, detailSB.toString());
+        sender.send(true, view.draw());
 
     }
 

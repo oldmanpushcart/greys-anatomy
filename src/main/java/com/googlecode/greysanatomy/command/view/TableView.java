@@ -93,7 +93,7 @@ public class TableView implements View {
                                         getData(rowIndex, columnDefineArray[colIndex])));
                     }
 
-                    final String borderChar = drawBorder ? "|" : EMPTY;
+                    final String borderChar = isDrawBorder() ? "|" : EMPTY;
                     final int width = widthCacheArray[colIndex];
                     final boolean isLastColOfRow = colIndex == widthCacheArray.length - 1;
                     final Scanner scanner = scannerArray[colIndex];

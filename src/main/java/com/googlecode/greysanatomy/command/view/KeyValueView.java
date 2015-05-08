@@ -28,7 +28,6 @@ public class KeyValueView implements View {
         return this;
     }
 
-
     @Override
     public String draw() {
         return tableView.draw();

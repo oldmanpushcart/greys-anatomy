@@ -111,7 +111,6 @@ public class WatchCommand extends Command {
                                 } else {
                                     sender.send(false, "" + value + "\n");
                                 }
-//                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 if (logger.isLoggable(Level.WARNING)) {
                                     logger.log(Level.WARNING, "watch failed.", e);
@@ -132,7 +131,6 @@ public class WatchCommand extends Command {
                                 } else {
                                     sender.send(false, "" + value + "\n");
                                 }
-//                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 if (logger.isLoggable(Level.WARNING)) {
                                     logger.log(Level.WARNING, "watch failed.", e);
@@ -153,7 +151,6 @@ public class WatchCommand extends Command {
                                 } else {
                                     sender.send(false, "" + value + "\n");
                                 }
-//                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 if (logger.isLoggable(Level.WARNING)) {
                                     logger.log(Level.WARNING, "watch failed.", e);
@@ -174,7 +171,6 @@ public class WatchCommand extends Command {
                                 } else {
                                     sender.send(false, "" + value + "\n");
                                 }
-//                                sender.send(false, "" + value + "\n");
                             } catch (Exception e) {
                                 if (logger.isLoggable(Level.WARNING)) {
                                     logger.log(Level.WARNING, "watch failed.", e);
