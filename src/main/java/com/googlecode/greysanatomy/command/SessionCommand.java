@@ -2,6 +2,7 @@ package com.googlecode.greysanatomy.command;
 
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
+import com.googlecode.greysanatomy.command.view.KeyValueView;
 import com.googlecode.greysanatomy.server.GaSession;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 
@@ -66,13 +67,14 @@ public class SessionCommand extends Command {
      */
     private String sessionToString(GaSession gaSession) {
 
-        return format("javaPid=%s;sessionId=%s;duration=%s;charset=%s;from=%s;to=%s;",
-                gaSession.getJavaPid(),
-                gaSession.getSessionId(),
-                gaSession.getSessionDuration(),
-                gaSession.getCharset().displayName(),
-                gaSession.getSocketChannel().socket().getRemoteSocketAddress(),
-                gaSession.getSocketChannel().socket().getLocalSocketAddress());
+        return new KeyValueView()
+                .add("javaPid", gaSession.getJavaPid())
+                .add("sessionId", gaSession.getSessionId())
+                .add("duration", gaSession.getSessionDuration())
+                .add("charset", gaSession.getCharset())
+                .add("from", gaSession.getSocketChannel().socket().getRemoteSocketAddress())
+                .add("to", gaSession.getSocketChannel().socket().getLocalSocketAddress())
+                .draw();
 
     }
 

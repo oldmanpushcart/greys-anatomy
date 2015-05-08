@@ -1,6 +1,7 @@
 package com.googlecode.greysanatomy.util;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Modifier;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -695,5 +696,75 @@ public class GaStringUtils {
      */
     public static final String DEFAULT_PROMPT = "\rga?>";
 
+
+    /**
+     * 翻译类名称
+     *
+     * @param clazz Java类
+     * @return 翻译值
+     */
+    public static String tranClassName(Class<?> clazz) {
+        if (clazz.isArray()) {
+            StringBuilder sb = new StringBuilder(clazz.getName());
+            sb.delete(0, 2);
+            if (sb.length() > 0 && sb.charAt(sb.length() - 1) == ';') {
+                sb.deleteCharAt(sb.length() - 1);
+            }
+            sb.append("[]");
+            return sb.toString();
+        } else {
+            return clazz.getName();
+        }
+    }
+
+    /**
+     * 翻译Modifier值
+     *
+     * @param mod modifier
+     * @return 翻译值
+     */
+    public static String tranModifier(int mod) {
+        StringBuilder sb = new StringBuilder();
+        if (Modifier.isAbstract(mod)) {
+            sb.append("abstract,");
+        }
+        if (Modifier.isFinal(mod)) {
+            sb.append("final,");
+        }
+        if (Modifier.isInterface(mod)) {
+            sb.append("interface,");
+        }
+        if (Modifier.isNative(mod)) {
+            sb.append("native,");
+        }
+        if (Modifier.isPrivate(mod)) {
+            sb.append("private,");
+        }
+        if (Modifier.isProtected(mod)) {
+            sb.append("protected,");
+        }
+        if (Modifier.isPublic(mod)) {
+            sb.append("public,");
+        }
+        if (Modifier.isStatic(mod)) {
+            sb.append("static,");
+        }
+        if (Modifier.isStrict(mod)) {
+            sb.append("strict,");
+        }
+        if (Modifier.isSynchronized(mod)) {
+            sb.append("synchronized,");
+        }
+        if (Modifier.isTransient(mod)) {
+            sb.append("transient,");
+        }
+        if (Modifier.isVolatile(mod)) {
+            sb.append("volatile,");
+        }
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        return sb.toString();
+    }
 
 }

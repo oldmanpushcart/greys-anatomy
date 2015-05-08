@@ -74,7 +74,8 @@ public class JstackCommand extends Command {
 
                 final StringBuilder message = new StringBuilder();
                 message.append(GaStringUtils.LINE);
-                message.append(String.format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
+
+                message.append(String.format("result: matching-class=%s,matching-method=%s.\n",
                         result.getModifiedClasses().size(),
                         result.getModifiedBehaviors().size()));
                 message.append(GaStringUtils.ABORT_MSG).append("\n");

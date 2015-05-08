@@ -226,24 +226,24 @@ public class GaReflectUtils {
             field.setAccessible(isAccessible);
         }
     }
-
-    /**
-     * 获取对象某个成员的值
-     *
-     * @param target
-     * @param fieldName
-     * @return
-     * @throws IllegalArgumentException
-     * @throws IllegalAccessException
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T getFieldValueByFieldName(Object target, String fieldName) throws IllegalArgumentException, IllegalAccessException {
-        if (null == fieldName
-                || fieldName.length() == 0) {
-            return (T) target;
-        }
-        return (T) getFieldValueByField(target, getField(target.getClass(), fieldName));
-    }
+//
+//    /**
+//     * 获取对象某个成员的值
+//     *
+//     * @param target
+//     * @param fieldName
+//     * @return
+//     * @throws IllegalArgumentException
+//     * @throws IllegalAccessException
+//     */
+//    @SuppressWarnings("unchecked")
+//    public static <T> T getFieldValueByFieldName(Object target, String fieldName) throws IllegalArgumentException, IllegalAccessException {
+//        if (null == fieldName
+//                || fieldName.length() == 0) {
+//            return (T) target;
+//        }
+//        return (T) getFieldValueByField(target, getField(target.getClass(), fieldName));
+//    }
 
     /**
      * 设置对象某个成员的值
@@ -305,26 +305,5 @@ public class GaReflectUtils {
     public static String toClassPath(String filePath) {
         return filePath.replaceAll("/", ".");
     }
-
-//    /**
-//     * 输出调用堆栈
-//     *
-//     * @return
-//     */
-//    public static String jstack() {
-//
-//        int i = 0;
-//        final StringBuilder jstackSB = new StringBuilder();
-//        for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
-//            GaStringUtils.rightFill(jstackSB, i * 2, " ");
-//            if (0 != i++) {
-//                jstackSB.append("`-- ");
-//            }
-//            jstackSB.append(ste.toString()).append("\n");
-//        }
-//
-//        return jstackSB.toString();
-//
-//    }
 
 }

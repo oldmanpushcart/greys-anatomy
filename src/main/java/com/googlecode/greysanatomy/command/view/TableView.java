@@ -1,7 +1,9 @@
 package com.googlecode.greysanatomy.command.view;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import static com.googlecode.greysanatomy.util.GaStringUtils.*;
 import static java.lang.Math.abs;
@@ -30,7 +32,7 @@ public class TableView implements View {
 
     public TableView(int columnNum) {
         this.columnDefineArray = new ColumnDefine[columnNum];
-        for (int index = 0; index < columnDefineArray.length; index++) {
+        for (int index = 0; index < this.columnDefineArray.length; index++) {
             columnDefineArray[index] = new ColumnDefine();
         }
     }
@@ -40,8 +42,8 @@ public class TableView implements View {
         final StringBuilder tableSB = new StringBuilder();
 
         // init width cache
-        final int[] widthCacheArray = new int[columnDefineArray.length];
-        for (int index = 0; index < columnDefineArray.length; index++) {
+        final int[] widthCacheArray = new int[getColumnCount()];
+        for (int index = 0; index < widthCacheArray.length; index++) {
             widthCacheArray[index] = abs(columnDefineArray[index].getWidth());
         }
 
@@ -55,53 +57,8 @@ public class TableView implements View {
                 tableSB.append(drawSeparationLine(widthCacheArray)).append("\n");
             }
 
-
-            // 打印正式数据
-            for (int colIndex = 0; colIndex < widthCacheArray.length; colIndex++) {
-
-                final boolean isLastColOfRow = colIndex == widthCacheArray.length - 1;
-                final ColumnDefine columnDefine = columnDefineArray[colIndex];
-
-                // 空指针保护
-                if (null == columnDefine) {
-                    continue;
-                }
-
-                final String data;
-                // 当前列已经读尽，此列为空数据
-                if (columnDefine.getHigh() <= rowIndex) {
-                    data = EMPTY;
-                } else {
-                    data = columnDefine.dataList.get(rowIndex);
-                }
-
-                final int width = widthCacheArray[colIndex];
-                final String dataFormat;
-                switch (columnDefine.align) {
-                    case RIGHT: {
-                        dataFormat = "%" + width + "s";
-                        break;
-                    }
-                    case LEFT:
-                    default: {
-                        dataFormat = "%-" + width + "s";
-                        break;
-                    }
-                }
-
-
-                final String borderChar = drawBorder
-                        ? "|"
-                        : EMPTY;
-
-                if (width > 0) {
-                    tableSB.append(format(borderChar + repeat(" ", padding) + dataFormat + repeat(" ", padding), summary(data, width)));
-                }
-
-                if (isLastColOfRow) {
-                    tableSB.append(borderChar).append("\n");
-                }
-            }
+            // 绘一行
+            drawLine(tableSB, widthCacheArray, rowIndex);
 
 
             // 打印结尾分隔行
@@ -115,6 +72,89 @@ public class TableView implements View {
 
 
         return tableSB.toString();
+    }
+
+
+    private void drawLine(StringBuilder tableSB, int[] widthCacheArray, int rowIndex) {
+
+        final Scanner[] scannerArray = new Scanner[getColumnCount()];
+        try {
+            boolean hasNext;
+            do {
+
+                hasNext = false;
+                final StringBuilder segmentSB = new StringBuilder();
+
+                for (int colIndex = 0; colIndex < getColumnCount(); colIndex++) {
+
+                    if (null == scannerArray[colIndex]) {
+                        scannerArray[colIndex] = new Scanner(
+                                new StringReader(
+                                        getData(rowIndex, columnDefineArray[colIndex])));
+                    }
+
+                    final String borderChar = drawBorder ? "|" : EMPTY;
+                    final int width = widthCacheArray[colIndex];
+                    final boolean isLastColOfRow = colIndex == widthCacheArray.length - 1;
+                    final Scanner scanner = scannerArray[colIndex];
+
+                    final String data;
+                    if (scanner.hasNext()) {
+                        data = scanner.nextLine();
+                        hasNext = true;
+                    } else {
+                        data = EMPTY;
+                    }
+
+                    if (width > 0) {
+
+                        final ColumnDefine columnDefine = columnDefineArray[colIndex];
+                        final String dataFormat = getDataFormat(columnDefine, width);
+                        final String paddingChar = repeat(" ", padding);
+
+                        segmentSB.append(
+                                format(borderChar + paddingChar + dataFormat + paddingChar,
+                                        summary(data, width)));
+
+                    }
+
+                    if (isLastColOfRow) {
+                        segmentSB.append(borderChar).append("\n");
+                    }
+
+                }
+
+                if (hasNext) {
+                    tableSB.append(segmentSB);
+                }
+
+            } while (hasNext);
+        } finally {
+            for (Scanner scanner : scannerArray) {
+                if( null != scanner ) {
+                    scanner.close();
+                }
+            }
+        }
+
+    }
+
+    private String getData(int rowIndex, ColumnDefine columnDefine) {
+        return columnDefine.getHigh() <= rowIndex
+                ? EMPTY
+                : columnDefine.dataList.get(rowIndex);
+    }
+
+    private String getDataFormat(ColumnDefine columnDefine, int width) {
+        switch (columnDefine.align) {
+            case RIGHT: {
+                return "%" + width + "s";
+            }
+            case LEFT:
+            default: {
+                return "%-" + width + "s";
+            }
+        }
     }
 
     /*
@@ -216,7 +256,14 @@ public class TableView implements View {
 
             int maxWidth = 0;
             for (String data : dataList) {
-                maxWidth = max(length(data), maxWidth);
+                final Scanner scanner = new Scanner(new StringReader(data));
+                try {
+                    while (scanner.hasNext()) {
+                        maxWidth = max(length(scanner.nextLine()), maxWidth);
+                    }
+                } finally {
+                    scanner.close();
+                }
             }
 
             return maxWidth;
@@ -238,8 +285,9 @@ public class TableView implements View {
      *
      * @param isDrawBorder true / false
      */
-    public void setDrawBorder(boolean isDrawBorder) {
+    public TableView setDrawBorder(boolean isDrawBorder) {
         this.drawBorder = isDrawBorder;
+        return this;
     }
 
     /**
@@ -256,8 +304,18 @@ public class TableView implements View {
      *
      * @param padding 内边距
      */
-    public void setPadding(int padding) {
+    public TableView setPadding(int padding) {
         this.padding = padding;
+        return this;
+    }
+
+    /**
+     * 获取表格列总数
+     *
+     * @return 表格列总数
+     */
+    public int getColumnCount() {
+        return columnDefineArray.length;
     }
 
     public static void main(String... args) {
@@ -265,7 +323,6 @@ public class TableView implements View {
 
         final TableView tv = new TableView(new ColumnDefine[]{
                 new ColumnDefine(10, false, Align.RIGHT),
-                new ColumnDefine(1, false, Align.LEFT),
                 new ColumnDefine(0, true, Align.LEFT),
         });
 
@@ -273,23 +330,20 @@ public class TableView implements View {
         tv.setPadding(0);
 
         tv.addRow(
-                "1AAAAaaaaaaaaaaaaaaaaaaaaaaa",
-                ":",
+                "AAAAaaaaaaaaaaaaaaaaaaaaaaa",
                 "CCCCC"
         );
 
         tv.addRow(
-                "2AAAAA",
-                ":",
-                "CCCCC"
+                "AAAAA",
+                "CCC1C\n\n\n3DDDD"
 
         );
 
         tv.addRow(
-                "3AAAAA",
-                ":",
+                "AAAAA",
                 "CCCCC",
-                "3DDDDD"
+                "DDDDD"
         );
 
 

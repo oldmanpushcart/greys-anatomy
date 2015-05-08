@@ -342,7 +342,7 @@ public class TimeTunnelCommand extends Command {
 
         final StringBuilder message = new StringBuilder();
         message.append(LINE);
-        message.append(format("done. probe:c-Cnt=%s,m-Cnt=%s\n",
+        message.append(format("result: matching-class=%s,matching-method=%s.\n",
                 result.getModifiedClasses().size(),
                 result.getModifiedBehaviors().size()));
         message.append(ABORT_MSG).append("\n");

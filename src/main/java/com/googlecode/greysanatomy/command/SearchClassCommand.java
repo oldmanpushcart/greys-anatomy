@@ -3,12 +3,12 @@ package com.googlecode.greysanatomy.command;
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.command.annotation.IndexArg;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
+import com.googlecode.greysanatomy.command.view.ClassInfoView;
 import com.googlecode.greysanatomy.server.GaSession;
-import com.googlecode.greysanatomy.util.GaDetailUtils;
-import com.googlecode.greysanatomy.util.GaStringUtils;
 
 import java.util.Set;
 
+import static com.googlecode.greysanatomy.util.GaStringUtils.LINE;
 import static com.googlecode.greysanatomy.util.SearchUtils.searchClassByClassPatternMatching;
 import static com.googlecode.greysanatomy.util.SearchUtils.searchClassBySupers;
 import static java.lang.String.format;
@@ -21,7 +21,6 @@ import static java.lang.String.format;
 @Cmd(named = "sc", sort = 0, desc = "Search all have been loaded by the JVM class.",
         eg = {
                 "sc -E org\\.apache\\.commons\\.lang\\.StringUtils",
-//                "sc -s org.apache.commons.lang.StringUtils",
                 "sc -d org.apache.commons.lang.StringUtils",
                 "sc -Sd *StringUtils"
         })
@@ -35,9 +34,6 @@ public class SearchClassCommand extends Command {
 
     @NamedArg(named = "d", description = "show the detail of class")
     private boolean isDetail = false;
-
-    @NamedArg(named = "f", description = "show the fields of class")
-    private boolean isField = false;
 
     @NamedArg(named = "E", description = "enable the regex pattern matching")
     private boolean isRegEx = false;
@@ -71,14 +67,14 @@ public class SearchClassCommand extends Command {
 
                 for (Class<?> clazz : matchedClassSet) {
                     if (isDetail) {
-                        message.append(GaDetailUtils.detail(clazz, isField)).append("\n");
+                        message.append(new ClassInfoView(clazz).draw()).append("\n");
                     } else {
                         message.append(clazz.getName()).append("\n");
                     }
                 }
 
-                message.append(GaStringUtils.LINE);
-                message.append(format("done. classes result: matching-class=%s;\n", matchedClassSet.size()));
+                message.append(LINE);
+                message.append(format("result: matching-class=%s.", matchedClassSet.size()));
                 sender.send(true, message.toString());
             }
 

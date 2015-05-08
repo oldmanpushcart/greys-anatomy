@@ -3,8 +3,8 @@ package com.googlecode.greysanatomy.command;
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.command.annotation.IndexArg;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
+import com.googlecode.greysanatomy.command.view.MethodInfoView;
 import com.googlecode.greysanatomy.server.GaSession;
-import com.googlecode.greysanatomy.util.GaDetailUtils;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 import com.googlecode.greysanatomy.util.PatternMatchingUtils;
 
@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.googlecode.greysanatomy.util.GaStringUtils.LINE;
 import static java.lang.String.format;
 
 /**
@@ -83,7 +84,7 @@ public class SearchMethodCommand extends Command {
                         if (/*method.getName().matches(methodPattern)*/
                                 PatternMatchingUtils.matching(method.getName(), methodPattern, isRegEx())) {
                             if (isDetail) {
-                                message.append(GaDetailUtils.detail(method)).append("\n");
+                                message.append(new MethodInfoView(method).draw()).append("\n");
                             } else {
                                 /*
                                  * π˝¬À÷ÿ∏¥––
@@ -108,8 +109,8 @@ public class SearchMethodCommand extends Command {
 
                 }//for
 
-                message.append(GaStringUtils.LINE);
-                message.append(format("done. method result: matching-class=%s; matching-method=%s\n", clzCnt, mthCnt));
+                message.append(LINE);
+                message.append(format("result: matching-class=%s; matching-method=%s.", clzCnt, mthCnt));
 
                 sender.send(true, message.toString());
             }
