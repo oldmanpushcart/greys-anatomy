@@ -256,8 +256,8 @@ public class MonitorCommand extends Command {
                                     }
                                 }
 
-                                tableView.setPadding(1);
-                                tableView.setDrawBorder(true);
+                                tableView.padding(1);
+                                tableView.setBorder(true);
 
                                 sender.send(false, tableView.draw()+"\n");
                             }

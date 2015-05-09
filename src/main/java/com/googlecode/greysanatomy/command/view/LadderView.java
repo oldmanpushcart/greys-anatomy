@@ -14,6 +14,9 @@ public class LadderView implements View {
     // 分隔符
     private static final String LADDER_CHAR = "`-->";
 
+    // 缩进符
+    private static final String STEP_CHAR = " ";
+
     // 缩进长度
     private static final int INDENT_STEP = 2;
 
@@ -36,7 +39,7 @@ public class LadderView implements View {
             // 其他的需要添加分隔符
             else {
                 ladderSB
-                        .append(repeat(" ", deep * INDENT_STEP))
+                        .append(repeat(STEP_CHAR, deep * INDENT_STEP))
                         .append(LADDER_CHAR)
                         .append(item)
                         .append("\n");

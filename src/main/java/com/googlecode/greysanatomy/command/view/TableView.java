@@ -16,10 +16,17 @@ import static java.lang.String.format;
  */
 public class TableView implements View {
 
+    public static final int BORDER_TOP = 1 << 0;
+    public static final int BORDER_BOTTOM = 1 << 1;
+
+    // 各个列的定义
     private final ColumnDefine[] columnDefineArray;
 
     // 是否渲染边框
-    private boolean drawBorder;
+    private boolean isBorder;
+
+    // 边框
+    private int border = BORDER_TOP | BORDER_BOTTOM;
 
     // 内填充
     private int padding;
@@ -37,6 +44,19 @@ public class TableView implements View {
         }
     }
 
+    private boolean isBorder(int border) {
+        return (this.border & border) == border;
+    }
+
+    public int border() {
+        return border;
+    }
+
+    public TableView border(int border) {
+        this.border = border;
+        return this;
+    }
+
     @Override
     public String draw() {
         final StringBuilder tableSB = new StringBuilder();
@@ -50,22 +70,32 @@ public class TableView implements View {
         final int tableHigh = getTableHigh();
         for (int rowIndex = 0; rowIndex < tableHigh; rowIndex++) {
 
+            final boolean isFirstRow = rowIndex == 0;
             final boolean isLastRow = rowIndex == tableHigh - 1;
 
-            // 打印分割行
-            if (isDrawBorder()) {
+            // 打印首分隔行
+            if (isFirstRow
+                    && isBorder()
+                    && isBorder(BORDER_TOP)) {
+                tableSB.append(drawSeparationLine(widthCacheArray)).append("\n");
+            }
+
+            // 打印内部分割行
+            if (!isFirstRow
+                    && isBorder()) {
                 tableSB.append(drawSeparationLine(widthCacheArray)).append("\n");
             }
 
             // 绘一行
-            drawLine(tableSB, widthCacheArray, rowIndex);
+            tableSB.append(drawRow(widthCacheArray, rowIndex));
 
 
             // 打印结尾分隔行
             if (isLastRow
-                    && isDrawBorder()) {
+                    && isBorder()
+                    && isBorder(BORDER_BOTTOM)) {
                 // 打印分割行
-                tableSB.append(drawSeparationLine(widthCacheArray));
+                tableSB.append(drawSeparationLine(widthCacheArray)).append("\n");
             }
 
         }
@@ -75,8 +105,9 @@ public class TableView implements View {
     }
 
 
-    private void drawLine(StringBuilder tableSB, int[] widthCacheArray, int rowIndex) {
+    private String drawRow(int[] widthCacheArray, int rowIndex) {
 
+        final StringBuilder rowSB = new StringBuilder();
         final Scanner[] scannerArray = new Scanner[getColumnCount()];
         try {
             boolean hasNext;
@@ -93,7 +124,7 @@ public class TableView implements View {
                                         getData(rowIndex, columnDefineArray[colIndex])));
                     }
 
-                    final String borderChar = isDrawBorder() ? "|" : EMPTY;
+                    final String borderChar = isBorder() ? "|" : EMPTY;
                     final int width = widthCacheArray[colIndex];
                     final boolean isLastColOfRow = colIndex == widthCacheArray.length - 1;
                     final Scanner scanner = scannerArray[colIndex];
@@ -125,13 +156,15 @@ public class TableView implements View {
                 }
 
                 if (hasNext) {
-                    tableSB.append(segmentSB);
+                    rowSB.append(segmentSB);
                 }
 
             } while (hasNext);
+
+            return rowSB.toString();
         } finally {
             for (Scanner scanner : scannerArray) {
-                if( null != scanner ) {
+                if (null != scanner) {
                     scanner.close();
                 }
             }
@@ -173,16 +206,14 @@ public class TableView implements View {
      */
     private String drawSeparationLine(int[] widthCacheArray) {
         final StringBuilder separationLineSB = new StringBuilder();
-
         for (int width : widthCacheArray) {
             if (width > 0) {
                 separationLineSB.append("+").append(repeat("-", width + 2 * padding));
             }
         }
-
-        separationLineSB.append("+");
-
-        return separationLineSB.toString();
+        return separationLineSB
+                .append("+")
+                .toString();
     }
 
 
@@ -283,10 +314,10 @@ public class TableView implements View {
     /**
      * 设置是否画边框
      *
-     * @param isDrawBorder true / false
+     * @param isBorder true / false
      */
-    public TableView setDrawBorder(boolean isDrawBorder) {
-        this.drawBorder = isDrawBorder;
+    public TableView setBorder(boolean isBorder) {
+        this.isBorder = isBorder;
         return this;
     }
 
@@ -295,8 +326,8 @@ public class TableView implements View {
      *
      * @return true / false
      */
-    public boolean isDrawBorder() {
-        return drawBorder;
+    public boolean isBorder() {
+        return isBorder;
     }
 
     /**
@@ -304,7 +335,7 @@ public class TableView implements View {
      *
      * @param padding 内边距
      */
-    public TableView setPadding(int padding) {
+    public TableView padding(int padding) {
         this.padding = padding;
         return this;
     }
@@ -326,8 +357,8 @@ public class TableView implements View {
                 new ColumnDefine(0, true, Align.LEFT),
         });
 
-        tv.setDrawBorder(false);
-        tv.setPadding(0);
+        tv.setBorder(true);
+        tv.padding(1);
 
         tv.addRow(
                 "AAAAaaaaaaaaaaaaaaaaaaaaaaa",
@@ -347,7 +378,9 @@ public class TableView implements View {
         );
 
 
-        System.out.println(tv.draw());
+        tv.border(tv.border() & ~BORDER_TOP);
+        System.out.print(tv.draw());
+        System.out.print(tv.draw());
 
     }
 

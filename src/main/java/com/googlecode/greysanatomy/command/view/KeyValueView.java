@@ -19,8 +19,8 @@ public class KeyValueView implements View {
                 new ColumnDefine(RIGHT),
                 new ColumnDefine(LEFT)
         })
-                .setDrawBorder(false)
-                .setPadding(0);
+                .setBorder(false)
+                .padding(0);
     }
 
     public KeyValueView add(final Object key, final Object value) {
