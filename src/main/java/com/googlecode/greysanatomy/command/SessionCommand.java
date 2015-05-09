@@ -2,7 +2,7 @@ package com.googlecode.greysanatomy.command;
 
 import com.googlecode.greysanatomy.command.annotation.Cmd;
 import com.googlecode.greysanatomy.command.annotation.NamedArg;
-import com.googlecode.greysanatomy.command.view.KeyValueView;
+import com.googlecode.greysanatomy.command.view.TableView;
 import com.googlecode.greysanatomy.server.GaSession;
 import com.googlecode.greysanatomy.util.GaStringUtils;
 
@@ -67,13 +67,18 @@ public class SessionCommand extends Command {
      */
     private String sessionToString(GaSession gaSession) {
 
-        return new KeyValueView()
-                .add("javaPid", gaSession.getJavaPid())
-                .add("sessionId", gaSession.getSessionId())
-                .add("duration", gaSession.getSessionDuration())
-                .add("charset", gaSession.getCharset())
-                .add("from", gaSession.getSocketChannel().socket().getRemoteSocketAddress())
-                .add("to", gaSession.getSocketChannel().socket().getLocalSocketAddress())
+        return new TableView(new TableView.ColumnDefine[]{
+                new TableView.ColumnDefine(TableView.Align.RIGHT),
+                new TableView.ColumnDefine(TableView.Align.LEFT)
+        })
+                .addRow("JAVA PID", gaSession.getJavaPid())
+                .addRow("SESSION ID", gaSession.getSessionId())
+                .addRow("DURATION", gaSession.getSessionDuration())
+                .addRow("CHARSET", gaSession.getCharset())
+                .addRow("FROM", gaSession.getSocketChannel().socket().getRemoteSocketAddress())
+                .addRow("TO", gaSession.getSocketChannel().socket().getLocalSocketAddress())
+                .border(true)
+                .padding(1)
                 .draw();
 
     }

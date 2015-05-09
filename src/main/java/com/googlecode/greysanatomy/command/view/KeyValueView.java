@@ -19,7 +19,7 @@ public class KeyValueView implements View {
                 new ColumnDefine(RIGHT),
                 new ColumnDefine(LEFT)
         })
-                .setBorder(false)
+                .border(false)
                 .padding(0);
     }
 

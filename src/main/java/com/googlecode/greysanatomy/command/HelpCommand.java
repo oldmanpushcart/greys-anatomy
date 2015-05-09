@@ -146,7 +146,7 @@ public class HelpCommand extends Command {
             view.addRow("example", drawEg(cmd));
         }
 
-        return view.setBorder(true).padding(1).draw();
+        return view.border(true).padding(1).draw();
     }
 
     /**

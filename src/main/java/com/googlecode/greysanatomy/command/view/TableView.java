@@ -316,7 +316,7 @@ public class TableView implements View {
      *
      * @param isBorder true / false
      */
-    public TableView setBorder(boolean isBorder) {
+    public TableView border(boolean isBorder) {
         this.isBorder = isBorder;
         return this;
     }
@@ -357,7 +357,7 @@ public class TableView implements View {
                 new ColumnDefine(0, true, Align.LEFT),
         });
 
-        tv.setBorder(true);
+        tv.border(true);
         tv.padding(1);
 
         tv.addRow(

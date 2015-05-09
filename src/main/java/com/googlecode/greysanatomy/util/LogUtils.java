@@ -85,46 +85,4 @@ public class LogUtils {
         return logger;
     }
 
-//    public static void info(String format, Object... args) {
-//        if (logger.isLoggable(INFO)) {
-//            logger.log(INFO, format(format, args));
-//        }
-//    }
-//
-//    public static void trace(String format, Object... args) {
-//        if (logger.isLoggable(FINEST)) {
-//            logger.log(FINEST, format(format, args));
-//        }
-//    }
-//
-//    public static void debug(String format, Object... args) {
-//        if (logger.isLoggable(FINE)) {
-//            logger.log(FINE, format(format, args));
-//        }
-//    }
-//
-//    public static void debug(Throwable t, String format, Object... args) {
-//        if (logger.isLoggable(FINE)) {
-//            logger.log(FINE, format(format, args), t);
-//        }
-//    }
-//
-//    public static void warn(String format, Object... args) {
-//        if (logger.isLoggable(WARNING)) {
-//            logger.log(WARNING, format(format, args));
-//        }
-//    }
-//
-//    public static void warn(Throwable t, String format, Object... args) {
-//        if (logger.isLoggable(WARNING)) {
-//            logger.log(WARNING, format(format, args), t);
-//        }
-//    }
-//
-//    public static void error(Throwable t, String format, Object... args) {
-//        if (logger.isLoggable(SEVERE)) {
-//            logger.log(SEVERE, format(format, args), t);
-//        }
-//    }
-
 }
