@@ -226,24 +226,6 @@ public class GaReflectUtils {
             field.setAccessible(isAccessible);
         }
     }
-//
-//    /**
-//     * 获取对象某个成员的值
-//     *
-//     * @param target
-//     * @param fieldName
-//     * @return
-//     * @throws IllegalArgumentException
-//     * @throws IllegalAccessException
-//     */
-//    @SuppressWarnings("unchecked")
-//    public static <T> T getFieldValueByFieldName(Object target, String fieldName) throws IllegalArgumentException, IllegalAccessException {
-//        if (null == fieldName
-//                || fieldName.length() == 0) {
-//            return (T) target;
-//        }
-//        return (T) getFieldValueByField(target, getField(target.getClass(), fieldName));
-//    }
 
     /**
      * 设置对象某个成员的值

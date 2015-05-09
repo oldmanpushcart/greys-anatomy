@@ -3,10 +3,8 @@ package com.googlecode.greysanatomy.agent;
 import com.googlecode.greysanatomy.command.Command.Info;
 import com.googlecode.greysanatomy.probe.JobListener;
 import com.googlecode.greysanatomy.probe.ProbeJobs;
-import com.googlecode.greysanatomy.probe.Probes;
 import com.googlecode.greysanatomy.util.GaReflectUtils;
 import com.googlecode.greysanatomy.util.LogUtils;
-import com.googlecode.greysanatomy.util.PatternMatchingUtils;
 import javassist.*;
 
 import java.lang.instrument.ClassFileTransformer;
@@ -19,6 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.googlecode.greysanatomy.probe.ProbeJobs.register;
+import static com.googlecode.greysanatomy.probe.Probes.mine;
+import static com.googlecode.greysanatomy.util.PatternMatchingUtils.matching;
 import static com.googlecode.greysanatomy.util.SearchUtils.searchClassByClassPatternMatching;
 import static com.googlecode.greysanatomy.util.SearchUtils.searchClassBySupers;
 import static java.lang.System.arraycopy;
@@ -87,7 +87,7 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                 final CtBehavior[] cbs = cc.getDeclaredBehaviors();
                 if (null != cbs) {
                     for (CtBehavior cb : cbs) {
-                        if (PatternMatchingUtils.matching(cb.getMethodInfo().getName(), prefMthPattern, isRegEx)) {
+                        if (matching(cb.getMethodInfo().getName(), prefMthPattern, isRegEx)) {
 
                             if (logger.isLoggable(Level.FINE)) {
                                 logger.log(Level.FINE, String.format(
@@ -99,10 +99,10 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
                             }
 
                             modifiedBehaviors.add(cb);
-                            Probes.mine(id, cc, cb);
+                            mine(id, cc, cb);
                         }
 
-                        //  方法名不匹配正则表达式
+                        //  方法名不匹配表达式
                         else {
                             if (logger.isLoggable(Level.FINE)) {
                                 logger.log(Level.FINE, String.format(
@@ -219,11 +219,9 @@ public class GreysAnatomyClassFileTransformer implements ClassFileTransformer {
         instrumentation.addTransformer(transformer, true);
 
         final Collection<Class<?>> modifiedClasses =
-
                 isSuper
                         ? searchClassBySupers(instrumentation, searchClassByClassPatternMatching(instrumentation, prefClzPattern, isRegEx))
                         : searchClassByClassPatternMatching(instrumentation, prefClzPattern, isRegEx);
-
 
         synchronized (GreysAnatomyClassFileTransformer.class) {
             try {
