@@ -2,16 +2,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.googlecode.greys-anatomy</groupId>
-    <artifactId>greys-anatomy</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>com.github.ompc.greys</groupId>
+    <artifactId>greys</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>greys-anatomy</name>
-    <url>http://maven.apache.org</url>
+    <name>greys</name>
+    <url>https://github.com/oldmanpushcart/greys-anatomy</url>
 
     <properties>
-        <project.build.sourceEncoding>GBK</project.build.sourceEncoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
 
@@ -63,7 +63,7 @@
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
-                    <encoding>GBK</encoding>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
             <plugin>
@@ -81,11 +81,11 @@
                             </descriptorRefs>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.googlecode.greysanatomy.GreysAnatomyMain</mainClass>
+                                    <mainClass>com.github.ompc.greys.GreysLauncher</mainClass>
                                 </manifest>
                                 <manifestEntries>
-                                    <Premain-Class>com.googlecode.greysanatomy.agent.AgentMain</Premain-Class>
-                                    <Agent-Class>com.googlecode.greysanatomy.agent.AgentMain</Agent-Class>
+                                    <Premain-Class>com.github.ompc.greys.agent.AgentLauncher</Premain-Class>
+                                    <Agent-Class>com.github.ompc.greys.agent.AgentLauncher</Agent-Class>
                                     <Can-Redefine-Classes>true</Can-Redefine-Classes>
                                     <Can-Retransform-Classes>true</Can-Retransform-Classes>
                                 </manifestEntries>
@@ -99,34 +99,28 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.16.1-GA</version>
-        </dependency>
-        <!--<dependency>-->
-        <!--<groupId>jline</groupId>-->
-        <!--<artifactId>jline</artifactId>-->
-        <!--<version>2.12</version>-->
-        <!--</dependency>-->
-        <dependency>
             <groupId>net.sf.jopt-simple</groupId>
             <artifactId>jopt-simple</artifactId>
             <version>4.3</version>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.9</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>ognl</groupId>
             <artifactId>ognl</artifactId>
             <version>3.0.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>5.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>5.0.3</version>
             <exclusions>
                 <exclusion>
-                    <groupId>javassist</groupId>
-                    <artifactId>javassist</artifactId>
+                    <groupId>org.ow2.asm</groupId>
+                    <artifactId>asm-tree</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
