@@ -12,6 +12,7 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import static com.github.ompc.greys.agent.AgentLauncher.*;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 
@@ -30,35 +31,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     // 通知监听器集合
     private final static Map<Integer/*ADVICE_ID*/, AdviceListener> advices
             = new ConcurrentHashMap<Integer, AdviceListener>();
-
-
-    // 初始化编织类所使用的ASM常量
-    private static final Type ASM_TYPE_OF_ADVICE_INJECTOR = Type.getType(AdviceWeaver.class);
-    private static final Method ASM_METHOD_ON_BEGIN;
-    private static final Method ASM_METHOD_ON_RETURN_END;
-    private static final Method ASM_METHOD_ON_THROWING_END;
-
-    static {
-        try {
-            ASM_METHOD_ON_BEGIN = Method.getMethod(AdviceWeaver.class.getMethod(
-                    "methodOnBegin",
-                    int.class,
-                    String.class,
-                    String.class,
-                    String.class,
-                    Object.class,
-                    Object[].class));
-            ASM_METHOD_ON_RETURN_END = Method.getMethod(AdviceWeaver.class.getMethod(
-                    "methodOnReturnEnd",
-                    Object.class));
-            ASM_METHOD_ON_THROWING_END = Method.getMethod(AdviceWeaver.class.getMethod(
-                    "methodOnThrowingEnd",
-                    Throwable.class));
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 
     // 线程帧封装
     private static final Map<Thread, Stack<Stack<Object>>> threadBoundContexts
@@ -304,6 +276,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         return (ACC_ABSTRACT & access) == 0;
     }
 
+
     @Override
     public MethodVisitor visitMethod(
             final int access,
@@ -327,57 +300,197 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
             private final Label beginLabel = new Label();
             private final Label endLabel = new Label();
+            private final Type ASM_TYPE_SYSTEM = Type.getType(java.lang.System.class);
+            private final Type ASM_TYPE_METHOD = Type.getType(java.lang.reflect.Method.class);
+            private final Type ASM_TYPE_PROPERTIES = Type.getType(java.util.Properties.class);
+            private final Method ASM_METHOD_METHOD_INVOKE = Method.getMethod("Object invoke(Object,Object[])");
+
+
+            /**
+             * 加载通知方法
+             * @param keyOfMethod 通知方法KEY
+             *                    AgentLauncher.KEY_GREYS_ADVICE_BEFORE_METHOD
+             *                    AgentLauncher.KEY_GREYS_ADVICE_RETURN_METHOD
+             *                    AgentLauncher.KEY_GREYS_ADVICE_THROWS_METHOD
+             */
+            private void loadAdviceMethod(String keyOfMethod) {
+                invokeStatic(ASM_TYPE_SYSTEM, Method.getMethod("java.util.Properties getProperties()"));
+                push(keyOfMethod);
+                invokeVirtual(ASM_TYPE_PROPERTIES, Method.getMethod("Object get(Object)"));
+                checkCast(ASM_TYPE_METHOD);
+            }
+
+            /**
+             * 加载before通知参数数组
+             */
+            private void loadArrayForBefore() {
+                push(6);
+                newArray(Type.getType(Object.class));
+
+                dup();
+                push(0);
+                push(adviceId);
+                box(Type.getType(int.class));
+                arrayStore(Type.getType(Integer.class));
+
+                dup();
+                push(1);
+                push(className);
+                arrayStore(Type.getType(String.class));
+
+                dup();
+                push(2);
+                push(name);
+                arrayStore(Type.getType(String.class));
+
+                dup();
+                push(3);
+                push(desc);
+                arrayStore(Type.getType(String.class));
+
+                dup();
+                push(4);
+                loadThisOrPushNullIfIsStatic();
+                arrayStore(Type.getType(Object.class));
+
+                dup();
+                push(5);
+                loadArgArray();
+                arrayStore(Type.getType(Object[].class));
+            }
+
 
             @Override
             protected void onMethodEnter() {
 
-                push(adviceId);
-                push(className);
-                push(name);
-                push(desc);
-                loadThisOrPushNullIfIsStatic();
-                loadArgArray();
+                // 加载before方法
+                loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_METHOD);
 
-                invokeStatic(ASM_TYPE_OF_ADVICE_INJECTOR, ASM_METHOD_ON_BEGIN);
+                // 推入Method.invoke()的第一个参数
+                pushNull();
+
+                // 方法参数
+                loadArrayForBefore();
+
+                // 调用方法
+                invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                pop();
+
                 mark(beginLabel);
+
+            }
+
+
+            /*
+             * 加载return通知参数数组
+             */
+            private void loadReturnArgs() {
+                dup2X1();
+                pop2();
+                push(1);
+                newArray(Type.getType(Object.class));
+                dup();
+                dup2X1();
+                pop2();
+                push(0);
+                swap();
+                arrayStore(Type.getType(Object.class));
             }
 
             @Override
             protected void onMethodExit(int opcode) {
 
-                if (isNotThrow(opcode)) {
+                if (!isThrow(opcode)) {
+
+                    // 加载返回对象
                     loadReturn(opcode);
-                    invokeStatic(ASM_TYPE_OF_ADVICE_INJECTOR, ASM_METHOD_ON_RETURN_END);
+
+                    // 加载returning方法
+                    loadAdviceMethod(KEY_GREYS_ADVICE_RETURN_METHOD);
+
+                    // 推入Method.invoke()的第一个参数
+                    pushNull();
+
+                    // 加载return通知参数数组
+                    loadReturnArgs();
+
+                    invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                    pop();
+
                 }
 
+            }
+
+
+            /*
+             * 创建throwing通知参数本地变量
+             */
+            private void loadThrowArgs() {
+                dup2X1();
+                pop2();
+                push(1);
+                newArray(Type.getType(Object.class));
+                dup();
+                dup2X1();
+                pop2();
+                push(0);
+                swap();
+                arrayStore(Type.getType(Throwable.class));
             }
 
             @Override
             public void visitMaxs(int maxStack, int maxLocals) {
 
                 mark(endLabel);
-
                 catchException(beginLabel, endLabel, null);
 
+                // 加载异常
                 loadThrow();
-                invokeStatic(ASM_TYPE_OF_ADVICE_INJECTOR, ASM_METHOD_ON_THROWING_END);
+
+                // 加载throwing方法
+                loadAdviceMethod(KEY_GREYS_ADVICE_THROWS_METHOD);
+
+                // 推入Method.invoke()的第一个参数
+                pushNull();
+
+                // 加载throw通知参数数组
+                loadThrowArgs();
+
+                // 调用方法
+                invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                pop();
 
                 throwException();
                 super.visitMaxs(maxStack, maxLocals);
             }
 
+            /**
+             * 是否静态方法
+             * @return true:静态方法 / false:非静态方法
+             */
             private boolean isStaticMethod() {
                 return (methodAccess & ACC_STATIC) != 0;
             }
 
-            private boolean isNotThrow(int opcode) {
+            /**
+             * 是否抛出异常返回(通过字节码判断)
+             * @param opcode 操作码
+             * @return true:以抛异常形式返回 / false:非抛异常形式返回(return)
+             */
+            private boolean isThrow(int opcode) {
                 return opcode != ATHROW;
             }
 
+            /**
+             * 将NULL推入堆栈
+             */
             private void pushNull() {
                 push((Type) null);
             }
 
+            /**
+             * 加载this/null
+             */
             private void loadThisOrPushNullIfIsStatic() {
                 if (isStaticMethod()) {
                     pushNull();
@@ -386,6 +499,10 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 }
             }
 
+            /**
+             * 加载返回值
+             * @param opcode 操作吗
+             */
             private void loadReturn(int opcode) {
                 switch (opcode) {
 
@@ -415,6 +532,9 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 }
             }
 
+            /**
+             * 加载异常
+             */
             private void loadThrow() {
                 dup();
             }

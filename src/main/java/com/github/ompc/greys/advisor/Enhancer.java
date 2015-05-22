@@ -6,6 +6,7 @@ import com.github.ompc.greys.util.Matcher;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
+import java.io.FileOutputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
@@ -102,6 +103,12 @@ public class Enhancer implements ClassFileTransformer {
 
             // 成功计数
             affect.cCnt(1);
+
+            // dump
+            final java.io.OutputStream os = new FileOutputStream(new java.io.File("/tmp/AgentTest.class"));
+            os.write(enhanceClassByteArray);
+            os.flush();;
+            os.close();
 
             return enhanceClassByteArray;
         } catch (Throwable t) {

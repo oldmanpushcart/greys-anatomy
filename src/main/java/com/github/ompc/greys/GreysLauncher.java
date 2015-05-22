@@ -75,7 +75,7 @@ public class GreysLauncher {
             } else {
                 vmObj = vmClass.getMethod("attach", vmdClass).invoke(null, attachVmdObj);
             }
-            vmClass.getMethod("loadAgent", String.class, String.class).invoke(vmObj, JARFILE, configure.toString());
+            vmClass.getMethod("loadAgent", String.class, String.class).invoke(vmObj, JARFILE, JARFILE + ";" + configure.toString());
         } finally {
             if (null != vmObj) {
                 vmClass.getMethod("detach", (Class<?>[]) null).invoke(vmObj, (Object[]) null);
