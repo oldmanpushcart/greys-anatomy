@@ -8,7 +8,7 @@ import java.util.List;
 import static com.github.ompc.greys.util.StringUtil.getCauseMessage;
 
 /**
- * Hello world!
+ * Greys启动器
  */
 public class GreysLauncher {
 
