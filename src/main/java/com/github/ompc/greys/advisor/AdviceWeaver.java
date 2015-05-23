@@ -1,6 +1,6 @@
 package com.github.ompc.greys.advisor;
 
-import com.github.ompc.greys.util.EnhancerAffect;
+import com.github.ompc.greys.command.affect.EnhancerAffect;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
 import org.objectweb.asm.*;

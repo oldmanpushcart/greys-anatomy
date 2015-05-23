@@ -13,7 +13,7 @@ import com.github.ompc.greys.util.Express.OgnlExpress;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
-import com.github.ompc.greys.util.RowAffect;
+import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

@@ -1,4 +1,4 @@
-package com.github.ompc.greys.util;
+package com.github.ompc.greys.command.affect;
 
 import static java.lang.System.currentTimeMillis;
 

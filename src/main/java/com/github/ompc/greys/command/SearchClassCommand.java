@@ -10,7 +10,7 @@ import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
-import com.github.ompc.greys.util.RowAffect;
+import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Set;

@@ -8,7 +8,7 @@ import com.github.ompc.greys.command.view.KVView;
 import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.command.view.TableView.ColumnDefine;
 import com.github.ompc.greys.server.Session;
-import com.github.ompc.greys.util.RowAffect;
+import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;

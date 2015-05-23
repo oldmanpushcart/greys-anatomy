@@ -4,7 +4,7 @@ import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.server.Session;
-import com.github.ompc.greys.util.RowAffect;
+import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.Charset;

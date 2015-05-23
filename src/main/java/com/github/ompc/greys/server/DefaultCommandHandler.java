@@ -11,10 +11,10 @@ import com.github.ompc.greys.exception.CommandException;
 import com.github.ompc.greys.exception.CommandInitializationException;
 import com.github.ompc.greys.exception.CommandNotFoundException;
 import com.github.ompc.greys.exception.GaExecuteException;
-import com.github.ompc.greys.util.Affect;
-import com.github.ompc.greys.util.EnhancerAffect;
+import com.github.ompc.greys.command.affect.Affect;
+import com.github.ompc.greys.command.affect.EnhancerAffect;
 import com.github.ompc.greys.util.LogUtil;
-import com.github.ompc.greys.util.RowAffect;
+import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
