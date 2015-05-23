@@ -6,17 +6,18 @@ import com.github.ompc.greys.util.Matcher;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
-import java.io.FileOutputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Logger;
 
+import static com.github.ompc.greys.util.CheckUtil.isEquals;
 import static com.github.ompc.greys.util.SearchUtil.searchClass;
 import static com.github.ompc.greys.util.SearchUtil.searchSubClass;
 import static java.lang.String.format;
@@ -104,11 +105,11 @@ public class Enhancer implements ClassFileTransformer {
             // 成功计数
             affect.cCnt(1);
 
-            // dump
-            final java.io.OutputStream os = new FileOutputStream(new java.io.File("/tmp/AgentTest.class"));
-            os.write(enhanceClassByteArray);
-            os.flush();;
-            os.close();
+//            // dump
+//            final java.io.OutputStream os = new FileOutputStream(new java.io.File("/tmp/AgentTest.class"));
+//            os.write(enhanceClassByteArray);
+//            os.flush();
+//            os.close();
 
             return enhanceClassByteArray;
         } catch (Throwable t) {
@@ -118,6 +119,28 @@ public class Enhancer implements ClassFileTransformer {
         }
 
         return null;
+    }
+
+
+    /**
+     * 是否需要过滤的类
+     *
+     * @param classes 类集合
+     * @return 过滤后的类
+     */
+    private static Set<Class<?>> filter(Set<Class<?>> classes) {
+        final Iterator<Class<?>> it = classes.iterator();
+        while (it.hasNext()) {
+
+            final Class<?> clazz = it.next();
+
+            if (null == clazz
+                    || isEquals(clazz.getClassLoader(), Enhancer.class.getClassLoader())) {
+                it.remove();
+            }
+
+        }
+        return classes;
     }
 
 
@@ -146,6 +169,9 @@ public class Enhancer implements ClassFileTransformer {
                 ? searchClass(inst, classNameMatcher)
                 : searchSubClass(inst, searchClass(inst, classNameMatcher));
 
+        // 过滤掉无法被增强的类
+        filter(enhanceClassSet);
+
         // 构建增强器
         final Enhancer enhancer = new Enhancer(adviceId, enhanceClassSet, methodNameMatcher, affect);
         try {
@@ -155,7 +181,7 @@ public class Enhancer implements ClassFileTransformer {
             final int size = enhanceClassSet.size();
             final Class<?>[] classArray = new Class<?>[size];
             arraycopy(enhanceClassSet.toArray(), 0, classArray, 0, size);
-            if( classArray.length > 0 ) {
+            if (classArray.length > 0) {
                 inst.retransformClasses(classArray);
             }
 

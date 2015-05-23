@@ -270,12 +270,24 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * 是否抽象属性
      *
      * @param access 属性值
-     * @return true : 非抽象 / false : 抽象
+     * @return true : 抽象 / false : 非抽象
      */
-    private boolean isNotAbstract(int access) {
-        return (ACC_ABSTRACT & access) == 0;
+    private boolean isAbstract(int access) {
+        return (ACC_ABSTRACT & access) == ACC_ABSTRACT;
     }
 
+
+    /**
+     * 是否需要忽略
+     */
+    private boolean isIgnore(MethodVisitor mv, int access, String methodName) {
+        if (null == mv
+                || isAbstract(access)
+                || !matcher.matching(methodName)) {
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public MethodVisitor visitMethod(
@@ -287,9 +299,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         final MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 
-        if (null == mv
-                || !isNotAbstract(access)
-                || !matcher.matching(name)) {
+        if (isIgnore(mv, access, name)) {
             return mv;
         }
 
@@ -478,7 +488,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
              * @return true:以抛异常形式返回 / false:非抛异常形式返回(return)
              */
             private boolean isThrow(int opcode) {
-                return opcode != ATHROW;
+                return opcode == ATHROW;
             }
 
             /**
