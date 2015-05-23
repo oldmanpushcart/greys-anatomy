@@ -281,12 +281,9 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * 是否需要忽略
      */
     private boolean isIgnore(MethodVisitor mv, int access, String methodName) {
-        if (null == mv
+        return null == mv
                 || isAbstract(access)
-                || !matcher.matching(methodName)) {
-            return true;
-        }
-        return false;
+                || !matcher.matching(methodName);
     }
 
     @Override
