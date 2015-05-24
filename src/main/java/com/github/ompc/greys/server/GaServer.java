@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.github.ompc.greys.util.StringUtil.getLogo;
@@ -122,7 +121,7 @@ public class GaServer {
 
     private GaServer(int javaPid, Instrumentation instrumentation) {
         this.javaPid = javaPid;
-        this.sessionManager = new DefaultGaSessionManager();
+        this.sessionManager = new DefaultSessionManager();
         this.commandHandler = new DefaultCommandHandler(this, instrumentation);
 
         Runtime.getRuntime().addShutdownHook(new Thread("ga-shutdown-hooker") {
@@ -176,8 +175,8 @@ public class GaServer {
 
             // 服务器挂载端口
             serverSocketChannel.socket().bind(new InetSocketAddress(configure.getTargetIp(), configure.getTargetPort()), 24);
-            if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, format("GaServer listened on network=%s;port=%d;timeout=%d;",
+            if (logger.isLoggable(INFO)) {
+                logger.log(INFO, format("GaServer listened on network=%s;port=%d;timeout=%d;",
                         configure.getTargetIp(),
                         configure.getTargetPort(),
                         configure.getConnectTimeout()));
@@ -254,11 +253,9 @@ public class GaServer {
 
 
         final Session session = sessionManager.newSession(javaPid, socketChannel, DEFAULT_CHARSET);
-        socketChannel.register(selector, OP_READ, new GaAttachment(
-                BUFFER_SIZE,
-                sessionManager.newSession(javaPid, socketChannel, DEFAULT_CHARSET)));
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, format("%s accept an connection, client=%s;",
+        socketChannel.register(selector, OP_READ, new GaAttachment(BUFFER_SIZE, session));
+        if (logger.isLoggable(INFO)) {
+            logger.log(INFO, format("%s accept an connection, client=%s;",
                     GaServer.this,
                     socketChannel));
         }
@@ -280,8 +277,8 @@ public class GaServer {
 
             // 若读到-1，则说明SocketChannel已经关闭
             if (-1 == socketChannel.read(byteBuffer)) {
-                if (logger.isLoggable(Level.INFO)) {
-                    logger.log(Level.INFO, format("client=%s was closed, for %s",
+                if (logger.isLoggable(INFO)) {
+                    logger.log(INFO, format("client=%s was closed, for %s",
                             socketChannel,
                             GaServer.this));
                 }

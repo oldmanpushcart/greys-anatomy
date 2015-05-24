@@ -19,7 +19,7 @@ import static java.lang.String.format;
  * 默认会话管理器实现
  * Created by vlinux on 15/5/2.
  */
-public class DefaultGaSessionManager implements SessionManager {
+public class DefaultSessionManager implements SessionManager {
 
     private final Logger logger = LogUtil.getLogger();
 
@@ -30,34 +30,34 @@ public class DefaultGaSessionManager implements SessionManager {
     private static final long DEFAULT_SESSION_DURATION = DURATION_5_MINUTE;
 
     // 会话管理Map
-    private final ConcurrentHashMap<Integer, Session> gaSessionMap = new ConcurrentHashMap<Integer, Session>();
+    private final ConcurrentHashMap<Integer, Session> sessionMap = new ConcurrentHashMap<Integer, Session>();
 
     // 会话ID序列生成器
     private final AtomicInteger gaSessionIndexSequence = new AtomicInteger(0);
 
     private final AtomicBoolean isDestroyRef = new AtomicBoolean(false);
 
-    public DefaultGaSessionManager() {
+    public DefaultSessionManager() {
         activeGaSessionExpireDaemon();
     }
 
     @Override
     public Session getGaSession(int sessionId) {
-        return gaSessionMap.get(sessionId);
+        return sessionMap.get(sessionId);
     }
 
     @Override
     public Session newSession(int javaPid, SocketChannel socketChannel, Charset charset) {
-        final int gaSessionId = gaSessionIndexSequence.getAndIncrement();
-        final Session session = new Session(javaPid, gaSessionId, DEFAULT_SESSION_DURATION, socketChannel, charset) {
+        final int sessionId = gaSessionIndexSequence.getAndIncrement();
+        final Session session = new Session(javaPid, sessionId, DEFAULT_SESSION_DURATION, socketChannel, charset) {
             @Override
             public void destroy() {
                 super.destroy();
-                gaSessionMap.remove(gaSessionId);
+                sessionMap.remove(sessionId);
             }
         };
 
-        final Session sessionInMap = gaSessionMap.putIfAbsent(gaSessionId, session);
+        final Session sessionInMap = sessionMap.putIfAbsent(sessionId, session);
         if (null != sessionInMap) {
             // 之前竟然存在，返回之前的
             return sessionInMap;
@@ -84,7 +84,7 @@ public class DefaultGaSessionManager implements SessionManager {
                         interrupt();
                     }
 
-                    for (final Map.Entry<Integer, Session> entry : gaSessionMap.entrySet()) {
+                    for (final Map.Entry<Integer, Session> entry : sessionMap.entrySet()) {
 
                         final int gaSessionId = entry.getKey();
                         final Session session = entry.getValue();
@@ -112,7 +112,7 @@ public class DefaultGaSessionManager implements SessionManager {
                                 session.destroy();
                             }
 
-                            gaSessionMap.remove(gaSessionId);
+                            sessionMap.remove(gaSessionId);
 
                         }
 
@@ -129,7 +129,7 @@ public class DefaultGaSessionManager implements SessionManager {
     @Override
     public void clean() {
         // shutdown all the gaSession
-        for (Session session : gaSessionMap.values()) {
+        for (Session session : sessionMap.values()) {
             session.destroy();
         }
     }
