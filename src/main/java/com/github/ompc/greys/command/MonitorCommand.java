@@ -298,6 +298,7 @@ public class MonitorCommand implements Command {
                                 }
                                 final long cost = currentTimeMillis() - startTime;
                                 final Key key = new Key(clazz.getName(), method.getName());
+                                System.out.println(clazz.getName()+"$"+method.getName());
 
                                 while (true) {
                                     AtomicReference<Data> value = monitorData.get(key);
@@ -312,7 +313,9 @@ public class MonitorCommand implements Command {
                                         nData.cost = oData.cost + cost;
                                         if (isThrowing) {
                                             nData.failed = oData.failed + 1;
+                                            nData.success = oData.success;
                                         } else {
+                                            nData.failed = oData.failed;
                                             nData.success = oData.success + 1;
                                         }
                                         nData.total = oData.total + 1;
