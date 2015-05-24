@@ -12,6 +12,7 @@ import com.github.ompc.greys.command.view.TableView.ColumnDefine;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Advice;
 import com.github.ompc.greys.util.Express.OgnlExpress;
+import com.github.ompc.greys.util.GaMethod;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
@@ -19,7 +20,6 @@ import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -280,7 +280,7 @@ public class TimeTunnelCommand implements Command {
                             public void afterReturning(
                                     ClassLoader loader,
                                     Class<?> clazz,
-                                    Method method,
+                                    GaMethod method,
                                     Object target,
                                     Object[] args,
                                     Object returnObject) throws Throwable {
@@ -298,7 +298,7 @@ public class TimeTunnelCommand implements Command {
                             public void afterThrowing(
                                     ClassLoader loader,
                                     Class<?> clazz,
-                                    Method method,
+                                    GaMethod method,
                                     Object target,
                                     Object[] args,
                                     Throwable throwable) {
@@ -442,7 +442,7 @@ public class TimeTunnelCommand implements Command {
             public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
                 final int count = timeTunnel.size();
                 timeTunnel.clear();
-                sender.send(true, "fragments was clean.");
+                sender.send(true, "time fragments was clean.\n");
                 return new RowAffect(count);
             }
         };
@@ -460,7 +460,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeTunnel.get(index);
                 if (null == tf) {
-                    sender.send(true, format("%d fragment was not existed.", index));
+                    sender.send(true, format("time-fragment[%d] was not existed.\n", index));
                     return new RowAffect();
                 }
 
@@ -488,12 +488,12 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeTunnel.get(index);
                 if (null == tf) {
-                    sender.send(true, format("%d fragment was not existed.", index));
+                    sender.send(true, format("time-fragment[%d] was not existed.\n", index));
                     return new RowAffect();
                 }
 
                 final Advice advice = tf.getAdvice();
-                final Method method = advice.getMethod();
+                final GaMethod method = advice.getMethod();
                 final boolean accessible = advice.getMethod().isAccessible();
                 try {
                     method.setAccessible(true);
@@ -502,7 +502,7 @@ public class TimeTunnelCommand implements Command {
                     method.setAccessible(accessible);
                 }
 
-                sender.send(true, format("rePlay %s success.", index));
+                sender.send(true, format("rePlay time-fragment[%d] success.\n", index));
                 return new RowAffect(1);
             }
         };
@@ -520,7 +520,7 @@ public class TimeTunnelCommand implements Command {
                 if (timeTunnel.remove(index) != null) {
                     affect.rCnt(1);
                 }
-                sender.send(true, format("delete %s success.", index));
+                sender.send(true, format("delete time-fragment[%d] success.\n", index));
                 return affect;
             }
         };
@@ -600,7 +600,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeTunnel.get(index);
                 if (null == tf) {
-                    sender.send(true, format("%d fragment was not existed.", index));
+                    sender.send(true, format("time-fragment[%d] was not existed.\n", index));
                     return new RowAffect();
                 }
 

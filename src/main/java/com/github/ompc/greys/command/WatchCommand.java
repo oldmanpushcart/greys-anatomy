@@ -9,13 +9,13 @@ import com.github.ompc.greys.command.view.ObjectView;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Advice;
 import com.github.ompc.greys.util.Express.OgnlExpress;
+import com.github.ompc.greys.util.GaMethod;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
 
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
 import static com.github.ompc.greys.util.Advice.*;
@@ -125,7 +125,7 @@ public class WatchCommand implements Command {
                             public void before(
                                     ClassLoader loader,
                                     Class<?> clazz,
-                                    Method method,
+                                    GaMethod method,
                                     Object target,
                                     Object[] args) throws Throwable {
                                 if (isBefore) {
@@ -137,7 +137,7 @@ public class WatchCommand implements Command {
                             public void afterReturning(
                                     ClassLoader loader,
                                     Class<?> clazz,
-                                    Method method,
+                                    GaMethod method,
                                     Object target,
                                     Object[] args,
                                     Object returnObject) throws Throwable {
@@ -154,7 +154,7 @@ public class WatchCommand implements Command {
                             public void afterThrowing(
                                     ClassLoader loader,
                                     Class<?> clazz,
-                                    Method method,
+                                    GaMethod method,
                                     Object target,
                                     Object[] args,
                                     Throwable throwable) {

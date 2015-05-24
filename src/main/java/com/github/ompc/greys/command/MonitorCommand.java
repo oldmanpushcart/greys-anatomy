@@ -8,12 +8,12 @@ import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.server.Session;
+import com.github.ompc.greys.util.GaMethod;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
 
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -263,7 +263,7 @@ public class MonitorCommand implements Command {
                             public void before(
                                     ClassLoader loader,
                                     Class<?> clazz,
-                                    Method method,
+                                    GaMethod method,
                                     Object target,
                                     Object[] args) throws Throwable {
                                 beginTimestamp.set(currentTimeMillis());
@@ -273,7 +273,7 @@ public class MonitorCommand implements Command {
                             public void afterReturning(
                                     ClassLoader loader,
                                     Class<?> clazz,
-                                    Method method,
+                                    GaMethod method,
                                     Object target,
                                     Object[] args,
                                     Object returnObject) throws Throwable {
@@ -284,14 +284,14 @@ public class MonitorCommand implements Command {
                             public void afterThrowing(
                                     ClassLoader loader,
                                     Class<?> clazz,
-                                    Method method,
+                                    GaMethod method,
                                     Object target,
                                     Object[] args,
                                     Throwable throwable) {
                                 finishing(clazz, method, true);
                             }
 
-                            private void finishing(Class<?> clazz, Method method, boolean isThrowing) {
+                            private void finishing(Class<?> clazz, GaMethod method, boolean isThrowing) {
                                 final Long startTime = beginTimestamp.get();
                                 if (null == startTime) {
                                     return;

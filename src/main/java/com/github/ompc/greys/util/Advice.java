@@ -1,7 +1,5 @@
 package com.github.ompc.greys.util;
 
-import java.lang.reflect.Method;
-
 /**
  * 通知点
  * Created by vlinux on 15/5/20.
@@ -10,7 +8,7 @@ public class Advice {
 
     private final ClassLoader loader;
     private final Class<?> clazz;
-    private final Method method;
+    private final GaMethod method;
     private final Object target;
     private final Object[] params;
     private final Object returnObj;
@@ -59,7 +57,7 @@ public class Advice {
         return clazz;
     }
 
-    public Method getMethod() {
+    public GaMethod getMethod() {
         return method;
     }
 
@@ -78,7 +76,7 @@ public class Advice {
     private Advice(
             ClassLoader loader,
             Class<?> clazz,
-            Method method,
+            GaMethod method,
             Object target,
             Object[] params,
             Object returnObj,
@@ -97,7 +95,7 @@ public class Advice {
 
     public static Advice newForBefore(ClassLoader loader,
                                       Class<?> clazz,
-                                      Method method,
+                                      GaMethod method,
                                       Object target,
                                       Object[] params) {
         return new Advice(
@@ -114,7 +112,7 @@ public class Advice {
 
     public static Advice newForAfterRetuning(ClassLoader loader,
                                              Class<?> clazz,
-                                             Method method,
+                                             GaMethod method,
                                              Object target,
                                              Object[] params,
                                              Object returnObj) {
@@ -132,7 +130,7 @@ public class Advice {
 
     public static Advice newForAfterThrowing(ClassLoader loader,
                                              Class<?> clazz,
-                                             Method method,
+                                             GaMethod method,
                                              Object target,
                                              Object[] params,
                                              Throwable throwExp) {

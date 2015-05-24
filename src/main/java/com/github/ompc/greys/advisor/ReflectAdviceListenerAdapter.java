@@ -1,7 +1,11 @@
 package com.github.ompc.greys.advisor;
 
+import com.github.ompc.greys.util.GaMethod;
+
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import static com.github.ompc.greys.util.CheckUtil.isEquals;
 import static com.github.ompc.greys.util.StringUtil.tranClassName;
 
 /**
@@ -29,18 +33,66 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
 
     private Class<?> toClass(ClassLoader loader, String className) throws ClassNotFoundException {
         final String tranClassName = tranClassName(className);
-        return toClassLoader(loader).loadClass(tranClassName);
+        if (isEquals(className, "boolean")) {
+            return boolean.class;
+        } else if (isEquals(className, "char")) {
+            return char.class;
+        } else if (isEquals(className, "byte")) {
+            return byte.class;
+        } else if (isEquals(className, "short")) {
+            return short.class;
+        } else if (isEquals(className, "int")) {
+            return int.class;
+        } else if (isEquals(className, "float")) {
+            return float.class;
+        } else if (isEquals(className, "long")) {
+            return long.class;
+        } else if (isEquals(className, "double")) {
+            return double.class;
+        } else if (isEquals(className, "boolean[]")) {
+            return boolean[].class;
+        } else if (isEquals(className, "char[]")) {
+            return char[].class;
+        } else if (isEquals(className, "byte[]")) {
+            return byte[].class;
+        } else if (isEquals(className, "short[]")) {
+            return short[].class;
+        } else if (isEquals(className, "int[]")) {
+            return int[].class;
+        } else if (isEquals(className, "float[]")) {
+            return float[].class;
+        } else if (isEquals(className, "long[]")) {
+            return long[].class;
+        } else if (isEquals(className, "double[]")) {
+            return double[].class;
+        } else {
+            return toClassLoader(loader).loadClass(tranClassName);
+        }
     }
 
-    private Method toMethod(ClassLoader loader, Class<?> clazz, String methodName, String methodDesc)
+    private GaMethod toMethod(ClassLoader loader, Class<?> clazz, String methodName, String methodDesc)
             throws ClassNotFoundException, NoSuchMethodException {
         final org.objectweb.asm.Type asmType = org.objectweb.asm.Type.getMethodType(methodDesc);
         final Class<?>[] argsClasses = new Class<?>[asmType.getArgumentTypes().length];
         for (int index = 0; index < argsClasses.length; index++) {
             argsClasses[index] = toClass(loader, asmType.getArgumentTypes()[index].getClassName());
         }
-        return clazz.getDeclaredMethod(methodName, argsClasses);
+
+        if (isEquals(methodName, "<init>")) {
+            return GaMethod.newInit(toConstructor(clazz, argsClasses));
+        } else {
+            return GaMethod.newMethod(toMethod(clazz, methodName, argsClasses));
+        }
     }
+
+    private Method toMethod(Class<?> clazz, String methodName, Class<?>[] argClasses) throws NoSuchMethodException {
+        return clazz.getDeclaredMethod(methodName, argClasses);
+    }
+
+    private Constructor<?> toConstructor(Class<?> clazz, Class<?>[] argClasses) throws NoSuchMethodException {
+        return clazz.getDeclaredConstructor(argClasses);
+    }
+
 
     @Override
     final public void before(
@@ -79,7 +131,7 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
      * @throws Throwable 通知过程出错
      */
     public void before(
-            ClassLoader loader, Class<?> clazz, Method method,
+            ClassLoader loader, Class<?> clazz, GaMethod method,
             Object target, Object[] args) throws Throwable {
 
     }
@@ -98,7 +150,7 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
      * @throws Throwable 通知过程出错
      */
     public void afterReturning(
-            ClassLoader loader, Class<?> clazz, Method method,
+            ClassLoader loader, Class<?> clazz, GaMethod method,
             Object target, Object[] args,
             Object returnObject) throws Throwable {
 
@@ -117,7 +169,7 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
      * @throws Throwable 通知过程出错
      */
     public void afterThrowing(
-            ClassLoader loader, Class<?> clazz, Method method,
+            ClassLoader loader, Class<?> clazz, GaMethod method,
             Object target, Object[] args,
             Throwable throwable) throws Throwable {
 
