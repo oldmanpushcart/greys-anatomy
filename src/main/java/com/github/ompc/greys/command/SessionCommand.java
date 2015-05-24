@@ -85,18 +85,19 @@ public class SessionCommand implements Command {
     /*
      * 会话详情
      */
-    private String sessionToString(Session gaSession) {
+    private String sessionToString(Session session) {
 
         return new TableView(new TableView.ColumnDefine[]{
                 new TableView.ColumnDefine(TableView.Align.RIGHT),
                 new TableView.ColumnDefine(TableView.Align.LEFT)
         })
-                .addRow("JAVA_PID", gaSession.getJavaPid())
-                .addRow("SESSION_ID", gaSession.getSessionId())
-                .addRow("DURATION", gaSession.getSessionDuration())
-                .addRow("CHARSET", gaSession.getCharset())
-                .addRow("FROM", gaSession.getSocketChannel().socket().getRemoteSocketAddress())
-                .addRow("TO", gaSession.getSocketChannel().socket().getLocalSocketAddress())
+                .addRow("JAVA_PID", session.getJavaPid())
+                .addRow("SESSION_ID", session.getSessionId())
+                .addRow("DURATION", session.getSessionDuration())
+                .addRow("CHARSET", session.getCharset())
+                .addRow("PROMPT", session.getPrompt())
+                .addRow("FROM", session.getSocketChannel().socket().getRemoteSocketAddress())
+                .addRow("TO", session.getSocketChannel().socket().getLocalSocketAddress())
                 .border(true)
                 .padding(1)
                 .draw();
