@@ -33,22 +33,22 @@ public class DefaultSessionManager implements SessionManager {
     private final ConcurrentHashMap<Integer, Session> sessionMap = new ConcurrentHashMap<Integer, Session>();
 
     // 会话ID序列生成器
-    private final AtomicInteger gaSessionIndexSequence = new AtomicInteger(0);
+    private final AtomicInteger sessionIndexSequence = new AtomicInteger(0);
 
     private final AtomicBoolean isDestroyRef = new AtomicBoolean(false);
 
     public DefaultSessionManager() {
-        activeGaSessionExpireDaemon();
+        activeSessionExpireDaemon();
     }
 
     @Override
-    public Session getGaSession(int sessionId) {
+    public Session getSession(int sessionId) {
         return sessionMap.get(sessionId);
     }
 
     @Override
     public Session newSession(int javaPid, SocketChannel socketChannel, Charset charset) {
-        final int sessionId = gaSessionIndexSequence.getAndIncrement();
+        final int sessionId = sessionIndexSequence.getAndIncrement();
         final Session session = new Session(javaPid, sessionId, DEFAULT_SESSION_DURATION, socketChannel, charset) {
             @Override
             public void destroy() {
@@ -69,8 +69,8 @@ public class DefaultSessionManager implements SessionManager {
     /**
      * 激活会话过期管理守护线程
      */
-    private void activeGaSessionExpireDaemon() {
-        final Thread gaSessionExpireDaemon = new Thread("ga-session-expire-daemon") {
+    private void activeSessionExpireDaemon() {
+        final Thread sessionExpireDaemon = new Thread("ga-session-expire-daemon") {
 
             @Override
             public void run() {
@@ -86,12 +86,12 @@ public class DefaultSessionManager implements SessionManager {
 
                     for (final Map.Entry<Integer, Session> entry : sessionMap.entrySet()) {
 
-                        final int gaSessionId = entry.getKey();
+                        final int sessionId = entry.getKey();
                         final Session session = entry.getValue();
                         if (null == session
                                 || session.isExpired()) {
                             if (logger.isLoggable(Level.INFO)) {
-                                logger.log(Level.INFO, format("session was expired, sessionId=%d;", gaSessionId));
+                                logger.log(Level.INFO, format("session was expired, sessionId=%d;", sessionId));
                             }
 
                             if (null != session) {
@@ -112,7 +112,7 @@ public class DefaultSessionManager implements SessionManager {
                                 session.destroy();
                             }
 
-                            sessionMap.remove(gaSessionId);
+                            sessionMap.remove(sessionId);
 
                         }
 
@@ -121,14 +121,14 @@ public class DefaultSessionManager implements SessionManager {
                 }
             }
         };
-        gaSessionExpireDaemon.setDaemon(true);
-        gaSessionExpireDaemon.start();
+        sessionExpireDaemon.setDaemon(true);
+        sessionExpireDaemon.start();
     }
 
 
     @Override
     public void clean() {
-        // shutdown all the gaSession
+        // shutdown all the session
         for (Session session : sessionMap.values()) {
             session.destroy();
         }

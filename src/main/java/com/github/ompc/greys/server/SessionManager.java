@@ -25,7 +25,7 @@ public interface SessionManager {
      * @param sessionId 会话ID
      * @return 返回会话
      */
-    Session getGaSession(int sessionId);
+    Session getSession(int sessionId);
 
     /**
      * 关闭所有会话
