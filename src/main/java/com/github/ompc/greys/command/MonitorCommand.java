@@ -298,7 +298,6 @@ public class MonitorCommand implements Command {
                                 }
                                 final long cost = currentTimeMillis() - startTime;
                                 final Key key = new Key(clazz.getName(), method.getName());
-                                System.out.println(clazz.getName()+"$"+method.getName());
 
                                 while (true) {
                                     AtomicReference<Data> value = monitorData.get(key);
