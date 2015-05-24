@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.github.ompc.greys.command.view.TableView.Align.LEFT;
@@ -141,14 +140,14 @@ public class TimeTunnelCommand implements Command {
 
     @NamedArg(named = "s",
             hasValue = true,
-            summary = "search-express, searching the TimeTunnels by OGNL-express"
+            summary = "search-express, searching the time fragments by OGNL-express"
     )
     private String searchExpress = EMPTY;
 
 
-//    // play the index TimeTunnel
-//    @NamedArg(named = "p", summary = "rePlay the TimeTunnel of method called.")
-//    private boolean isPlay = false;
+    // play the index TimeTunnel
+    @NamedArg(named = "p", summary = "rePlay the time fragment of method called.")
+    private boolean isPlay = false;
 
     // delete the index TimeTunnel
     @NamedArg(named = "d", summary = "delete the index TimeTunnel")
@@ -165,13 +164,10 @@ public class TimeTunnelCommand implements Command {
      */
     private void checkArguments() {
 
-        // 检查d参数是否有i参数配套
-        if (isDelete) {
-
-            if (null == index) {
-                throw new IllegalArgumentException("miss TimeTunnel index, please type -i to appoint it.");
-            }
-
+        // 检查d/p参数是否有i参数配套
+        if ((isDelete || isPlay)
+                && null == index) {
+            throw new IllegalArgumentException("miss time fragments index, please type -i to appoint it.");
         }
 
         // 在t参数下class-pattern,method-pattern
@@ -192,9 +188,7 @@ public class TimeTunnelCommand implements Command {
                 && isBlank(watchExpress)
                 && !isList
                 && isBlank(searchExpress)
-//                && !isPlay
-                ) {
-
+                && !isPlay) {
             throw new IllegalArgumentException("miss arguments, type 'help tt' to got usage.");
 
         }
@@ -240,6 +234,7 @@ public class TimeTunnelCommand implements Command {
             "METHOD"
 
     };
+
 
     /*
      * do the TimeTunnel command
@@ -483,6 +478,35 @@ public class TimeTunnelCommand implements Command {
 
     }
 
+    /*
+     * 重放指定记录
+     */
+    private RowAction doPlay() {
+        return new RowAction() {
+            @Override
+            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+
+                final TimeFragment tf = timeTunnel.get(index);
+                if (null == tf) {
+                    sender.send(true, format("%d fragment was not existed.", index));
+                    return new RowAffect();
+                }
+
+                final Advice advice = tf.getAdvice();
+                final Method method = advice.getMethod();
+                final boolean accessible = advice.getMethod().isAccessible();
+                try {
+                    method.setAccessible(true);
+                    method.invoke(advice.getTarget(), advice.getParams());
+                } finally {
+                    method.setAccessible(accessible);
+                }
+
+                sender.send(true, format("rePlay %s success.", index));
+                return new RowAffect(1);
+            }
+        };
+    }
 
     /*
      * 删除指定记录
@@ -665,18 +689,6 @@ public class TimeTunnelCommand implements Command {
     @Override
     public Action getAction() {
 
-        if (logger.isLoggable(Level.FINE)) {
-            logger.log(Level.FINE, String.format("classPattern=%s;expend=%s;index=%s;isDelete=%s;isDeleteAll=%s;isList=%s;isRegEx=%s;watchExpress=%s;",
-                    this.classPattern,
-                    this.expend,
-                    this.index,
-                    this.isDelete,
-                    this.isDeleteAll,
-                    this.isList,
-                    this.isRegEx,
-                    this.watchExpress));
-        }
-
         // 检查参数
         checkArguments();
 
@@ -689,6 +701,8 @@ public class TimeTunnelCommand implements Command {
             action = doDeleteAll();
         } else if (isDelete) {
             action = doDelete();
+        } else if (isPlay) {
+            action = doPlay();
         } else if (null != index) {
             if (hasWatchExpress()) {
                 action = doWatch();
