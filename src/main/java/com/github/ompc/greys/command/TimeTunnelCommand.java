@@ -88,7 +88,7 @@ public class TimeTunnelCommand implements Command {
     private static final AtomicInteger sequence = new AtomicInteger(1000);
 
     // TimeTunnel the method call
-    @NamedArg(named = "t", summary = "TimeTunnel the method called.")
+    @NamedArg(named = "t", summary = "record the method call to time fragment.")
     private boolean isTimeTunnel = false;
 
     @IndexArg(index = 0, isRequired = false, name = "class-pattern", summary = "pattern matching of classpath.classname")
@@ -98,14 +98,14 @@ public class TimeTunnelCommand implements Command {
     private String methodPattern;
 
     // list the TimeTunnel
-    @NamedArg(named = "l", summary = "list all the TimeTunnels.")
+    @NamedArg(named = "l", summary = "list all the time fragments.")
     private boolean isList = false;
 
-    @NamedArg(named = "D", summary = "delete all TimeTunnels.")
+    @NamedArg(named = "D", summary = "delete all time fragments.")
     private boolean isDeleteAll = false;
 
     // index of TimeTunnel
-    @NamedArg(named = "i", hasValue = true, summary = "appoint the index of TimeTunnel. If use only, show the TimeTunnel detail.")
+    @NamedArg(named = "i", hasValue = true, summary = "appoint the index of time fragment. If use only, show the time fragment detail.")
     private Integer index;
 
     // expend of TimeTunnel
@@ -115,7 +115,7 @@ public class TimeTunnelCommand implements Command {
     // watch the index TimeTunnel
     @NamedArg(named = "w",
             hasValue = true,
-            summary = "watch-express, watch the TimeTunnel's data by OGNL-express, like params[0], returnObj, throwExp and so on.",
+            summary = "watch-express, watch the time fragment by OGNL-express, like params[0], returnObj, throwExp and so on.",
             description = ""
                     + " \n"
                     + "For example\n"
@@ -123,7 +123,9 @@ public class TimeTunnelCommand implements Command {
                     + "    : params[0]+params[1]\n"
                     + "    : returnObj\n"
                     + "    : throwExp\n"
-                    + "    : target.targetThis.getClass()\n"
+                    + "    : target\n"
+                    + "    : clazz\n"
+                    + "    : method\n"
                     + " \n"
                     + "The structure of 'advice'\n"
                     + "          target : the object entity\n"
