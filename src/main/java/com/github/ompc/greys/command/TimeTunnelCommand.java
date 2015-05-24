@@ -1,6 +1,8 @@
 package com.github.ompc.greys.command;
 
 import com.github.ompc.greys.advisor.AdviceListener;
+import com.github.ompc.greys.advisor.ReflectAdviceListenerAdapter;
+import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
@@ -13,11 +15,11 @@ import com.github.ompc.greys.util.Express.OgnlExpress;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
-import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -273,21 +275,22 @@ public class TimeTunnelCommand implements Command {
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new AdviceListener.AdviceListenerAdapter() {
+                        return new ReflectAdviceListenerAdapter() {
 
                             volatile boolean isFirst = true;
 
                             @Override
                             public void afterReturning(
-                                    String className,
-                                    String methodName,
-                                    String methodDesc,
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    Method method,
                                     Object target,
                                     Object[] args,
                                     Object returnObject) throws Throwable {
                                 afterFinishing(newForAfterRetuning(
-                                        className,
-                                        methodName,
+                                        loader,
+                                        clazz,
+                                        method,
                                         target,
                                         args,
                                         returnObject
@@ -296,15 +299,16 @@ public class TimeTunnelCommand implements Command {
 
                             @Override
                             public void afterThrowing(
-                                    String className,
-                                    String methodName,
-                                    String methodDesc,
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    Method method,
                                     Object target,
                                     Object[] args,
                                     Throwable throwable) {
                                 afterFinishing(newForAfterThrowing(
-                                        className,
-                                        methodName,
+                                        loader,
+                                        clazz,
+                                        method,
                                         target,
                                         args,
                                         throwable
@@ -553,8 +557,8 @@ public class TimeTunnelCommand implements Command {
                 advice.getTarget() == null
                         ? "NULL"
                         : "0x" + toHexString(advice.getTarget().hashCode()),
-                substringAfterLast("." + advice.getClassName(), "."),
-                advice.getMethodName()
+                substringAfterLast("." + advice.getClazz().getName(), "."),
+                advice.getMethod().getName()
         );
     }
 
@@ -575,8 +579,8 @@ public class TimeTunnelCommand implements Command {
                 }
 
                 final Advice advice = tf.getAdvice();
-                final String className = advice.getClassName();
-                final String methodName = advice.getMethodName();
+                final String className = advice.getClazz().getName();
+                final String methodName = advice.getMethod().getName();
                 final String objectAddress = advice.getTarget() == null
                         ? "NULL"
                         : "0x" + toHexString(advice.getTarget().hashCode());

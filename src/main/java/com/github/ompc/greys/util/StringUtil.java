@@ -352,6 +352,17 @@ public class StringUtil {
         }
     }
 
+
+    /**
+     * 翻译类名称<br/>
+     * 将 java/lang/String 的名称翻译成 java.lang.String
+     * @param className 类名称 java/lang/String
+     * @return 翻译后名称 java.lang.String
+     */
+    public static String tranClassName(String className) {
+        return replace(className, "/", ".");
+    }
+
     /**
      * 翻译Modifier值
      *

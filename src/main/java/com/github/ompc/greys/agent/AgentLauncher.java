@@ -59,6 +59,7 @@ public class AgentLauncher {
             props.put(KEY_GREYS_CLASS_LOADER, classLoader);
             props.put(KEY_GREYS_ADVICE_BEFORE_METHOD, clazz.getMethod("methodOnBegin",
                     int.class,
+                    ClassLoader.class,
                     String.class,
                     String.class,
                     String.class,

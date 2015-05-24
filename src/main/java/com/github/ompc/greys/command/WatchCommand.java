@@ -1,7 +1,7 @@
 package com.github.ompc.greys.command;
 
 import com.github.ompc.greys.advisor.AdviceListener;
-import com.github.ompc.greys.advisor.AdviceListener.AdviceListenerAdapter;
+import com.github.ompc.greys.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
@@ -15,11 +15,10 @@ import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
 
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
-import static com.github.ompc.greys.util.Advice.newForAfterRetuning;
-import static com.github.ompc.greys.util.Advice.newForAfterThrowing;
-import static com.github.ompc.greys.util.Advice.newForBefore;
+import static com.github.ompc.greys.util.Advice.*;
 import static com.github.ompc.greys.util.StringUtil.getCauseMessage;
 import static java.util.logging.Level.WARNING;
 
@@ -118,30 +117,30 @@ public class WatchCommand implements Command {
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new AdviceListenerAdapter() {
+                        return new ReflectAdviceListenerAdapter() {
 
                             @Override
                             public void before(
-                                    String className,
-                                    String methodName,
-                                    String methodDesc,
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    Method method,
                                     Object target,
                                     Object[] args) throws Throwable {
                                 if (isBefore) {
-                                    watching(newForBefore(className, methodName, target, args));
+                                    watching(newForBefore(loader, clazz, method, target, args));
                                 }
                             }
 
                             @Override
                             public void afterReturning(
-                                    String className,
-                                    String methodName,
-                                    String methodDesc,
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    Method method,
                                     Object target,
                                     Object[] args,
                                     Object returnObject) throws Throwable {
 
-                                final Advice advice = newForAfterRetuning(className, methodName, target, args, returnObject);
+                                final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
                                 if (isSuccess) {
                                     watching(advice);
                                 }
@@ -151,14 +150,14 @@ public class WatchCommand implements Command {
 
                             @Override
                             public void afterThrowing(
-                                    String className,
-                                    String methodName,
-                                    String methodDesc,
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    Method method,
                                     Object target,
                                     Object[] args,
                                     Throwable throwable) {
 
-                                final Advice advice = newForAfterThrowing(className, methodName, target, args, throwable);
+                                final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
                                 if (isException) {
                                     watching(advice);
                                 }

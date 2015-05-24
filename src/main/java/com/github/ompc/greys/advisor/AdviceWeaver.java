@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import static com.github.ompc.greys.agent.AgentLauncher.*;
-import static java.util.logging.Level.FINE;
+import static java.lang.String.format;
 import static java.util.logging.Level.WARNING;
 
 /**
@@ -41,6 +41,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * 方法开始<br/>
      * 用于编织通知器,外部不会直接调用
      *
+     * @param loader     类加载器
      * @param adviceId   通知ID
      * @param className  类名
      * @param methodName 方法名
@@ -51,11 +52,12 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      */
     public static void methodOnBegin(
             int adviceId,
-            String className, String methodName, String methodDesc,
+            ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args) {
 
         // 构建执行帧栈,保护当前的执行现场
         final Stack<Object> frameStack = new Stack<Object>();
+        frameStack.push(loader);
         frameStack.push(className);
         frameStack.push(methodName);
         frameStack.push(methodDesc);
@@ -64,7 +66,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         // 获取通知器并做前置通知
         final AdviceListener listener = advices.get(adviceId);
-        before(listener, className, methodName, methodDesc, target, args);
+        before(listener, loader, className, methodName, methodDesc, target, args);
 
         // 通知器也通过执行帧栈保存,到End环节恢复
         // 避免到End时再次通过advices获取,减少性能开销
@@ -115,15 +117,16 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         final String methodDesc = (String) frameStack.pop();
         final String methodName = (String) frameStack.pop();
         final String className = (String) frameStack.pop();
+        final ClassLoader loader = (ClassLoader) frameStack.pop();
 
         // 异常通知
         if (isThrowing) {
-            afterThrowing(listener, className, methodName, methodDesc, target, args, (Throwable) returnOrThrowable);
+            afterThrowing(listener, loader, className, methodName, methodDesc, target, args, (Throwable) returnOrThrowable);
         }
 
         // 返回通知
         else {
-            afterReturning(listener, className, methodName, methodDesc, target, args, returnOrThrowable);
+            afterReturning(listener, loader, className, methodName, methodDesc, target, args, returnOrThrowable);
         }
 
     }
@@ -178,30 +181,16 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
     }
 
-    /**
-     * 判断通知是否已经被注册
-     *
-     * @param adviceId 通知ID
-     * @return true : 已被注册 / false : 未被注册
-     */
-    public static boolean isReg(int adviceId) {
-        return advices.containsKey(adviceId);
-    }
-
-
     private static void before(AdviceListener listener,
-                               String className, String methodName, String methodDesc,
+                               ClassLoader loader, String className, String methodName, String methodDesc,
                                Object target, Object[] args) {
 
         if (null != listener) {
             try {
-                listener.before(className, methodName, methodDesc, target, args);
+                listener.before(loader, className, methodName, methodDesc, target, args);
             } catch (Throwable t) {
-                final String message = String.format("advice before : %s", t.getMessage());
                 if (logger.isLoggable(WARNING)) {
-                    logger.log(WARNING, message);
-                } else if (logger.isLoggable(FINE)) {
-                    logger.log(FINE, message, t);
+                    logger.log(WARNING, format("advice before : %s", t.getMessage()), t);
                 }
             }
         }
@@ -209,34 +198,28 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     }
 
     private static void afterReturning(AdviceListener listener,
-                                       String className, String methodName, String methodDesc,
+                                       ClassLoader loader, String className, String methodName, String methodDesc,
                                        Object target, Object[] args, Object returnObject) {
         if (null != listener) {
             try {
-                listener.afterReturning(className, methodName, methodDesc, target, args, returnObject);
+                listener.afterReturning(loader, className, methodName, methodDesc, target, args, returnObject);
             } catch (Throwable t) {
-                final String message = String.format("advice before : %s", t.getMessage());
                 if (logger.isLoggable(WARNING)) {
-                    logger.log(WARNING, message);
-                } else if (logger.isLoggable(FINE)) {
-                    logger.log(FINE, message, t);
+                    logger.log(WARNING, format("advice before : %s", t.getMessage()), t);
                 }
             }
         }
     }
 
     private static void afterThrowing(AdviceListener listener,
-                                      String className, String methodName, String methodDesc,
+                                      ClassLoader loader, String className, String methodName, String methodDesc,
                                       Object target, Object[] args, Throwable throwable) {
         if (null != listener) {
             try {
-                listener.afterThrowing(className, methodName, methodDesc, target, args, throwable);
+                listener.afterThrowing(loader, className, methodName, methodDesc, target, args, throwable);
             } catch (Throwable t) {
-                final String message = String.format("advice afterThrowing : %s", t.getMessage());
                 if (logger.isLoggable(WARNING)) {
-                    logger.log(WARNING, message);
-                } else if (logger.isLoggable(FINE)) {
-                    logger.log(FINE, message, t);
+                    logger.log(WARNING, format("advice afterThrowing : %s", t.getMessage()), t);
                 }
             }
         }
@@ -307,6 +290,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
             private final Label beginLabel = new Label();
             private final Label endLabel = new Label();
+            private final Type ASM_TYPE_THREAD = Type.getType(java.lang.Thread.class);
             private final Type ASM_TYPE_SYSTEM = Type.getType(java.lang.System.class);
             private final Type ASM_TYPE_METHOD = Type.getType(java.lang.reflect.Method.class);
             private final Type ASM_TYPE_PROPERTIES = Type.getType(java.util.Properties.class);
@@ -328,10 +312,18 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             }
 
             /**
+             * 加载ClassLoader
+             */
+            private void loadClassLoader() {
+                invokeStatic(ASM_TYPE_THREAD, Method.getMethod("Thread currentThread()"));
+                invokeVirtual(ASM_TYPE_THREAD, Method.getMethod("ClassLoader getContextClassLoader()"));
+            }
+
+            /**
              * 加载before通知参数数组
              */
             private void loadArrayForBefore() {
-                push(6);
+                push(7);
                 newArray(Type.getType(Object.class));
 
                 dup();
@@ -342,26 +334,31 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 dup();
                 push(1);
+                loadClassLoader();
+                arrayStore(Type.getType(ClassLoader.class));
+
+                dup();
+                push(2);
                 push(className);
                 arrayStore(Type.getType(String.class));
 
                 dup();
-                push(2);
+                push(3);
                 push(name);
                 arrayStore(Type.getType(String.class));
 
                 dup();
-                push(3);
+                push(4);
                 push(desc);
                 arrayStore(Type.getType(String.class));
 
                 dup();
-                push(4);
+                push(5);
                 loadThisOrPushNullIfIsStatic();
                 arrayStore(Type.getType(Object.class));
 
                 dup();
-                push(5);
+                push(6);
                 loadArgArray();
                 arrayStore(Type.getType(Object[].class));
             }

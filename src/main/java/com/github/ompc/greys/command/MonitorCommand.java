@@ -2,6 +2,7 @@ package com.github.ompc.greys.command;
 
 
 import com.github.ompc.greys.advisor.AdviceListener;
+import com.github.ompc.greys.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
@@ -12,6 +13,7 @@ import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
 
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -167,7 +169,7 @@ public class MonitorCommand implements Command {
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new AdviceListener() {
+                        return new ReflectAdviceListenerAdapter() {
 
                             /*
                              * 输出定时任务
@@ -259,9 +261,9 @@ public class MonitorCommand implements Command {
 
                             @Override
                             public void before(
-                                    String className,
-                                    String methodName,
-                                    String methodDesc,
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    Method method,
                                     Object target,
                                     Object[] args) throws Throwable {
                                 beginTimestamp.set(currentTimeMillis());
@@ -269,33 +271,33 @@ public class MonitorCommand implements Command {
 
                             @Override
                             public void afterReturning(
-                                    String className,
-                                    String methodName,
-                                    String methodDesc,
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    Method method,
                                     Object target,
                                     Object[] args,
                                     Object returnObject) throws Throwable {
-                                finishing(className, methodName, false);
+                                finishing(clazz, method, false);
                             }
 
                             @Override
                             public void afterThrowing(
-                                    String className,
-                                    String methodName,
-                                    String methodDesc,
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    Method method,
                                     Object target,
                                     Object[] args,
                                     Throwable throwable) {
-                                finishing(className, methodName, true);
+                                finishing(clazz, method, true);
                             }
 
-                            private void finishing(String className, String methodName, boolean isThrowing) {
+                            private void finishing(Class<?> clazz, Method method, boolean isThrowing) {
                                 final Long startTime = beginTimestamp.get();
                                 if (null == startTime) {
                                     return;
                                 }
                                 final long cost = currentTimeMillis() - startTime;
-                                final Key key = new Key(className, methodName);
+                                final Key key = new Key(clazz.getName(), method.getName());
 
                                 while (true) {
                                     AtomicReference<Data> value = monitorData.get(key);

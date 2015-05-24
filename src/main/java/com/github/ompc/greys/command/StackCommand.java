@@ -1,6 +1,7 @@
 package com.github.ompc.greys.command;
 
 import com.github.ompc.greys.advisor.AdviceListener;
+import com.github.ompc.greys.advisor.AdviceListenerAdapter;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
@@ -73,10 +74,11 @@ public class StackCommand implements Command {
 
                     @Override
                     public AdviceListener getAdviceListener() {
-                        return new AdviceListener.AdviceListenerAdapter() {
+                        return new AdviceListenerAdapter() {
 
                             @Override
                             public void before(
+                                    ClassLoader loader,
                                     String className,
                                     String methodName,
                                     String methodDesc,
