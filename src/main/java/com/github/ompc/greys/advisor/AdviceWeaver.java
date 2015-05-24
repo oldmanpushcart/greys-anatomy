@@ -446,7 +446,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             public void visitMaxs(int maxStack, int maxLocals) {
 
                 mark(endLabel);
-                catchException(beginLabel, endLabel, null);
+                catchException(beginLabel, endLabel, Type.getType(Throwable.class));
 
                 // 加载异常
                 loadThrow();
