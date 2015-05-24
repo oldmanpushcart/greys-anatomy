@@ -11,7 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
-import static com.github.ompc.greys.util.StringUtil.DEFAULT_PROMPT;
+import static com.github.ompc.greys.util.StringUtil.*;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.logging.Level.INFO;
@@ -166,7 +166,9 @@ public class Session {
      * @return 可以正常绘制的提示符
      */
     public String prompt() {
-        return "\r" + getPrompt();
+        return isNotBlank(getPrompt())
+                ? "\r" + getPrompt()
+                : EMPTY;
     }
 
     /**
