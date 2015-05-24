@@ -37,7 +37,7 @@ public class StringUtil {
     /**
      * 命令提示符
      */
-    public static final String DEFAULT_PROMPT = "\rga?>";
+    public static final String DEFAULT_PROMPT = "ga?>";
 
 
     /**

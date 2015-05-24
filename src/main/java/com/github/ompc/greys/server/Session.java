@@ -11,6 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+import static com.github.ompc.greys.util.StringUtil.DEFAULT_PROMPT;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.logging.Level.INFO;
@@ -35,6 +36,9 @@ public class Session {
     private final long sessionDuration;
     private final SocketChannel socketChannel;
     private Charset charset;
+
+    // 提示符
+    private String prompt = DEFAULT_PROMPT;
 
 
     // 会话最后一次交互时间(触摸时间)
@@ -153,6 +157,34 @@ public class Session {
      */
     public boolean isDestroy() {
         return isDestroy;
+    }
+
+    /**
+     * 获取提示符<br/>
+     * 这里主要是要求增加上\r
+     *
+     * @return 可以正常绘制的提示符
+     */
+    public String prompt() {
+        return "\r" + getPrompt();
+    }
+
+    /**
+     * 获取会话提示符
+     *
+     * @return 会话提示符
+     */
+    public String getPrompt() {
+        return prompt;
+    }
+
+    /**
+     * 设置会话提示符
+     *
+     * @param prompt 会话提示符
+     */
+    public void setPrompt(String prompt) {
+        this.prompt = prompt;
     }
 
     /**

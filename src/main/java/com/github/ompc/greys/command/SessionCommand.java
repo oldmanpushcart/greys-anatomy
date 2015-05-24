@@ -1,10 +1,10 @@
 package com.github.ompc.greys.command;
 
+import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.server.Session;
-import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.Charset;
@@ -28,14 +28,21 @@ public class SessionCommand implements Command {
     @NamedArg(named = "c", hasValue = true, summary = "change the charset of session")
     private String charsetString;
 
+    @NamedArg(named = "p", hasValue = true, summary = "change the prompt of session")
+    private String prompt;
+
     @Override
     public Action getAction() {
         return new RowAction() {
 
             @Override
             public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
-                // 如果是设置字符集
+
+                boolean isShow = true;
+                // 设置字符集
                 if (isNotBlank(charsetString)) {
+
+                    isShow = false;
 
                     try {
                         final Charset newCharset = Charset.forName(charsetString);
@@ -52,8 +59,20 @@ public class SessionCommand implements Command {
 
                 }
 
+                // 设置提示符
+                if (null != prompt) {
+
+                    isShow = false;
+
+                    final String beforePrompt = session.getPrompt();
+                    session.setPrompt(prompt);
+                    sender.send(true, format("change prompt before[%s] -> new[%s]\n",
+                            beforePrompt,
+                            prompt));
+                }
+
                 // 展示会话状态
-                else {
+                if (isShow) {
                     sender.send(true, sessionToString(session));
                 }
 

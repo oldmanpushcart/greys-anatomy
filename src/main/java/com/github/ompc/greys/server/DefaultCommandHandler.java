@@ -7,14 +7,14 @@ import com.github.ompc.greys.command.Command.*;
 import com.github.ompc.greys.command.Commands;
 import com.github.ompc.greys.command.QuitCommand;
 import com.github.ompc.greys.command.ShutdownCommand;
+import com.github.ompc.greys.command.affect.Affect;
+import com.github.ompc.greys.command.affect.EnhancerAffect;
+import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.exception.CommandException;
 import com.github.ompc.greys.exception.CommandInitializationException;
 import com.github.ompc.greys.exception.CommandNotFoundException;
 import com.github.ompc.greys.exception.GaExecuteException;
-import com.github.ompc.greys.command.affect.Affect;
-import com.github.ompc.greys.command.affect.EnhancerAffect;
 import com.github.ompc.greys.util.LogUtil;
-import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
@@ -65,7 +65,7 @@ public class DefaultCommandHandler implements CommandHandler {
                 logger.log(FINE, "reDrawPrompt for blank line.");
             }
 
-            reDrawPrompt(socketChannel, session.getCharset());
+            reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
             return;
         }
 
@@ -90,7 +90,7 @@ public class DefaultCommandHandler implements CommandHandler {
                     logger.log(FINE, "reDrawPrompt for command execute finished.");
                 }
 
-                reDrawPrompt(socketChannel, session.getCharset());
+                reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
             }
 
         }
@@ -108,7 +108,7 @@ public class DefaultCommandHandler implements CommandHandler {
             }
 
             write(socketChannel, message + "\n", session.getCharset());
-            reDrawPrompt(socketChannel, session.getCharset());
+            reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
 
             if (logger.isLoggable(INFO)) {
                 logger.log(INFO, message, t);
@@ -122,7 +122,7 @@ public class DefaultCommandHandler implements CommandHandler {
                 logger.log(WARNING, format("command execute failed, %s.", getCauseMessage(e)), e);
             }
             write(socketChannel, "command execute failed.\n", session.getCharset());
-            reDrawPrompt(socketChannel, session.getCharset());
+            reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
         }
 
     }
@@ -275,8 +275,8 @@ public class DefaultCommandHandler implements CommandHandler {
     /*
      * 绘制提示符
      */
-    private void reDrawPrompt(SocketChannel socketChannel, Charset charset) throws IOException {
-        write(socketChannel, DEFAULT_PROMPT, charset);
+    private void reDrawPrompt(SocketChannel socketChannel, Charset charset, String prompt) throws IOException {
+        write(socketChannel, prompt, charset);
     }
 
     /*

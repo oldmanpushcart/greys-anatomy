@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.github.ompc.greys.util.StringUtil.DEFAULT_PROMPT;
 import static com.github.ompc.greys.util.StringUtil.getLogo;
 import static java.lang.String.format;
 import static java.nio.channels.SelectionKey.OP_ACCEPT;
@@ -108,7 +107,7 @@ public class GaServer {
     private static final byte CTRL_X = 0x18;
 
     private final AtomicBoolean isBindRef = new AtomicBoolean(false);
-    private final SessionManager gaSessionManager;
+    private final SessionManager sessionManager;
     private final CommandHandler commandHandler;
     private final int javaPid;
 
@@ -123,7 +122,7 @@ public class GaServer {
 
     private GaServer(int javaPid, Instrumentation instrumentation) {
         this.javaPid = javaPid;
-        this.gaSessionManager = new DefaultGaSessionManager();
+        this.sessionManager = new DefaultGaSessionManager();
         this.commandHandler = new DefaultCommandHandler(this, instrumentation);
 
         Runtime.getRuntime().addShutdownHook(new Thread("ga-shutdown-hooker") {
@@ -132,7 +131,7 @@ public class GaServer {
             public void run() {
                 executorService.shutdown();
                 commandHandler.destroy();
-                gaSessionManager.destroy();
+                sessionManager.destroy();
                 if (isBind()) {
                     unbind();
                 }
@@ -244,14 +243,7 @@ public class GaServer {
 
     private void doAccept(SelectionKey key, Selector selector, Configure configure) throws IOException {
         final ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-        final SocketChannel socketChannel = acceptSocketChannel(selector, serverSocketChannel, configure);
-
-        // 这里输出Logo
-        socketChannel.write(ByteBuffer.wrap(getLogo().getBytes(DEFAULT_CHARSET)));
-
-        // 绘制提示符
-        reDrawPrompt(socketChannel, DEFAULT_CHARSET);
-
+        acceptSocketChannel(selector, serverSocketChannel, configure);
     }
 
     private SocketChannel acceptSocketChannel(Selector selector, ServerSocketChannel serverSocketChannel, Configure configure) throws IOException {
@@ -260,14 +252,23 @@ public class GaServer {
         socketChannel.socket().setSoTimeout(configure.getConnectTimeout());
         socketChannel.socket().setTcpNoDelay(true);
 
+
+        final Session session = sessionManager.newSession(javaPid, socketChannel, DEFAULT_CHARSET);
         socketChannel.register(selector, OP_READ, new GaAttachment(
                 BUFFER_SIZE,
-                gaSessionManager.newSession(javaPid, socketChannel, DEFAULT_CHARSET)));
+                sessionManager.newSession(javaPid, socketChannel, DEFAULT_CHARSET)));
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, format("%s accept an connection, client=%s;",
                     GaServer.this,
                     socketChannel));
         }
+
+        // 这里输出Logo
+        socketChannel.write(ByteBuffer.wrap(getLogo().getBytes(DEFAULT_CHARSET)));
+
+        // 绘制提示符
+        reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
+
         return socketChannel;
     }
 
@@ -375,8 +376,8 @@ public class GaServer {
     /*
      * 绘制提示符
      */
-    private void reDrawPrompt(SocketChannel socketChannel, Charset charset) throws IOException {
-        socketChannel.write(ByteBuffer.wrap(DEFAULT_PROMPT.getBytes(charset)));
+    private void reDrawPrompt(SocketChannel socketChannel, Charset charset, String prompt) throws IOException {
+        socketChannel.write(ByteBuffer.wrap(prompt.getBytes(charset)));
     }
 
     private void closeSocketChannel(SelectionKey key, SocketChannel socketChannel) {
@@ -389,7 +390,7 @@ public class GaServer {
      */
     public void unbind() {
 
-        gaSessionManager.clean();
+        sessionManager.clean();
 
         IOUtil.close(serverSocketChannel);
         IOUtil.close(selector);
