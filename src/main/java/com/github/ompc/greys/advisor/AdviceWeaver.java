@@ -75,7 +75,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         // 保护当前执行帧栈,压入线程帧栈
         threadFrameStackPush(frameStack);
 
-        System.out.println("BEFORE:frameStack.size=" + frameStack.size()+"==="+Thread.currentThread());
     }
 
 
@@ -130,8 +129,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         else {
             afterReturning(listener, loader, className, methodName, methodDesc, target, args, returnOrThrowable);
         }
-
-        System.out.println("END:frameStack.size="+frameStack.size()+"==="+Thread.currentThread());
 
     }
 
