@@ -125,15 +125,16 @@ public class TableView implements View {
 
                 for (int colIndex = 0; colIndex < getColumnCount(); colIndex++) {
 
-                    if (null == scannerArray[colIndex]) {
-                        scannerArray[colIndex] = new Scanner(
-                                new StringReader(
-                                        getData(rowIndex, columnDefineArray[colIndex])));
-                    }
 
                     final String borderChar = isBorder() ? "|" : EMPTY;
                     final int width = widthCacheArray[colIndex];
                     final boolean isLastColOfRow = colIndex == widthCacheArray.length - 1;
+
+
+                    if (null == scannerArray[colIndex]) {
+                        scannerArray[colIndex] = new Scanner(
+                                new StringReader(wrap(getData(rowIndex, columnDefineArray[colIndex]), width)));
+                    }
                     final Scanner scanner = scannerArray[colIndex];
 
                     final String data;
@@ -151,8 +152,9 @@ public class TableView implements View {
                         final String paddingChar = repeat(" ", padding);
 
                         segmentSB.append(
-                                format(borderChar + paddingChar + dataFormat + paddingChar,
-                                        summary(data, width)));
+                                //format(borderChar + paddingChar + dataFormat + paddingChar, summary(data, width))
+                                format(borderChar + paddingChar + dataFormat + paddingChar, data)
+                        );
 
                     }
 

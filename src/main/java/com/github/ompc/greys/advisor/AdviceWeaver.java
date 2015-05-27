@@ -74,6 +74,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         // 保护当前执行帧栈,压入线程帧栈
         threadFrameStackPush(frameStack);
+
+        System.out.println("BEFORE:frameStack.size=" + frameStack.size()+"==="+Thread.currentThread());
     }
 
 
@@ -129,7 +131,54 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             afterReturning(listener, loader, className, methodName, methodDesc, target, args, returnOrThrowable);
         }
 
+        System.out.println("END:frameStack.size="+frameStack.size()+"==="+Thread.currentThread());
+
     }
+
+    /**
+     * 方法内部调用开始
+     *
+     * @param owner 调用类名
+     * @param name  调用方法名
+     * @param desc  调用方法描述
+     */
+    public static void methodOnInvokeBeforeTracing(String owner, String name, String desc) {
+        final Stack<Object> frameStack = threadFrameStackPeek();
+        final InvokeTraceable listener = (InvokeTraceable) frameStack.peek();
+
+        if (null != listener) {
+            try {
+                listener.invokeBeforeTracing(owner, name, desc);
+            } catch (Throwable t) {
+                if (logger.isLoggable(WARNING)) {
+                    logger.log(WARNING, format("advice before invoking : %s", t.getMessage()), t);
+                }
+            }
+        }
+    }
+
+    /**
+     * 方法内部调用结束(正常返回)
+     *
+     * @param owner 调用类名
+     * @param name  调用方法名
+     * @param desc  调用方法描述
+     */
+    public static void methodOnInvokeAfterTracing(String owner, String name, String desc) {
+        final Stack<Object> frameStack = threadFrameStackPeek();
+        final InvokeTraceable listener = (InvokeTraceable) frameStack.peek();
+
+        if (null != listener) {
+            try {
+                listener.invokeAfterTracing(owner, name, desc);
+            } catch (Throwable t) {
+                if (logger.isLoggable(WARNING)) {
+                    logger.log(WARNING, format("advice after invoking : %s", t.getMessage()), t);
+                }
+            }
+        }
+    }
+
 
     /*
      * 线程帧栈压栈<br/>
@@ -146,6 +195,10 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
     private static Stack<Object> threadFrameStackPop() {
         return threadBoundContexts.get(Thread.currentThread()).pop();
+    }
+
+    private static Stack<Object> threadFrameStackPeek() {
+        return threadBoundContexts.get(Thread.currentThread()).peek();
     }
 
 
@@ -227,23 +280,27 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
 
     private final int adviceId;
+    private final boolean isTracing;
     private final String className;
     private final Matcher matcher;
     private final EnhancerAffect affect;
+
 
     /**
      * 构建通知编织器
      *
      * @param adviceId  通知ID
+     * @param isTracing 可跟踪方法调用
      * @param className 类名称
      * @param matcher   方法匹配
      *                  只有匹配上的方法才会被织入通知器
      * @param affect    影响计数
      * @param cv        ClassVisitor for ASM
      */
-    public AdviceWeaver(int adviceId, String className, Matcher matcher, EnhancerAffect affect, ClassVisitor cv) {
+    public AdviceWeaver(int adviceId, boolean isTracing, String className, Matcher matcher, EnhancerAffect affect, ClassVisitor cv) {
         super(ASM5, cv);
         this.adviceId = adviceId;
+        this.isTracing = isTracing;
         this.className = className;
         this.matcher = matcher;
         this.affect = affect;
@@ -541,6 +598,57 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
              */
             private void loadThrow() {
                 dup();
+            }
+
+
+            /**
+             * 加载方法调用跟踪通知所需参数数组
+             */
+            private void loadArrayForInvokeTracing(String owner, String name, String desc) {
+                push(3);
+                newArray(Type.getType(Object.class));
+
+                dup();
+                push(0);
+                push(owner);
+                arrayStore(Type.getType(String.class));
+
+                dup();
+                push(1);
+                push(name);
+                arrayStore(Type.getType(String.class));
+
+                dup();
+                push(2);
+                push(desc);
+                arrayStore(Type.getType(String.class));
+            }
+
+
+            @Override
+            public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+
+                // 方法调用前通知
+                if (isTracing) {
+                    loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD);
+                    pushNull();
+                    loadArrayForInvokeTracing(owner, name, desc);
+                    invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                    pop();
+                }
+
+                // 方法执行
+                super.visitMethodInsn(opcode, owner, name, desc, itf);
+
+                // 方法调用后通知
+                if (isTracing) {
+                    loadAdviceMethod(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD);
+                    pushNull();
+                    loadArrayForInvokeTracing(owner, name, desc);
+                    invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                    pop();
+                }
+
             }
 
         };

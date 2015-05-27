@@ -12,7 +12,7 @@ import static com.github.ompc.greys.util.StringUtil.repeat;
 public class LadderView implements View {
 
     // 分隔符
-    private static final String LADDER_CHAR = "`-->";
+    private static final String LADDER_CHAR = "`-";
 
     // 缩进符
     private static final String STEP_CHAR = " ";
@@ -60,6 +60,15 @@ public class LadderView implements View {
     public LadderView addItem(String item) {
         items.add(item);
         return this;
+    }
+
+    public static void main(String... args) {
+        LadderView view = new LadderView();
+        view.addItem("test");
+        view.addItem("test2");
+        view.addItem("test3");
+        view.addItem("test4");
+        System.out.println(view.draw());
     }
 
 }

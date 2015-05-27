@@ -21,7 +21,7 @@ public class Affect {
 
     @Override
     public String toString() {
-        return String.format("Affect in %s ms.", cost());
+        return String.format("Affect callback %s ms.", cost());
     }
 
 }

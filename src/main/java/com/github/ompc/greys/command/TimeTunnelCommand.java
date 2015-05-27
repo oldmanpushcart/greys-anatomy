@@ -614,7 +614,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TableView view = new TableView(new ColumnDefine[]{
                         new ColumnDefine(RIGHT),
-                        new ColumnDefine(LEFT)
+                        new ColumnDefine(50, false, LEFT)
                 })
                         .border(true)
                         .padding(1)

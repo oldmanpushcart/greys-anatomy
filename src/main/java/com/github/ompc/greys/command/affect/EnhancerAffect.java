@@ -61,7 +61,7 @@ public class EnhancerAffect extends Affect {
 
     @Override
     public String toString() {
-        return String.format("Affect(class-cnt:%d , method-cnt:%d) in %s ms.",
+        return String.format("Affect(class-cnt:%d , method-cnt:%d) callback %s ms.",
                 cCnt(),
                 mCnt(),
                 cost());

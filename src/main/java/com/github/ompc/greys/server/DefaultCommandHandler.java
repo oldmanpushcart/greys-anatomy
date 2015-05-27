@@ -1,7 +1,9 @@
 package com.github.ompc.greys.server;
 
+import com.github.ompc.greys.advisor.AdviceListener;
 import com.github.ompc.greys.advisor.AdviceWeaver;
 import com.github.ompc.greys.advisor.Enhancer;
+import com.github.ompc.greys.advisor.InvokeTraceable;
 import com.github.ompc.greys.command.Command;
 import com.github.ompc.greys.command.Command.*;
 import com.github.ompc.greys.command.Commands;
@@ -183,16 +185,18 @@ public class DefaultCommandHandler implements CommandHandler {
                 // 执行命令动作 & 获取增强器
                 final GetEnhancer getEnhancer = ((GetEnhancerAction) action).action(session, inst, sender);
                 final int lock = session.getLock();
+                final AdviceListener listener = getEnhancer.getAdviceListener();
                 final EnhancerAffect enhancerAffect = Enhancer.enhance(
                         inst,
                         lock,
+                        listener instanceof InvokeTraceable,
                         getEnhancer.getClassNameMatcher(),
                         getEnhancer.getMethodNameMatcher(),
                         getEnhancer.isIncludeSub()
                 );
 
                 // 注册通知监听器
-                AdviceWeaver.reg(lock, getEnhancer.getAdviceListener());
+                AdviceWeaver.reg(lock, listener);
                 sender.send(false, ABORT_MSG + "\n");
 
                 ((EnhancerAffect) affect).cCnt(enhancerAffect.cCnt());

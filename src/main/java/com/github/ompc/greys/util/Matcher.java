@@ -70,7 +70,7 @@ public interface Matcher {
             while (true) {
 
                 // check if end of string and/or pattern occurred
-                if ((sNdx >= sLen)) {   // end of string still may have pending '*' in pattern
+                if ((sNdx >= sLen)) {   // end of string still may have pending '*' callback pattern
                     while ((pNdx < pLen) && (pattern.charAt(pNdx) == '*')) {
                         pNdx++;
                     }

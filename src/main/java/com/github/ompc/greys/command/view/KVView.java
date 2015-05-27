@@ -23,6 +23,16 @@ public class KVView implements View {
                 .padding(0);
     }
 
+    public KVView(ColumnDefine keyColumnDefine, ColumnDefine valueColumnDefine) {
+        this.tableView = new TableView(new ColumnDefine[]{
+                keyColumnDefine,
+                new ColumnDefine(RIGHT),
+                valueColumnDefine
+        })
+                .border(false)
+                .padding(0);
+    }
+
     public KVView add(final Object key, final Object value) {
         tableView.addRow(key, " : ", value);
         return this;

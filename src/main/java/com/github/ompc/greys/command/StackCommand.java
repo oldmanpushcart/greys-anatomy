@@ -20,7 +20,7 @@ import static com.github.ompc.greys.util.StringUtil.getStack;
  *
  * @author vlinux
  */
-@Cmd(named = "stack", sort = 6, desc = "The call stack output buried point method in each thread.",
+@Cmd(named = "stack", sort = 6, desc = "The call stack output buried point method callback each thread.",
         eg = {
                 "stack -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
                 "stack org.apache.commons.lang.StringUtils isBlank",

@@ -37,6 +37,7 @@ public class Enhancer implements ClassFileTransformer {
     private static final Logger logger = LogUtil.getLogger();
 
     private final int adviceId;
+    private final boolean isTracing;
     private final Set<Class<?>> matchingClasses;
     private final Matcher methodNameMatcher;
     private final EnhancerAffect affect;
@@ -47,15 +48,18 @@ public class Enhancer implements ClassFileTransformer {
 
     /**
      * @param adviceId          通知编号
+     * @param isTracing         可跟踪方法调用
      * @param matchingClasses   匹配中的类
      * @param methodNameMatcher 方法名匹配
      * @param affect            影响统计
      */
     private Enhancer(int adviceId,
+                     boolean isTracing,
                      Set<Class<?>> matchingClasses,
                      Matcher methodNameMatcher,
                      EnhancerAffect affect) {
         this.adviceId = adviceId;
+        this.isTracing = isTracing;
         this.matchingClasses = matchingClasses;
         this.methodNameMatcher = methodNameMatcher;
         this.affect = affect;
@@ -96,7 +100,7 @@ public class Enhancer implements ClassFileTransformer {
         try {
 
             // 生成增强字节码
-            cr.accept(new AdviceWeaver(adviceId, cr.getClassName(), methodNameMatcher, affect, cw), EXPAND_FRAMES);
+            cr.accept(new AdviceWeaver(adviceId, isTracing, cr.getClassName(), methodNameMatcher, affect, cw), EXPAND_FRAMES);
             final byte[] enhanceClassByteArray = cw.toByteArray();
 
             // 生成成功,推入缓存
@@ -105,11 +109,11 @@ public class Enhancer implements ClassFileTransformer {
             // 成功计数
             affect.cCnt(1);
 
-//            // dump
-//            final java.io.OutputStream os = new FileOutputStream(new java.io.File("/tmp/AgentTest.class"));
-//            os.write(enhanceClassByteArray);
-//            os.flush();
-//            os.close();
+            // dump
+            final java.io.OutputStream os = new java.io.FileOutputStream(new java.io.File("/tmp/AgentTest.class"));
+            os.write(enhanceClassByteArray);
+            os.flush();
+            os.close();
 
             return enhanceClassByteArray;
         } catch (Throwable t) {
@@ -149,6 +153,7 @@ public class Enhancer implements ClassFileTransformer {
      *
      * @param inst              inst
      * @param adviceId          通知ID
+     * @param isTracing         可跟踪方法调用
      * @param classNameMatcher  类名匹配
      * @param methodNameMatcher 方法名匹配
      * @param isIncludeSub      是否包括子类
@@ -158,6 +163,7 @@ public class Enhancer implements ClassFileTransformer {
     public static synchronized EnhancerAffect enhance(
             final Instrumentation inst,
             final int adviceId,
+            final boolean isTracing,
             final Matcher classNameMatcher,
             final Matcher methodNameMatcher,
             final boolean isIncludeSub) throws UnmodifiableClassException {
@@ -173,7 +179,7 @@ public class Enhancer implements ClassFileTransformer {
         filter(enhanceClassSet);
 
         // 构建增强器
-        final Enhancer enhancer = new Enhancer(adviceId, enhanceClassSet, methodNameMatcher, affect);
+        final Enhancer enhancer = new Enhancer(adviceId, isTracing, enhanceClassSet, methodNameMatcher, affect);
         try {
             inst.addTransformer(enhancer, true);
 

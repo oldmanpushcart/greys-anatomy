@@ -269,7 +269,7 @@ public class StringUtil {
      * <p>A negative start position can be used to start/end <code>n</code>
      * characters from the end of the String.</p>
      * <p/>
-     * <p>The returned substring starts with the character in the <code>start</code>
+     * <p>The returned substring starts with the character callback the <code>start</code>
      * position and ends before the <code>end</code> position. All position counting is
      * zero-based -- i.e., to start at the beginning of the string use
      * <code>start = 0</code>. Negative start and end positions can be used to
@@ -356,6 +356,7 @@ public class StringUtil {
     /**
      * 翻译类名称<br/>
      * 将 java/lang/String 的名称翻译成 java.lang.String
+     *
      * @param className 类名称 java/lang/String
      * @return 翻译后名称 java.lang.String
      */
@@ -453,9 +454,9 @@ public class StringUtil {
      * StringUtils.isEmpty("  bob  ") = false
      * </pre>
      * <p/>
-     * <p>NOTE: This method changed in Lang version 2.0.
+     * <p>NOTE: This method changed callback Lang version 2.0.
      * It no longer trims the String.
-     * That functionality is available in isBlank().</p>
+     * That functionality is available callback isBlank().</p>
      *
      * @param str the String to check, may be null
      * @return <code>true</code> if the String is empty or null
@@ -548,6 +549,34 @@ public class StringUtil {
             return string;
         }
         return string.replace(oldStr, newStr);
+    }
+
+
+    /**
+     * 自动换行
+     *
+     * @param string 字符串
+     * @param width  行宽
+     * @return 换行后的字符串
+     */
+    public static String wrap(String string, int width) {
+        final StringBuilder sb = new StringBuilder();
+        final char[] buffer = string.toCharArray();
+        int index = 0;
+        for (char c : buffer) {
+            sb.append(c);
+            if( c == '\n' ) {
+                index = 0;
+            } else if (++index > width) {
+                sb.append("\n");
+                index = 0;
+            }
+        }
+        return sb.toString();
+    }
+
+    public static void main(String... args) {
+        System.out.println(wrap("12\n34567\n890", 5));
     }
 
 

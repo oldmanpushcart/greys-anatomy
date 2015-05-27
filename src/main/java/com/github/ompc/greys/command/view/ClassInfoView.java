@@ -70,7 +70,7 @@ public class ClassInfoView implements View {
 
             for (Field field : fields) {
 
-                final KVView kvView = new KVView()
+                final KVView kvView = new KVView(new ColumnDefine(RIGHT), new ColumnDefine(80, false, LEFT))
                         .add("modifier", tranModifier(field.getModifiers()))
                         .add("type", tranClassName(field.getType()))
                         .add("name", field.getName());
@@ -93,8 +93,7 @@ public class ClassInfoView implements View {
                     final boolean isAccessible = field.isAccessible();
                     try {
                         field.setAccessible(true);
-
-                        kvView.add("value", summary(newString(field.get(null)), 80));
+                        kvView.add("value", newString(field.get(null)));
                     } catch (IllegalAccessException e) {
                         //
                     } finally {

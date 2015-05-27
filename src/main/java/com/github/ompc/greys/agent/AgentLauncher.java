@@ -16,6 +16,8 @@ public class AgentLauncher {
     public static final String KEY_GREYS_ADVICE_BEFORE_METHOD = "KEY_GREYS_ADVICE_BEFORE_METHOD";
     public static final String KEY_GREYS_ADVICE_RETURN_METHOD = "KEY_GREYS_ADVICE_RETURN_METHOD";
     public static final String KEY_GREYS_ADVICE_THROWS_METHOD = "KEY_GREYS_ADVICE_THROWS_METHOD";
+    public static final String KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD = "KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD";
+    public static final String KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD = "KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD";
 
     public static void premain(String args, Instrumentation inst) {
         main(args, inst);
@@ -65,8 +67,18 @@ public class AgentLauncher {
                     String.class,
                     Object.class,
                     Object[].class));
-            props.put(KEY_GREYS_ADVICE_RETURN_METHOD, clazz.getMethod("methodOnReturnEnd", Object.class));
-            props.put(KEY_GREYS_ADVICE_THROWS_METHOD, clazz.getMethod("methodOnThrowingEnd", Throwable.class));
+            props.put(KEY_GREYS_ADVICE_RETURN_METHOD, clazz.getMethod("methodOnReturnEnd",
+                    Object.class));
+            props.put(KEY_GREYS_ADVICE_THROWS_METHOD, clazz.getMethod("methodOnThrowingEnd",
+                    Throwable.class));
+            props.put(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD, clazz.getMethod("methodOnInvokeBeforeTracing",
+                    String.class,
+                    String.class,
+                    String.class));
+            props.put(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD, clazz.getMethod("methodOnInvokeAfterTracing",
+                    String.class,
+                    String.class,
+                    String.class));
         }
 
         return classLoader;
