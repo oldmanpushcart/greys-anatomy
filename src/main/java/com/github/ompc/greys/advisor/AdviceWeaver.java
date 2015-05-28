@@ -1,5 +1,6 @@
 package com.github.ompc.greys.advisor;
 
+import com.github.ompc.greys.advisor.CodeLock.Block;
 import com.github.ompc.greys.command.affect.EnhancerAffect;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
@@ -343,6 +344,9 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
             private final Label beginLabel = new Label();
             private final Label endLabel = new Label();
+
+            private final CodeLock codeLockForTracing = new AsmCodeLock(this);
+
             private final Type ASM_TYPE_THREAD = Type.getType(java.lang.Thread.class);
             private final Type ASM_TYPE_SYSTEM = Type.getType(java.lang.System.class);
             private final Type ASM_TYPE_METHOD = Type.getType(java.lang.reflect.Method.class);
@@ -420,18 +424,23 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             @Override
             protected void onMethodEnter() {
 
-                // 加载before方法
-                loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_METHOD);
+                codeLockForTracing.lock(new Block() {
+                    @Override
+                    public void code() {
+                        // 加载before方法
+                        loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_METHOD);
 
-                // 推入Method.invoke()的第一个参数
-                pushNull();
+                        // 推入Method.invoke()的第一个参数
+                        pushNull();
 
-                // 方法参数
-                loadArrayForBefore();
+                        // 方法参数
+                        loadArrayForBefore();
 
-                // 调用方法
-                invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                pop();
+                        // 调用方法
+                        invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                        pop();
+                    }
+                });
 
                 mark(beginLabel);
 
@@ -455,24 +464,29 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             }
 
             @Override
-            protected void onMethodExit(int opcode) {
+            protected void onMethodExit(final int opcode) {
 
                 if (!isThrow(opcode)) {
 
-                    // 加载返回对象
-                    loadReturn(opcode);
+                    codeLockForTracing.lock(new Block() {
+                        @Override
+                        public void code() {
+                            // 加载返回对象
+                            loadReturn(opcode);
 
-                    // 加载returning方法
-                    loadAdviceMethod(KEY_GREYS_ADVICE_RETURN_METHOD);
+                            // 加载returning方法
+                            loadAdviceMethod(KEY_GREYS_ADVICE_RETURN_METHOD);
 
-                    // 推入Method.invoke()的第一个参数
-                    pushNull();
+                            // 推入Method.invoke()的第一个参数
+                            pushNull();
 
-                    // 加载return通知参数数组
-                    loadReturnArgs();
+                            // 加载return通知参数数组
+                            loadReturnArgs();
 
-                    invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                    pop();
+                            invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                            pop();
+                        }
+                    });
 
                 }
 
@@ -501,21 +515,26 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 mark(endLabel);
                 catchException(beginLabel, endLabel, Type.getType(Throwable.class));
 
-                // 加载异常
-                loadThrow();
+                codeLockForTracing.lock(new Block() {
+                    @Override
+                    public void code() {
+                        // 加载异常
+                        loadThrow();
 
-                // 加载throwing方法
-                loadAdviceMethod(KEY_GREYS_ADVICE_THROWS_METHOD);
+                        // 加载throwing方法
+                        loadAdviceMethod(KEY_GREYS_ADVICE_THROWS_METHOD);
 
-                // 推入Method.invoke()的第一个参数
-                pushNull();
+                        // 推入Method.invoke()的第一个参数
+                        pushNull();
 
-                // 加载throw通知参数数组
-                loadThrowArgs();
+                        // 加载throw通知参数数组
+                        loadThrowArgs();
 
-                // 调用方法
-                invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                pop();
+                        // 调用方法
+                        invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                        pop();
+                    }
+                });
 
                 throwException();
                 super.visitMaxs(maxStack, maxLocals);
@@ -628,27 +647,43 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
 
             @Override
-            public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+            public void visitInsn(int opcode) {
+                super.visitInsn(opcode);
+                codeLockForTracing.code(opcode);
+            }
+
+            @Override
+            public void visitMethodInsn(int opcode, final String owner, final String name, final String desc, boolean itf) {
 
                 // 方法调用前通知
-                if (isTracing) {
-                    loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD);
-                    pushNull();
-                    loadArrayForInvokeTracing(owner, name, desc);
-                    invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                    pop();
+                if (isTracing && !codeLockForTracing.isLock()) {
+                    codeLockForTracing.lock(new Block() {
+                        @Override
+                        public void code() {
+                            loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD);
+                            pushNull();
+                            loadArrayForInvokeTracing(owner, name, desc);
+                            invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                            pop();
+                        }
+                    });
                 }
 
                 // 方法执行
                 super.visitMethodInsn(opcode, owner, name, desc, itf);
 
                 // 方法调用后通知
-                if (isTracing) {
-                    loadAdviceMethod(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD);
-                    pushNull();
-                    loadArrayForInvokeTracing(owner, name, desc);
-                    invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                    pop();
+                if (isTracing && !codeLockForTracing.isLock()) {
+                    codeLockForTracing.lock(new Block() {
+                        @Override
+                        public void code() {
+                            loadAdviceMethod(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD);
+                            pushNull();
+                            loadArrayForInvokeTracing(owner, name, desc);
+                            invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                            pop();
+                        }
+                    });
                 }
 
             }
