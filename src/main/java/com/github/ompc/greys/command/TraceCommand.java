@@ -101,7 +101,7 @@ public class TraceCommand implements Command {
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc) throws Throwable {
-                                threadBoundEntity.get().view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "(" + tracingMethodDesc + ")");
+                                threadBoundEntity.get().view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
                             }
 
                             @Override
@@ -117,7 +117,7 @@ public class TraceCommand implements Command {
                                     ClassLoader loader,
                                     String className, String methodName, String methodDesc,
                                     Object target, Object[] args) throws Throwable {
-                                threadBoundEntity.get().view.begin(tranClassName(className) + ":" + methodName + "(" + methodDesc + ")");
+                                threadBoundEntity.get().view.begin(tranClassName(className) + ":" + methodName + "()");
                                 threadBoundEntity.get().deep++;
                             }
 
@@ -135,7 +135,7 @@ public class TraceCommand implements Command {
                                     ClassLoader loader,
                                     String className, String methodName, String methodDesc,
                                     Object target, Object[] args, Throwable throwable) throws Throwable {
-                                threadBoundEntity.get().view.begin("throw:" + throwable.getClass().getName() + "(" + methodDesc + ")").end().end();
+                                threadBoundEntity.get().view.begin("throw:" + throwable.getClass().getName() + "()").end().end();
                                 finishing();
                             }
 
