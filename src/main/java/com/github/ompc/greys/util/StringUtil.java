@@ -228,28 +228,28 @@ public class StringUtil {
     }
 
 
-    /**
-     * 产生摘要
-     *
-     * @param str    字符串内容
-     * @param length 摘要长度
-     * @return 字符串的摘要信息
-     */
-    public static String summary(String str, int length) {
-
-        final StringBuilder sb = new StringBuilder();
-
-        if (length(str) <= length) {
-            sb.append(str);
-        } else if (length <= 3) {
-            sb.append(substring(str, 0, 3));
-        } else {
-            sb.append(substring(str, 0, length - 3)).append("...");
-        }
-
-        return sb.toString();
-
-    }
+//    /**
+//     * 产生摘要
+//     *
+//     * @param str    字符串内容
+//     * @param length 摘要长度
+//     * @return 字符串的摘要信息
+//     */
+//    private static String summary(String str, int length) {
+//
+//        final StringBuilder sb = new StringBuilder();
+//
+//        if (length(str) <= length) {
+//            sb.append(str);
+//        } else if (length <= 3) {
+//            sb.append(substring(str, 0, 3));
+//        } else {
+//            sb.append(substring(str, 0, length - 3)).append("...");
+//        }
+//
+//        return sb.toString();
+//
+//    }
 
     /**
      * Gets a String's length or <code>0</code> if the String is <code>null</code>.
@@ -260,75 +260,6 @@ public class StringUtil {
      */
     public static int length(String str) {
         return str == null ? 0 : str.length();
-    }
-
-
-    /**
-     * <p>Gets a substring from the specified String avoiding exceptions.</p>
-     * <p/>
-     * <p>A negative start position can be used to start/end <code>n</code>
-     * characters from the end of the String.</p>
-     * <p/>
-     * <p>The returned substring starts with the character callback the <code>start</code>
-     * position and ends before the <code>end</code> position. All position counting is
-     * zero-based -- i.e., to start at the beginning of the string use
-     * <code>start = 0</code>. Negative start and end positions can be used to
-     * specify offsets relative to the end of the String.</p>
-     * <p/>
-     * <p>If <code>start</code> is not strictly to the left of <code>end</code>, ""
-     * is returned.</p>
-     * <p/>
-     * <pre>
-     * StringUtils.substring(null, *, *)    = null
-     * StringUtils.substring("", * ,  *)    = "";
-     * StringUtils.substring("abc", 0, 2)   = "ab"
-     * StringUtils.substring("abc", 2, 0)   = ""
-     * StringUtils.substring("abc", 2, 4)   = "c"
-     * StringUtils.substring("abc", 4, 6)   = ""
-     * StringUtils.substring("abc", 2, 2)   = ""
-     * StringUtils.substring("abc", -2, -1) = "b"
-     * StringUtils.substring("abc", -4, 2)  = "ab"
-     * </pre>
-     *
-     * @param str   the String to get the substring from, may be null
-     * @param start the position to start from, negative means
-     *              count back from the end of the String by this many characters
-     * @param end   the position to end at (exclusive), negative means
-     *              count back from the end of the String by this many characters
-     * @return substring from start position to end positon,
-     * <code>null</code> if null String input
-     */
-    public static String substring(String str, int start, int end) {
-        if (str == null) {
-            return null;
-        }
-
-        // handle negatives
-        if (end < 0) {
-            end = str.length() + end; // remember end is negative
-        }
-        if (start < 0) {
-            start = str.length() + start; // remember start is negative
-        }
-
-        // check length next
-        if (end > str.length()) {
-            end = str.length();
-        }
-
-        // if start is greater than end, return ""
-        if (start > end) {
-            return EMPTY;
-        }
-
-        if (start < 0) {
-            start = 0;
-        }
-        if (end < 0) {
-            end = 0;
-        }
-
-        return str.substring(start, end);
     }
 
 
