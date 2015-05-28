@@ -64,13 +64,11 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         frameStack.push(target);
         frameStack.push(args);
 
-        // 获取通知器并做前置通知
-        final AdviceListener listener = advices.get(adviceId);
-        before(listener, loader, className, methodName, methodDesc, target, args);
-
-        // 通知器也通过执行帧栈保存,到End环节恢复
-        // 避免到End时再次通过advices获取,减少性能开销
+        final AdviceListener listener = getListener(adviceId);
         frameStack.push(listener);
+
+        // 获取通知器并做前置通知
+        before(listener, loader, className, methodName, methodDesc, target, args);
 
         // 保护当前执行帧栈,压入线程帧栈
         threadFrameStackPush(frameStack);
@@ -111,7 +109,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         final Stack<Object> frameStack = threadFrameStackPop();
 
         // 弹射执行帧栈,恢复Begin所保护的现场
-        // 当然了，这里弹射的是对象的引用，并不能真正像寄存器那样恢复真正的值
         final AdviceListener listener = (AdviceListener) frameStack.pop();
         final Object[] args = (Object[]) frameStack.pop();
         final Object target = frameStack.pop();
@@ -135,14 +132,13 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     /**
      * 方法内部调用开始
      *
-     * @param owner 调用类名
-     * @param name  调用方法名
-     * @param desc  调用方法描述
+     * @param adviceId 通知ID
+     * @param owner    调用类名
+     * @param name     调用方法名
+     * @param desc     调用方法描述
      */
-    public static void methodOnInvokeBeforeTracing(String owner, String name, String desc) {
-        final Stack<Object> frameStack = threadFrameStackPeek();
-        final InvokeTraceable listener = (InvokeTraceable) frameStack.peek();
-
+    public static void methodOnInvokeBeforeTracing(int adviceId, String owner, String name, String desc) {
+        final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
                 listener.invokeBeforeTracing(owner, name, desc);
@@ -157,14 +153,13 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     /**
      * 方法内部调用结束(正常返回)
      *
-     * @param owner 调用类名
-     * @param name  调用方法名
-     * @param desc  调用方法描述
+     * @param adviceId 通知ID
+     * @param owner    调用类名
+     * @param name     调用方法名
+     * @param desc     调用方法描述
      */
-    public static void methodOnInvokeAfterTracing(String owner, String name, String desc) {
-        final Stack<Object> frameStack = threadFrameStackPeek();
-        final InvokeTraceable listener = (InvokeTraceable) frameStack.peek();
-
+    public static void methodOnInvokeAfterTracing(int adviceId, String owner, String name, String desc) {
+        final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
                 listener.invokeAfterTracing(owner, name, desc);
@@ -196,6 +191,10 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
     private static Stack<Object> threadFrameStackPeek() {
         return threadBoundContexts.get(Thread.currentThread()).peek();
+    }
+
+    private static AdviceListener getListener(int adviceId) {
+        return advices.get(adviceId);
     }
 
 
@@ -602,21 +601,27 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
              * 加载方法调用跟踪通知所需参数数组
              */
             private void loadArrayForInvokeTracing(String owner, String name, String desc) {
-                push(3);
+                push(4);
                 newArray(Type.getType(Object.class));
 
                 dup();
                 push(0);
+                push(adviceId);
+                box(Type.getType(int.class));
+                arrayStore(Type.getType(Integer.class));
+
+                dup();
+                push(1);
                 push(owner);
                 arrayStore(Type.getType(String.class));
 
                 dup();
-                push(1);
+                push(2);
                 push(name);
                 arrayStore(Type.getType(String.class));
 
                 dup();
-                push(2);
+                push(3);
                 push(desc);
                 arrayStore(Type.getType(String.class));
             }

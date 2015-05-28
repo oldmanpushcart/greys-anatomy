@@ -71,11 +71,14 @@ public class AgentLauncher {
                     Object.class));
             props.put(KEY_GREYS_ADVICE_THROWS_METHOD, clazz.getMethod("methodOnThrowingEnd",
                     Throwable.class));
+
             props.put(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD, clazz.getMethod("methodOnInvokeBeforeTracing",
+                    int.class,
                     String.class,
                     String.class,
                     String.class));
             props.put(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD, clazz.getMethod("methodOnInvokeAfterTracing",
+                    int.class,
                     String.class,
                     String.class,
                     String.class));
