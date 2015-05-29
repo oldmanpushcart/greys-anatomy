@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 
 import static com.github.ompc.greys.agent.AgentLauncher.*;
 import static java.lang.String.format;
+import static java.lang.Thread.currentThread;
 import static java.util.logging.Level.WARNING;
 
 /**
@@ -178,7 +179,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * 将当前执行帧栈压入线程栈
      */
     private static void threadFrameStackPush(Stack<Object> frameStack) {
-        final Thread thread = Thread.currentThread();
+        final Thread thread = currentThread();
         Stack<Stack<Object>> threadFrameStack = threadBoundContexts.get(thread);
         if (null == threadFrameStack) {
             threadBoundContexts.put(thread, threadFrameStack = new Stack<Stack<Object>>());
@@ -187,7 +188,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     }
 
     private static Stack<Object> threadFrameStackPop() {
-        return threadBoundContexts.get(Thread.currentThread()).pop();
+        return threadBoundContexts.get(currentThread()).pop();
     }
 
     private static AdviceListener getListener(int adviceId) {
@@ -356,6 +357,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
              *                    AgentLauncher.KEY_GREYS_ADVICE_BEFORE_METHOD
              *                    AgentLauncher.KEY_GREYS_ADVICE_RETURN_METHOD
              *                    AgentLauncher.KEY_GREYS_ADVICE_THROWS_METHOD
+             *                    AgentLauncher.KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD
+             *                    AgentLauncher.KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD
              */
             private void loadAdviceMethod(String keyOfMethod) {
                 invokeStatic(ASM_TYPE_SYSTEM, Method.getMethod("java.util.Properties getProperties()"));
