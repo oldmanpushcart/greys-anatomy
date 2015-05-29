@@ -190,10 +190,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         return threadBoundContexts.get(Thread.currentThread()).pop();
     }
 
-    private static Stack<Object> threadFrameStackPeek() {
-        return threadBoundContexts.get(Thread.currentThread()).peek();
-    }
-
     private static AdviceListener getListener(int adviceId) {
         return advices.get(adviceId);
     }
