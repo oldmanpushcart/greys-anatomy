@@ -237,7 +237,7 @@ public class MonitorCommand implements Command {
                                                         data.success,
                                                         data.failed,
                                                         df.format(div(data.cost, data.total)),
-                                                        df.format(100.0d * div(data.failed, data.total))
+                                                        df.format(100.0d * div(data.failed, data.total))+"%"
                                                 );
 
                                             }

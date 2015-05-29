@@ -81,7 +81,7 @@ public class TimeTunnelCommand implements Command {
     private final Logger logger = LogUtil.getLogger();
 
     // 时间隧道(时间碎片的集合)
-    private static final Map<Integer, TimeFragment> timeTunnel = new LinkedHashMap<Integer, TimeFragment>();
+    private static final Map<Integer, TimeFragment> timeFragmentMap = new LinkedHashMap<Integer, TimeFragment>();
 
     // 时间碎片序列生成器
     private static final AtomicInteger sequence = new AtomicInteger(1000);
@@ -150,7 +150,7 @@ public class TimeTunnelCommand implements Command {
     private boolean isPlay = false;
 
     // delete the index TimeTunnel
-    @NamedArg(named = "d", summary = "delete the index TimeTunnel")
+    @NamedArg(named = "d", summary = "delete the index time fragment")
     private boolean isDelete = false;
 
     @NamedArg(named = "S", summary = "including sub class")
@@ -200,7 +200,7 @@ public class TimeTunnelCommand implements Command {
      */
     private int putTimeTunnel(TimeFragment tt) {
         final int index = sequence.getAndIncrement();
-        timeTunnel.put(index, tt);
+        timeFragmentMap.put(index, tt);
         return index;
     }
 
@@ -344,15 +344,15 @@ public class TimeTunnelCommand implements Command {
 
 
     /*
-     * do list timeTunnel
+     * do list timeFragmentMap
      */
     private RowAction doList() {
 
         return new RowAction() {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
-                sender.send(true, drawTimeTunnelTable(timeTunnel));
-                return new RowAffect(timeTunnel.size());
+                sender.send(true, drawTimeTunnelTable(timeFragmentMap));
+                return new RowAffect(timeFragmentMap.size());
             }
         };
 
@@ -373,7 +373,7 @@ public class TimeTunnelCommand implements Command {
     }
 
     /*
-     * do search timeTunnel
+     * do search timeFragmentMap
      */
     private RowAction doSearch() {
 
@@ -384,7 +384,7 @@ public class TimeTunnelCommand implements Command {
                 // 匹配的时间片段
                 final Map<Integer, TimeFragment> matchingTimeSegmentMap = new LinkedHashMap<Integer, TimeFragment>();
 
-                for (Map.Entry<Integer, TimeFragment> entry : timeTunnel.entrySet()) {
+                for (Map.Entry<Integer, TimeFragment> entry : timeFragmentMap.entrySet()) {
                     final int index = entry.getKey();
                     final TimeFragment tf = entry.getValue();
                     final Advice advice = tf.getAdvice();
@@ -440,8 +440,8 @@ public class TimeTunnelCommand implements Command {
 
             @Override
             public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
-                final int count = timeTunnel.size();
-                timeTunnel.clear();
+                final int count = timeFragmentMap.size();
+                timeFragmentMap.clear();
                 sender.send(true, "time fragments was clean.\n");
                 return new RowAffect(count);
             }
@@ -458,7 +458,7 @@ public class TimeTunnelCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
 
-                final TimeFragment tf = timeTunnel.get(index);
+                final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
                     sender.send(true, format("time-fragment[%d] was not existed.\n", index));
                     return new RowAffect();
@@ -486,7 +486,7 @@ public class TimeTunnelCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
 
-                final TimeFragment tf = timeTunnel.get(index);
+                final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
                     sender.send(true, format("time-fragment[%d] was not existed.\n", index));
                     return new RowAffect();
@@ -517,7 +517,7 @@ public class TimeTunnelCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
                 final RowAffect affect = new RowAffect();
-                if (timeTunnel.remove(index) != null) {
+                if (timeFragmentMap.remove(index) != null) {
                     affect.rCnt(1);
                 }
                 sender.send(true, format("delete time-fragment[%d] success.\n", index));
@@ -598,7 +598,7 @@ public class TimeTunnelCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
 
-                final TimeFragment tf = timeTunnel.get(index);
+                final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
                     sender.send(true, format("time-fragment[%d] was not existed.\n", index));
                     return new RowAffect();

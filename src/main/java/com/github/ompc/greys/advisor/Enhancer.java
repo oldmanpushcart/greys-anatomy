@@ -11,10 +11,7 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static com.github.ompc.greys.util.CheckUtil.isEquals;
@@ -193,6 +190,63 @@ public class Enhancer implements ClassFileTransformer {
 
         } finally {
             inst.removeTransformer(enhancer);
+        }
+
+        return affect;
+    }
+
+
+    /**
+     * 重置指定的Class
+     *
+     * @param inst             inst
+     * @param classNameMatcher 类名匹配
+     * @return 增强影响范围
+     * @throws UnmodifiableClassException
+     */
+    public static synchronized EnhancerAffect reset(
+            final Instrumentation inst,
+            final Matcher classNameMatcher) throws UnmodifiableClassException {
+
+        final EnhancerAffect affect = new EnhancerAffect();
+        final Set<Class<?>> enhanceClassSet = new HashSet<Class<?>>();
+
+        for (Class<?> classInCache : classBytesCache.keySet()) {
+            if (classNameMatcher.matching(classInCache.getName())) {
+                enhanceClassSet.add(classInCache);
+            }
+        }
+
+        final ClassFileTransformer resetClassFileTransformer = new ClassFileTransformer() {
+            @Override
+            public byte[] transform(
+                    ClassLoader loader,
+                    String className,
+                    Class<?> classBeingRedefined,
+                    ProtectionDomain protectionDomain,
+                    byte[] classfileBuffer) throws IllegalClassFormatException {
+                return null;
+            }
+        };
+
+        try {
+
+            inst.addTransformer(resetClassFileTransformer, true);
+
+            // 批量增强
+            final int size = enhanceClassSet.size();
+            final Class<?>[] classArray = new Class<?>[size];
+            arraycopy(enhanceClassSet.toArray(), 0, classArray, 0, size);
+            if (classArray.length > 0) {
+                inst.retransformClasses(classArray);
+            }
+
+        } finally {
+            inst.removeTransformer(resetClassFileTransformer);
+            for (Class<?> resetClass : enhanceClassSet) {
+                classBytesCache.remove(resetClass);
+                affect.cCnt(1);
+            }
         }
 
         return affect;

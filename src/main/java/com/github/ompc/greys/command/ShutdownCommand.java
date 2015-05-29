@@ -1,7 +1,11 @@
 package com.github.ompc.greys.command;
 
+import com.github.ompc.greys.advisor.Enhancer;
+import com.github.ompc.greys.command.affect.EnhancerAffect;
+import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.server.Session;
+import com.github.ompc.greys.util.Matcher;
 
 import java.lang.instrument.Instrumentation;
 
@@ -17,11 +21,18 @@ public class ShutdownCommand implements Command {
 
     @Override
     public Action getAction() {
-        return new SilentAction() {
-
+        return new RowAction() {
             @Override
-            public void action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+
+                // 退出之前需要重置所有的增强类
+                final EnhancerAffect enhancerAffect = Enhancer.reset(
+                        inst,
+                        new Matcher.WildcardMatcher("*")
+                );
+
                 sender.send(true, "Greys shutdown completed.\n");
+                return new RowAffect(enhancerAffect.cCnt());
             }
 
         };
