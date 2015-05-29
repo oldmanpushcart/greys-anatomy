@@ -227,30 +227,6 @@ public class StringUtil {
         return new String(buf);
     }
 
-
-//    /**
-//     * 产生摘要
-//     *
-//     * @param str    字符串内容
-//     * @param length 摘要长度
-//     * @return 字符串的摘要信息
-//     */
-//    private static String summary(String str, int length) {
-//
-//        final StringBuilder sb = new StringBuilder();
-//
-//        if (length(str) <= length) {
-//            sb.append(str);
-//        } else if (length <= 3) {
-//            sb.append(substring(str, 0, 3));
-//        } else {
-//            sb.append(substring(str, 0, length - 3)).append("...");
-//        }
-//
-//        return sb.toString();
-//
-//    }
-
     /**
      * Gets a String's length or <code>0</code> if the String is <code>null</code>.
      *
@@ -445,25 +421,6 @@ public class StringUtil {
             return EMPTY;
         }
         return str.substring(pos + separator.length());
-    }
-
-
-    /**
-     * 行转换为列
-     *
-     * @param str       列字符串
-     * @param splitChar 拆分割字符串
-     * @return 行字符串
-     */
-    public static String rowToCol(String str, String splitChar) {
-        final StringBuilder sb = new StringBuilder();
-        final String[] split = str.split(splitChar);
-        for (String s : split) {
-            if (null != s) {
-                sb.append(s.trim()).append("\n");
-            }
-        }
-        return sb.toString();
     }
 
 

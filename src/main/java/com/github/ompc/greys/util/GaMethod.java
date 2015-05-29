@@ -73,11 +73,9 @@ public class GaMethod {
     }
 
     public Object invoke(Object target, Object... args) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        if (isInit()
-                || isInit()) {
-            return constructor.newInstance(args);
-        }
-        return method.invoke(target, args);
+        return isInit()
+                ? constructor.newInstance(args)
+                : method.invoke(target, args);
     }
 
     private GaMethod(int type, Constructor<?> constructor, Method method) {

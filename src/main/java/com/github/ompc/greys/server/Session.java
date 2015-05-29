@@ -40,17 +40,14 @@ public class Session {
     // 提示符
     private String prompt = DEFAULT_PROMPT;
 
-
     // 会话最后一次交互时间(触摸时间)
     private volatile long gmtLastTouch;
-
 
     // 是否被销毁
     private volatile boolean isDestroy = false;
 
     // 会话锁ID
     private final AtomicInteger lockTx = new AtomicInteger(LOCK_TX_EMPTY);
-
 
     // 会话输出阻塞队列
     private final BlockingQueue<String> writeQueue = new LinkedBlockingQueue<String>();
@@ -71,7 +68,6 @@ public class Session {
         this.socketChannel = socketChannel;
         this.charset = charset;
         this.gmtLastTouch = currentTimeMillis();
-
     }
 
     /**
