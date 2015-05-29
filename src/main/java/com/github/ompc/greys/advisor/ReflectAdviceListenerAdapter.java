@@ -65,8 +65,10 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
             return long[].class;
         } else if (isEquals(className, "double[]")) {
             return double[].class;
+        } else if (className.endsWith("[]")) {
+            return Class.forName("[L" + tranClassName.replaceFirst("\\[]$", ";"), true, toClassLoader(loader));
         } else {
-            return toClassLoader(loader).loadClass(tranClassName);
+            return Class.forName(tranClassName, true, toClassLoader(loader));
         }
     }
 

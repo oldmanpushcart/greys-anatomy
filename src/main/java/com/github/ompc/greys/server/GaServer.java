@@ -17,6 +17,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
+import static com.github.ompc.greys.server.LineDecodeState.READ_CHAR;
+import static com.github.ompc.greys.server.LineDecodeState.READ_EOL;
 import static com.github.ompc.greys.util.StringUtil.getLogo;
 import static java.lang.String.format;
 import static java.nio.channels.SelectionKey.OP_ACCEPT;
@@ -40,7 +42,7 @@ class GaAttachment {
     public GaAttachment(int bufferSize, Session session) {
         this.lineByteBuffer = ByteBuffer.allocate(bufferSize);
         this.bufferSize = bufferSize;
-        this.lineDecodeState = LineDecodeState.READ_CHAR;
+        this.lineDecodeState = READ_CHAR;
         this.session = session;
     }
 
@@ -297,7 +299,7 @@ public class GaServer {
                     case READ_CHAR: {
                         final byte data = byteBuffer.get();
                         if ('\n' == data) {
-                            attachment.setLineDecodeState(LineDecodeState.READ_EOL);
+                            attachment.setLineDecodeState(READ_EOL);
                         }
 
                         // 遇到中止命令(CTRL_D)，则标记会话为不可写，让后台任务停下
@@ -329,10 +331,10 @@ public class GaServer {
                                     try {
                                         commandHandler.executeCommand(line, session);
                                     } catch (IOException e) {
-                                        final String message = format("network communicate failed, session[%d] will be close.",
-                                                session.getSessionId());
                                         if (logger.isLoggable(WARNING)) {
-                                            logger.log(WARNING, message, e);
+                                            logger.log(WARNING,
+                                                    format("network communicate failed, session[%d] will be close.",
+                                                            session.getSessionId()));
                                         }
                                         session.destroy();
                                     } finally {
@@ -347,7 +349,7 @@ public class GaServer {
                             }
                         });
 
-                        attachment.setLineDecodeState(LineDecodeState.READ_CHAR);
+                        attachment.setLineDecodeState(READ_CHAR);
                         break;
                     }
                 }

@@ -15,26 +15,34 @@ public class AsmCodeLock implements CodeLock, Opcodes {
     // 锁记数
     private int lock;
 
+    // 代码块开始特征数组
+    private final int[] beginCodeArray;
+
+    // 代码块结束特征数组
+    private final int[] endCodeArray;
+
     // 代码匹配索引
     private int index = 0;
 
-    private int[] BEGIN_IDENTI_CODES = new int[]{
-            ACONST_NULL, POP,
-            ACONST_NULL, ACONST_NULL, POP2,
-            ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP,
-            ACONST_NULL, ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP2
-    };
 
-    private int[] END_IDENTI_CODES = new int[]{
-            ACONST_NULL, ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP2,
-            ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP,
-            ACONST_NULL, ACONST_NULL, POP2,
-            ACONST_NULL, POP,
-    };
+    /**
+     * 用ASM构建代码锁
+     *
+     * @param aa             ASM
+     * @param beginCodeArray 代码块开始特征数组
+     * @param endCodeArray   代码块结束特征数组
+     */
+    public AsmCodeLock(AdviceAdapter aa, int[] beginCodeArray, int[] endCodeArray) {
+        if (null == beginCodeArray
+                || null == endCodeArray
+                || beginCodeArray.length != endCodeArray.length) {
+            throw new IllegalArgumentException();
+        }
 
-
-    public AsmCodeLock(AdviceAdapter aa) {
         this.aa = aa;
+        this.beginCodeArray = beginCodeArray;
+        this.endCodeArray = endCodeArray;
+
     }
 
     private void pushNull() {
@@ -44,7 +52,7 @@ public class AsmCodeLock implements CodeLock, Opcodes {
     @Override
     public void code(int code) {
 
-        final int[] codes = isLock() ? END_IDENTI_CODES : BEGIN_IDENTI_CODES;
+        final int[] codes = isLock() ? endCodeArray : beginCodeArray;
 
         if (index >= codes.length) {
             reset();
@@ -78,31 +86,13 @@ public class AsmCodeLock implements CodeLock, Opcodes {
 
     private void asm(int opcode) {
         aa.visitInsn(opcode);
-//        switch (opcode) {
-//
-//            case ACONST_NULL: {
-//                pushNull();
-//                break;
-//            }
-//
-//            case POP: {
-//                aa.pop();
-//                break;
-//            }
-//
-//            case POP2: {
-//                aa.pop2();
-//                break;
-//            }
-//
-//        }
     }
 
     /**
      * 锁定序列
      */
     private void lock() {
-        for (int op : BEGIN_IDENTI_CODES) {
+        for (int op : beginCodeArray) {
             asm(op);
         }
     }
@@ -111,7 +101,7 @@ public class AsmCodeLock implements CodeLock, Opcodes {
      * 解锁序列
      */
     private void unLock() {
-        for (int op : END_IDENTI_CODES) {
+        for (int op : endCodeArray) {
             asm(op);
         }
     }

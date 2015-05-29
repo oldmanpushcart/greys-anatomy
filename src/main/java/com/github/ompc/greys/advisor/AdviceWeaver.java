@@ -20,6 +20,31 @@ import static java.lang.String.format;
 import static java.lang.Thread.currentThread;
 import static java.util.logging.Level.WARNING;
 
+
+/**
+ * 用于Tracing的代码锁
+ */
+class TracingAsmCodeLock extends AsmCodeLock {
+
+    public TracingAsmCodeLock(AdviceAdapter aa) {
+        super(
+                aa,
+                new int[]{
+                        ACONST_NULL, POP,
+                        ACONST_NULL, ACONST_NULL, POP2,
+                        ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP,
+                        ACONST_NULL, ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP2
+                },
+                new int[]{
+                        ACONST_NULL, ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP2,
+                        ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP,
+                        ACONST_NULL, ACONST_NULL, POP2,
+                        ACONST_NULL, POP
+                }
+        );
+    }
+}
+
 /**
  * 通知编织者<br/>
  * <p/>
@@ -344,9 +369,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private final Label beginLabel = new Label();
             private final Label endLabel = new Label();
 
-            private final CodeLock codeLockForTracing = new AsmCodeLock(this);
+            private final CodeLock codeLockForTracing = new TracingAsmCodeLock(this);
 
-            private final Type ASM_TYPE_THREAD = Type.getType(java.lang.Thread.class);
             private final Type ASM_TYPE_SYSTEM = Type.getType(java.lang.System.class);
             private final Type ASM_TYPE_METHOD = Type.getType(java.lang.reflect.Method.class);
             private final Type ASM_TYPE_PROPERTIES = Type.getType(java.util.Properties.class);
@@ -375,14 +399,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private void loadClassLoader() {
                 visitLdcInsn(Type.getObjectType(className));
                 invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
-//                if (isStaticMethod()) {
-//                    visitLdcInsn(Type.getObjectType(className));
-//                    invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
-//                } else {
-//                    loadThis();
-//                    invokeVirtual(Type.getType(Object.class), Method.getMethod("Class getClass()"));
-//                    invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
-//                }
             }
 
             /**
