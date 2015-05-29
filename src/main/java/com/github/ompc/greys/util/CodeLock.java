@@ -1,4 +1,4 @@
-package com.github.ompc.greys.advisor;
+package com.github.ompc.greys.util;
 
 /**
  * 代码锁<br/>

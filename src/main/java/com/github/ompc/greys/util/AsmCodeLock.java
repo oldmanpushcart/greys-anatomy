@@ -1,4 +1,4 @@
-package com.github.ompc.greys.advisor;
+package com.github.ompc.greys.util;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -77,24 +77,25 @@ public class AsmCodeLock implements CodeLock, Opcodes {
 
 
     private void asm(int opcode) {
-        switch (opcode) {
-
-            case ACONST_NULL: {
-                pushNull();
-                break;
-            }
-
-            case POP: {
-                aa.pop();
-                break;
-            }
-
-            case POP2: {
-                aa.pop2();
-                break;
-            }
-
-        }
+        aa.visitInsn(opcode);
+//        switch (opcode) {
+//
+//            case ACONST_NULL: {
+//                pushNull();
+//                break;
+//            }
+//
+//            case POP: {
+//                aa.pop();
+//                break;
+//            }
+//
+//            case POP2: {
+//                aa.pop2();
+//                break;
+//            }
+//
+//        }
     }
 
     /**

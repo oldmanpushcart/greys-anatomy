@@ -1,7 +1,9 @@
 package com.github.ompc.greys.advisor;
 
-import com.github.ompc.greys.advisor.CodeLock.Block;
 import com.github.ompc.greys.command.affect.EnhancerAffect;
+import com.github.ompc.greys.util.AsmCodeLock;
+import com.github.ompc.greys.util.CodeLock;
+import com.github.ompc.greys.util.CodeLock.Block;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
 import org.objectweb.asm.*;
@@ -371,8 +373,16 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
              * 加载ClassLoader
              */
             private void loadClassLoader() {
-                invokeStatic(ASM_TYPE_THREAD, Method.getMethod("Thread currentThread()"));
-                invokeVirtual(ASM_TYPE_THREAD, Method.getMethod("ClassLoader getContextClassLoader()"));
+                visitLdcInsn(Type.getObjectType(className));
+                invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
+//                if (isStaticMethod()) {
+//                    visitLdcInsn(Type.getObjectType(className));
+//                    invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
+//                } else {
+//                    loadThis();
+//                    invokeVirtual(Type.getType(Object.class), Method.getMethod("Class getClass()"));
+//                    invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
+//                }
             }
 
             /**
