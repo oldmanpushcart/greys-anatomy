@@ -26,6 +26,7 @@ public class MethodInfoView implements View {
                 .add("name", method.getName())
                 .add("annotation", drawAnnotation())
                 .add("parameters", drawParameters())
+                .add("return", drawReturn())
                 .draw();
     }
 
@@ -57,6 +58,13 @@ public class MethodInfoView implements View {
             }
         }
         return paramsSB.toString();
+    }
+
+    private String drawReturn() {
+        final StringBuilder returnSB = new StringBuilder();
+        final Class<?> returnTypeClass = method.getReturnType();
+        returnSB.append(tranClassName(returnTypeClass)).append("\n");
+        return returnSB.toString();
     }
 
 }

@@ -362,7 +362,7 @@ public class TableView implements View {
 
 
         final TableView tv = new TableView(new ColumnDefine[]{
-                new ColumnDefine(10, false, Align.RIGHT),
+                new ColumnDefine(10, true, Align.RIGHT),
                 new ColumnDefine(0, true, Align.LEFT),
         });
 

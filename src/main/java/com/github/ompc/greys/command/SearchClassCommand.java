@@ -1,24 +1,21 @@
 package com.github.ompc.greys.command;
 
+import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.command.view.ClassInfoView;
-import com.github.ompc.greys.command.view.TableView;
-import com.github.ompc.greys.command.view.TableView.ColumnDefine;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
-import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Set;
 
-import static com.github.ompc.greys.command.view.TableView.Align.LEFT;
 import static com.github.ompc.greys.util.SearchUtil.searchClass;
 import static com.github.ompc.greys.util.SearchUtil.searchSubClass;
-import static com.github.ompc.greys.util.StringUtil.*;
+import static com.github.ompc.greys.util.StringUtil.EMPTY;
 
 /**
  * 展示类信息
@@ -73,29 +70,9 @@ public class SearchClassCommand implements Command {
                 // 展示类该要列表
                 else {
 
-                    final TableView view = new TableView(new ColumnDefine[]{
-                            new ColumnDefine(50, false, LEFT),
-                            new ColumnDefine(50, false, LEFT),
-                            new ColumnDefine(LEFT),
-                            new ColumnDefine(LEFT)
-                    })
-                            .addRow(
-                                    "CLASS-LOADER",
-                                    "CLASS-NAME",
-                                    "TYPE",
-                                    "MODIFIER"
-                            );
-
                     for (Class<?> clazz : matchedClassSet) {
-                        view.addRow(
-                                newString(clazz.getClassLoader()),
-                                clazz.getName(),
-                                getType(clazz),
-                                rowToCol(tranModifier(clazz.getModifiers()), ",")
-                        );
+                        sender.send(false, clazz.getName()+"\n");
                     }
-
-                    sender.send(false, view.border(true).padding(1).draw());
 
                 }
 

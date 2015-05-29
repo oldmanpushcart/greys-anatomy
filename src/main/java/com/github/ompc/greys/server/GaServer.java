@@ -21,7 +21,8 @@ import static com.github.ompc.greys.util.StringUtil.getLogo;
 import static java.lang.String.format;
 import static java.nio.channels.SelectionKey.OP_ACCEPT;
 import static java.nio.channels.SelectionKey.OP_READ;
-import static java.util.logging.Level.*;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 
 /**
  * GaServer操作的附件
@@ -255,8 +256,9 @@ public class GaServer {
         final Session session = sessionManager.newSession(javaPid, socketChannel, DEFAULT_CHARSET);
         socketChannel.register(selector, OP_READ, new GaAttachment(BUFFER_SIZE, session));
         if (logger.isLoggable(INFO)) {
-            logger.log(INFO, format("%s accept an connection, client=%s;",
+            logger.log(INFO, format("%s accept an connection, session[%d];client=%s;",
                     GaServer.this,
+                    session.getSessionId(),
                     socketChannel));
         }
 
@@ -327,7 +329,7 @@ public class GaServer {
                                     try {
                                         commandHandler.executeCommand(line, session);
                                     } catch (IOException e) {
-                                        final String message = format("network communicate failed, sessionId=%d;",
+                                        final String message = format("network communicate failed, session[%d] will be close.",
                                                 session.getSessionId());
                                         if (logger.isLoggable(WARNING)) {
                                             logger.log(WARNING, message, e);
@@ -357,12 +359,9 @@ public class GaServer {
 
         // 处理
         catch (IOException e) {
-            final String message = format("read/write data failed, client=%s will be close", socketChannel);
             if (logger.isLoggable(WARNING)) {
-                logger.log(WARNING, message);
-            }
-            if (logger.isLoggable(FINE)) {
-                logger.log(FINE, message, e);
+                logger.log(WARNING, format("read/write data failed, session[%d] will be close",
+                        session.getSessionId()), e);
             }
             closeSocketChannel(key, socketChannel);
             session.destroy();
@@ -374,7 +373,11 @@ public class GaServer {
      * 绘制提示符
      */
     private void reDrawPrompt(SocketChannel socketChannel, Charset charset, String prompt) throws IOException {
-        socketChannel.write(ByteBuffer.wrap(prompt.getBytes(charset)));
+        final ByteBuffer buffer = ByteBuffer.wrap(prompt.getBytes(charset));
+        while (buffer.hasRemaining()) {
+            socketChannel.write(buffer);
+        }
+
     }
 
     private void closeSocketChannel(SelectionKey key, SocketChannel socketChannel) {

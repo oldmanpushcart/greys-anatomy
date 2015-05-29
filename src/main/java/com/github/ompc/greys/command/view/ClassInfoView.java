@@ -70,7 +70,7 @@ public class ClassInfoView implements View {
 
             for (Field field : fields) {
 
-                final KVView kvView = new KVView(new ColumnDefine(RIGHT), new ColumnDefine(80, false, LEFT))
+                final KVView kvView = new KVView(new ColumnDefine(RIGHT), new ColumnDefine(50, false, LEFT))
                         .add("modifier", tranModifier(field.getModifiers()))
                         .add("type", tranClassName(field.getType()))
                         .add("name", field.getName());

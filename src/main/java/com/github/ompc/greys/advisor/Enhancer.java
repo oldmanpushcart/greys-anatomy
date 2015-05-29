@@ -21,7 +21,6 @@ import static java.lang.String.format;
 import static java.lang.System.arraycopy;
 import static java.util.logging.Level.WARNING;
 import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
-import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
 
 
@@ -92,7 +91,7 @@ public class Enhancer implements ClassFileTransformer {
         }
 
         // 字节码增强
-        final ClassWriter cw = new ClassWriter(cr, COMPUTE_FRAMES | COMPUTE_MAXS);
+        final ClassWriter cw = new ClassWriter(cr, /*COMPUTE_FRAMES |*/ COMPUTE_MAXS);
 
         try {
 
@@ -106,11 +105,11 @@ public class Enhancer implements ClassFileTransformer {
             // 成功计数
             affect.cCnt(1);
 
-            // dump
-            final java.io.OutputStream os = new java.io.FileOutputStream(new java.io.File("/tmp/AgentTest.class"));
-            os.write(enhanceClassByteArray);
-            os.flush();
-            os.close();
+//            // dump
+//            final java.io.OutputStream os = new java.io.FileOutputStream(new java.io.File("/tmp/AgentTest.class"));
+//            os.write(enhanceClassByteArray);
+//            os.flush();
+//            os.close();
 
             return enhanceClassByteArray;
         } catch (Throwable t) {
