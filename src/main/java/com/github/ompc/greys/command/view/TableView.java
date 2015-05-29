@@ -133,7 +133,7 @@ public class TableView implements View {
 
                     if (null == scannerArray[colIndex]) {
                         scannerArray[colIndex] = new Scanner(
-                                new StringReader(wrap(getData(rowIndex, columnDefineArray[colIndex]), width)));
+                                new StringReader(wrap(getData(rowIndex, columnDefineArray[colIndex]), width - padding)));
                     }
                     final Scanner scanner = scannerArray[colIndex];
 
