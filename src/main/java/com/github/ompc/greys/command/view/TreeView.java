@@ -3,16 +3,21 @@ package com.github.ompc.greys.command.view;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.System.currentTimeMillis;
+
 /**
  * 树形控件
  * Created by vlinux on 15/5/26.
  */
 public class TreeView implements View {
 
-    private static final String STEP_FIRST_CHAR  = "`---";
+    private static final String STEP_FIRST_CHAR = "`---";
     private static final String STEP_NORMAL_CHAR = "+---";
-    private static final String STEP_HAS_BOARD   = "|   ";
+    private static final String STEP_HAS_BOARD = "|   ";
     private static final String STEP_EMPTY_BOARD = "    ";
+
+    // 是否输出耗时
+    private final boolean isPrintCost;
 
     // 根节点
     private final Node root;
@@ -20,9 +25,11 @@ public class TreeView implements View {
     // 当前节点
     private Node current;
 
-    public TreeView(String title) {
-        this.root = new Node(title);
+
+    public TreeView(boolean isPrintCost, String title) {
+        this.root = new Node(title).markBegin().markEnd();
         this.current = root;
+        this.isPrintCost = isPrintCost;
     }
 
     @Override
@@ -33,7 +40,12 @@ public class TreeView implements View {
 
             @Override
             public void callback(int deep, boolean isLast, String prefix, Node node) {
-                treeSB.append(prefix).append(isLast ? STEP_FIRST_CHAR : STEP_NORMAL_CHAR).append(node.data).append("\n");
+                treeSB.append(prefix).append(isLast ? STEP_FIRST_CHAR : STEP_NORMAL_CHAR);
+                if (isPrintCost
+                        && !node.isRoot()) {
+                    treeSB.append("[").append(node.endTimestamp - root.beginTimestamp).append(",").append(node.endTimestamp - node.beginTimestamp).append("ms]");
+                }
+                treeSB.append(node.data).append("\n");
             }
 
         });
@@ -71,6 +83,7 @@ public class TreeView implements View {
      */
     public TreeView begin(String data) {
         current = new Node(current, data);
+        current.markBegin();
         return this;
     }
 
@@ -83,6 +96,7 @@ public class TreeView implements View {
         if (current.isRoot()) {
             throw new IllegalStateException("current node is root.");
         }
+        current.markEnd();
         current = current.parent;
         return this;
     }
@@ -93,6 +107,9 @@ public class TreeView implements View {
      */
     private class Node {
 
+        /**
+         * 父节点
+         */
         final Node parent;
 
         /**
@@ -104,6 +121,16 @@ public class TreeView implements View {
          * 子节点
          */
         final List<Node> children = new ArrayList<Node>();
+
+        /**
+         * 开始时间戳
+         */
+        private long beginTimestamp;
+
+        /**
+         * 结束时间戳
+         */
+        private long endTimestamp;
 
         /**
          * 构造树节点(根节点)
@@ -143,6 +170,16 @@ public class TreeView implements View {
             return children.isEmpty();
         }
 
+        Node markBegin() {
+            beginTimestamp = currentTimeMillis();
+            return this;
+        }
+
+        Node markEnd() {
+            endTimestamp = currentTimeMillis();
+            return this;
+        }
+
     }
 
 
@@ -158,7 +195,7 @@ public class TreeView implements View {
 
     public static void main(String... args) {
 
-        final TreeView view = new TreeView("TEST");
+        final TreeView view = new TreeView(true, "TEST");
 
         view
                 .begin("SayService:say()")

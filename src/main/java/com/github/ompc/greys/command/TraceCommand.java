@@ -142,12 +142,12 @@ public class TraceCommand implements Command {
                             private void finishing() {
                                 if (--threadBoundEntity.get().deep == 0) {
                                     sender.send(false, threadBoundEntity.get().view.draw() + "\n");
-                                    threadBoundEntity.get().view = createTreeView();
+                                    threadBoundEntity.remove();
                                 }
                             }
 
                             private TreeView createTreeView() {
-                                return new TreeView("Tracing...");
+                                return new TreeView(true, "Tracing...");
                             }
 
                         };
