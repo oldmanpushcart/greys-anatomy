@@ -1,7 +1,6 @@
 package com.github.ompc.greys.util;
 
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 
 /**
@@ -30,7 +29,9 @@ public class AsmCodeLock implements CodeLock, Opcodes {
      *
      * @param aa             ASM
      * @param beginCodeArray 代码块开始特征数组
+     *                       字节码流要求不能破坏执行堆栈
      * @param endCodeArray   代码块结束特征数组
+     *                       字节码流要求不能破坏执行堆栈
      */
     public AsmCodeLock(AdviceAdapter aa, int[] beginCodeArray, int[] endCodeArray) {
         if (null == beginCodeArray
@@ -43,10 +44,6 @@ public class AsmCodeLock implements CodeLock, Opcodes {
         this.beginCodeArray = beginCodeArray;
         this.endCodeArray = endCodeArray;
 
-    }
-
-    private void pushNull() {
-        aa.push((Type) null);
     }
 
     @Override

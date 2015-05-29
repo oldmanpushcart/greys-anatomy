@@ -33,13 +33,15 @@ class TracingAsmCodeLock extends AsmCodeLock {
                         ACONST_NULL, POP,
                         ACONST_NULL, ACONST_NULL, POP2,
                         ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP,
-                        ACONST_NULL, ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP2
+                        ACONST_NULL, ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP2,
+                        ACONST_NULL, ACONST_NULL, SWAP, SWAP, SWAP, POP2
                 },
                 new int[]{
                         ACONST_NULL, ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP2,
                         ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP,
                         ACONST_NULL, ACONST_NULL, POP2,
-                        ACONST_NULL, POP
+                        ACONST_NULL, POP,
+                        ACONST_NULL, ACONST_NULL, SWAP, SWAP, SWAP, POP2
                 }
         );
     }
