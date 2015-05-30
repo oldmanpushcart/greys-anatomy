@@ -97,7 +97,12 @@ attach_jvm()
 active_console()
 {
 
-    if type telnet 2>&1 >> /dev/null; then
+    if type ${JAVA_HOME}/bin/java 2>&1 >> /dev/null; then
+
+        # use default console
+        ${JAVA_HOME}/bin/java -cp ${GREYS_ROOT}/greys.jar com.github.ompc.greys.GreysConsole ${TARGET_IP} ${TARGET_PORT}
+
+    elif type telnet 2>&1 >> /dev/null; then
 
         # use telnet
         telnet ${TARGET_IP} ${TARGET_PORT}

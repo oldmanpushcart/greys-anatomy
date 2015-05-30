@@ -403,7 +403,7 @@ public class TimeTunnelCommand implements Command {
                             new ColumnDefine(RIGHT),
                             new ColumnDefine(LEFT)
                     })
-                            .border(true)
+                            .hasBorder(true)
                             .padding(1)
                             .addRow("INDEX", "SEARCH-RESULT");
 
@@ -538,7 +538,7 @@ public class TimeTunnelCommand implements Command {
                 new ColumnDefine(TABLE_COL_WIDTH[5], false, RIGHT),
                 new ColumnDefine(TABLE_COL_WIDTH[6], false, RIGHT),
         })
-                .border(true)
+                .hasBorder(true)
                 .padding(1)
                 ;
     }
@@ -616,7 +616,7 @@ public class TimeTunnelCommand implements Command {
                         new ColumnDefine(RIGHT),
                         new ColumnDefine(50, false, LEFT)
                 })
-                        .border(true)
+                        .hasBorder(true)
                         .padding(1)
                         .addRow("INDEX", index)
                         .addRow("GMT-CREATE", sdf.format(tf.getGmtCreate()))

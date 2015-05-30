@@ -51,14 +51,25 @@ public class TableView implements View {
         }
     }
 
-    private boolean isBorder(int border) {
+    private boolean borders(int border) {
         return (this.border & border) == border;
     }
 
+    /**
+     * 获取表格边框设置
+     *
+     * @return 边框位
+     */
     public int border() {
         return border;
     }
 
+    /**
+     * 设置表格边框
+     *
+     * @param border 边框位
+     * @return this
+     */
     public TableView border(int border) {
         this.border = border;
         return this;
@@ -82,14 +93,14 @@ public class TableView implements View {
 
             // 打印首分隔行
             if (isFirstRow
-                    && isBorder()
-                    && isBorder(BORDER_TOP)) {
+                    && hasBorder()
+                    && borders(BORDER_TOP)) {
                 tableSB.append(drawSeparationLine(widthCacheArray)).append("\n");
             }
 
             // 打印内部分割行
             if (!isFirstRow
-                    && isBorder()) {
+                    && hasBorder()) {
                 tableSB.append(drawSeparationLine(widthCacheArray)).append("\n");
             }
 
@@ -99,8 +110,8 @@ public class TableView implements View {
 
             // 打印结尾分隔行
             if (isLastRow
-                    && isBorder()
-                    && isBorder(BORDER_BOTTOM)) {
+                    && hasBorder()
+                    && borders(BORDER_BOTTOM)) {
                 // 打印分割行
                 tableSB.append(drawSeparationLine(widthCacheArray)).append("\n");
             }
@@ -126,14 +137,14 @@ public class TableView implements View {
                 for (int colIndex = 0; colIndex < getColumnCount(); colIndex++) {
 
 
-                    final String borderChar = isBorder() ? "|" : EMPTY;
+                    final String borderChar = hasBorder() ? "|" : EMPTY;
                     final int width = widthCacheArray[colIndex];
                     final boolean isLastColOfRow = colIndex == widthCacheArray.length - 1;
 
 
                     if (null == scannerArray[colIndex]) {
                         scannerArray[colIndex] = new Scanner(
-                                new StringReader(wrap(getData(rowIndex, columnDefineArray[colIndex]), width - padding)));
+                                new StringReader(wrap(getData(rowIndex, columnDefineArray[colIndex]), width)));
                     }
                     final Scanner scanner = scannerArray[colIndex];
 
@@ -323,10 +334,10 @@ public class TableView implements View {
     /**
      * 设置是否画边框
      *
-     * @param isBorder true / false
+     * @param hasBorder true / false
      */
-    public TableView border(boolean isBorder) {
-        this.isBorder = isBorder;
+    public TableView hasBorder(boolean hasBorder) {
+        this.isBorder = hasBorder;
         return this;
     }
 
@@ -335,7 +346,7 @@ public class TableView implements View {
      *
      * @return true / false
      */
-    public boolean isBorder() {
+    public boolean hasBorder() {
         return isBorder;
     }
 
@@ -356,40 +367,6 @@ public class TableView implements View {
      */
     public int getColumnCount() {
         return columnDefineArray.length;
-    }
-
-    public static void main(String... args) {
-
-
-        final TableView tv = new TableView(new ColumnDefine[]{
-                new ColumnDefine(10, true, Align.RIGHT),
-                new ColumnDefine(0, true, Align.LEFT),
-        });
-
-        tv.border(true);
-        tv.padding(1);
-
-        tv.addRow(
-                "AAAAaaaaaaaaaaaaaaaaaaaaaaa",
-                "CCCCC"
-        );
-
-        tv.addRow(
-                "AAAAA",
-                "CCC1C\n\n\n3DDDD"
-
-        );
-
-        tv.addRow(
-                "AAAAA",
-                "CCCCC\n\t\tXXXX",
-                "DDDDD"
-        );
-
-
-        tv.border(tv.border());
-        System.out.print(tv.draw());
-
     }
 
 }

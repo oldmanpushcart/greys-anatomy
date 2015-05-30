@@ -19,7 +19,7 @@ public class KVView implements View {
                 new ColumnDefine(RIGHT),
                 new ColumnDefine(LEFT)
         })
-                .border(false)
+                .hasBorder(false)
                 .padding(0);
     }
 
@@ -29,7 +29,7 @@ public class KVView implements View {
                 new ColumnDefine(RIGHT),
                 valueColumnDefine
         })
-                .border(false)
+                .hasBorder(false)
                 .padding(0);
     }
 

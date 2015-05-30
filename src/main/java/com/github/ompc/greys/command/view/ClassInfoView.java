@@ -54,7 +54,7 @@ public class ClassInfoView implements View {
                 .addRow("super-class", drawSuperClass())
                 .addRow("class-loader", drawClassLoader())
                 .addRow("fields", drawField())
-                .border(true)
+                .hasBorder(true)
                 .padding(1)
                 .draw();
     }

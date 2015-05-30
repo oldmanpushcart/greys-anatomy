@@ -244,7 +244,7 @@ public class MonitorCommand implements Command {
                                         }
 
                                         tableView.padding(1);
-                                        tableView.border(true);
+                                        tableView.hasBorder(true);
 
                                         sender.send(false, tableView.draw() + "\n");
                                     }

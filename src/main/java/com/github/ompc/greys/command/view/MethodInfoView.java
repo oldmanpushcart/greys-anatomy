@@ -1,8 +1,12 @@
 package com.github.ompc.greys.command.view;
 
+import com.github.ompc.greys.command.view.TableView.ColumnDefine;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
+import static com.github.ompc.greys.command.view.TableView.Align.LEFT;
+import static com.github.ompc.greys.command.view.TableView.Align.RIGHT;
 import static com.github.ompc.greys.util.StringUtil.*;
 
 /**
@@ -19,14 +23,19 @@ public class MethodInfoView implements View {
 
     @Override
     public String draw() {
-        return new KVView()
-                .add("method-info", String.format("%s->%s", method.getDeclaringClass().getName(), method.getName()))
-                .add("declaring-class", method.getDeclaringClass())
-                .add("modifier", tranModifier(method.getModifiers()))
-                .add("name", method.getName())
-                .add("annotation", drawAnnotation())
-                .add("parameters", drawParameters())
-                .add("return", drawReturn())
+        return new TableView(new ColumnDefine[]{
+                new ColumnDefine(20, false, RIGHT),
+                new ColumnDefine(100, false, LEFT)
+        })
+                .addRow("declaring-class", method.getDeclaringClass())
+                .addRow("method-name", method.getName())
+                .addRow("modifier", tranModifier(method.getModifiers()))
+                .addRow("annotation", drawAnnotation())
+                .addRow("parameters", drawParameters())
+                .addRow("return", drawReturn())
+                .addRow("exceptions", drawExceptions())
+                .padding(1)
+                .hasBorder(true)
                 .draw();
     }
 
@@ -65,6 +74,17 @@ public class MethodInfoView implements View {
         final Class<?> returnTypeClass = method.getReturnType();
         returnSB.append(tranClassName(returnTypeClass)).append("\n");
         return returnSB.toString();
+    }
+
+    private String drawExceptions() {
+        final StringBuilder exceptionSB = new StringBuilder();
+        final Class<?>[] exceptionTypes = method.getExceptionTypes();
+        if (null != exceptionTypes && exceptionTypes.length > 0) {
+            for (Class<?> clazz : exceptionTypes) {
+                exceptionSB.append(tranClassName(clazz)).append("\n");
+            }
+        }
+        return exceptionSB.toString();
     }
 
 }

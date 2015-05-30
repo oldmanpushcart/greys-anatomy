@@ -1,6 +1,7 @@
 package com.github.ompc.greys.command;
 
 
+import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
@@ -8,7 +9,6 @@ import com.github.ompc.greys.command.view.KVView;
 import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.command.view.TableView.ColumnDefine;
 import com.github.ompc.greys.server.Session;
-import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
@@ -17,6 +17,7 @@ import java.util.*;
 import static com.github.ompc.greys.command.view.TableView.Align.LEFT;
 import static com.github.ompc.greys.command.view.TableView.Align.RIGHT;
 import static com.github.ompc.greys.util.StringUtil.isBlank;
+import static com.github.ompc.greys.util.StringUtil.isNotBlank;
 
 
 /**
@@ -83,7 +84,10 @@ public class HelpCommand implements Command {
             }
         }
 
-        usageSB.append("\n").append(cmd.desc());
+        if( usageSB.length() > 0 ) {
+            usageSB.append("\n");
+        }
+        usageSB.append(cmd.desc());
 
         return usageSB.toString();
     }
@@ -96,7 +100,7 @@ public class HelpCommand implements Command {
                 final String named = "[" + namedArg.named() + (namedArg.hasValue() ? ":" : "") + "]";
 
                 String description = namedArg.summary();
-                if (isBlank(namedArg.description())) {
+                if (isNotBlank(namedArg.description())) {
                     description += "\n" + namedArg.description();
                 }
                 view.add(named, description);
@@ -107,7 +111,7 @@ public class HelpCommand implements Command {
             if (f.isAnnotationPresent(IndexArg.class)) {
                 final IndexArg indexArg = f.getAnnotation(IndexArg.class);
                 String description = indexArg.summary();
-                if (isBlank(indexArg.description())) {
+                if (isNotBlank(indexArg.description())) {
                     description += "\n" + indexArg.description();
                 }
                 view.add(indexArg.name(), description);
@@ -151,7 +155,7 @@ public class HelpCommand implements Command {
             view.addRow("EXAMPLE", drawEg(cmd));
         }
 
-        return view.border(true).padding(1).draw();
+        return view.hasBorder(true).padding(1).draw();
     }
 
 
@@ -186,7 +190,7 @@ public class HelpCommand implements Command {
 
         }
 
-        return view.border(true).padding(1).draw();
+        return view.hasBorder(true).padding(1).draw();
     }
 
 }

@@ -107,6 +107,7 @@ public class GaServer {
 
     private static final byte CTRL_D = 0x04;
     private static final byte CTRL_X = 0x18;
+    private static final byte EOT = 0x04;
 
     private final AtomicBoolean isBindRef = new AtomicBoolean(false);
     private final SessionManager sessionManager;
@@ -329,7 +330,13 @@ public class GaServer {
                                 // 会话只有未锁定的时候才能响应命令
                                 if (session.tryLock()) {
                                     try {
+
+                                        // 命令执行
                                         commandHandler.executeCommand(line, session);
+
+                                        // 命令结束之后需要传输EOT告诉client命令传输已经完结，可以展示提示符
+                                        socketChannel.write(ByteBuffer.wrap(new byte[]{EOT}));
+
                                     } catch (IOException e) {
                                         if (logger.isLoggable(WARNING)) {
                                             logger.log(WARNING,

@@ -28,9 +28,6 @@ public class SessionCommand implements Command {
     @NamedArg(named = "c", hasValue = true, summary = "change the charset of session")
     private String charsetString;
 
-    @NamedArg(named = "p", hasValue = true, summary = "change the prompt of session")
-    private String prompt;
-
     @Override
     public Action getAction() {
         return new RowAction() {
@@ -38,11 +35,8 @@ public class SessionCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
 
-                boolean isShow = true;
                 // 设置字符集
                 if (isNotBlank(charsetString)) {
-
-                    isShow = false;
 
                     try {
                         final Charset newCharset = Charset.forName(charsetString);
@@ -57,22 +51,7 @@ public class SessionCommand implements Command {
                         sender.send(true, format("unsupported charset : \"%s\"\n", charsetString));
                     }
 
-                }
-
-                // 设置提示符
-                if (null != prompt) {
-
-                    isShow = false;
-
-                    final String beforePrompt = session.getPrompt();
-                    session.setPrompt(prompt);
-                    sender.send(true, format("change prompt before[%s] -> new[%s]\n",
-                            beforePrompt,
-                            prompt));
-                }
-
-                // 展示会话状态
-                if (isShow) {
+                } else {
                     sender.send(true, sessionToString(session));
                 }
 
@@ -98,7 +77,7 @@ public class SessionCommand implements Command {
                 .addRow("PROMPT", session.getPrompt())
                 .addRow("FROM", session.getSocketChannel().socket().getRemoteSocketAddress())
                 .addRow("TO", session.getSocketChannel().socket().getLocalSocketAddress())
-                .border(true)
+                .hasBorder(true)
                 .padding(1)
                 .draw();
 

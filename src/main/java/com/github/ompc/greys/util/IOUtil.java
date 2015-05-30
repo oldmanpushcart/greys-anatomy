@@ -1,5 +1,8 @@
 package com.github.ompc.greys.util;
 
+import java.io.Reader;
+import java.io.Writer;
+import java.net.Socket;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -39,6 +42,43 @@ public class IOUtil {
         if (null != serverSocketChannel) {
             try {
                 serverSocketChannel.close();
+            } catch (Throwable t) {
+                //
+            }
+        }
+
+    }
+
+
+    public static void close(Writer writer) {
+
+        if (null != writer) {
+            try {
+                writer.close();
+            } catch (Throwable t) {
+                //
+            }
+        }
+
+    }
+
+    public static void close(Reader reader) {
+
+        if (null != reader) {
+            try {
+                reader.close();
+            } catch (Throwable t) {
+                //
+            }
+        }
+
+    }
+
+    public static void close(Socket socket) {
+
+        if (null != socket) {
+            try {
+                socket.close();
             } catch (Throwable t) {
                 //
             }
