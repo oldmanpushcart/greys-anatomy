@@ -72,7 +72,7 @@ reset_for_env()
     # check the jvm version, we need 1.6+
     local JAVA_VERSION=$(${JAVA_HOME}/bin/java -version 2>&1|awk -F '"' '/java version/&&$2>"1.5"{print $2}')
     if [[ ! -x ${JAVA_HOME} || -z ${JAVA_VERSION} ]];then
-        print "illegal ENV, please set \$JAVA_HOME to JDK6+" >> /dev/stderr
+        echo "illegal ENV, please set \$JAVA_HOME to JDK6+" >> /dev/stderr
         exit 1
     fi
 

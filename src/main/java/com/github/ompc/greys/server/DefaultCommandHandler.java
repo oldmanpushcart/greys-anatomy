@@ -82,7 +82,7 @@ public class DefaultCommandHandler implements CommandHandler {
 
             // 关闭命令，需要关闭整个服务端
             else if (command instanceof ShutdownCommand) {
-                DefaultCommandHandler.this.gaServer.unbind();
+                DefaultCommandHandler.this.gaServer.destroy();
             }
 
             // 其他命令需要重新绘制提示符

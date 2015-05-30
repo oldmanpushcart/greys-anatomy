@@ -20,6 +20,7 @@ import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -460,7 +461,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("time-fragment[%d] was not existed.\n", index));
+                    sender.send(true, format("time fragment[%d] was not existed.\n", index));
                     return new RowAffect();
                 }
 
@@ -488,21 +489,97 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("time-fragment[%d] was not existed.\n", index));
+                    sender.send(true, format("time fragment[%d] was not existed.\n", index));
                     return new RowAffect();
                 }
 
                 final Advice advice = tf.getAdvice();
+                final String className = advice.getClazz().getName();
+                final String methodName = advice.getMethod().getName();
+                final String objectAddress = advice.getTarget() == null
+                        ? "NULL"
+                        : "0x" + toHexString(advice.getTarget().hashCode());
+                final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+                final TableView view = new TableView(new ColumnDefine[]{
+                        new ColumnDefine(RIGHT),
+                        new ColumnDefine(50, true, LEFT)
+                })
+                        .hasBorder(true)
+                        .padding(1)
+                        .addRow("RE-INDEX", index)
+                        .addRow("GMT-REPLAY", sdf.format(new Date()))
+                        .addRow("OBJECT", objectAddress)
+                        .addRow("CLASS", className)
+                        .addRow("METHOD", methodName);
+
+                // fill the parameters
+                if (null != advice.getParams()) {
+
+                    int paramIndex = 0;
+                    for (Object param : advice.getParams()) {
+
+                        if (isNeedExpend()) {
+                            view.addRow("PARAMETERS[" + paramIndex++ + "]", new ObjectView(param, expend).draw());
+                        } else {
+                            view.addRow("PARAMETERS[" + paramIndex++ + "]", param);
+                        }
+
+                    }
+
+                }
+
+
                 final GaMethod method = advice.getMethod();
                 final boolean accessible = advice.getMethod().isAccessible();
                 try {
                     method.setAccessible(true);
                     method.invoke(advice.getTarget(), advice.getParams());
+
+                    // 执行成功:输出成功状态
+                    view.addRow("IS-RETURN", true);
+                    view.addRow("IS-EXCEPTION", false);
+
+                    // 执行成功:输出成功结果
+                    if (isNeedExpend()) {
+                        view.addRow("RETURN-OBJ", new ObjectView(advice.getReturnObj(), expend).draw());
+                    } else {
+                        view.addRow("RETURN-OBJ", advice.getReturnObj());
+                    }
+
+                } catch (Throwable t) {
+
+                    // 执行失败:输出失败状态
+                    view.addRow("IS-RETURN", false);
+                    view.addRow("IS-EXCEPTION", true);
+
+                    // 执行失败:输出失败异常信息
+                    final Throwable cause;
+                    if (t instanceof InvocationTargetException) {
+                        cause = t.getCause();
+                    } else {
+                        cause = t;
+                    }
+
+                    if (isNeedExpend()) {
+                        view.addRow("THROW-EXCEPTION", new ObjectView(cause, expend).draw());
+                    } else {
+                        final StringWriter stringWriter = new StringWriter();
+                        final PrintWriter printWriter = new PrintWriter(stringWriter);
+                        try {
+                            cause.printStackTrace(printWriter);
+                            view.addRow("THROW-EXCEPTION", stringWriter.toString());
+                        } finally {
+                            printWriter.close();
+                        }
+                    }
+
                 } finally {
                     method.setAccessible(accessible);
                 }
 
-                sender.send(true, format("rePlay time-fragment[%d] success.\n", index));
+                sender.send(false, view.hasBorder(true).padding(1).draw());
+                sender.send(true, format("rePlay time fragment[%d] success.\n", index));
                 return new RowAffect(1);
             }
         };
@@ -520,7 +597,7 @@ public class TimeTunnelCommand implements Command {
                 if (timeFragmentMap.remove(index) != null) {
                     affect.rCnt(1);
                 }
-                sender.send(true, format("delete time-fragment[%d] success.\n", index));
+                sender.send(true, format("delete time fragment[%d] success.\n", index));
                 return affect;
             }
         };
@@ -600,7 +677,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("time-fragment[%d] was not existed.\n", index));
+                    sender.send(true, format("time fragment[%d] was not existed.\n", index));
                     return new RowAffect();
                 }
 
@@ -614,17 +691,18 @@ public class TimeTunnelCommand implements Command {
 
                 final TableView view = new TableView(new ColumnDefine[]{
                         new ColumnDefine(RIGHT),
-                        new ColumnDefine(50, false, LEFT)
+                        new ColumnDefine(50, true, LEFT)
                 })
                         .hasBorder(true)
                         .padding(1)
                         .addRow("INDEX", index)
                         .addRow("GMT-CREATE", sdf.format(tf.getGmtCreate()))
-                        .addRow("IS-RETURN", advice.isAfterReturning())
-                        .addRow("IS-EXCEPTION", advice.isAfterThrowing())
                         .addRow("OBJECT", objectAddress)
                         .addRow("CLASS", className)
-                        .addRow("METHOD", methodName);
+                        .addRow("METHOD", methodName)
+                        .addRow("IS-RETURN", advice.isAfterReturning())
+                        .addRow("IS-EXCEPTION", advice.isAfterThrowing())
+                        ;
 
 
                 // fill the parameters

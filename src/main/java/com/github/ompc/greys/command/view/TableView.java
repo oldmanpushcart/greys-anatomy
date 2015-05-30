@@ -157,16 +157,10 @@ public class TableView implements View {
                     }
 
                     if (width > 0) {
-
                         final ColumnDefine columnDefine = columnDefineArray[colIndex];
                         final String dataFormat = getDataFormat(columnDefine, width);
                         final String paddingChar = repeat(" ", padding);
-
-                        segmentSB.append(
-                                //format(borderChar + paddingChar + dataFormat + paddingChar, summary(data, width))
-                                format(borderChar + paddingChar + dataFormat + paddingChar, data)
-                        );
-
+                        segmentSB.append(format(borderChar + paddingChar + dataFormat + paddingChar, data));
                     }
 
                     if (isLastColOfRow) {
@@ -367,6 +361,23 @@ public class TableView implements View {
      */
     public int getColumnCount() {
         return columnDefineArray.length;
+    }
+
+    public static void main(String... args) {
+
+        TableView view = new TableView(new ColumnDefine[]{
+                new ColumnDefine(Align.RIGHT),
+                new ColumnDefine(5,false,Align.LEFT)
+        });
+
+        view
+                .addRow("AAAAAAAA", "AAA")
+                .addRow("BBBBBBBB", "\tBBBBBBBBBBBBBBB")
+                .addRow("AAAAAAAA", "AAA")
+        ;
+
+        System.out.println(view.hasBorder(true).padding(1).draw());
+
     }
 
 }

@@ -132,12 +132,7 @@ public class GaServer {
 
             @Override
             public void run() {
-                executorService.shutdown();
-                commandHandler.destroy();
-                sessionManager.destroy();
-                if (isBind()) {
-                    unbind();
-                }
+                GaServer.this.destroy();
             }
         });
 
@@ -407,6 +402,17 @@ public class GaServer {
         if (!isBindRef.compareAndSet(true, false)) {
             throw new IllegalStateException("already unbind");
         }
+    }
+
+
+    public void destroy() {
+        if (isBind()) {
+            unbind();
+        }
+        sessionManager.destroy();
+        executorService.shutdown();
+        commandHandler.destroy();
+        sessionManager.destroy();
     }
 
     private static volatile GaServer gaServer;

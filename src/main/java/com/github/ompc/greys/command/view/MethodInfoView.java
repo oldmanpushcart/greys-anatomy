@@ -24,10 +24,10 @@ public class MethodInfoView implements View {
     @Override
     public String draw() {
         return new TableView(new ColumnDefine[]{
-                new ColumnDefine(20, false, RIGHT),
-                new ColumnDefine(100, false, LEFT)
+                new ColumnDefine(16, false, RIGHT),
+                new ColumnDefine(50, false, LEFT)
         })
-                .addRow("declaring-class", method.getDeclaringClass())
+                .addRow("declaring-class", method.getDeclaringClass().getName())
                 .addRow("method-name", method.getName())
                 .addRow("modifier", tranModifier(method.getModifiers()))
                 .addRow("annotation", drawAnnotation())

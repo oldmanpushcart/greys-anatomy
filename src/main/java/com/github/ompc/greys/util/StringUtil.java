@@ -455,7 +455,7 @@ public class StringUtil {
             sb.append(c);
             if( c == '\n' ) {
                 index = 0;
-            } else if (++index > width) {
+            } else if (++index == width) {
                 sb.append("\n");
                 index = 0;
             }
