@@ -41,9 +41,9 @@ example:
 parse_arguments()
 {
 
-     TARGET_PID=$(echo ${1}|awk -F"@"   '{print $1}');
-      TARGET_IP=$(echo ${1}|awk -F"@|:" '{print $2}');
-    TARGET_PORT=$(echo ${1}|awk -F":"   '{print $2}');
+     TARGET_PID=$(echo ${1}|awk -F "@"   '{print $1}');
+      TARGET_IP=$(echo ${1}|awk -F "@|:" '{print $2}');
+    TARGET_PORT=$(echo ${1}|awk -F ":"   '{print $2}');
 
     # check pid
     if [ -z ${TARGET_PID} ];then
