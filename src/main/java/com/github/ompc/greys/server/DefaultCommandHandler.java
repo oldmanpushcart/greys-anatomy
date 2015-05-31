@@ -298,10 +298,4 @@ public class DefaultCommandHandler implements CommandHandler {
         }//while for write
     }
 
-    @Override
-    public void destroy() {
-        //
-    }
-
-
 }

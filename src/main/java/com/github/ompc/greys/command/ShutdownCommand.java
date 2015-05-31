@@ -39,8 +39,6 @@ public class ShutdownCommand implements Command {
                 final Properties props = System.getProperties();
                 props.remove(KEY_GREYS_CLASS_LOADER);
 
-
-
                 sender.send(true, "Greys shutdown completed.\n");
                 return new RowAffect(enhancerAffect.cCnt());
             }

@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
+import static java.util.logging.Level.INFO;
 
 /**
  * 默认会话管理器实现
@@ -90,8 +91,8 @@ public class DefaultSessionManager implements SessionManager {
                         final Session session = entry.getValue();
                         if (null == session
                                 || session.isExpired()) {
-                            if (logger.isLoggable(Level.INFO)) {
-                                logger.log(Level.INFO, format("session was expired, sessionId=%d;", sessionId));
+                            if (logger.isLoggable(INFO)) {
+                                logger.log(INFO, format("session was expired, sessionId=%d;", sessionId));
                             }
 
                             if (null != session) {
@@ -104,8 +105,8 @@ public class DefaultSessionManager implements SessionManager {
                                     if (logger.isLoggable(Level.FINE)) {
                                         logger.log(Level.FINE, message, e);
                                     }
-                                    if (logger.isLoggable(Level.INFO)) {
-                                        logger.log(Level.INFO, message);
+                                    if (logger.isLoggable(INFO)) {
+                                        logger.log(INFO, message);
                                     }
                                 }
 
@@ -132,6 +133,18 @@ public class DefaultSessionManager implements SessionManager {
         for (Session session : sessionMap.values()) {
             session.destroy();
         }
+
+        sessionMap.clear();
+
+        if (logger.isLoggable(INFO)) {
+            logger.log(INFO, "session manager clean completed.");
+        }
+
+    }
+
+    @Override
+    public boolean isDestroy() {
+        return isDestroyRef.get();
     }
 
     @Override
@@ -142,6 +155,10 @@ public class DefaultSessionManager implements SessionManager {
         }
 
         clean();
+
+        if (logger.isLoggable(INFO)) {
+            logger.log(INFO, "session manager destroy completed.");
+        }
 
     }
 }

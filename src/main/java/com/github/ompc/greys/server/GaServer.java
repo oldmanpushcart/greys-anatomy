@@ -394,8 +394,6 @@ public class GaServer {
      */
     public void unbind() {
 
-        sessionManager.clean();
-
         IOUtil.close(serverSocketChannel);
         IOUtil.close(selector);
 
@@ -409,9 +407,16 @@ public class GaServer {
         if (isBind()) {
             unbind();
         }
-        sessionManager.destroy();
+
+        if (!sessionManager.isDestroy()) {
+            sessionManager.destroy();
+        }
+
         executorService.shutdown();
-        commandHandler.destroy();
+        if (logger.isLoggable(INFO)) {
+            logger.log(INFO, "GaServer destroy completed.");
+        }
+
     }
 
     private static volatile GaServer gaServer;

@@ -33,6 +33,12 @@ public interface SessionManager {
     void clean();
 
     /**
+     * 是否已经被销毁
+     * @return true/false
+     */
+    boolean isDestroy();
+
+    /**
      * 销毁会话管理器所管理的所有会话
      */
     void destroy();

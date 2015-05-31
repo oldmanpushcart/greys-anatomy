@@ -17,10 +17,4 @@ public interface CommandHandler {
      */
     void executeCommand(final String line, final Session session) throws IOException;
 
-
-    /**
-     * 销毁
-     */
-    void destroy();
-
 }
