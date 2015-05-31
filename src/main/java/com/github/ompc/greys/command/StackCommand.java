@@ -12,7 +12,7 @@ import com.github.ompc.greys.util.Matcher.WildcardMatcher;
 
 import java.lang.instrument.Instrumentation;
 
-import static com.github.ompc.greys.util.StringUtil.getStack;
+import static com.github.ompc.greys.util.GaStringUtils.getStack;
 
 /**
  * Jstack命令<br/>

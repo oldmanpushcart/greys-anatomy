@@ -7,7 +7,9 @@ import java.lang.reflect.Method;
 
 import static com.github.ompc.greys.command.view.TableView.Align.LEFT;
 import static com.github.ompc.greys.command.view.TableView.Align.RIGHT;
-import static com.github.ompc.greys.util.StringUtil.*;
+import static com.github.ompc.greys.util.GaStringUtils.tranClassName;
+import static com.github.ompc.greys.util.GaStringUtils.tranModifier;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
  * Java方法信息控件

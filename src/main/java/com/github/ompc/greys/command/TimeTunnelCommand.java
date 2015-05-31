@@ -34,9 +34,9 @@ import static com.github.ompc.greys.command.view.TableView.BORDER_BOTTOM;
 import static com.github.ompc.greys.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.util.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.util.Matcher.WildcardMatcher;
-import static com.github.ompc.greys.util.StringUtil.*;
 import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.*;
 
 
 /**
@@ -691,7 +691,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TableView view = new TableView(new ColumnDefine[]{
                         new ColumnDefine(RIGHT),
-                        new ColumnDefine(50, true, LEFT)
+                        new ColumnDefine(100, false, LEFT)
                 })
                         .hasBorder(true)
                         .padding(1)

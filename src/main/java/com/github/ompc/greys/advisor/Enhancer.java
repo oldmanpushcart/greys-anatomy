@@ -14,9 +14,9 @@ import java.security.ProtectionDomain;
 import java.util.*;
 import java.util.logging.Logger;
 
-import static com.github.ompc.greys.util.CheckUtil.isEquals;
-import static com.github.ompc.greys.util.SearchUtil.searchClass;
-import static com.github.ompc.greys.util.SearchUtil.searchSubClass;
+import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
+import static com.github.ompc.greys.util.SearchUtils.searchClass;
+import static com.github.ompc.greys.util.SearchUtils.searchSubClass;
 import static java.lang.String.format;
 import static java.lang.System.arraycopy;
 import static java.util.logging.Level.WARNING;

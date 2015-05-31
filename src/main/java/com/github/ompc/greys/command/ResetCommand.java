@@ -11,8 +11,8 @@ import com.github.ompc.greys.util.Matcher;
 import java.lang.instrument.Instrumentation;
 
 import static com.github.ompc.greys.advisor.Enhancer.reset;
-import static com.github.ompc.greys.util.StringUtil.EMPTY;
-import static com.github.ompc.greys.util.StringUtil.isBlank;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * 恢复所有增强类<br/>
@@ -56,7 +56,6 @@ public class ResetCommand implements Command {
                 sender.send(true, EMPTY);
                 return new RowAffect(enhancerAffect.cCnt());
             }
-
 
 
         };

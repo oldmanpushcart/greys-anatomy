@@ -3,7 +3,7 @@ package com.github.ompc.greys.command.view;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.ompc.greys.util.StringUtil.repeat;
+import static org.apache.commons.lang3.StringUtils.repeat;
 
 /**
  * 阶梯缩进控件

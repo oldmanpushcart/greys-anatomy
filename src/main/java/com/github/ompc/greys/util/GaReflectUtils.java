@@ -14,14 +14,14 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import static com.github.ompc.greys.util.CheckUtil.isEquals;
-import static com.github.ompc.greys.util.CheckUtil.isIn;
+import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
+import static com.github.ompc.greys.util.GaCheckUtils.isIn;
 
 /**
  * 反射工具类
  * Created by vlinux on 15/5/18.
  */
-public class ReflectUtil {
+public class GaReflectUtils {
 
     /**
      * 从包package中获取所有的Class

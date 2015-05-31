@@ -13,9 +13,9 @@ import com.github.ompc.greys.util.Matcher.WildcardMatcher;
 import java.lang.instrument.Instrumentation;
 import java.util.Set;
 
-import static com.github.ompc.greys.util.SearchUtil.searchClass;
-import static com.github.ompc.greys.util.SearchUtil.searchSubClass;
-import static com.github.ompc.greys.util.StringUtil.EMPTY;
+import static com.github.ompc.greys.util.SearchUtils.searchClass;
+import static com.github.ompc.greys.util.SearchUtils.searchSubClass;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
  * 展示类信息
@@ -81,24 +81,6 @@ public class SearchClassCommand implements Command {
             }
 
         };
-    }
-
-
-    /*
-     * 获取对象类型
-     */
-    private String getType(Class<?> clazz) {
-
-        if (clazz.isAnnotation()) {
-            return "Annotation";
-        } else if (clazz.isEnum()) {
-            return "Enum";
-        } else if (clazz.isInterface()) {
-            return "Interface";
-        } else {
-            return "Class";
-        }
-
     }
 
 }

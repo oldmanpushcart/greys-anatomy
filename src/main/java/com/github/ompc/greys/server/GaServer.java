@@ -1,7 +1,6 @@
 package com.github.ompc.greys.server;
 
 import com.github.ompc.greys.Configure;
-import com.github.ompc.greys.util.IOUtil;
 import com.github.ompc.greys.util.LogUtil;
 
 import java.io.IOException;
@@ -19,12 +18,13 @@ import java.util.logging.Logger;
 
 import static com.github.ompc.greys.server.LineDecodeState.READ_CHAR;
 import static com.github.ompc.greys.server.LineDecodeState.READ_EOL;
-import static com.github.ompc.greys.util.StringUtil.getLogo;
+import static com.github.ompc.greys.util.GaStringUtils.getLogo;
 import static java.lang.String.format;
 import static java.nio.channels.SelectionKey.OP_ACCEPT;
 import static java.nio.channels.SelectionKey.OP_READ;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 
 /**
  * GaServer操作的附件
@@ -385,7 +385,7 @@ public class GaServer {
     }
 
     private void closeSocketChannel(SelectionKey key, SocketChannel socketChannel) {
-        IOUtil.close(socketChannel);
+        closeQuietly(socketChannel);
         key.cancel();
     }
 
@@ -394,8 +394,8 @@ public class GaServer {
      */
     public void unbind() {
 
-        IOUtil.close(serverSocketChannel);
-        IOUtil.close(selector);
+        closeQuietly(serverSocketChannel);
+        closeQuietly(selector);
 
         if (!isBindRef.compareAndSet(true, false)) {
             throw new IllegalStateException("already unbind");

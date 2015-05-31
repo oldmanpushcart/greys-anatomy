@@ -9,7 +9,8 @@ import java.security.CodeSource;
 
 import static com.github.ompc.greys.command.view.TableView.Align.LEFT;
 import static com.github.ompc.greys.command.view.TableView.Align.RIGHT;
-import static com.github.ompc.greys.util.StringUtil.*;
+import static com.github.ompc.greys.util.GaStringUtils.*;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
  * Java类信息控件

@@ -9,15 +9,15 @@ import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
 import com.github.ompc.greys.command.affect.RowAffect;
-import com.github.ompc.greys.util.SearchUtil;
+import com.github.ompc.greys.util.SearchUtils;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.github.ompc.greys.util.StringUtil.isBlank;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * 展示方法信息
@@ -70,7 +70,7 @@ public class SearchMethodCommand implements Command {
                 final StringBuilder message = new StringBuilder();
 
                 final RowAffect affect = new RowAffect();
-                final Set<Class<?>> matchingClassSet = SearchUtil.searchClass(inst, classNameMatcher);
+                final Set<Class<?>> matchingClassSet = SearchUtils.searchClass(inst, classNameMatcher);
 
                 for (Class<?> clazz : matchingClassSet) {
                     for (Method method : clazz.getDeclaredMethods()) {

@@ -23,7 +23,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.github.ompc.greys.util.CheckUtil.isEquals;
+import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
 import static java.lang.System.currentTimeMillis;
 
 /**

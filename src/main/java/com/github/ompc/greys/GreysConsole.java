@@ -1,6 +1,5 @@
 package com.github.ompc.greys;
 
-import com.github.ompc.greys.util.IOUtil;
 import jline.console.ConsoleReader;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
@@ -12,8 +11,11 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import static com.github.ompc.greys.util.StringUtil.*;
+import static com.github.ompc.greys.util.GaStringUtils.DEFAULT_PROMPT;
 import static jline.console.KeyMap.CTRL_D;
+import static org.apache.commons.io.IOUtils.closeQuietly;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * Greys控制台
@@ -169,9 +171,9 @@ public class GreysConsole {
      */
     private void shutdown() {
         isRunning = false;
-        IOUtil.close(socketWriter);
-        IOUtil.close(socketReader);
-        IOUtil.close(socket);
+        closeQuietly(socketWriter);
+        closeQuietly(socketReader);
+        closeQuietly(socket);
         console.shutdown();
     }
 

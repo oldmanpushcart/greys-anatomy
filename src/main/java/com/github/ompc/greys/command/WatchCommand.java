@@ -19,7 +19,7 @@ import java.lang.instrument.Instrumentation;
 import java.util.logging.Logger;
 
 import static com.github.ompc.greys.util.Advice.*;
-import static com.github.ompc.greys.util.StringUtil.getCauseMessage;
+import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
 import static java.util.logging.Level.WARNING;
 
 @Cmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",

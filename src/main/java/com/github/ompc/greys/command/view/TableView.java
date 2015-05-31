@@ -5,10 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import static com.github.ompc.greys.util.StringUtil.*;
+import static com.github.ompc.greys.util.GaStringUtils.wrap;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.*;
 
 /**
  * 表格控件
@@ -52,11 +53,11 @@ public class TableView implements View {
     }
 
     private boolean isAnyBorder(int... borders) {
-        if( null == borders ) {
+        if (null == borders) {
             return false;
         }
-        for( int b : borders ) {
-            if( (this.borders & b) == b ) {
+        for (int b : borders) {
+            if ((this.borders & b) == b) {
                 return true;
             }
         }
@@ -375,12 +376,12 @@ public class TableView implements View {
 
         TableView view = new TableView(new ColumnDefine[]{
                 new ColumnDefine(Align.RIGHT),
-                new ColumnDefine(5,false,Align.LEFT)
+                new ColumnDefine(8, false, Align.LEFT)
         });
 
         view
-                .addRow("AAAAAAAA", "AAA")
-                .addRow("BBBBBBBB", "\tBBBBBBBBBBBBBBB")
+                .addRow("AAAAAAAA", "AAAAAAAAAAA")
+                .addRow("BBBBBBBB", "12345678\n12345678123456\n7812345678")
                 .addRow("AAAAAAAA", "AAA")
         ;
 

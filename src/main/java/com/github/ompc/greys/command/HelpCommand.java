@@ -16,8 +16,8 @@ import java.util.*;
 
 import static com.github.ompc.greys.command.view.TableView.Align.LEFT;
 import static com.github.ompc.greys.command.view.TableView.Align.RIGHT;
-import static com.github.ompc.greys.util.StringUtil.isBlank;
-import static com.github.ompc.greys.util.StringUtil.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 
 /**

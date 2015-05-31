@@ -5,8 +5,8 @@ import com.github.ompc.greys.util.GaMethod;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
-import static com.github.ompc.greys.util.CheckUtil.isEquals;
-import static com.github.ompc.greys.util.StringUtil.tranClassName;
+import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
+import static com.github.ompc.greys.util.GaStringUtils.tranClassName;
 
 /**
  * 反射通知适配器<br/>

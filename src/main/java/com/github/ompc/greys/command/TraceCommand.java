@@ -11,7 +11,7 @@ import com.github.ompc.greys.util.Matcher;
 
 import java.lang.instrument.Instrumentation;
 
-import static com.github.ompc.greys.util.StringUtil.tranClassName;
+import static com.github.ompc.greys.util.GaStringUtils.tranClassName;
 
 /**
  * 调用跟踪命令<br/>

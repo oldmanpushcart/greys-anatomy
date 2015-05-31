@@ -8,7 +8,7 @@ import java.util.Set;
  * 类搜索工具
  * Created by vlinux on 15/5/17.
  */
-public class SearchUtil {
+public class SearchUtils {
 
     /**
      * 根据类名匹配，搜已经被JVM加载的类

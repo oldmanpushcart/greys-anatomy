@@ -4,7 +4,7 @@ package com.github.ompc.greys.util;
  * 检查工具类
  * Created by vlinux on 15/5/19.
  */
-public class CheckUtil {
+public class GaCheckUtils {
 
     /**
      * 比对某个元素是否在集合中<br/>
@@ -30,22 +30,6 @@ public class CheckUtil {
 
         return false;
 
-    }
-
-    /**
-     * 比对某个元素是否不在集合中<br/>
-     *
-     * @param e   元素
-     * @param s   元素集合
-     * @param <E> 元素类型
-     * @return <br/>
-     * (1,1,2,3)        == false
-     * (1,2,3,4)        == true
-     * (null,1,null,2)  == false
-     * (1,null)         == true
-     */
-    public static <E> boolean isNotIn(E e, E... s) {
-        return !isIn(e, s);
     }
 
     /**

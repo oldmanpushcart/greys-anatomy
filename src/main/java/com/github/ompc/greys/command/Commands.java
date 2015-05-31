@@ -6,7 +6,7 @@ import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.exception.CommandException;
 import com.github.ompc.greys.exception.CommandInitializationException;
 import com.github.ompc.greys.exception.CommandNotFoundException;
-import com.github.ompc.greys.util.ReflectUtil;
+import com.github.ompc.greys.util.GaReflectUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpecBuilder;
@@ -16,8 +16,8 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.github.ompc.greys.util.ReflectUtil.getClasses;
-import static com.github.ompc.greys.util.StringUtil.splitForArgument;
+import static com.github.ompc.greys.util.GaReflectUtils.getClasses;
+import static com.github.ompc.greys.util.GaStringUtils.splitForArgument;
 
 public class Commands {
 
@@ -91,7 +91,7 @@ public class Commands {
                                 }
                             }
                             try {
-                                ReflectUtil.set(field, value, command);
+                                GaReflectUtils.set(field, value, command);
                             } catch (IllegalAccessException e) {
                                 throw new CommandInitializationException(cmdName, e);
                             }
@@ -101,7 +101,7 @@ public class Commands {
                     // 设置boolean类型,一般只有boolean类型hasValue才为false
                     else {
                         try {
-                            ReflectUtil.set(field, opt.has(arg.named()), command);
+                            GaReflectUtils.set(field, opt.has(arg.named()), command);
                         } catch (IllegalAccessException e) {
                             throw new CommandInitializationException(cmdName, e);
                         }
@@ -121,7 +121,7 @@ public class Commands {
 
                     if (opt.nonOptionArguments().size() > index) {
                         try {
-                            ReflectUtil.set(field, opt.nonOptionArguments().get(index), command);
+                            GaReflectUtils.set(field, opt.nonOptionArguments().get(index), command);
                         } catch (IllegalAccessException e) {
                             throw new CommandInitializationException(cmdName, e);
                         }

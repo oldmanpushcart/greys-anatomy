@@ -7,7 +7,7 @@ import com.github.ompc.greys.command.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 
-import static com.github.ompc.greys.util.StringUtil.getLogo;
+import static com.github.ompc.greys.util.GaStringUtils.getLogo;
 
 /**
  * 输出版本

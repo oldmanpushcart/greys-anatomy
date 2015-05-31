@@ -5,7 +5,7 @@ import joptsimple.OptionSet;
 
 import java.util.List;
 
-import static com.github.ompc.greys.util.StringUtil.getCauseMessage;
+import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
 
 /**
  * Greys启动器

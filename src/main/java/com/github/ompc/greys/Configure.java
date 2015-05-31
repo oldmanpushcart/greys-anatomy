@@ -1,14 +1,14 @@
 package com.github.ompc.greys;
 
 import com.github.ompc.greys.util.FeatureCodec;
-import com.github.ompc.greys.util.ReflectUtil;
+import com.github.ompc.greys.util.GaReflectUtils;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.github.ompc.greys.util.ReflectUtil.*;
-import static com.github.ompc.greys.util.StringUtil.newString;
+import static com.github.ompc.greys.util.GaReflectUtils.*;
+import static com.github.ompc.greys.util.GaStringUtils.newString;
 import static java.lang.reflect.Modifier.isStatic;
 
 /**
@@ -67,7 +67,7 @@ public class Configure {
     public String toString() {
 
         final Map<String, String> map = new HashMap<String, String>();
-        for (Field field : ReflectUtil.getFields(Configure.class)) {
+        for (Field field : GaReflectUtils.getFields(Configure.class)) {
 
             // 过滤掉静态类
             if (isStatic(field.getModifiers())) {
