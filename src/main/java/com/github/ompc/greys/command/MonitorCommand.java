@@ -31,8 +31,8 @@ import static java.lang.System.currentTimeMillis;
  * 输出的内容格式为:<br/>
  * <style type="text/css">
  * table, th, td {
- * border:1px solid #cccccc;
- * border-collapse:collapse;
+ * borders:1px solid #cccccc;
+ * borders-collapse:collapse;
  * }
  * </style>
  * <table>

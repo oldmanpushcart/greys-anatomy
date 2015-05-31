@@ -327,7 +327,7 @@ public class TimeTunnelCommand implements Command {
                                 }
 
                                 // 表格控件不输出表格上边框,这样两个表格就能拼凑在一起
-                                view.border(view.border() & ~BORDER_BOTTOM);
+                                view.borders(view.borders() & ~BORDER_BOTTOM);
 
                                 // 填充表格内容
                                 fillTableRow(view, index, timeTunnel);

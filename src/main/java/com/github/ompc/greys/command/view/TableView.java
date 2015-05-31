@@ -30,10 +30,10 @@ public class TableView implements View {
     private final ColumnDefine[] columnDefineArray;
 
     // 是否渲染边框
-    private boolean isBorder;
+    private boolean hasBorder;
 
     // 边框
-    private int border = BORDER_TOP | BORDER_BOTTOM;
+    private int borders = BORDER_TOP | BORDER_BOTTOM;
 
     // 内填充
     private int padding;
@@ -51,8 +51,16 @@ public class TableView implements View {
         }
     }
 
-    private boolean borders(int border) {
-        return (this.border & border) == border;
+    private boolean isAnyBorder(int... borders) {
+        if( null == borders ) {
+            return false;
+        }
+        for( int b : borders ) {
+            if( (this.borders & b) == b ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -60,8 +68,8 @@ public class TableView implements View {
      *
      * @return 边框位
      */
-    public int border() {
-        return border;
+    public int borders() {
+        return borders;
     }
 
     /**
@@ -70,8 +78,8 @@ public class TableView implements View {
      * @param border 边框位
      * @return this
      */
-    public TableView border(int border) {
-        this.border = border;
+    public TableView borders(int border) {
+        this.borders = border;
         return this;
     }
 
@@ -94,7 +102,7 @@ public class TableView implements View {
             // 打印首分隔行
             if (isFirstRow
                     && hasBorder()
-                    && borders(BORDER_TOP)) {
+                    && isAnyBorder(BORDER_TOP)) {
                 tableSB.append(drawSeparationLine(widthCacheArray)).append("\n");
             }
 
@@ -111,7 +119,7 @@ public class TableView implements View {
             // 打印结尾分隔行
             if (isLastRow
                     && hasBorder()
-                    && borders(BORDER_BOTTOM)) {
+                    && isAnyBorder(BORDER_BOTTOM)) {
                 // 打印分割行
                 tableSB.append(drawSeparationLine(widthCacheArray)).append("\n");
             }
@@ -331,7 +339,7 @@ public class TableView implements View {
      * @param hasBorder true / false
      */
     public TableView hasBorder(boolean hasBorder) {
-        this.isBorder = hasBorder;
+        this.hasBorder = hasBorder;
         return this;
     }
 
@@ -341,7 +349,7 @@ public class TableView implements View {
      * @return true / false
      */
     public boolean hasBorder() {
-        return isBorder;
+        return hasBorder;
     }
 
     /**
