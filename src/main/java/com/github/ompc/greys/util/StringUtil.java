@@ -450,21 +450,21 @@ public class StringUtil {
     public static String wrap(String string, int width) {
         final StringBuilder sb = new StringBuilder();
         final char[] buffer = string.toCharArray();
-        int index = 0;
+        int count = 0;
         for (char c : buffer) {
             sb.append(c);
             if( c == '\n' ) {
-                index = 0;
-            } else if (++index == width) {
+                count = 0;
+            } else if (count++ == width) {
                 sb.append("\n");
-                index = 0;
+                count = 0;
             }
         }
         return sb.toString();
     }
 
     public static void main(String... args) {
-        System.out.println(wrap("12\n34567\n890", 5));
+        System.out.println(wrap("12\n34567\n890\n", 5));
     }
 
 
