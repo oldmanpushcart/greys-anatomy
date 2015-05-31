@@ -579,7 +579,7 @@ public class TimeTunnelCommand implements Command {
                 }
 
                 sender.send(false, view.hasBorder(true).padding(1).draw());
-                sender.send(true, format("rePlay time fragment[%d] success.\n", index));
+                sender.send(true, format("replay time fragment[%d] success.\n", index));
                 return new RowAffect(1);
             }
         };

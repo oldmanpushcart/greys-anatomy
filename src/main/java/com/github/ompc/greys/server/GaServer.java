@@ -412,7 +412,6 @@ public class GaServer {
         sessionManager.destroy();
         executorService.shutdown();
         commandHandler.destroy();
-        sessionManager.destroy();
     }
 
     private static volatile GaServer gaServer;
