@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import static com.github.ompc.greys.agent.AgentLauncher.*;
+import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
 import static java.lang.String.format;
 import static java.lang.Thread.currentThread;
 import static java.util.logging.Level.WARNING;
@@ -30,18 +31,10 @@ class TracingAsmCodeLock extends AsmCodeLock {
         super(
                 aa,
                 new int[]{
-                        ACONST_NULL, POP,
-                        ACONST_NULL, ACONST_NULL, POP2,
-                        ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP,
-                        ACONST_NULL, ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP2,
-                        ACONST_NULL, ACONST_NULL, SWAP, SWAP, SWAP, POP2
+                        ACONST_NULL, ICONST_0, ICONST_1, SWAP, SWAP, POP2, POP
                 },
                 new int[]{
-                        ACONST_NULL, ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP2,
-                        ACONST_NULL, ACONST_NULL, ACONST_NULL, POP2, POP,
-                        ACONST_NULL, ACONST_NULL, POP2,
-                        ACONST_NULL, POP,
-                        ACONST_NULL, ACONST_NULL, SWAP, SWAP, SWAP, POP2
+                        ICONST_1, ACONST_NULL, ICONST_0, SWAP, SWAP, POP, POP2
                 }
         );
     }
@@ -346,7 +339,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     private boolean isIgnore(MethodVisitor mv, int access, String methodName) {
         return null == mv
                 || isAbstract(access)
-                || !matcher.matching(methodName);
+                || !matcher.matching(methodName)
+                || isEquals(methodName, "<clinit>");
     }
 
     @Override
