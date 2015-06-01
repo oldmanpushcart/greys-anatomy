@@ -20,7 +20,7 @@ import static com.github.ompc.greys.util.SearchUtils.searchSubClass;
 import static java.lang.String.format;
 import static java.lang.System.arraycopy;
 import static java.util.logging.Level.WARNING;
-import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
+import static org.objectweb.asm.ClassReader.EXPAND_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
 
@@ -135,7 +135,7 @@ public class Enhancer implements ClassFileTransformer {
         try {
 
             // 生成增强字节码
-            cr.accept(new AdviceWeaver(adviceId, isTracing, cr.getClassName(), methodNameMatcher, affect, cw), SKIP_FRAMES);
+            cr.accept(new AdviceWeaver(adviceId, isTracing, cr.getClassName(), methodNameMatcher, affect, cw), EXPAND_FRAMES);
             final byte[] enhanceClassByteArray = cw.toByteArray();
 
             // 生成成功,推入缓存
