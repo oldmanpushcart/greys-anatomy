@@ -11,8 +11,8 @@ public class AsmCodeLock implements CodeLock, Opcodes {
 
     private final AdviceAdapter aa;
 
-    // 锁记数
-    private int lock;
+    // 锁标记
+    private boolean isLook;
 
     // 代码块开始特征数组
     private final int[] beginCodeArray;
@@ -62,11 +62,8 @@ public class AsmCodeLock implements CodeLock, Opcodes {
         }
 
         if (++index == codes.length) {
-            if (isLock()) {
-                lock--;
-            } else {
-                lock++;
-            }
+            // 翻转锁状态
+            isLook = !isLook;
             reset();
         }
 
@@ -105,7 +102,7 @@ public class AsmCodeLock implements CodeLock, Opcodes {
 
     @Override
     public boolean isLock() {
-        return lock > 0;
+        return isLook;
     }
 
     @Override
