@@ -118,6 +118,7 @@ public class GreysConsole {
                     while (isRunning) {
 
                         final String line = console.readLine();
+                        history.add(line);
                         console.setPrompt(EMPTY);
                         if (isNotBlank(line)) {
                             socketWriter.write(line + "\n");

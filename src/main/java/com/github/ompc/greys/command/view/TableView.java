@@ -372,21 +372,4 @@ public class TableView implements View {
         return columnDefineArray.length;
     }
 
-    public static void main(String... args) {
-
-        TableView view = new TableView(new ColumnDefine[]{
-                new ColumnDefine(Align.RIGHT),
-                new ColumnDefine(8, false, Align.LEFT)
-        });
-
-        view
-                .addRow("AAAAAAAA", "AAAAAAAAAAA")
-                .addRow("BBBBBBBB", "12345678\n12345678123456\n7812345678")
-                .addRow("AAAAAAAA", "AAA")
-        ;
-
-        System.out.println(view.hasBorder(true).padding(1).draw());
-
-    }
-
 }

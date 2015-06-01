@@ -8,7 +8,6 @@ import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.command.view.ObjectView;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Advice;
-import com.github.ompc.greys.util.Express.OgnlExpress;
 import com.github.ompc.greys.util.GaMethod;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
@@ -19,6 +18,7 @@ import java.lang.instrument.Instrumentation;
 import java.util.logging.Logger;
 
 import static com.github.ompc.greys.util.Advice.*;
+import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
 import static java.util.logging.Level.WARNING;
 
@@ -175,7 +175,7 @@ public class WatchCommand implements Command {
 
                             private void watching(Advice advice) {
                                 try {
-                                    final Object value = new OgnlExpress(advice).get(express);
+                                    final Object value = newExpress(advice).get(express);
                                     if (null != expend
                                             && expend >= 0) {
                                         sender.send(false, new ObjectView(value, expend).draw() + "\n");

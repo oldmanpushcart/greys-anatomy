@@ -235,14 +235,5 @@ public class GaStringUtils {
         return sb.toString();
     }
 
-
-    public static void main(String... args) {
-//        final String str = "java.lang.RuntimeException: test\n\tat AgentTest.printAddress(AgentTest.java:77)\n\tat AgentTest.<init>(AgentTest.java:63)";
-        final String str = "12345678\n123456789\nCCCCCCCC";
-        final String fixStr = StringUtils.replace(str, "\t", "    ");
-        System.out.println(wrap(fixStr, 8));
-
-    }
-
 }
 

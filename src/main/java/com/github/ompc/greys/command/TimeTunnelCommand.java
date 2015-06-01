@@ -11,7 +11,6 @@ import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.command.view.TableView.ColumnDefine;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Advice;
-import com.github.ompc.greys.util.Express.OgnlExpress;
 import com.github.ompc.greys.util.GaMethod;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
@@ -33,6 +32,7 @@ import static com.github.ompc.greys.command.view.TableView.Align.RIGHT;
 import static com.github.ompc.greys.command.view.TableView.BORDER_BOTTOM;
 import static com.github.ompc.greys.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.util.Advice.newForAfterThrowing;
+import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.util.Matcher.WildcardMatcher;
 import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
@@ -391,7 +391,7 @@ public class TimeTunnelCommand implements Command {
                     final Advice advice = tf.getAdvice();
 
                     // 搜索出匹配的时间片段
-                    if ((new OgnlExpress(advice)).is(searchExpress)) {
+                    if ((newExpress(advice)).is(searchExpress)) {
                         matchingTimeSegmentMap.put(index, tf);
                     }
 
@@ -409,7 +409,7 @@ public class TimeTunnelCommand implements Command {
                             .addRow("INDEX", "SEARCH-RESULT");
 
                     for (Map.Entry<Integer, TimeFragment> entry : matchingTimeSegmentMap.entrySet()) {
-                        final Object value = new OgnlExpress(entry.getValue().getAdvice()).get(watchExpress);
+                        final Object value = newExpress(entry.getValue().getAdvice()).get(watchExpress);
                         view.addRow(
                                 entry.getKey(),
                                 isNeedExpend()
@@ -466,7 +466,7 @@ public class TimeTunnelCommand implements Command {
                 }
 
                 final Advice advice = tf.getAdvice();
-                final Object value = new OgnlExpress(advice).get(watchExpress);
+                final Object value = newExpress(advice).get(watchExpress);
                 if (isNeedExpend()) {
                     sender.send(true, new ObjectView(value, expend).draw() + "\n");
                 } else {
@@ -701,8 +701,7 @@ public class TimeTunnelCommand implements Command {
                         .addRow("CLASS", className)
                         .addRow("METHOD", methodName)
                         .addRow("IS-RETURN", advice.isAfterReturning())
-                        .addRow("IS-EXCEPTION", advice.isAfterThrowing())
-                        ;
+                        .addRow("IS-EXCEPTION", advice.isAfterThrowing());
 
 
                 // fill the parameters

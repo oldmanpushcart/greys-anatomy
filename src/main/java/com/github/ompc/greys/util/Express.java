@@ -1,12 +1,12 @@
 package com.github.ompc.greys.util;
 
 import com.github.ompc.greys.exception.ExpressException;
-import ognl.DefaultMemberAccess;
-import ognl.Ognl;
-import ognl.OgnlContext;
-import ognl.OgnlException;
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
 
-import java.util.Map;
+import java.lang.reflect.Field;
+
+import static org.apache.commons.lang3.reflect.FieldUtils.readDeclaredField;
 
 /**
  * 表达式
@@ -34,27 +34,48 @@ public interface Express {
 
 
     /**
-     * Ognl表达式
+     * 表达式工厂类
      */
-    class OgnlExpress implements Express {
+    class ExpressFactory {
 
-        // 执行表达式的对象
-        private final Object object;
+        /**
+         * 构造表达式执行类
+         *
+         * @param object 执行对象
+         * @return 返回表达式实现
+         */
+        public final static Express newExpress(Object object) {
+            return new GroovyExpress(object);
+        }
 
-        public OgnlExpress(Object object) {
-            this.object = object;
+    }
+
+
+    /**
+     * Groovy实现的表达式
+     */
+    class GroovyExpress implements Express {
+
+        private final Binding bind;
+
+        public GroovyExpress(Object object) {
+            bind = new Binding();
+            for (Field field : object.getClass().getDeclaredFields()) {
+                try {
+                    bind.setVariable(field.getName(), readDeclaredField(object, field.getName(), true));
+                } catch (IllegalAccessException e) {
+                    // ignore
+                }
+            }
         }
 
         @Override
         public Object get(String express) throws ExpressException {
-            final Map<String, Object> context = Ognl.createDefaultContext(null);
-            context.put(OgnlContext.MEMBER_ACCESS_CONTEXT_KEY, new DefaultMemberAccess(true, true, true));
             try {
-                return Ognl.getValue(express, context, object);
-            } catch (OgnlException e) {
+                return new GroovyShell(bind).evaluate(express);
+            } catch (Exception e) {
                 throw new ExpressException(express, e);
             }
-
         }
 
         @Override
@@ -64,7 +85,7 @@ public interface Express {
                     && ret instanceof Boolean
                     && (Boolean) ret;
         }
-    }
 
+    }
 
 }

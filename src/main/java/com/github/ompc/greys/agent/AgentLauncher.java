@@ -71,7 +71,6 @@ public class AgentLauncher {
                     Object.class));
             props.put(KEY_GREYS_ADVICE_THROWS_METHOD, clazz.getMethod("methodOnThrowingEnd",
                     Throwable.class));
-
             props.put(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD, clazz.getMethod("methodOnInvokeBeforeTracing",
                     int.class,
                     String.class,
