@@ -1,6 +1,7 @@
 package com.github.ompc.greys.server;
 
 import com.github.ompc.greys.util.LogUtil;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -10,11 +11,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static java.lang.String.format;
-import static java.util.logging.Level.INFO;
 
 /**
  * 默认会话管理器实现
@@ -91,9 +87,8 @@ public class DefaultSessionManager implements SessionManager {
                         final Session session = entry.getValue();
                         if (null == session
                                 || session.isExpired()) {
-                            if (logger.isLoggable(INFO)) {
-                                logger.log(INFO, format("session was expired, sessionId=%d;", sessionId));
-                            }
+
+                            logger.info("session[{}] was expired", sessionId);
 
                             if (null != session) {
 
@@ -101,13 +96,7 @@ public class DefaultSessionManager implements SessionManager {
                                     // 会话超时，关闭之前输出超时信息
                                     session.getSocketChannel().write(ByteBuffer.wrap("session expired.\n".getBytes()));
                                 } catch (IOException e) {
-                                    final String message = format("write expired message failed. sessionId=%d;", session.getSessionId());
-                                    if (logger.isLoggable(Level.FINE)) {
-                                        logger.log(Level.FINE, message, e);
-                                    }
-                                    if (logger.isLoggable(INFO)) {
-                                        logger.log(INFO, message);
-                                    }
+                                    logger.debug("write expired message to session[{}] failed.", sessionId, e);
                                 }
 
                                 session.destroy();
@@ -136,9 +125,7 @@ public class DefaultSessionManager implements SessionManager {
 
         sessionMap.clear();
 
-        if (logger.isLoggable(INFO)) {
-            logger.log(INFO, "session manager clean completed.");
-        }
+        logger.info("session manager clean completed.");
 
     }
 
@@ -156,9 +143,7 @@ public class DefaultSessionManager implements SessionManager {
 
         clean();
 
-        if (logger.isLoggable(INFO)) {
-            logger.log(INFO, "session manager destroy completed.");
-        }
+        logger.info("session manager destroy completed.");
 
     }
 }

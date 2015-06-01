@@ -9,17 +9,15 @@ import com.github.ompc.greys.util.Matcher;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
+import org.slf4j.Logger;
 
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 
 import static com.github.ompc.greys.agent.AgentLauncher.*;
 import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
-import static java.lang.String.format;
 import static java.lang.Thread.currentThread;
-import static java.util.logging.Level.WARNING;
 
 
 /**
@@ -167,9 +165,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             try {
                 listener.invokeBeforeTracing(owner, name, desc);
             } catch (Throwable t) {
-                if (logger.isLoggable(WARNING)) {
-                    logger.log(WARNING, format("advice before invoking : %s", t.getMessage()), t);
-                }
+                logger.warn("advice before tracing failed." ,t);
             }
         }
     }
@@ -188,9 +184,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             try {
                 listener.invokeAfterTracing(owner, name, desc);
             } catch (Throwable t) {
-                if (logger.isLoggable(WARNING)) {
-                    logger.log(WARNING, format("advice after invoking : %s", t.getMessage()), t);
-                }
+                logger.warn("advice after tracing failed." ,t);
             }
         }
     }
@@ -258,9 +252,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             try {
                 listener.before(loader, className, methodName, methodDesc, target, args);
             } catch (Throwable t) {
-                if (logger.isLoggable(WARNING)) {
-                    logger.log(WARNING, format("advice before : %s", t.getMessage()), t);
-                }
+                logger.warn("advice before failed." ,t);
             }
         }
 
@@ -273,9 +265,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             try {
                 listener.afterReturning(loader, className, methodName, methodDesc, target, args, returnObject);
             } catch (Throwable t) {
-                if (logger.isLoggable(WARNING)) {
-                    logger.log(WARNING, format("advice before : %s", t.getMessage()), t);
-                }
+                logger.warn("advice returning failed." ,t);
             }
         }
     }
@@ -287,9 +277,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             try {
                 listener.afterThrowing(loader, className, methodName, methodDesc, target, args, throwable);
             } catch (Throwable t) {
-                if (logger.isLoggable(WARNING)) {
-                    logger.log(WARNING, format("advice afterThrowing : %s", t.getMessage()), t);
-                }
+                logger.warn("advice throwing failed." ,t);
             }
         }
     }

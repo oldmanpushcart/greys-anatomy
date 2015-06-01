@@ -2,6 +2,7 @@ package com.github.ompc.greys.server;
 
 import com.github.ompc.greys.Configure;
 import com.github.ompc.greys.util.LogUtil;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
@@ -14,16 +15,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
 import static com.github.ompc.greys.server.LineDecodeState.READ_CHAR;
 import static com.github.ompc.greys.server.LineDecodeState.READ_EOL;
 import static com.github.ompc.greys.util.GaStringUtils.getLogo;
-import static java.lang.String.format;
 import static java.nio.channels.SelectionKey.OP_ACCEPT;
 import static java.nio.channels.SelectionKey.OP_READ;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.WARNING;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
 /**
@@ -174,12 +171,9 @@ public class GaServer {
 
             // 服务器挂载端口
             serverSocketChannel.socket().bind(new InetSocketAddress(configure.getTargetIp(), configure.getTargetPort()), 24);
-            if (logger.isLoggable(INFO)) {
-                logger.log(INFO, format("GaServer listened on network=%s;port=%d;timeout=%d;",
-                        configure.getTargetIp(),
-                        configure.getTargetPort(),
-                        configure.getConnectTimeout()));
-            }
+            logger.info("ga-server listened on network={};port={};timeout={};", configure.getTargetIp(),
+                    configure.getTargetPort(),
+                    configure.getConnectTimeout());
 
             activeSelectorDaemon(selector, configure);
 
@@ -223,11 +217,9 @@ public class GaServer {
                         }
 
                     } catch (IOException e) {
-                        if (logger.isLoggable(WARNING)) {
-                            logger.log(WARNING, "selector failed.", e);
-                        }
+                        logger.warn("selector failed.", e);
                     } catch (ClosedSelectorException e) {
-                        //
+                        logger.debug("selector closed.", e);
                     }
 
 
@@ -253,12 +245,7 @@ public class GaServer {
 
         final Session session = sessionManager.newSession(javaPid, socketChannel, DEFAULT_CHARSET);
         socketChannel.register(selector, OP_READ, new GaAttachment(BUFFER_SIZE, session));
-        if (logger.isLoggable(INFO)) {
-            logger.log(INFO, format("%s accept an connection, session[%d];client=%s;",
-                    GaServer.this,
-                    session.getSessionId(),
-                    socketChannel));
-        }
+        logger.info("accept new connection, client={}@session[{}]", socketChannel, session.getSessionId());
 
         // 这里输出Logo
         socketChannel.write(ByteBuffer.wrap(getLogo().getBytes(DEFAULT_CHARSET)));
@@ -277,16 +264,10 @@ public class GaServer {
 
             // 若读到-1，则说明SocketChannel已经关闭
             if (-1 == socketChannel.read(byteBuffer)) {
-                if (logger.isLoggable(INFO)) {
-                    logger.log(INFO, format("client=%s was closed, for %s",
-                            socketChannel,
-                            GaServer.this));
-                }
+                logger.info("client={}@session[{}] was closed.", socketChannel, session.getSessionId());
                 closeSocketChannel(key, socketChannel);
-
                 return;
             }
-
 
             // decode for line
             byteBuffer.flip();
@@ -333,20 +314,15 @@ public class GaServer {
                                         socketChannel.write(ByteBuffer.wrap(new byte[]{EOT}));
 
                                     } catch (IOException e) {
-                                        if (logger.isLoggable(WARNING)) {
-                                            logger.log(WARNING,
-                                                    format("network communicate failed, session[%d] will be close.",
-                                                            session.getSessionId()));
-                                        }
+                                        logger.info("network communicate failed, session[{}] will be close.",
+                                                session.getSessionId());
                                         session.destroy();
                                     } finally {
                                         session.unLock();
                                     }
                                 } else {
-                                    if (logger.isLoggable(INFO)) {
-                                        logger.log(INFO, format("session[%d] was locked, ignore this command.",
-                                                session.getSessionId()));
-                                    }
+                                    logger.info("session[{}] was locked, ignore this command.",
+                                            session.getSessionId());
                                 }
                             }
                         });
@@ -363,10 +339,7 @@ public class GaServer {
 
         // 处理
         catch (IOException e) {
-            if (logger.isLoggable(WARNING)) {
-                logger.log(WARNING, format("read/write data failed, session[%d] will be close",
-                        session.getSessionId()), e);
-            }
+            logger.warn("read/write data failed, session[{}] will be close.", session.getSessionId(), e);
             closeSocketChannel(key, socketChannel);
             session.destroy();
         }
@@ -413,9 +386,7 @@ public class GaServer {
         }
 
         executorService.shutdown();
-        if (logger.isLoggable(INFO)) {
-            logger.log(INFO, "GaServer destroy completed.");
-        }
+        logger.info("ga-server destroy completed.");
 
     }
 

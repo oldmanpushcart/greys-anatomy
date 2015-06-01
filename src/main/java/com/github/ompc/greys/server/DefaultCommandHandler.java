@@ -17,6 +17,7 @@ import com.github.ompc.greys.exception.CommandInitializationException;
 import com.github.ompc.greys.exception.CommandNotFoundException;
 import com.github.ompc.greys.exception.GaExecuteException;
 import com.github.ompc.greys.util.LogUtil;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
@@ -27,11 +28,10 @@ import java.nio.charset.Charset;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
-import static com.github.ompc.greys.util.GaStringUtils.*;
+import static com.github.ompc.greys.util.GaStringUtils.ABORT_MSG;
+import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
 import static java.lang.String.format;
-import static java.util.logging.Level.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -64,10 +64,7 @@ public class DefaultCommandHandler implements CommandHandler {
             // 第一次是因为这里，第二次则是下边（命令结束重绘提示符）
             // 这里做了一次取巧，虽然依旧是重绘了两次提示符，但在提示符之间增加了\r
             // 这样两次重绘都是在同一个位置，这样就没有人能发现，其实他们是被绘制了两次
-            if (logger.isLoggable(FINE)) {
-                logger.log(FINE, "reDrawPrompt for blank line.");
-            }
-
+            logger.debug("reDrawPrompt for blank line.");
             reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
             return;
         }
@@ -88,11 +85,7 @@ public class DefaultCommandHandler implements CommandHandler {
 
             // 其他命令需要重新绘制提示符
             else {
-
-                if (logger.isLoggable(FINE)) {
-                    logger.log(FINE, "reDrawPrompt for command execute finished.");
-                }
-
+                logger.debug("reDrawPrompt for command execute finished.");
                 reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
             }
 
@@ -113,17 +106,13 @@ public class DefaultCommandHandler implements CommandHandler {
             write(socketChannel, message + "\n", session.getCharset());
             reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
 
-            if (logger.isLoggable(INFO)) {
-                logger.log(INFO, message, t);
-            }
+            logger.info(message, t);
 
         }
 
         // 命令执行错误
         catch (GaExecuteException e) {
-            if (logger.isLoggable(WARNING)) {
-                logger.log(WARNING, format("command execute failed, %s.", getCauseMessage(e)), e);
-            }
+            logger.warn("command execute failed.", e);
             write(socketChannel, "command execute failed.\n", session.getCharset());
             reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
         }
@@ -267,12 +256,8 @@ public class DefaultCommandHandler implements CommandHandler {
 
         // 遇到关闭的链接可以忽略
         catch (ClosedChannelException e) {
-
-            if (logger.isLoggable(FINE)) {
-                logger.log(FINE, format("session[%s] write failed, because socket broken.",
-                        session.getSessionId()), e);
-            }
-
+            logger.debug("session[{}] write failed, because socket broken.",
+                    session.getSessionId(), e);
         }
 
     }

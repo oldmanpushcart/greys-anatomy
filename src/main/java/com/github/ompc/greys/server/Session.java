@@ -2,18 +2,16 @@ package com.github.ompc.greys.server;
 
 import com.github.ompc.greys.advisor.AdviceWeaver;
 import com.github.ompc.greys.util.LogUtil;
+import org.slf4j.Logger;
 
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import static com.github.ompc.greys.util.GaStringUtils.DEFAULT_PROMPT;
-import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
-import static java.util.logging.Level.INFO;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -80,9 +78,7 @@ public class Session {
         isDestroy = true;
         closeQuietly(socketChannel);
 
-        if (logger.isLoggable(INFO)) {
-            logger.log(INFO, format("session[%d] destroyed.", sessionId));
-        }
+        logger.info("session[{}] destroyed.", sessionId);
 
     }
 

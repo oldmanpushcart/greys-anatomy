@@ -13,14 +13,13 @@ import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
+import org.slf4j.Logger;
 
 import java.lang.instrument.Instrumentation;
-import java.util.logging.Logger;
 
 import static com.github.ompc.greys.util.Advice.*;
 import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
-import static java.util.logging.Level.WARNING;
 
 @Cmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
         eg = {
@@ -183,9 +182,7 @@ public class WatchCommand implements Command {
                                         sender.send(false, value + "\n");
                                     }
                                 } catch (Exception e) {
-                                    if (logger.isLoggable(WARNING)) {
-                                        logger.log(WARNING, "watch failed.", e);
-                                    }
+                                    logger.warn("watch failed.", e);
                                     sender.send(false, getCauseMessage(e) + "\n");
                                 }
                             }

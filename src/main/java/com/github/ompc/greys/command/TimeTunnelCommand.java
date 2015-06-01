@@ -12,7 +12,6 @@ import com.github.ompc.greys.command.view.TableView.ColumnDefine;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Advice;
 import com.github.ompc.greys.util.GaMethod;
-import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 
@@ -25,7 +24,6 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import static com.github.ompc.greys.command.view.TableView.Align.LEFT;
 import static com.github.ompc.greys.command.view.TableView.Align.RIGHT;
@@ -78,8 +76,6 @@ class TimeFragment {
 //                "tt -i 1000 -p"
         })
 public class TimeTunnelCommand implements Command {
-
-    private final Logger logger = LogUtil.getLogger();
 
     // 时间隧道(时间碎片的集合)
     private static final Map<Integer, TimeFragment> timeFragmentMap = new LinkedHashMap<Integer, TimeFragment>();

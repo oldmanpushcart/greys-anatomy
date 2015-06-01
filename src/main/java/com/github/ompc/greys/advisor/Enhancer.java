@@ -5,6 +5,7 @@ import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.slf4j.Logger;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
@@ -12,14 +13,11 @@ import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
 import java.util.*;
-import java.util.logging.Logger;
 
 import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
 import static com.github.ompc.greys.util.SearchUtils.searchClass;
 import static com.github.ompc.greys.util.SearchUtils.searchSubClass;
-import static java.lang.String.format;
 import static java.lang.System.arraycopy;
-import static java.util.logging.Level.WARNING;
 import static org.objectweb.asm.ClassReader.EXPAND_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
@@ -152,9 +150,7 @@ public class Enhancer implements ClassFileTransformer {
 
             return enhanceClassByteArray;
         } catch (Throwable t) {
-            if (logger.isLoggable(WARNING)) {
-                logger.log(WARNING, format("transform class[%s] failed. ClassLoader=%s;", className, loader), t);
-            }
+            logger.warn("transform loader[{}]:class[{}] failed.", loader, className, t);
         }
 
         return null;
@@ -170,14 +166,11 @@ public class Enhancer implements ClassFileTransformer {
     private static Set<Class<?>> filter(Set<Class<?>> classes) {
         final Iterator<Class<?>> it = classes.iterator();
         while (it.hasNext()) {
-
             final Class<?> clazz = it.next();
-
             if (null == clazz
                     || isEquals(clazz.getClassLoader(), Enhancer.class.getClassLoader())) {
                 it.remove();
             }
-
         }
         return classes;
     }
