@@ -142,11 +142,11 @@ public class Enhancer implements ClassFileTransformer {
             // 成功计数
             affect.cCnt(1);
 
-            // dump
-            final java.io.OutputStream os = new java.io.FileOutputStream(new java.io.File("/tmp/AgentTest.class"));
-            os.write(enhanceClassByteArray);
-            os.flush();
-            os.close();
+//            // dump
+//            final java.io.OutputStream os = new java.io.FileOutputStream(new java.io.File("/tmp/AgentTest.class"));
+//            os.write(enhanceClassByteArray);
+//            os.flush();
+//            os.close();
 
             return enhanceClassByteArray;
         } catch (Throwable t) {
