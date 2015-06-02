@@ -1,13 +1,10 @@
 package com.googlecode.greysanatomy.console.command;
 
 import com.googlecode.greysanatomy.agent.GreysAnatomyClassFileTransformer.TransformResult;
-<<<<<<< HEAD
 import com.googlecode.greysanatomy.console.command.annotation.*;
-=======
 import com.googlecode.greysanatomy.console.command.annotation.RiscCmd;
 import com.googlecode.greysanatomy.console.command.annotation.RiscIndexArg;
 import com.googlecode.greysanatomy.console.command.annotation.RiscNamedArg;
->>>>>>> pr/8
 import com.googlecode.greysanatomy.console.server.ConsoleServer;
 import com.googlecode.greysanatomy.probe.Advice;
 import com.googlecode.greysanatomy.probe.AdviceListenerAdapter;
@@ -26,8 +23,8 @@ import static com.googlecode.greysanatomy.console.server.SessionJobsHolder.regis
 import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
 
 /**
- * ¼à¿ØÇëÇóÃüÁî<br/>
- * Êä³öµÄÄÚÈİ¸ñÊ½Îª:<br/>
+ * ç›‘æ§è¯·æ±‚å‘½ä»¤<br/>
+ * è¾“å‡ºçš„å†…å®¹æ ¼å¼ä¸º:<br/>
  * <style type="text/css">
  * table, th, td {
  * border:1px solid #cccccc;
@@ -36,15 +33,15 @@ import static com.googlecode.greysanatomy.probe.ProbeJobs.activeJob;
  * </style>
  * <table>
  * <tr>
- * <th>Ê±¼ä´Á</th>
- * <th>Í³¼ÆÖÜÆÚ(s)</th>
- * <th>ÀàÈ«Â·¾¶</th>
- * <th>·½·¨Ãû</th>
- * <th>µ÷ÓÃ×Ü´ÎÊı</th>
- * <th>³É¹¦´ÎÊı</th>
- * <th>Ê§°Ü´ÎÊı</th>
- * <th>Æ½¾ùºÄÊ±(ms)</th>
- * <th>Ê§°ÜÂÊ</th>
+ * <th>æ—¶é—´æˆ³</th>
+ * <th>ç»Ÿè®¡å‘¨æœŸ(s)</th>
+ * <th>ç±»å…¨è·¯å¾„</th>
+ * <th>æ–¹æ³•å</th>
+ * <th>è°ƒç”¨æ€»æ¬¡æ•°</th>
+ * <th>æˆåŠŸæ¬¡æ•°</th>
+ * <th>å¤±è´¥æ¬¡æ•°</th>
+ * <th>å¹³å‡è€—æ—¶(ms)</th>
+ * <th>å¤±è´¥ç‡</th>
  * </tr>
  * <tr>
  * <td>2012-11-07 05:00:01</td>
@@ -101,17 +98,17 @@ public class MonitorCommand extends Command {
     private int cycle = 120;
 
     /*
-     * Êä³ö¶¨Ê±ÈÎÎñ
+     * è¾“å‡ºå®šæ—¶ä»»åŠ¡
      */
     private Timer timer;
 
     /*
-     * ¼à¿ØÊı¾İ
+     * ç›‘æ§æ•°æ®
      */
     private ConcurrentHashMap<Key, AtomicReference<Data>> monitorDatas = new ConcurrentHashMap<Key, AtomicReference<Data>>();
 
     /**
-     * Êı¾İ¼à¿ØÓÃµÄKey
+     * æ•°æ®ç›‘æ§ç”¨çš„Key
      *
      * @author vlinux
      */
@@ -142,7 +139,7 @@ public class MonitorCommand extends Command {
     }
 
     /**
-     * Êı¾İ¼à¿ØÓÃµÄvalue
+     * æ•°æ®ç›‘æ§ç”¨çš„value
      *
      * @author vlinux
      */
@@ -261,7 +258,7 @@ public class MonitorCommand extends Command {
                     }
 
                     /**
-                     * ÈÆ¹ı0µÄ³ı·¨
+                     * ç»•è¿‡0çš„é™¤æ³•
                      * @param a
                      * @param b
                      * @return
@@ -282,10 +279,10 @@ public class MonitorCommand extends Command {
 
                 }, info);
 
-                // ×¢²áÈÎÎñ
+                // æ³¨å†Œä»»åŠ¡
                 registJob(info.getSessionId(), result.getId());
 
-                // ¼¤»îÈÎÎñ
+                // æ¿€æ´»ä»»åŠ¡
                 activeJob(result.getId());
 
                 final StringBuilder message = new StringBuilder();
@@ -305,7 +302,7 @@ public class MonitorCommand extends Command {
 
 <<<<<<< HEAD
     /**
-     * ±í¸ñ¸ñÊ½»¯
+     * è¡¨æ ¼æ ¼å¼åŒ–
      *
      * @param output
      * @return
@@ -351,13 +348,13 @@ public class MonitorCommand extends Command {
         }
         titleSB.append("+").append("\n");
 
-        // ±éÀúĞĞ
+        // éå†è¡Œ
         for (int i = 0; i < lines.size(); i++) {
 
             final StringBuilder lineSB = lines.get(i);
             final String[] cols = datas.get(i);
 
-            // ±éÀúÁĞ
+            // éå†åˆ—
             for (int c = 0; c < 8; c++) {
                 lineSB.append("|");
                 int diff = colMaxWidths[c] - cols[c].length() + 1;
