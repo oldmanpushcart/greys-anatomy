@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.github.ompc.greys.server.LineDecodeState.READ_CHAR;
 import static com.github.ompc.greys.server.LineDecodeState.READ_EOL;
+import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
 import static com.github.ompc.greys.util.GaStringUtils.getLogo;
 import static java.nio.channels.SelectionKey.OP_ACCEPT;
 import static java.nio.channels.SelectionKey.OP_READ;
@@ -170,8 +171,8 @@ public class GaServer {
             serverSocketChannel.register(selector, OP_ACCEPT);
 
             // 服务器挂载端口
-            serverSocketChannel.socket().bind(new InetSocketAddress(configure.getTargetIp(), configure.getTargetPort()), 24);
-            logger.info("ga-server listened on network={};port={};timeout={};", configure.getTargetIp(),
+            serverSocketChannel.socket().bind(getInetSocketAddress(configure.getTargetIp(), configure.getTargetPort()), 24);
+            logger.info("ga-server listening on network={};port={};timeout={};", configure.getTargetIp(),
                     configure.getTargetPort(),
                     configure.getConnectTimeout());
 
@@ -183,6 +184,20 @@ public class GaServer {
         }
 
     }
+
+    /*
+     * 获取绑定网络地址信息<br/>
+     * 这里做个小修正,如果targetIp为127.0.0.1(本地环回口)，则需要绑定所有网卡
+     * 否则外部无法访问，只能通过127.0.0.1来进行了
+     */
+    private InetSocketAddress getInetSocketAddress(String targetIp, int targetPort) {
+        if (isEquals("127.0.0.1", targetIp)) {
+            return new InetSocketAddress(targetPort);
+        } else {
+            return new InetSocketAddress(targetIp, targetPort);
+        }
+    }
+
 
     private void activeSelectorDaemon(final Selector selector, final Configure configure) {
 
