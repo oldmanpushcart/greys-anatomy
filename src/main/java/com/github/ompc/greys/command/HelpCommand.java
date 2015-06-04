@@ -185,7 +185,9 @@ public class HelpCommand implements Command {
 
             if (clazz.isAnnotationPresent(Cmd.class)) {
                 final Cmd cmd = clazz.getAnnotation(Cmd.class);
-                view.addRow(cmd.named(), cmd.desc());
+                if( !cmd.isHacking() ) {
+                    view.addRow(cmd.named(), cmd.desc());
+                }
             }
 
         }

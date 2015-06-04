@@ -40,4 +40,14 @@ public @interface Cmd {
      */
     int sort() default 0;
 
+    /**
+     * 是否hacking命令<br/>
+     * hacking命令是给开发人员进行命令调试的隐藏命令
+     * 由于不需要让普通用户感知，所以不需要在help命令中展示
+     * 也不会对这个命令是否在下个版本进行兼容
+     *
+     * @return true/false
+     */
+    boolean isHacking() default false;
+
 }
