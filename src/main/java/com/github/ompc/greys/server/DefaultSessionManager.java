@@ -74,9 +74,9 @@ public class DefaultSessionManager implements SessionManager {
                 while (!isDestroyRef.get()
                         && !isInterrupted()) {
 
-                    // 间隔500ms检测一次
+                    // 间隔200ms检测一次
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(200);
                     } catch (InterruptedException e) {
                         interrupt();
                     }

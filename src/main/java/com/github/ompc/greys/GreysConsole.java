@@ -140,6 +140,20 @@ public class GreysConsole {
         socketThread.start();
     }
 
+
+    private volatile boolean hackingForReDrawPrompt = true;
+
+    /*
+     * Console在启动的时候会出现第一个提示符占位不准的BUG
+     * 这个我无法很优雅的消除，所以这里做了一个小hacking
+     */
+    private void hackingForReDrawPrompt() {
+        if (hackingForReDrawPrompt) {
+            hackingForReDrawPrompt = false;
+            System.out.println(EMPTY);
+        }
+    }
+
     private void loopForWriter() {
 
         try {
@@ -149,6 +163,7 @@ public class GreysConsole {
                     break;
                 }
                 if (c == EOT) {
+                    hackingForReDrawPrompt();
                     console.setPrompt(DEFAULT_PROMPT);
                     console.redrawLine();
                 } else {
