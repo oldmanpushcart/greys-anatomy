@@ -15,7 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * Dump命令
  * Created by vlinux on 15/6/2.
  */
-@Cmd(isHacking = true, named = "dump", desc = "Dump the class")
+@Cmd(isHacking = true, named = "dump", desc = "Change the dump options")
 public class DumpCommand implements Command {
 
     @IndexArg(index = 0, isRequired = false, name = "is-dump", summary = "let greys support dump options")

@@ -166,11 +166,14 @@ public class Enhancer implements ClassFileTransformer {
         }
         final File classFile = new File("./greys-dump/" + className + ".class");
         final File classPath = new File(classFile.getParent());
-        classPath.mkdirs();
-        try {
-            writeByteArrayToFile(classFile, data);
-        } catch (IOException e) {
-            logger.warn("dump class:{} to file {} failed.", className, classFile, e);
+        if (classPath.mkdirs()) {
+            try {
+                writeByteArrayToFile(classFile, data);
+            } catch (IOException e) {
+                logger.warn("dump class:{} to file {} failed.", className, classFile, e);
+            }
+        } else {
+            logger.warn("create dump classpath:{} failed.", classPath);
         }
     }
 
