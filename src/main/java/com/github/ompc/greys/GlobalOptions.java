@@ -19,10 +19,4 @@ public class GlobalOptions {
      */
     public static volatile boolean isDump = false;
 
-    /**
-     * dump目录<br/>
-     * 当dump开关打开时候时生效
-     */
-    public static volatile String dumpDir = "./";
-
 }

@@ -164,7 +164,7 @@ public class Enhancer implements ClassFileTransformer {
         if (!GlobalOptions.isDump) {
             return;
         }
-        final File classFile = new File("./" + className);
+        final File classFile = new File("./greys-dump/" + className + ".class");
         final File classPath = new File(classFile.getParent());
         classPath.mkdirs();
         try {
@@ -206,7 +206,7 @@ public class Enhancer implements ClassFileTransformer {
      * 是否过滤unsafe类
      */
     private static boolean isFilterUnsafe(Class<?> clazz) {
-        return GlobalOptions.isUnsafe
+        return !GlobalOptions.isUnsafe
                 && null != clazz
                 && clazz.getClassLoader() == null;
     }
