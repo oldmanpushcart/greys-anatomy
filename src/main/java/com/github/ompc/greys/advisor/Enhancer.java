@@ -166,15 +166,20 @@ public class Enhancer implements ClassFileTransformer {
         }
         final File classFile = new File("./greys-dump/" + className + ".class");
         final File classPath = new File(classFile.getParent());
-        if (classPath.mkdirs()) {
-            try {
-                writeByteArrayToFile(classFile, data);
-            } catch (IOException e) {
-                logger.warn("dump class:{} to file {} failed.", className, classFile, e);
-            }
-        } else {
+
+        // 创建类所在的包路径
+        if (!classPath.mkdirs()
+                && !classPath.exists()) {
             logger.warn("create dump classpath:{} failed.", classPath);
         }
+
+        // 将类字节码写入文件
+        try {
+            writeByteArrayToFile(classFile, data);
+        } catch (IOException e) {
+            logger.warn("dump class:{} to file {} failed.", className, classFile, e);
+        }
+
     }
 
 

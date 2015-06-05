@@ -263,10 +263,13 @@ public class GaServer {
         logger.info("accept new connection, client={}@session[{}]", socketChannel, session.getSessionId());
 
         // 这里输出Logo
-        socketChannel.write(ByteBuffer.wrap(getLogo().getBytes(DEFAULT_CHARSET)));
+        writeToSocketChannel(socketChannel, session.getCharset(), getLogo());
 
         // 绘制提示符
-        reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
+        writeToSocketChannel(socketChannel, session.getCharset(), session.prompt());
+
+        // Logo结束之后输出传输中止符
+        writeToSocketChannel(socketChannel, ByteBuffer.wrap(new byte[]{EOT}));
 
         return socketChannel;
     }
@@ -360,16 +363,14 @@ public class GaServer {
         }
     }
 
+    private void writeToSocketChannel(SocketChannel socketChannel, Charset charset, String message) throws IOException {
+        writeToSocketChannel(socketChannel, ByteBuffer.wrap(message.getBytes(charset)));
+    }
 
-    /*
-     * 绘制提示符
-     */
-    private void reDrawPrompt(SocketChannel socketChannel, Charset charset, String prompt) throws IOException {
-        final ByteBuffer buffer = ByteBuffer.wrap(prompt.getBytes(charset));
+    private void writeToSocketChannel(SocketChannel socketChannel, ByteBuffer buffer) throws IOException {
         while (buffer.hasRemaining()) {
             socketChannel.write(buffer);
         }
-
     }
 
     private void closeSocketChannel(SelectionKey key, SocketChannel socketChannel) {
