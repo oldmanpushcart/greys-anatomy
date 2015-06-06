@@ -58,6 +58,16 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     private static final Map<Thread, Stack<Stack<Object>>> threadBoundContexts
             = new ConcurrentHashMap<Thread, Stack<Stack<Object>>>();
 
+    // 防止自己递归调用
+    private static final ThreadLocal<Boolean> isSelfCallRef = new ThreadLocal<Boolean>() {
+
+        @Override
+        protected Boolean initialValue() {
+            return false;
+        }
+
+    };
+
 
     /**
      * 方法开始<br/>
@@ -77,23 +87,33 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args) {
 
-        // 构建执行帧栈,保护当前的执行现场
-        final Stack<Object> frameStack = new Stack<Object>();
-        frameStack.push(loader);
-        frameStack.push(className);
-        frameStack.push(methodName);
-        frameStack.push(methodDesc);
-        frameStack.push(target);
-        frameStack.push(args);
+        if (isSelfCallRef.get()) {
+            return;
+        } else {
+            isSelfCallRef.set(true);
+        }
 
-        final AdviceListener listener = getListener(adviceId);
-        frameStack.push(listener);
+        try {
+            // 构建执行帧栈,保护当前的执行现场
+            final Stack<Object> frameStack = new Stack<Object>();
+            frameStack.push(loader);
+            frameStack.push(className);
+            frameStack.push(methodName);
+            frameStack.push(methodDesc);
+            frameStack.push(target);
+            frameStack.push(args);
 
-        // 获取通知器并做前置通知
-        before(listener, loader, className, methodName, methodDesc, target, args);
+            final AdviceListener listener = getListener(adviceId);
+            frameStack.push(listener);
 
-        // 保护当前执行帧栈,压入线程帧栈
-        threadFrameStackPush(frameStack);
+            // 获取通知器并做前置通知
+            before(listener, loader, className, methodName, methodDesc, target, args);
+
+            // 保护当前执行帧栈,压入线程帧栈
+            threadFrameStackPush(frameStack);
+        } finally {
+            isSelfCallRef.set(false);
+        }
 
     }
 
@@ -127,26 +147,36 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      */
     private static void methodOnEnd(boolean isThrowing, Object returnOrThrowable) {
 
-        // 弹射线程帧栈,恢复Begin所保护的执行帧栈
-        final Stack<Object> frameStack = threadFrameStackPop();
-
-        // 弹射执行帧栈,恢复Begin所保护的现场
-        final AdviceListener listener = (AdviceListener) frameStack.pop();
-        final Object[] args = (Object[]) frameStack.pop();
-        final Object target = frameStack.pop();
-        final String methodDesc = (String) frameStack.pop();
-        final String methodName = (String) frameStack.pop();
-        final String className = (String) frameStack.pop();
-        final ClassLoader loader = (ClassLoader) frameStack.pop();
-
-        // 异常通知
-        if (isThrowing) {
-            afterThrowing(listener, loader, className, methodName, methodDesc, target, args, (Throwable) returnOrThrowable);
+        if (isSelfCallRef.get()) {
+            return;
+        } else {
+            isSelfCallRef.set(true);
         }
 
-        // 返回通知
-        else {
-            afterReturning(listener, loader, className, methodName, methodDesc, target, args, returnOrThrowable);
+        try {
+            // 弹射线程帧栈,恢复Begin所保护的执行帧栈
+            final Stack<Object> frameStack = threadFrameStackPop();
+
+            // 弹射执行帧栈,恢复Begin所保护的现场
+            final AdviceListener listener = (AdviceListener) frameStack.pop();
+            final Object[] args = (Object[]) frameStack.pop();
+            final Object target = frameStack.pop();
+            final String methodDesc = (String) frameStack.pop();
+            final String methodName = (String) frameStack.pop();
+            final String className = (String) frameStack.pop();
+            final ClassLoader loader = (ClassLoader) frameStack.pop();
+
+            // 异常通知
+            if (isThrowing) {
+                afterThrowing(listener, loader, className, methodName, methodDesc, target, args, (Throwable) returnOrThrowable);
+            }
+
+            // 返回通知
+            else {
+                afterReturning(listener, loader, className, methodName, methodDesc, target, args, returnOrThrowable);
+            }
+        } finally {
+            isSelfCallRef.set(false);
         }
 
     }
@@ -165,7 +195,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             try {
                 listener.invokeBeforeTracing(owner, name, desc);
             } catch (Throwable t) {
-                logger.warn("advice before tracing failed." ,t);
+                logger.warn("advice before tracing failed.", t);
             }
         }
     }
@@ -184,7 +214,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             try {
                 listener.invokeAfterTracing(owner, name, desc);
             } catch (Throwable t) {
-                logger.warn("advice after tracing failed." ,t);
+                logger.warn("advice after tracing failed.", t);
             }
         }
     }
@@ -252,7 +282,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             try {
                 listener.before(loader, className, methodName, methodDesc, target, args);
             } catch (Throwable t) {
-                logger.warn("advice before failed." ,t);
+                logger.warn("advice before failed.", t);
             }
         }
 
@@ -265,7 +295,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             try {
                 listener.afterReturning(loader, className, methodName, methodDesc, target, args, returnObject);
             } catch (Throwable t) {
-                logger.warn("advice returning failed." ,t);
+                logger.warn("advice returning failed.", t);
             }
         }
     }
@@ -277,7 +307,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             try {
                 listener.afterThrowing(loader, className, methodName, methodDesc, target, args, throwable);
             } catch (Throwable t) {
-                logger.warn("advice throwing failed." ,t);
+                logger.warn("advice throwing failed.", t);
             }
         }
     }

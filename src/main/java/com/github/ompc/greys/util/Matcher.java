@@ -1,5 +1,7 @@
 package com.github.ompc.greys.util;
 
+import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
+
 /**
  * 匹配器
  * Created by vlinux on 15/5/17.
@@ -14,6 +16,23 @@ public interface Matcher {
      */
     boolean matching(String target);
 
+
+    /**
+     * 字符串全匹配
+     */
+    class EqualsMatcher implements Matcher {
+
+        private final String pattern;
+
+        public EqualsMatcher(String pattern) {
+            this.pattern = pattern;
+        }
+
+        @Override
+        public boolean matching(String target) {
+            return isEquals(target, pattern);
+        }
+    }
 
     /**
      * 正则表达式匹配

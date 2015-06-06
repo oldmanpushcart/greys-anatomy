@@ -1,5 +1,6 @@
 package com.github.ompc.greys.advisor;
 
+import com.github.ompc.greys.GlobalOptions;
 import com.github.ompc.greys.command.affect.EnhancerAffect;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
@@ -7,6 +8,8 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.slf4j.Logger;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
@@ -18,6 +21,7 @@ import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
 import static com.github.ompc.greys.util.SearchUtils.searchClass;
 import static com.github.ompc.greys.util.SearchUtils.searchSubClass;
 import static java.lang.System.arraycopy;
+import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
 import static org.objectweb.asm.ClassReader.EXPAND_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
@@ -139,14 +143,11 @@ public class Enhancer implements ClassFileTransformer {
             // 生成成功,推入缓存
             classBytesCache.put(classBeingRedefined, enhanceClassByteArray);
 
+            // dump the class
+            dumpClassIfNecessary(className, enhanceClassByteArray);
+
             // 成功计数
             affect.cCnt(1);
-
-//            // dump
-//            final java.io.OutputStream os = new java.io.FileOutputStream(new java.io.File("/tmp/AgentTest.class"));
-//            os.write(enhanceClassByteArray);
-//            os.flush();
-//            os.close();
 
             return enhanceClassByteArray;
         } catch (Throwable t) {
@@ -154,6 +155,31 @@ public class Enhancer implements ClassFileTransformer {
         }
 
         return null;
+    }
+
+    /*
+     * dump class to file
+     */
+    private static void dumpClassIfNecessary(String className, byte[] data) {
+        if (!GlobalOptions.isDump) {
+            return;
+        }
+        final File classFile = new File("./greys-dump/" + className + ".class");
+        final File classPath = new File(classFile.getParent());
+
+        // 创建类所在的包路径
+        if (!classPath.mkdirs()
+                && !classPath.exists()) {
+            logger.warn("create dump classpath:{} failed.", classPath);
+        }
+
+        // 将类字节码写入文件
+        try {
+            writeByteArrayToFile(classFile, data);
+        } catch (IOException e) {
+            logger.warn("dump class:{} to file {} failed.", className, classFile, e);
+        }
+
     }
 
 
@@ -168,11 +194,29 @@ public class Enhancer implements ClassFileTransformer {
         while (it.hasNext()) {
             final Class<?> clazz = it.next();
             if (null == clazz
-                    || isEquals(clazz.getClassLoader(), Enhancer.class.getClassLoader())) {
+                    || isFilterSelf(clazz)
+                    || isFilterUnsafe(clazz)) {
                 it.remove();
             }
         }
         return classes;
+    }
+
+    /*
+     * 是否过滤Greys加载的类
+     */
+    private static boolean isFilterSelf(Class<?> clazz) {
+        return null != clazz
+                && isEquals(clazz.getClassLoader(), Enhancer.class.getClassLoader());
+    }
+
+    /*
+     * 是否过滤unsafe类
+     */
+    private static boolean isFilterUnsafe(Class<?> clazz) {
+        return !GlobalOptions.isUnsafe
+                && null != clazz
+                && clazz.getClassLoader() == null;
     }
 
 
