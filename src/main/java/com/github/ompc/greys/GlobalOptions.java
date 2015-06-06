@@ -17,6 +17,7 @@ public class GlobalOptions {
      * 所以这个开关默认是关闭的，除非你非常了解你要做什么，否则请不要打开
      */
     @Option(level = 0,
+            name = "unsafe",
             summary = "is support system class",
             description =
                     "After this option is activated, the class will be able to come from the JVM class. "
@@ -30,6 +31,7 @@ public class GlobalOptions {
      * 这个开关打开这后，每次增强类的时候都将会将增强的类dump到文件中，以便于进行反编译分析
      */
     @Option(level = 1,
+            name = "dump",
             summary = "is support dump the enhance class",
             description =
                     "After this option is activated, each time the enhanced class will be dump to the file, to facilitate the reverse compiler analysis."
@@ -47,6 +49,11 @@ public class GlobalOptions {
          * 选项级别，数字越小级别越高
          */
         int level();
+
+        /*
+         * 选项名称
+         */
+        String name();
 
         /*
          * 选项摘要说明

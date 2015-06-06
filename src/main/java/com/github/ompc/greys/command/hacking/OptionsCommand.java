@@ -109,8 +109,13 @@ public class OptionsCommand implements Command {
     private Collection<Field> findOptions(Matcher optionNameMatcher) {
         final Collection<Field> matchFields = new ArrayList<Field>();
         for (final Field optionField : FieldUtils.getAllFields(GlobalOptions.class)) {
-            if (!optionField.isAnnotationPresent(Option.class)
-                    || !optionNameMatcher.matching(optionField.getName())) {
+            if (!optionField.isAnnotationPresent(Option.class)) {
+                continue;
+            }
+
+            final Option optionAnnotation = optionField.getAnnotation(Option.class);
+            if (optionAnnotation != null
+                    && !optionNameMatcher.matching(optionAnnotation.name())) {
                 continue;
             }
             matchFields.add(optionField);
@@ -137,7 +142,7 @@ public class OptionsCommand implements Command {
             view.addRow(
                     optionAnnotation.level(),
                     optionField.getType().getSimpleName(),
-                    optionField.getName(),
+                    optionAnnotation.name(),
                     optionField.get(null),
                     optionAnnotation.summary(),
                     optionAnnotation.description()
@@ -158,11 +163,12 @@ public class OptionsCommand implements Command {
 
                 // name not exists
                 if (fields.isEmpty()) {
-                    sender.send(true, format("options[%s] not found.", optionName));
+                    sender.send(true, format("options[%s] not found.\n", optionName));
                     return affect;
                 }
 
                 final Field field = fields.iterator().next();
+                final Option optionAnnotation = field.getAnnotation(Option.class);
                 final Class<?> type = field.getType();
                 final Object beforeValue = FieldUtils.readStaticField(field);
                 final Object afterValue;
@@ -184,24 +190,21 @@ public class OptionsCommand implements Command {
                     } else if (isIn(type, short.class, Short.class)) {
                         writeStaticField(field, afterValue = Short.valueOf(optionValue));
                     } else {
-                        afterValue = beforeValue;
-                        sender.send(true, format("options[%s]'s type[%s] was unsupported.", optionName, type.getSimpleName()));
+                        sender.send(true, format("options[%s]'s type[%s] was unsupported.\n", optionName, type.getSimpleName()));
                         return affect;
                     }
 
                     affect.rCnt(1);
                 } catch (Throwable t) {
-                    sender.send(true, format("option value[%s] can not cast to options type[%s]", optionValue, type.getSimpleName()));
+                    sender.send(true, format("option value[%s] can not cast to options type[%s].\n", optionValue, type.getSimpleName()));
                     return affect;
                 }
 
                 final TableView view = new TableView(4)
                         .padding(1)
                         .hasBorder(true)
-                        .addRow("NAME","BEFORE-VALUE","AFTER-VALUE")
-                        .addRow(field.getName(), newString(beforeValue), newString(afterValue));
-                        ;
-
+                        .addRow("NAME", "BEFORE-VALUE", "AFTER-VALUE")
+                        .addRow(optionAnnotation.name(), newString(beforeValue), newString(afterValue));
 
                 sender.send(true, view.draw());
                 return affect;
