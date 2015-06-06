@@ -191,6 +191,8 @@ public class DefaultCommandHandler implements CommandHandler {
 
                 ((EnhancerAffect) affect).cCnt(enhancerAffect.cCnt());
                 ((EnhancerAffect) affect).mCnt(enhancerAffect.mCnt());
+                ((EnhancerAffect) affect).setSupportClassDump(enhancerAffect.isSupportClassDump());
+                ((EnhancerAffect) affect).getClassDumpFiles().addAll(enhancerAffect.getClassDumpFiles());
             }
 
             // 其他自定义动作

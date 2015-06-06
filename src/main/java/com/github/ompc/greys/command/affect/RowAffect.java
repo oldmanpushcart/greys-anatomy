@@ -38,7 +38,7 @@ public class RowAffect extends Affect {
 
     @Override
     public String toString() {
-        return String.format("Affect(row-cnt:%d) cost %s ms.",
+        return String.format("Affect(row-cnt:%d) cost in %s ms.",
                 rCnt(),
                 cost());
     }

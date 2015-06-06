@@ -144,7 +144,13 @@ public class Enhancer implements ClassFileTransformer {
             classBytesCache.put(classBeingRedefined, enhanceClassByteArray);
 
             // dump the class
-            dumpClassIfNecessary(className, enhanceClassByteArray);
+            final File classDumpFile = dumpClassIfNecessary(className, enhanceClassByteArray);
+            if (null != classDumpFile) {
+                if (!affect.isSupportClassDump()) {
+                    affect.setSupportClassDump(true);
+                }
+                affect.getClassDumpFiles().add(classDumpFile);
+            }
 
             // 成功计数
             affect.cCnt(1);
@@ -160,9 +166,9 @@ public class Enhancer implements ClassFileTransformer {
     /*
      * dump class to file
      */
-    private static void dumpClassIfNecessary(String className, byte[] data) {
+    private static File dumpClassIfNecessary(String className, byte[] data) {
         if (!GlobalOptions.isDump) {
-            return;
+            return null;
         }
         final File classFile = new File("./greys-class-dump/" + className + ".class");
         final File classPath = new File(classFile.getParent());
@@ -171,6 +177,7 @@ public class Enhancer implements ClassFileTransformer {
         if (!classPath.mkdirs()
                 && !classPath.exists()) {
             logger.warn("create dump classpath:{} failed.", classPath);
+            return null;
         }
 
         // 将类字节码写入文件
@@ -178,8 +185,10 @@ public class Enhancer implements ClassFileTransformer {
             writeByteArrayToFile(classFile, data);
         } catch (IOException e) {
             logger.warn("dump class:{} to file {} failed.", className, classFile, e);
+            return null;
         }
 
+        return classFile;
     }
 
 
@@ -195,7 +204,8 @@ public class Enhancer implements ClassFileTransformer {
             final Class<?> clazz = it.next();
             if (null == clazz
                     || isFilterSelf(clazz)
-                    || isFilterUnsafe(clazz)) {
+                    || isFilterUnsafe(clazz)
+                    || isFilterUnsupportedClass(clazz)) {
                 it.remove();
             }
         }
@@ -215,8 +225,16 @@ public class Enhancer implements ClassFileTransformer {
      */
     private static boolean isFilterUnsafe(Class<?> clazz) {
         return !GlobalOptions.isUnsafe
-                && null != clazz
                 && clazz.getClassLoader() == null;
+    }
+
+    /*
+     * 是否过滤目前暂不支持的类
+     */
+    private static boolean isFilterUnsupportedClass(Class<?> clazz) {
+        // 在没有解决cglib增强出来的类会失败的问题之前,暂时先过滤掉
+        return clazz.getName().contains("$$EnhancerByCGLIB$$");
+
     }
 
 

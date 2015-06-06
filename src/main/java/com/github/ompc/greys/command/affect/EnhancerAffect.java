@@ -1,6 +1,11 @@
 package com.github.ompc.greys.command.affect;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.String.format;
 
 /**
  * 增强影响范围<br/>
@@ -11,6 +16,10 @@ public class EnhancerAffect extends Affect {
 
     private final AtomicInteger cCnt = new AtomicInteger();
     private final AtomicInteger mCnt = new AtomicInteger();
+
+    private boolean supportClassDump;
+    private Collection<File> classDumpFiles = new ArrayList<File>();
+
 
     public EnhancerAffect() {
 
@@ -59,12 +68,33 @@ public class EnhancerAffect extends Affect {
         return mCnt.get();
     }
 
+    public Collection<File> getClassDumpFiles() {
+        return classDumpFiles;
+    }
+
+    public boolean isSupportClassDump() {
+        return supportClassDump;
+    }
+
+    public void setSupportClassDump(boolean supportClassDump) {
+        this.supportClassDump = supportClassDump;
+    }
+
     @Override
     public String toString() {
-        return String.format("Affect(class-cnt:%d , method-cnt:%d) cost %s ms.",
+        final StringBuilder infoSB = new StringBuilder();
+        if (isSupportClassDump()
+                && !classDumpFiles.isEmpty()) {
+
+            for (File classDumpFile : classDumpFiles) {
+                infoSB.append("[dump: ").append(classDumpFile.getAbsoluteFile() + "]\n");
+            }
+        }
+        infoSB.append(format("Affect(class-cnt:%d , method-cnt:%d) cost in %s ms.",
                 cCnt(),
                 mCnt(),
-                cost());
+                cost()));
+        return infoSB.toString();
     }
 
 }
