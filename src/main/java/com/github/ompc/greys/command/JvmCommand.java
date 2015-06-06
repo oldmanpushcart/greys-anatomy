@@ -62,7 +62,7 @@ public class JvmCommand implements Command {
                 }
 
                 view.addRow("MEMORY", drawMemoryTable());
-                view.addRow("OS", drawOperatingSystemMXBeanTable());
+                view.addRow("OPERATING-SYSTEM", drawOperatingSystemMXBeanTable());
                 view.addRow("THREAD", drawThreadTable());
 
                 sender.send(true, view.draw());
