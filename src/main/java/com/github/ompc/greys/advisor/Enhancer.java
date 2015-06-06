@@ -164,7 +164,7 @@ public class Enhancer implements ClassFileTransformer {
         if (!GlobalOptions.isDump) {
             return;
         }
-        final File classFile = new File("./greys-dump/" + className + ".class");
+        final File classFile = new File("./greys-class-dump/" + className + ".class");
         final File classPath = new File(classFile.getParent());
 
         // 创建类所在的包路径
