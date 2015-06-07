@@ -203,9 +203,9 @@ public class Enhancer implements ClassFileTransformer {
         while (it.hasNext()) {
             final Class<?> clazz = it.next();
             if (null == clazz
-                    || isFilterSelf(clazz)
-                    || isFilterUnsafe(clazz)
-                    || isFilterUnsupportedClass(clazz)) {
+                    || isSelf(clazz)
+                    || isUnsafeClass(clazz)
+                    || isUnsupportedClass(clazz)) {
                 it.remove();
             }
         }
@@ -215,7 +215,7 @@ public class Enhancer implements ClassFileTransformer {
     /*
      * 是否过滤Greys加载的类
      */
-    private static boolean isFilterSelf(Class<?> clazz) {
+    private static boolean isSelf(Class<?> clazz) {
         return null != clazz
                 && isEquals(clazz.getClassLoader(), Enhancer.class.getClassLoader());
     }
@@ -223,7 +223,7 @@ public class Enhancer implements ClassFileTransformer {
     /*
      * 是否过滤unsafe类
      */
-    private static boolean isFilterUnsafe(Class<?> clazz) {
+    private static boolean isUnsafeClass(Class<?> clazz) {
         return !GlobalOptions.isUnsafe
                 && clazz.getClassLoader() == null;
     }
@@ -231,12 +231,14 @@ public class Enhancer implements ClassFileTransformer {
     /*
      * 是否过滤目前暂不支持的类
      */
-    private static boolean isFilterUnsupportedClass(Class<?> clazz) {
-        // 在没有解决cglib增强出来的类会失败的问题之前,暂时先过滤掉
-        return clazz.getName().contains("$$EnhancerByCGLIB$$");
+    private static boolean isUnsupportedClass(Class<?> clazz) {
 
+        return clazz.isArray()
+                || clazz.isInterface()
+                || clazz.isEnum()
+                || clazz.getName().contains("$$EnhancerByCGLIB$$") // 在没有解决cglib增强出来的类会失败的问题之前,暂时先过滤掉
+                ;
     }
-
 
     /**
      * 对象增强
@@ -274,12 +276,34 @@ public class Enhancer implements ClassFileTransformer {
             inst.addTransformer(enhancer, true);
 
             // 批量增强
-            final int size = enhanceClassSet.size();
-            final Class<?>[] classArray = new Class<?>[size];
-            arraycopy(enhanceClassSet.toArray(), 0, classArray, 0, size);
-            if (classArray.length > 0) {
-                inst.retransformClasses(classArray);
+            if (GlobalOptions.isBatchReTransform) {
+                final int size = enhanceClassSet.size();
+                final Class<?>[] classArray = new Class<?>[size];
+                arraycopy(enhanceClassSet.toArray(), 0, classArray, 0, size);
+                if (classArray.length > 0) {
+                    inst.retransformClasses(classArray);
+                }
             }
+
+
+            // for each 增强
+            else {
+                for (Class<?> clazz : enhanceClassSet) {
+                    try {
+                        inst.retransformClasses(clazz);
+                    } catch (Throwable t) {
+                        logger.warn("reTransform {} failed.", clazz, t);
+                        if (t instanceof UnmodifiableClassException) {
+                            throw (UnmodifiableClassException) t;
+                        } else if (t instanceof RuntimeException) {
+                            throw (RuntimeException) t;
+                        } else {
+                            throw new RuntimeException(t);
+                        }
+                    }
+                }
+            }
+
 
         } finally {
             inst.removeTransformer(enhancer);

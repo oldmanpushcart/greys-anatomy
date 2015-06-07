@@ -38,6 +38,13 @@ public class GlobalOptions {
     )
     public static volatile boolean isDump = false;
 
+    @Option(level = 1,
+            name = "batch-re-transform",
+            summary = "is support batch reTransform Class",
+            description = "After this option is activated, each time the reTransform class in batch model."
+    )
+    public static volatile boolean isBatchReTransform = true;
+
     /**
      * 选项
      */
