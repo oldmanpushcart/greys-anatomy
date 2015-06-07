@@ -411,8 +411,16 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
              * 加载ClassLoader
              */
             private void loadClassLoader() {
-                visitLdcInsn(Type.getObjectType(className));
-                invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
+
+                if(this.isStaticMethod()) {
+                    visitLdcInsn(Type.getObjectType(className));
+                    invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
+                } else {
+                    loadThis();
+                    invokeVirtual(Type.getType(Object.class), Method.getMethod("Class getClass()"));
+                    invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
+                }
+
             }
 
             /**
