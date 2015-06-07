@@ -103,8 +103,8 @@ public class ObjectView implements View {
                 }
 
                 // ASCII的控制字符
-                else if (ASCII_MAP.containsKey((byte)c.charValue())) {
-                    buf.append(format("@%s[%s]", className, ASCII_MAP.get((byte)c.charValue())));
+                else if (ASCII_MAP.containsKey((byte) c.charValue())) {
+                    buf.append(format("@%s[%s]", className, ASCII_MAP.get((byte) c.charValue())));
                 }
 
                 // 超过ASCII的编码范围

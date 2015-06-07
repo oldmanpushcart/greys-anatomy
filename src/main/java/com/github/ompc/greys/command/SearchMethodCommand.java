@@ -8,8 +8,8 @@ import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
-import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.util.SearchUtils;
+import com.github.ompc.greys.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;

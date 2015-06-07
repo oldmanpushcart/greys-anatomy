@@ -1,6 +1,5 @@
 package com.github.ompc.greys.command;
 
-import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
@@ -9,6 +8,7 @@ import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
+import com.github.ompc.greys.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Set;
@@ -71,7 +71,7 @@ public class SearchClassCommand implements Command {
                 else {
 
                     for (Class<?> clazz : matchedClassSet) {
-                        sender.send(false, clazz.getName()+"\n");
+                        sender.send(false, clazz.getName() + "\n");
                     }
 
                 }

@@ -1,4 +1,4 @@
-package com.github.ompc.greys.command.affect;
+package com.github.ompc.greys.util.affect;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -21,7 +21,7 @@ public class Affect {
 
     @Override
     public String toString() {
-        return String.format("Affect cost %s ms.", cost());
+        return String.format("Affect cost in %s ms.", cost());
     }
 
 }

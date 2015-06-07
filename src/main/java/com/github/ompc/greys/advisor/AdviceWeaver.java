@@ -1,11 +1,11 @@
 package com.github.ompc.greys.advisor;
 
-import com.github.ompc.greys.command.affect.EnhancerAffect;
 import com.github.ompc.greys.util.AsmCodeLock;
 import com.github.ompc.greys.util.CodeLock;
 import com.github.ompc.greys.util.CodeLock.Block;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
+import com.github.ompc.greys.util.affect.EnhancerAffect;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;

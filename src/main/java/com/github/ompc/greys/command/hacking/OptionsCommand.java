@@ -3,13 +3,13 @@ package com.github.ompc.greys.command.hacking;
 import com.github.ompc.greys.GlobalOptions;
 import com.github.ompc.greys.GlobalOptions.Option;
 import com.github.ompc.greys.command.Command;
-import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.command.view.TableView.ColumnDefine;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Matcher;
+import com.github.ompc.greys.util.affect.RowAffect;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.instrument.Instrumentation;

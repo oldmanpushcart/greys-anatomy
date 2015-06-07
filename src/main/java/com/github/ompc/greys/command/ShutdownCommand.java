@@ -1,11 +1,11 @@
 package com.github.ompc.greys.command;
 
 import com.github.ompc.greys.advisor.Enhancer;
-import com.github.ompc.greys.command.affect.EnhancerAffect;
-import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Matcher;
+import com.github.ompc.greys.util.affect.EnhancerAffect;
+import com.github.ompc.greys.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Properties;

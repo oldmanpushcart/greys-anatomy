@@ -9,14 +9,14 @@ import com.github.ompc.greys.command.Command.*;
 import com.github.ompc.greys.command.Commands;
 import com.github.ompc.greys.command.QuitCommand;
 import com.github.ompc.greys.command.ShutdownCommand;
-import com.github.ompc.greys.command.affect.Affect;
-import com.github.ompc.greys.command.affect.EnhancerAffect;
-import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.exception.CommandException;
 import com.github.ompc.greys.exception.CommandInitializationException;
 import com.github.ompc.greys.exception.CommandNotFoundException;
 import com.github.ompc.greys.exception.GaExecuteException;
 import com.github.ompc.greys.util.LogUtil;
+import com.github.ompc.greys.util.affect.Affect;
+import com.github.ompc.greys.util.affect.EnhancerAffect;
+import com.github.ompc.greys.util.affect.RowAffect;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -29,6 +29,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.github.ompc.greys.util.GaCheckUtils._;
+import static com.github.ompc.greys.util.GaCheckUtils.__;
 import static com.github.ompc.greys.util.GaStringUtils.ABORT_MSG;
 import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
 import static java.lang.String.format;
@@ -39,7 +41,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * Created by vlinux on 15/5/2.
  */
 public class DefaultCommandHandler implements CommandHandler {
-
 
     private final Logger logger = LogUtil.getLogger();
 
@@ -65,6 +66,12 @@ public class DefaultCommandHandler implements CommandHandler {
             // 这里做了一次取巧，虽然依旧是重绘了两次提示符，但在提示符之间增加了\r
             // 这样两次重绘都是在同一个位置，这样就没有人能发现，其实他们是被绘制了两次
             logger.debug("reDrawPrompt for blank line.");
+            reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
+            return;
+        }
+
+        if (_(line)) {
+            write(socketChannel, ByteBuffer.wrap(__()));
             reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
             return;
         }
@@ -191,6 +198,8 @@ public class DefaultCommandHandler implements CommandHandler {
 
                 ((EnhancerAffect) affect).cCnt(enhancerAffect.cCnt());
                 ((EnhancerAffect) affect).mCnt(enhancerAffect.mCnt());
+                ((EnhancerAffect) affect).setSupportClassDump(enhancerAffect.isSupportClassDump());
+                ((EnhancerAffect) affect).getClassDumpFiles().addAll(enhancerAffect.getClassDumpFiles());
             }
 
             // 其他自定义动作
@@ -273,15 +282,16 @@ public class DefaultCommandHandler implements CommandHandler {
      * 输出到网络
      */
     private void write(SocketChannel socketChannel, String message, Charset charset) throws IOException {
-        final ByteBuffer writeByteBuffer = charset.encode(message);
-        while (writeByteBuffer.hasRemaining()) {
+        write(socketChannel, charset.encode(message));
+    }
 
-            if (-1 == socketChannel.write(writeByteBuffer)) {
+    private void write(SocketChannel socketChannel, ByteBuffer buffer) throws IOException {
+        while (buffer.hasRemaining()) {
+            if (-1 == socketChannel.write(buffer)) {
                 // socket broken
                 throw new IOException("write EOF");
             }
-
-        }//while for write
+        }
     }
 
 }

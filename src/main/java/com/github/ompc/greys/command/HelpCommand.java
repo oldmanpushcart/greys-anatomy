@@ -1,7 +1,6 @@
 package com.github.ompc.greys.command;
 
 
-import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
@@ -9,6 +8,7 @@ import com.github.ompc.greys.command.view.KVView;
 import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.command.view.TableView.ColumnDefine;
 import com.github.ompc.greys.server.Session;
+import com.github.ompc.greys.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
@@ -84,7 +84,7 @@ public class HelpCommand implements Command {
             }
         }
 
-        if( usageSB.length() > 0 ) {
+        if (usageSB.length() > 0) {
             usageSB.append("\n");
         }
         usageSB.append(cmd.desc());
@@ -185,7 +185,7 @@ public class HelpCommand implements Command {
 
             if (clazz.isAnnotationPresent(Cmd.class)) {
                 final Cmd cmd = clazz.getAnnotation(Cmd.class);
-                if( !cmd.isHacking() ) {
+                if (!cmd.isHacking()) {
                     view.addRow(cmd.named(), cmd.desc());
                 }
             }

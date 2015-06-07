@@ -217,15 +217,15 @@ public class GaStringUtils {
         int count = 0;
         for (char c : buffer) {
 
-            if( count++ == width ) {
+            if (count++ == width) {
                 count = 0;
                 sb.append('\n');
-                if( c == '\n' ) {
+                if (c == '\n') {
                     continue;
                 }
             }
 
-            if( c == '\n' ) {
+            if (c == '\n') {
                 count = 0;
             }
 
