@@ -11,7 +11,7 @@ public interface CommandHandler {
     /**
      * 解析输入行并执行命令
      *
-     * @param line      输入的命令行
+     * @param line    输入的命令行
      * @param session 会话
      * @throws IOException IO错误
      */

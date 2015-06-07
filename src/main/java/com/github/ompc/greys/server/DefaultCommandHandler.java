@@ -9,14 +9,14 @@ import com.github.ompc.greys.command.Command.*;
 import com.github.ompc.greys.command.Commands;
 import com.github.ompc.greys.command.QuitCommand;
 import com.github.ompc.greys.command.ShutdownCommand;
-import com.github.ompc.greys.command.affect.Affect;
-import com.github.ompc.greys.command.affect.EnhancerAffect;
-import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.exception.CommandException;
 import com.github.ompc.greys.exception.CommandInitializationException;
 import com.github.ompc.greys.exception.CommandNotFoundException;
 import com.github.ompc.greys.exception.GaExecuteException;
 import com.github.ompc.greys.util.LogUtil;
+import com.github.ompc.greys.util.affect.Affect;
+import com.github.ompc.greys.util.affect.EnhancerAffect;
+import com.github.ompc.greys.util.affect.RowAffect;
 import org.slf4j.Logger;
 
 import java.io.IOException;

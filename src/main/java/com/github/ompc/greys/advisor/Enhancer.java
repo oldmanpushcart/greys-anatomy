@@ -1,9 +1,9 @@
 package com.github.ompc.greys.advisor;
 
 import com.github.ompc.greys.GlobalOptions;
-import com.github.ompc.greys.command.affect.EnhancerAffect;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
+import com.github.ompc.greys.util.affect.EnhancerAffect;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.slf4j.Logger;

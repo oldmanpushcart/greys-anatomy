@@ -34,6 +34,7 @@ public interface SessionManager {
 
     /**
      * 是否已经被销毁
+     *
      * @return true/false
      */
     boolean isDestroy();

@@ -1,10 +1,10 @@
 package com.github.ompc.greys.command;
 
-import com.github.ompc.greys.command.affect.RowAffect;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.server.Session;
+import com.github.ompc.greys.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.Charset;

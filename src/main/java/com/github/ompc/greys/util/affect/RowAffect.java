@@ -1,4 +1,4 @@
-package com.github.ompc.greys.command.affect;
+package com.github.ompc.greys.util.affect;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
