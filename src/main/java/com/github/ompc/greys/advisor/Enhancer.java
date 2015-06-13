@@ -228,6 +228,7 @@ public class Enhancer implements ClassFileTransformer {
         return clazz.isArray()
                 || clazz.isInterface()
                 || clazz.isEnum()
+                || clazz.isArray()
                 ;
     }
 
