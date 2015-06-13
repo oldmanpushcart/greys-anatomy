@@ -6,6 +6,7 @@
 * [程序安装](https://github.com/oldmanpushcart/greys-anatomy/wiki/installing)
 * [入门说明](https://github.com/oldmanpushcart/greys-anatomy/wiki/Getting-Start)
 * [常见问题](https://github.com/oldmanpushcart/greys-anatomy/wiki/FAQ)
+* [更新记事](https://github.com/oldmanpushcart/greys-anatomy/wiki/Chronicle)
 
 # 程序安装：
 
