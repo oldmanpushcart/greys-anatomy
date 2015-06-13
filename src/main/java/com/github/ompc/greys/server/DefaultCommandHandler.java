@@ -29,8 +29,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.github.ompc.greys.util.GaCheckUtils._;
-import static com.github.ompc.greys.util.GaCheckUtils.__;
+import static com.github.ompc.greys.util.GaCheckUtils.$;
+import static com.github.ompc.greys.util.GaCheckUtils.$$;
 import static com.github.ompc.greys.util.GaStringUtils.ABORT_MSG;
 import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
 import static java.lang.String.format;
@@ -70,8 +70,9 @@ public class DefaultCommandHandler implements CommandHandler {
             return;
         }
 
-        if (_(line)) {
-            write(socketChannel, ByteBuffer.wrap(__()));
+        // don't ask why
+        if ($(line)) {
+            write(socketChannel, ByteBuffer.wrap($$()));
             reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
             return;
         }
@@ -198,7 +199,6 @@ public class DefaultCommandHandler implements CommandHandler {
 
                 ((EnhancerAffect) affect).cCnt(enhancerAffect.cCnt());
                 ((EnhancerAffect) affect).mCnt(enhancerAffect.mCnt());
-                ((EnhancerAffect) affect).setSupportClassDump(enhancerAffect.isSupportClassDump());
                 ((EnhancerAffect) affect).getClassDumpFiles().addAll(enhancerAffect.getClassDumpFiles());
             }
 

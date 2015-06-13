@@ -1,8 +1,9 @@
 package com.github.ompc.greys.util.affect;
 
+import com.github.ompc.greys.GlobalOptions;
+
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
@@ -17,9 +18,10 @@ public class EnhancerAffect extends Affect {
     private final AtomicInteger cCnt = new AtomicInteger();
     private final AtomicInteger mCnt = new AtomicInteger();
 
-    private boolean supportClassDump;
+    /*
+     * dumpClass的文件存放集合
+     */
     private Collection<File> classDumpFiles = new ArrayList<File>();
-
 
     public EnhancerAffect() {
 
@@ -68,22 +70,19 @@ public class EnhancerAffect extends Affect {
         return mCnt.get();
     }
 
+    /**
+     * 获取dump的Class文件集合
+     *
+     * @return classDumpList
+     */
     public Collection<File> getClassDumpFiles() {
         return classDumpFiles;
-    }
-
-    public boolean isSupportClassDump() {
-        return supportClassDump;
-    }
-
-    public void setSupportClassDump(boolean supportClassDump) {
-        this.supportClassDump = supportClassDump;
     }
 
     @Override
     public String toString() {
         final StringBuilder infoSB = new StringBuilder();
-        if (isSupportClassDump()
+        if (GlobalOptions.isDump
                 && !classDumpFiles.isEmpty()) {
 
             for (File classDumpFile : classDumpFiles) {
