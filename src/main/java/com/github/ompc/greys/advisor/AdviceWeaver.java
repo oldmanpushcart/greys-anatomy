@@ -316,6 +316,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
 
     private final int adviceId;
+    private final boolean isAdvising;
     private final boolean isTracing;
     private final String className;
     private final Matcher matcher;
@@ -325,17 +326,19 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     /**
      * 构建通知编织器
      *
-     * @param adviceId  通知ID
-     * @param isTracing 可跟踪方法调用
-     * @param className 类名称
-     * @param matcher   方法匹配
-     *                  只有匹配上的方法才会被织入通知器
-     * @param affect    影响计数
-     * @param cv        ClassVisitor for ASM
+     * @param adviceId   通知ID
+     * @param isAdvising 可通知
+     * @param isTracing  可跟踪方法调用
+     * @param className  类名称
+     * @param matcher    方法匹配
+     *                   只有匹配上的方法才会被织入通知器
+     * @param affect     影响计数
+     * @param cv         ClassVisitor for ASM
      */
-    public AdviceWeaver(int adviceId, boolean isTracing, String className, Matcher matcher, EnhancerAffect affect, ClassVisitor cv) {
+    public AdviceWeaver(int adviceId, boolean isAdvising, boolean isTracing, String className, Matcher matcher, EnhancerAffect affect, ClassVisitor cv) {
         super(ASM5, cv);
         this.adviceId = adviceId;
+        this.isAdvising = isAdvising;
         this.isTracing = isTracing;
         this.className = className;
         this.matcher = matcher;
@@ -484,25 +487,27 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             @Override
             protected void onMethodEnter() {
 
-                codeLockForTracing.lock(new Block() {
-                    @Override
-                    public void code() {
-                        // 加载before方法
-                        loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_METHOD);
+                if (isAdvising) {
+                    codeLockForTracing.lock(new Block() {
+                        @Override
+                        public void code() {
+                            // 加载before方法
+                            loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_METHOD);
 
-                        // 推入Method.invoke()的第一个参数
-                        pushNull();
+                            // 推入Method.invoke()的第一个参数
+                            pushNull();
 
-                        // 方法参数
-                        loadArrayForBefore();
+                            // 方法参数
+                            loadArrayForBefore();
 
-                        // 调用方法
-                        invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                        pop();
-                    }
-                });
+                            // 调用方法
+                            invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                            pop();
+                        }
+                    });
 
-                mark(beginLabel);
+                    mark(beginLabel);
+                }
 
             }
 
@@ -526,7 +531,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             @Override
             protected void onMethodExit(final int opcode) {
 
-                if (!isThrow(opcode)) {
+                if (isAdvising && !isThrow(opcode)) {
 
                     codeLockForTracing.lock(new Block() {
                         @Override
@@ -572,31 +577,34 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             @Override
             public void visitMaxs(int maxStack, int maxLocals) {
 
-                mark(endLabel);
-                catchException(beginLabel, endLabel, Type.getType(Throwable.class));
+                if (isAdvising) {
+                    mark(endLabel);
+                    catchException(beginLabel, endLabel, Type.getType(Throwable.class));
 
-                codeLockForTracing.lock(new Block() {
-                    @Override
-                    public void code() {
-                        // 加载异常
-                        loadThrow();
+                    codeLockForTracing.lock(new Block() {
+                        @Override
+                        public void code() {
+                            // 加载异常
+                            loadThrow();
 
-                        // 加载throwing方法
-                        loadAdviceMethod(KEY_GREYS_ADVICE_THROWS_METHOD);
+                            // 加载throwing方法
+                            loadAdviceMethod(KEY_GREYS_ADVICE_THROWS_METHOD);
 
-                        // 推入Method.invoke()的第一个参数
-                        pushNull();
+                            // 推入Method.invoke()的第一个参数
+                            pushNull();
 
-                        // 加载throw通知参数数组
-                        loadThrowArgs();
+                            // 加载throw通知参数数组
+                            loadThrowArgs();
 
-                        // 调用方法
-                        invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                        pop();
-                    }
-                });
+                            // 调用方法
+                            invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                            pop();
+                        }
+                    });
 
-                throwException();
+                    throwException();
+                }
+
                 super.visitMaxs(maxStack, maxLocals);
             }
 
