@@ -193,13 +193,16 @@ public class DefaultCommandHandler implements CommandHandler {
                         getEnhancer.isIncludeSub()
                 );
 
-                // 注册通知监听器
-                AdviceWeaver.reg(lock, listener);
-                sender.send(false, ABORT_MSG + "\n");
+                // 这里做个补偿,如果在enhance期间,unLock被调用了,则补偿性放弃
+                if (session.getLock() == lock) {
+                    // 注册通知监听器
+                    AdviceWeaver.reg(lock, listener);
+                    sender.send(false, ABORT_MSG + "\n");
 
-                ((EnhancerAffect) affect).cCnt(enhancerAffect.cCnt());
-                ((EnhancerAffect) affect).mCnt(enhancerAffect.mCnt());
-                ((EnhancerAffect) affect).getClassDumpFiles().addAll(enhancerAffect.getClassDumpFiles());
+                    ((EnhancerAffect) affect).cCnt(enhancerAffect.cCnt());
+                    ((EnhancerAffect) affect).mCnt(enhancerAffect.mCnt());
+                    ((EnhancerAffect) affect).getClassDumpFiles().addAll(enhancerAffect.getClassDumpFiles());
+                }
             }
 
             // 其他自定义动作
