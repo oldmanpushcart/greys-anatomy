@@ -8,6 +8,7 @@ import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.affect.EnhancerAffect;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
+import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.commons.Method;
 import org.slf4j.Logger;
 
@@ -379,7 +380,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         // 编织方法计数
         affect.mCnt(1);
 
-        return new AdviceAdapter(ASM5, mv, access, name, desc) {
+        return new AdviceAdapter(ASM5, new JSRInlinerAdapter(mv, access, name, desc, signature, exceptions), access, name, desc) {
 
             private final Label beginLabel = new Label();
             private final Label endLabel = new Label();
