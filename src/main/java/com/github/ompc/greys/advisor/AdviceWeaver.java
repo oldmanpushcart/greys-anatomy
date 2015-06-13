@@ -8,6 +8,7 @@ import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.affect.EnhancerAffect;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
+import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.commons.Method;
 import org.slf4j.Logger;
 
@@ -17,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.ompc.greys.agent.AgentLauncher.*;
 import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
+import static com.github.ompc.greys.util.GaStringUtils.tranClassName;
 import static java.lang.Thread.currentThread;
 
 
@@ -378,14 +380,22 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         // 编织方法计数
         affect.mCnt(1);
 
-        return new AdviceAdapter(ASM5, mv, access, name, desc) {
+        return new AdviceAdapter(ASM5, new JSRInlinerAdapter(mv, access, name, desc, signature, exceptions), access, name, desc) {
 
             private final Label beginLabel = new Label();
             private final Label endLabel = new Label();
 
             private final CodeLock codeLockForTracing = new TracingAsmCodeLock(this);
 
-            private final Type ASM_TYPE_SYSTEM = Type.getType(java.lang.System.class);
+            private final Type ASM_TYPE_OBJECT = Type.getType(Object.class);
+            private final Type ASM_TYPE_OBJECT_ARRAY = Type.getType(Object[].class);
+            private final Type ASM_TYPE_CLASS = Type.getType(Class.class);
+            private final Type ASM_TYPE_INTEGER = Type.getType(Integer.class);
+            private final Type ASM_TYPE_CLASS_LOADER = Type.getType(ClassLoader.class);
+            private final Type ASM_TYPE_STRING = Type.getType(String.class);
+            private final Type ASM_TYPE_THROWABLE = Type.getType(Throwable.class);
+            private final Type ASM_TYPE_INT = Type.getType(int.class);
+            private final Type ASM_TYPE_SYSTEM = Type.getType(System.class);
             private final Type ASM_TYPE_METHOD = Type.getType(java.lang.reflect.Method.class);
             private final Type ASM_TYPE_PROPERTIES = Type.getType(java.util.Properties.class);
             private final Method ASM_METHOD_METHOD_INVOKE = Method.getMethod("Object invoke(Object,Object[])");
@@ -408,17 +418,20 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             }
 
             /**
-             * 加载ClassLoader
+             * 加载ClassLoader<br/>
+             * 这里分开静态方法中ClassLoader的获取以及普通方法中ClassLoader的获取
+             * 主要是性能上的考虑
              */
             private void loadClassLoader() {
 
-                if(this.isStaticMethod()) {
-                    visitLdcInsn(Type.getObjectType(className));
-                    invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
+                if (this.isStaticMethod()) {
+                    visitLdcInsn(tranClassName(className));
+                    invokeStatic(ASM_TYPE_CLASS, Method.getMethod("Class forName(String)"));
+                    invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
                 } else {
                     loadThis();
-                    invokeVirtual(Type.getType(Object.class), Method.getMethod("Class getClass()"));
-                    invokeVirtual(Type.getType(Class.class), Method.getMethod("ClassLoader getClassLoader()"));
+                    invokeVirtual(ASM_TYPE_OBJECT, Method.getMethod("Class getClass()"));
+                    invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
                 }
 
             }
@@ -428,43 +441,43 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
              */
             private void loadArrayForBefore() {
                 push(7);
-                newArray(Type.getType(Object.class));
+                newArray(ASM_TYPE_OBJECT);
 
                 dup();
                 push(0);
                 push(adviceId);
-                box(Type.getType(int.class));
-                arrayStore(Type.getType(Integer.class));
+                box(ASM_TYPE_INT);
+                arrayStore(ASM_TYPE_INTEGER);
 
                 dup();
                 push(1);
                 loadClassLoader();
-                arrayStore(Type.getType(ClassLoader.class));
+                arrayStore(ASM_TYPE_CLASS_LOADER);
 
                 dup();
                 push(2);
                 push(className);
-                arrayStore(Type.getType(String.class));
+                arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(3);
                 push(name);
-                arrayStore(Type.getType(String.class));
+                arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(4);
                 push(desc);
-                arrayStore(Type.getType(String.class));
+                arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(5);
                 loadThisOrPushNullIfIsStatic();
-                arrayStore(Type.getType(Object.class));
+                arrayStore(ASM_TYPE_OBJECT);
 
                 dup();
                 push(6);
                 loadArgArray();
-                arrayStore(Type.getType(Object[].class));
+                arrayStore(ASM_TYPE_OBJECT_ARRAY);
             }
 
 
@@ -501,20 +514,19 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 dup2X1();
                 pop2();
                 push(1);
-                newArray(Type.getType(Object.class));
+                newArray(ASM_TYPE_OBJECT);
                 dup();
                 dup2X1();
                 pop2();
                 push(0);
                 swap();
-                arrayStore(Type.getType(Object.class));
+                arrayStore(ASM_TYPE_OBJECT);
             }
 
             @Override
             protected void onMethodExit(final int opcode) {
 
                 if (!isThrow(opcode)) {
-
                     codeLockForTracing.lock(new Block() {
                         @Override
                         public void code() {
@@ -534,7 +546,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                             pop();
                         }
                     });
-
                 }
 
             }
@@ -547,13 +558,13 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 dup2X1();
                 pop2();
                 push(1);
-                newArray(Type.getType(Object.class));
+                newArray(ASM_TYPE_OBJECT);
                 dup();
                 dup2X1();
                 pop2();
                 push(0);
                 swap();
-                arrayStore(Type.getType(Throwable.class));
+                arrayStore(ASM_TYPE_THROWABLE);
             }
 
             @Override
@@ -584,6 +595,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 });
 
                 throwException();
+
                 super.visitMaxs(maxStack, maxLocals);
             }
 
@@ -668,28 +680,28 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
              */
             private void loadArrayForInvokeTracing(String owner, String name, String desc) {
                 push(4);
-                newArray(Type.getType(Object.class));
+                newArray(ASM_TYPE_OBJECT);
 
                 dup();
                 push(0);
                 push(adviceId);
-                box(Type.getType(int.class));
-                arrayStore(Type.getType(Integer.class));
+                box(ASM_TYPE_INT);
+                arrayStore(ASM_TYPE_INTEGER);
 
                 dup();
                 push(1);
                 push(owner);
-                arrayStore(Type.getType(String.class));
+                arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(2);
                 push(name);
-                arrayStore(Type.getType(String.class));
+                arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(3);
                 push(desc);
-                arrayStore(Type.getType(String.class));
+                arrayStore(ASM_TYPE_STRING);
             }
 
 

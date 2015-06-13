@@ -29,7 +29,7 @@ import static org.apache.commons.lang3.reflect.FieldUtils.writeStaticField;
  * 选项开关命令
  * Created by vlinux on 15/6/6.
  */
-@Cmd(isHacking = true, named = "options", desc = "Change the options",
+@Cmd(isHacking = true, name = "options", summary = "Change the options",
         eg = {
                 "options dump true",
                 "options unsafe true"

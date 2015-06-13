@@ -97,7 +97,7 @@ public class GreysConsole {
      */
     private Socket connect(InetSocketAddress address) throws IOException {
         final Socket socket = new Socket();
-        socket.setSoTimeout(5 * _1MIN);
+        socket.setSoTimeout(0);
         socket.connect(address, _1MIN);
         socket.setKeepAlive(true);
         socketWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));

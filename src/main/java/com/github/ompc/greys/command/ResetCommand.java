@@ -18,7 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * 恢复所有增强类<br/>
  * Created by vlinux on 15/5/29.
  */
-@Cmd(named = "reset", sort = 11, desc = "Reset all the enhancer class.",
+@Cmd(name = "reset", sort = 11, summary = "Reset all the enhancer class.",
         eg = {
                 "reset",
                 "reset *List",
@@ -29,7 +29,7 @@ public class ResetCommand implements Command {
     @IndexArg(index = 0, name = "class-pattern", isRequired = false, summary = "pattern matching of classpath.classname")
     private String classPattern;
 
-    @NamedArg(named = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
     @Override

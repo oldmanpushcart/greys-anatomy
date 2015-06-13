@@ -17,7 +17,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * 查看会话状态命令
  * Created by vlinux on 15/5/3.
  */
-@Cmd(named = "session", sort = 8, desc = "Show the session state.",
+@Cmd(name = "session", sort = 8, summary = "Show the session state.",
         eg = {
                 "session",
                 "session -c GBK",
@@ -25,7 +25,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
         })
 public class SessionCommand implements Command {
 
-    @NamedArg(named = "c", hasValue = true, summary = "change the charset of session")
+    @NamedArg(name = "c", hasValue = true, summary = "change the charset of session")
     private String charsetString;
 
     @Override

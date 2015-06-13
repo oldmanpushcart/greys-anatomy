@@ -18,7 +18,7 @@ import static com.github.ompc.greys.util.GaStringUtils.tranClassName;
  * 负责输出一个类中的所有方法调用路径
  * Created by vlinux on 15/5/27.
  */
-@Cmd(named = "trace", sort = 6, desc = "The call stack output buried point method callback each thread.",
+@Cmd(name = "trace", sort = 6, summary = "The call stack output buried point method callback each thread.",
         eg = {
                 "trace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
                 "trace org.apache.commons.lang.StringUtils isBlank",
@@ -32,10 +32,10 @@ public class TraceCommand implements Command {
     @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
     private String methodPattern;
 
-    @NamedArg(named = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "including sub class")
     private boolean isIncludeSub = false;
 
-    @NamedArg(named = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
     @Override

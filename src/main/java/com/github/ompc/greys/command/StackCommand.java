@@ -20,7 +20,7 @@ import static com.github.ompc.greys.util.GaStringUtils.getStack;
  *
  * @author vlinux
  */
-@Cmd(named = "stack", sort = 6, desc = "The call stack output buried point method callback each thread.",
+@Cmd(name = "stack", sort = 6, summary = "The call stack output buried point method callback each thread.",
         eg = {
                 "stack -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
                 "stack org.apache.commons.lang.StringUtils isBlank",
@@ -34,10 +34,10 @@ public class StackCommand implements Command {
     @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
     private String methodPattern;
 
-    @NamedArg(named = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "including sub class")
     private boolean isIncludeSub = false;
 
-    @NamedArg(named = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
     @Override
