@@ -34,7 +34,7 @@ public class Commands {
 
             if (clazz.isAnnotationPresent(Cmd.class)) {
                 final Cmd cmd = clazz.getAnnotation(Cmd.class);
-                commands.put(cmd.named(), clazz);
+                commands.put(cmd.name(), clazz);
             }
 
         }
@@ -75,8 +75,8 @@ public class Commands {
                     final NamedArg arg = field.getAnnotation(NamedArg.class);
 
                     if (arg.hasValue()) {
-                        if (opt.has(arg.named())) {
-                            Object value = opt.valueOf(arg.named());
+                        if (opt.has(arg.name())) {
+                            Object value = opt.valueOf(arg.name());
 
                             //如果是枚举类型，则根据枚举信息赋值
                             if (field.getType().isEnum()) {
@@ -101,7 +101,7 @@ public class Commands {
                     // 设置boolean类型,一般只有boolean类型hasValue才为false
                     else {
                         try {
-                            GaReflectUtils.set(field, opt.has(arg.named()), command);
+                            GaReflectUtils.set(field, opt.has(arg.name()), command);
                         } catch (IllegalAccessException e) {
                             throw new CommandInitializationException(cmdName, e);
                         }
@@ -144,9 +144,9 @@ public class Commands {
             if (field.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg arg = field.getAnnotation(NamedArg.class);
                 if (arg.hasValue()) {
-                    sb.append(arg.named()).append(":");
+                    sb.append(arg.name()).append(":");
                 } else {
-                    sb.append(arg.named());
+                    sb.append(arg.name());
                 }
             }
         }
@@ -157,7 +157,7 @@ public class Commands {
             if (field.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg arg = field.getAnnotation(NamedArg.class);
                 if (arg.hasValue()) {
-                    final OptionSpecBuilder osb = parser.accepts(arg.named(), arg.summary());
+                    final OptionSpecBuilder osb = parser.accepts(arg.name(), arg.summary());
                     osb.withOptionalArg()
 //                            .withValuesConvertedBy(new FileValueConverter())
                             .ofType(field.getType());

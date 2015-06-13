@@ -21,7 +21,7 @@ import static com.github.ompc.greys.util.Advice.*;
 import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
 
-@Cmd(named = "watch", sort = 4, desc = "The call context information buried point observation methods.",
+@Cmd(name = "watch", sort = 4, summary = "The call context information buried point observation methods.",
         eg = {
                 "watch -Eb org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
                 "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
@@ -62,25 +62,25 @@ public class WatchCommand implements Command {
     )
     private String express;
 
-    @NamedArg(named = "b", summary = "is watch on before")
+    @NamedArg(name = "b", summary = "is watch on before")
     private boolean isBefore = true;
 
-    @NamedArg(named = "f", summary = "is watch on finish")
+    @NamedArg(name = "f", summary = "is watch on finish")
     private boolean isFinish = false;
 
-    @NamedArg(named = "e", summary = "is watch on exception")
+    @NamedArg(name = "e", summary = "is watch on exception")
     private boolean isException = false;
 
-    @NamedArg(named = "s", summary = "is watch on success")
+    @NamedArg(name = "s", summary = "is watch on success")
     private boolean isSuccess = false;
 
-    @NamedArg(named = "x", hasValue = true, summary = "expend level of object. Default level-0")
+    @NamedArg(name = "x", hasValue = true, summary = "expend level of object. Default level-0")
     private Integer expend;
 
-    @NamedArg(named = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "including sub class")
     private boolean isIncludeSub = false;
 
-    @NamedArg(named = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
     @Override

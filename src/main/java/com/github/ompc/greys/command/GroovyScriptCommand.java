@@ -20,7 +20,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  * 脚本增强命令
  * Created by vlinux on 15/5/31.
  */
-@Cmd(named = "groovy", sort = 6, desc = "The groovy script enhance.",
+@Cmd(name = "groovy", sort = 6, summary = "The groovy script enhance.",
         eg = {
                 "groovy -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank /tmp/watch.groovy",
                 "groovy org.apache.commons.lang.StringUtils isBlank /tmp/watch.groovy",
@@ -37,10 +37,10 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
     @IndexArg(index = 2, name = "script-filepath", summary = "script file path")
     private String scriptFilepath;
 
-    @NamedArg(named = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "including sub class")
     private boolean isIncludeSub = false;
 
-    @NamedArg(named = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
     @Override

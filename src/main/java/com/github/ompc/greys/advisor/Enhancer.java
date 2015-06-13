@@ -144,13 +144,7 @@ public class Enhancer implements ClassFileTransformer {
             classBytesCache.put(classBeingRedefined, enhanceClassByteArray);
 
             // dump the class
-            final File classDumpFile = dumpClassIfNecessary(className, enhanceClassByteArray);
-            if (null != classDumpFile) {
-                if (!affect.isSupportClassDump()) {
-                    affect.setSupportClassDump(true);
-                }
-                affect.getClassDumpFiles().add(classDumpFile);
-            }
+            dumpClassIfNecessary(className, enhanceClassByteArray, affect);
 
             // 成功计数
             affect.cCnt(1);
@@ -166,29 +160,29 @@ public class Enhancer implements ClassFileTransformer {
     /*
      * dump class to file
      */
-    private static File dumpClassIfNecessary(String className, byte[] data) {
+    private static void dumpClassIfNecessary(String className, byte[] data, EnhancerAffect affect) {
         if (!GlobalOptions.isDump) {
-            return null;
+            return;
         }
-        final File classFile = new File("./greys-class-dump/" + className + ".class");
-        final File classPath = new File(classFile.getParent());
+        final File dumpClassFile = new File("./greys-class-dump/" + className + ".class");
+        final File classPath = new File(dumpClassFile.getParent());
 
         // 创建类所在的包路径
         if (!classPath.mkdirs()
                 && !classPath.exists()) {
             logger.warn("create dump classpath:{} failed.", classPath);
-            return null;
+            return;
         }
 
         // 将类字节码写入文件
         try {
-            writeByteArrayToFile(classFile, data);
+            writeByteArrayToFile(dumpClassFile, data);
+            affect.getClassDumpFiles().add(dumpClassFile);
         } catch (IOException e) {
-            logger.warn("dump class:{} to file {} failed.", className, classFile, e);
-            return null;
+            logger.warn("dump class:{} to file {} failed.", className, dumpClassFile, e);
+            return;
         }
 
-        return classFile;
     }
 
 
@@ -196,9 +190,8 @@ public class Enhancer implements ClassFileTransformer {
      * 是否需要过滤的类
      *
      * @param classes 类集合
-     * @return 过滤后的类
      */
-    private static Set<Class<?>> filter(Set<Class<?>> classes) {
+    private static void filter(Set<Class<?>> classes) {
         final Iterator<Class<?>> it = classes.iterator();
         while (it.hasNext()) {
             final Class<?> clazz = it.next();
@@ -209,7 +202,6 @@ public class Enhancer implements ClassFileTransformer {
                 it.remove();
             }
         }
-        return classes;
     }
 
     /*
@@ -236,7 +228,6 @@ public class Enhancer implements ClassFileTransformer {
         return clazz.isArray()
                 || clazz.isInterface()
                 || clazz.isEnum()
-                || clazz.getName().contains("$$EnhancerByCGLIB$$") // 在没有解决cglib增强出来的类会失败的问题之前,暂时先过滤掉
                 ;
     }
 

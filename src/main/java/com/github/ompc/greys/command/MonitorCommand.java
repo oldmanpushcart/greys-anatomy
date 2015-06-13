@@ -73,7 +73,7 @@ import static java.lang.System.currentTimeMillis;
  *
  * @author vlinux
  */
-@Cmd(named = "monitor", sort = 2, desc = "Buried point method for monitoring the operation.")
+@Cmd(name = "monitor", sort = 2, summary = "Buried point method for monitoring the operation.")
 public class MonitorCommand implements Command {
 
     @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
@@ -82,13 +82,13 @@ public class MonitorCommand implements Command {
     @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
     private String methodPattern;
 
-    @NamedArg(named = "c", hasValue = true, summary = "the cycle of output")
+    @NamedArg(name = "c", hasValue = true, summary = "the cycle of output")
     private int cycle = 120;
 
-    @NamedArg(named = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "including sub class")
     private boolean isIncludeSub = false;
 
-    @NamedArg(named = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
     /**

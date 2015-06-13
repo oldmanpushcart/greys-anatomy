@@ -24,7 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  *
  * @author vlinux
  */
-@Cmd(named = "sm", sort = 1, desc = "Search all have been class method JVM loading.",
+@Cmd(name = "sm", sort = 1, summary = "Search all have been class method JVM loading.",
         eg = {
                 "sm -Ed org\\.apache\\.commons\\.lang\\.StringUtils .*",
                 "sm org.apache.commons.????.StringUtils *",
@@ -39,10 +39,10 @@ public class SearchMethodCommand implements Command {
     @IndexArg(index = 1, name = "method-pattern", isRequired = false, summary = "pattern matching of method name")
     private String methodPattern;
 
-    @NamedArg(named = "d", summary = "show the detail of method")
+    @NamedArg(name = "d", summary = "show the detail of method")
     private boolean isDetail = false;
 
-    @NamedArg(named = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
     @Override

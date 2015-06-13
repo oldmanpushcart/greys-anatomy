@@ -26,7 +26,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * <p/>
  * Created by vlinux on 14/10/26.
  */
-@Cmd(named = "help", sort = 12, desc = "List of the Greys command list.",
+@Cmd(name = "help", sort = 12, summary = "List of the Greys command list.",
         eg = {
                 "help",
                 "help sc",
@@ -66,7 +66,7 @@ public class HelpCommand implements Command {
 
             if (f.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg namedArg = f.getAnnotation(NamedArg.class);
-                sbOp.append(namedArg.named());
+                sbOp.append(namedArg.name());
                 if (namedArg.hasValue()) {
                     sbOp.append(":");
                 }
@@ -87,7 +87,7 @@ public class HelpCommand implements Command {
         if (usageSB.length() > 0) {
             usageSB.append("\n");
         }
-        usageSB.append(cmd.desc());
+        usageSB.append(cmd.summary());
 
         return usageSB.toString();
     }
@@ -97,7 +97,7 @@ public class HelpCommand implements Command {
         for (Field f : clazz.getDeclaredFields()) {
             if (f.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg namedArg = f.getAnnotation(NamedArg.class);
-                final String named = "[" + namedArg.named() + (namedArg.hasValue() ? ":" : "") + "]";
+                final String named = "[" + namedArg.name() + (namedArg.hasValue() ? ":" : "") + "]";
 
                 String description = namedArg.summary();
                 if (isNotBlank(namedArg.description())) {
@@ -186,7 +186,7 @@ public class HelpCommand implements Command {
             if (clazz.isAnnotationPresent(Cmd.class)) {
                 final Cmd cmd = clazz.getAnnotation(Cmd.class);
                 if (!cmd.isHacking()) {
-                    view.addRow(cmd.named(), cmd.desc());
+                    view.addRow(cmd.name(), cmd.summary());
                 }
             }
 

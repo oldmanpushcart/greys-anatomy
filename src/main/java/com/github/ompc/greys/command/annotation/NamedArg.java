@@ -17,7 +17,7 @@ public @interface NamedArg {
      *
      * @return 参数在命令中的位置
      */
-    String named();
+    String name();
 
     /**
      * 参数摘要

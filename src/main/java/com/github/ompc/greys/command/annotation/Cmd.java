@@ -17,14 +17,14 @@ public @interface Cmd {
      *
      * @return 返回命令的名称
      */
-    String named();
+    String name();
 
     /**
      * 指定命令的解释
      *
      * @return 返回命令的解释
      */
-    String desc();
+    String summary();
 
     /**
      * 例子
