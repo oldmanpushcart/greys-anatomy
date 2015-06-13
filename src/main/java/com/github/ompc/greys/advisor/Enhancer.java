@@ -236,7 +236,6 @@ public class Enhancer implements ClassFileTransformer {
         return clazz.isArray()
                 || clazz.isInterface()
                 || clazz.isEnum()
-                || clazz.getName().contains("$$EnhancerByCGLIB$$") // 在没有解决cglib增强出来的类会失败的问题之前,暂时先过滤掉
                 ;
     }
 
