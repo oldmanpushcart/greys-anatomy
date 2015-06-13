@@ -22,7 +22,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  *
  * @author vlinux
  */
-@Cmd(named = "sc", sort = 0, desc = "Search all have been loaded by the JVM class.",
+@Cmd(name = "sc", sort = 0, summary = "Search all have been loaded by the JVM class.",
         eg = {
                 "sc -E org\\.apache\\.commons\\.lang\\.StringUtils",
                 "sc -d org.apache.commons.lang.StringUtils",
@@ -33,13 +33,13 @@ public class SearchClassCommand implements Command {
     @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
     private String classPattern;
 
-    @NamedArg(named = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "including sub class")
     private boolean isIncludeSub = false;
 
-    @NamedArg(named = "d", summary = "show the detail of class")
+    @NamedArg(name = "d", summary = "show the detail of class")
     private boolean isDetail = false;
 
-    @NamedArg(named = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
     @Override

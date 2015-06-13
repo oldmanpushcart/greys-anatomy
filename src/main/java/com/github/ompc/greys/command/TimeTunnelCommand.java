@@ -65,7 +65,7 @@ class TimeFragment {
  * 参数w/d依赖于参数i所传递的记录编号<br/>
  * Created by vlinux on 14/11/15.
  */
-@Cmd(named = "tt", sort = 5, desc = "TimeTunnel the method call.",
+@Cmd(name = "tt", sort = 5, summary = "TimeTunnel the method call.",
         eg = {
                 "tt -t *StringUtils isEmpty",
                 "tt -l",
@@ -84,7 +84,7 @@ public class TimeTunnelCommand implements Command {
     private static final AtomicInteger sequence = new AtomicInteger(1000);
 
     // TimeTunnel the method call
-    @NamedArg(named = "t", summary = "record the method call to time fragment.")
+    @NamedArg(name = "t", summary = "record the method call to time fragment.")
     private boolean isTimeTunnel = false;
 
     @IndexArg(index = 0, isRequired = false, name = "class-pattern", summary = "pattern matching of classpath.classname")
@@ -94,22 +94,22 @@ public class TimeTunnelCommand implements Command {
     private String methodPattern;
 
     // list the TimeTunnel
-    @NamedArg(named = "l", summary = "list all the time fragments.")
+    @NamedArg(name = "l", summary = "list all the time fragments.")
     private boolean isList = false;
 
-    @NamedArg(named = "D", summary = "delete all time fragments.")
+    @NamedArg(name = "D", summary = "delete all time fragments.")
     private boolean isDeleteAll = false;
 
     // index of TimeTunnel
-    @NamedArg(named = "i", hasValue = true, summary = "appoint the index of time fragment. If use only, show the time fragment detail.")
+    @NamedArg(name = "i", hasValue = true, summary = "appoint the index of time fragment. If use only, show the time fragment detail.")
     private Integer index;
 
     // expend of TimeTunnel
-    @NamedArg(named = "x", hasValue = true, summary = "expend level of object. Default level-0")
+    @NamedArg(name = "x", hasValue = true, summary = "expend level of object. Default level-0")
     private Integer expend;
 
     // watch the index TimeTunnel
-    @NamedArg(named = "w",
+    @NamedArg(name = "w",
             hasValue = true,
             summary = "watch-express, watch the time fragment by OGNL-express, like params[0], returnObj, throwExp and so on.",
             description = ""
@@ -135,7 +135,7 @@ public class TimeTunnelCommand implements Command {
     private String watchExpress = EMPTY;
 
 
-    @NamedArg(named = "s",
+    @NamedArg(name = "s",
             hasValue = true,
             summary = "search-express, searching the time fragments by OGNL-express"
     )
@@ -143,17 +143,17 @@ public class TimeTunnelCommand implements Command {
 
 
     // play the index TimeTunnel
-    @NamedArg(named = "p", summary = "rePlay the time fragment of method called.")
+    @NamedArg(name = "p", summary = "rePlay the time fragment of method called.")
     private boolean isPlay = false;
 
     // delete the index TimeTunnel
-    @NamedArg(named = "d", summary = "delete the index time fragment")
+    @NamedArg(name = "d", summary = "delete the index time fragment")
     private boolean isDelete = false;
 
-    @NamedArg(named = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "including sub class")
     private boolean isIncludeSub = false;
 
-    @NamedArg(named = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
     /**

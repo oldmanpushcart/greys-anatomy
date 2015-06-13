@@ -9,7 +9,7 @@ import java.lang.instrument.Instrumentation;
  * 退出命令
  * Created by vlinux on 15/5/18.
  */
-@Cmd(named = "quit", sort = 8, desc = "Quit the Greys console.",
+@Cmd(name = "quit", sort = 8, summary = "Quit the Greys console.",
         eg = {
                 "quit"
         })

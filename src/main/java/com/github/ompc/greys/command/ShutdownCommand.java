@@ -16,7 +16,7 @@ import static com.github.ompc.greys.agent.AgentLauncher.KEY_GREYS_CLASS_LOADER;
  * 关闭命令
  * Created by vlinux on 14/10/23.
  */
-@Cmd(named = "shutdown", sort = 11, desc = "Shutdown the greys server, and exit the console.",
+@Cmd(name = "shutdown", sort = 11, summary = "Shutdown the greys server, and exit the console.",
         eg = {
                 "shutdown"
         })
