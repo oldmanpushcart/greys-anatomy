@@ -137,7 +137,7 @@ public class Enhancer implements ClassFileTransformer {
         try {
 
             // 生成增强字节码
-            cr.accept(new AdviceWeaver(adviceId, true, isTracing, cr.getClassName(), methodNameMatcher, affect, cw), EXPAND_FRAMES);
+            cr.accept(new AdviceWeaver(adviceId, isTracing, cr.getClassName(), methodNameMatcher, affect, cw), EXPAND_FRAMES);
             final byte[] enhanceClassByteArray = cw.toByteArray();
 
             // 生成成功,推入缓存
