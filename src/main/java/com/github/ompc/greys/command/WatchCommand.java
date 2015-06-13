@@ -40,7 +40,7 @@ public class WatchCommand implements Command {
     private String methodPattern;
 
     @IndexArg(index = 2, name = "express",
-            summary = "ognl express, write by ognl.",
+            summary = "express, write by groovy.",
             description = ""
                     + " \n"
                     + "For example\n"

@@ -111,7 +111,7 @@ public class TimeTunnelCommand implements Command {
     // watch the index TimeTunnel
     @NamedArg(named = "w",
             hasValue = true,
-            summary = "watch-express, watch the time fragment by OGNL-express, like params[0], returnObj, throwExp and so on.",
+            summary = "watch-express, watch the time fragment by groovy-express, like params[0], returnObj, throwExp and so on.",
             description = ""
                     + " \n"
                     + "For example\n"
@@ -137,7 +137,7 @@ public class TimeTunnelCommand implements Command {
 
     @NamedArg(named = "s",
             hasValue = true,
-            summary = "search-express, searching the time fragments by OGNL-express"
+            summary = "search-express, searching the time fragments by groovy-express"
     )
     private String searchExpress = EMPTY;
 
