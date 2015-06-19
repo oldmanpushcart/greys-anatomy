@@ -1,6 +1,10 @@
 package com.github.ompc.greys;
 
+import com.github.ompc.greys.command.Commands;
+import com.github.ompc.greys.command.annotation.NamedArg;
+import com.github.ompc.greys.util.GaReflectUtils;
 import jline.console.ConsoleReader;
+import jline.console.completer.*;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
@@ -8,8 +12,13 @@ import jline.console.history.MemoryHistory;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import static com.github.ompc.greys.util.GaStringUtils.DEFAULT_PROMPT;
 import static java.io.File.separatorChar;
@@ -57,6 +66,7 @@ public class GreysConsole {
         this.history.moveToEnd();
         this.console.setHistoryEnabled(true);
         this.console.setHistory(history);
+        this.console.addCompleter(initCompleter());
 
         this.socket = connect(address);
 
@@ -65,6 +75,7 @@ public class GreysConsole {
         loopForWriter();
 
     }
+
 
     private History initHistory() throws IOException {
         final File WORK_DIR = new File(WORKING_DIR);
@@ -95,6 +106,60 @@ public class GreysConsole {
 
         });
         return console;
+    }
+
+
+    /*
+     * 命令提示补全<br/>
+     * 临时方案，根本方案是Console单独走一套协议
+     */
+    private Completer initCompleter() {
+
+        final Collection<Completer> completerList = new ArrayList<Completer>();
+
+        for (Map.Entry<String, Class<?>> entry : Commands.getInstance().listCommands().entrySet()) {
+            ArgumentCompleter argCompleter = new ArgumentCompleter();
+            completerList.add(argCompleter);
+            argCompleter.getCompleters().add(new StringsCompleter(entry.getKey()));
+
+            if (entry.getKey().equals("help")) {
+                argCompleter.getCompleters().add(new StringsCompleter(Commands.getInstance().listCommands().keySet()));
+            }
+
+            for (Field field : GaReflectUtils.getFields(entry.getValue())) {
+                if (field.isAnnotationPresent(NamedArg.class)) {
+                    NamedArg arg = field.getAnnotation(NamedArg.class);
+                    argCompleter.getCompleters().add(new StringsCompleter("-" + arg.name()));
+                    if (field.getType().isEnum()) {
+                        Enum<?>[] enums = (Enum[]) field.getType().getEnumConstants();
+                        String[] enumArgs = new String[enums.length];
+                        for (int i = 0; i < enums.length; i++) {
+                            enumArgs[i] = enums[i].name();
+                        }
+                        argCompleter.getCompleters().add(new StringsCompleter(enumArgs));
+                    } else {
+                        argCompleter.getCompleters().add(new Completer() {
+
+                            @Override
+                            public int complete(String buffer, int cursor, List<CharSequence> candidates) {
+                                if (null == buffer
+                                        || buffer.isEmpty()
+                                        || buffer.trim().isEmpty()) {
+                                    candidates.add("");
+                                    return 0;
+                                } else {
+                                    candidates.add(buffer + " ");
+                                }
+                                return 0;
+                            }
+                        });
+                    }
+                }
+            }//for
+            argCompleter.getCompleters().add(new NullCompleter());
+        }
+
+        return new AggregateCompleter(completerList);
     }
 
 
