@@ -6,6 +6,9 @@ import com.github.ompc.greys.util.CodeLock.Block;
 import com.github.ompc.greys.util.LogUtil;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.affect.EnhancerAffect;
+import com.github.ompc.greys.util.collection.GaStack;
+import com.github.ompc.greys.util.collection.ThreadUnsafeFixGaStack;
+import com.github.ompc.greys.util.collection.ThreadUnsafeGaStack;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
@@ -13,7 +16,6 @@ import org.objectweb.asm.commons.Method;
 import org.slf4j.Logger;
 
 import java.util.Map;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.ompc.greys.agent.AgentLauncher.*;
@@ -52,13 +54,16 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
     private final static Logger logger = LogUtil.getLogger();
 
+    // 线程片段上下文堆栈深度，目前只需要到7
+    private final static int STACK_FRAGMENT_DEEP = 7;
+
     // 通知监听器集合
     private final static Map<Integer/*ADVICE_ID*/, AdviceListener> advices
             = new ConcurrentHashMap<Integer, AdviceListener>();
 
     // 线程帧封装
-    private static final Map<Thread, Stack<Stack<Object>>> threadBoundContexts
-            = new ConcurrentHashMap<Thread, Stack<Stack<Object>>>();
+    private static final Map<Thread, GaStack<GaStack<Object>>> threadBoundContexts
+            = new ConcurrentHashMap<Thread, GaStack<GaStack<Object>>>();
 
     // 防止自己递归调用
     private static final ThreadLocal<Boolean> isSelfCallRef = new ThreadLocal<Boolean>() {
@@ -97,7 +102,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         try {
             // 构建执行帧栈,保护当前的执行现场
-            final Stack<Object> frameStack = new Stack<Object>();
+            final GaStack<Object> frameStack = new ThreadUnsafeFixGaStack<Object>(STACK_FRAGMENT_DEEP);
             frameStack.push(loader);
             frameStack.push(className);
             frameStack.push(methodName);
@@ -157,7 +162,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         try {
             // 弹射线程帧栈,恢复Begin所保护的执行帧栈
-            final Stack<Object> frameStack = threadFrameStackPop();
+            final GaStack<Object> frameStack = threadFrameStackPop();
 
             // 弹射执行帧栈,恢复Begin所保护的现场
             final AdviceListener listener = (AdviceListener) frameStack.pop();
@@ -226,16 +231,16 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * 线程帧栈压栈<br/>
      * 将当前执行帧栈压入线程栈
      */
-    private static void threadFrameStackPush(Stack<Object> frameStack) {
+    private static void threadFrameStackPush(GaStack<Object> frameStack) {
         final Thread thread = currentThread();
-        Stack<Stack<Object>> threadFrameStack = threadBoundContexts.get(thread);
+        GaStack<GaStack<Object>> threadFrameStack = threadBoundContexts.get(thread);
         if (null == threadFrameStack) {
-            threadBoundContexts.put(thread, threadFrameStack = new Stack<Stack<Object>>());
+            threadBoundContexts.put(thread, threadFrameStack = new ThreadUnsafeGaStack<GaStack<Object>>());
         }
         threadFrameStack.push(frameStack);
     }
 
-    private static Stack<Object> threadFrameStackPop() {
+    private static GaStack<Object> threadFrameStackPop() {
         return threadBoundContexts.get(currentThread()).pop();
     }
 
