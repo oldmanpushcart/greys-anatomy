@@ -114,7 +114,7 @@ public class Enhancer implements ClassFileTransformer {
                     c = Class.forName(type1.replace('/', '.'), false, classLoader);
                     d = Class.forName(type2.replace('/', '.'), false, classLoader);
                 } catch (Exception e) {
-                    throw new RuntimeException(e.toString());
+                    throw new RuntimeException(e);
                 }
                 if (c.isAssignableFrom(d)) {
                     return type1;

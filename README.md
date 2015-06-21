@@ -1,5 +1,10 @@
 ![LOGO icon](https://raw.githubusercontent.com/oldmanpushcart/images/master/greys/greys-logo-readme.png)
 
+>
+线上系统为何频繁出错？数据库为何频遭黑手？业务调用为何频频失败？连环异常堆栈案，究竟是那次调用所为？
+数百台服务器意外雪崩背后又隐藏着什么？是软件的扭曲还是硬件的沦丧？
+走进科学带你了解Greys, Java线上问题诊断工具。
+
 # 相关文档
 
 * [关于软件](https://github.com/oldmanpushcart/greys-anatomy/wiki)
@@ -18,7 +23,7 @@
 
 ## 最新版本
 
-### **VERSION :** 1.6.0.3
+### **VERSION :** 1.6.0.5
 
 ### 版本号说明
 

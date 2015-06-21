@@ -12,6 +12,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import static com.github.ompc.greys.util.GaStringUtils.DEFAULT_PROMPT;
+import static java.io.File.separatorChar;
+import static java.lang.System.getProperty;
 import static jline.console.KeyMap.CTRL_D;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -30,7 +32,7 @@ public class GreysConsole {
     private static final int _1MIN = 60 * 1000;
 
     // 工作目录
-    private static final String WORKING_DIR = "./";
+    private static final String WORKING_DIR = getProperty("user.home");
 
     // 历史命令存储文件
     private static final String HISTORY_FILENAME = ".greys_history";
@@ -49,26 +51,30 @@ public class GreysConsole {
     public GreysConsole(InetSocketAddress address) throws IOException {
 
         this.console = initConsoleReader();
+        this.history = initHistory();
+
         this.out = console.getOutput();
-
-        final File WORK_DIR = new File(WORKING_DIR);
-        if (WORK_DIR.canWrite()
-                && WORK_DIR.canRead()) {
-            this.history = new FileHistory(new File(WORKING_DIR + HISTORY_FILENAME));
-        } else {
-            this.history = new MemoryHistory();
-        }
-
         this.history.moveToEnd();
         this.console.setHistoryEnabled(true);
         this.console.setHistory(history);
-
         this.socket = connect(address);
 
         this.isRunning = true;
         activeConsoleReader();
         loopForWriter();
 
+    }
+
+
+    private History initHistory() throws IOException {
+        final File WORK_DIR = new File(WORKING_DIR);
+        final File historyFile = new File(WORKING_DIR + separatorChar + HISTORY_FILENAME);
+        if (WORK_DIR.canWrite()
+                && WORK_DIR.canRead()
+                && ((!historyFile.exists() && historyFile.createNewFile()) || historyFile.exists())) {
+            return new FileHistory(historyFile);
+        }
+        return new MemoryHistory();
     }
 
     private ConsoleReader initConsoleReader() throws IOException {
@@ -119,6 +125,12 @@ public class GreysConsole {
 
                         final String line = console.readLine();
                         history.add(line);
+
+                        // flush if need
+                        if (history instanceof Flushable) {
+                            ((Flushable) history).flush();
+                        }
+
                         console.setPrompt(EMPTY);
                         if (isNotBlank(line)) {
                             socketWriter.write(line + "\n");

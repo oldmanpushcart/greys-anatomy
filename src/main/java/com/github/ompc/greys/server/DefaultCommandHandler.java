@@ -34,6 +34,7 @@ import static com.github.ompc.greys.util.GaCheckUtils.$$;
 import static com.github.ompc.greys.util.GaStringUtils.ABORT_MSG;
 import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
 import static java.lang.String.format;
+import static java.nio.ByteBuffer.wrap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -72,7 +73,7 @@ public class DefaultCommandHandler implements CommandHandler {
 
         // don't ask why
         if ($(line)) {
-            write(socketChannel, ByteBuffer.wrap($$()));
+            write(socketChannel, wrap($$()));
             reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
             return;
         }

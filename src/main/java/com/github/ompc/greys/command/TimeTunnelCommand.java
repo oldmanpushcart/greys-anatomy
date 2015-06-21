@@ -34,6 +34,7 @@ import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.util.Matcher.WildcardMatcher;
 import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.*;
 
 
@@ -42,13 +43,15 @@ import static org.apache.commons.lang3.StringUtils.*;
  */
 class TimeFragment {
 
-    public TimeFragment(Advice advice, Date gmtCreate) {
+    public TimeFragment(Advice advice, Date gmtCreate, long cost) {
         this.advice = advice;
         this.gmtCreate = gmtCreate;
+        this.cost = cost;
     }
 
     private final Advice advice;
     private final Date gmtCreate;
+    private final long cost;
 
     public Advice getAdvice() {
         return advice;
@@ -56,6 +59,10 @@ class TimeFragment {
 
     public Date getGmtCreate() {
         return gmtCreate;
+    }
+
+    public long getCost() {
+        return cost;
     }
 }
 
@@ -209,6 +216,7 @@ public class TimeTunnelCommand implements Command {
 
             8,  // index
             20, // timestamp
+            10, // cost(ms)
             8,  // isRet
             8,  // isExp
             15, // object address
@@ -224,6 +232,7 @@ public class TimeTunnelCommand implements Command {
 
             "INDEX",
             "TIMESTAMP",
+            "COST(ms)",
             "IS-RET",
             "IS-EXP",
             "OBJECT",
@@ -271,7 +280,25 @@ public class TimeTunnelCommand implements Command {
 
                         return new ReflectAdviceListenerAdapter() {
 
+                            /*
+                             * 第一次启动标记
+                             */
                             volatile boolean isFirst = true;
+
+                            /*
+                             * 方法执行时间戳
+                             */
+                            final ThreadLocal<Long> timestampThreadLocal = new ThreadLocal<Long>() {
+                                @Override
+                                protected Long initialValue() {
+                                    return currentTimeMillis();
+                                }
+                            };
+
+                            @Override
+                            public void before(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args) throws Throwable {
+                                timestampThreadLocal.get();
+                            }
 
                             @Override
                             public void afterReturning(
@@ -311,7 +338,15 @@ public class TimeTunnelCommand implements Command {
 
                             private void afterFinishing(Advice advice) {
 
-                                final TimeFragment timeTunnel = new TimeFragment(advice, new Date());
+                                final TimeFragment timeTunnel = new TimeFragment(
+                                        advice,
+                                        new Date(),
+                                        currentTimeMillis() - timestampThreadLocal.get()
+                                );
+
+                                // reset the timestamp
+                                timestampThreadLocal.remove();
+
                                 final int index = putTimeTunnel(timeTunnel);
                                 final TableView view = createTableView();
 
@@ -610,6 +645,7 @@ public class TimeTunnelCommand implements Command {
                 new ColumnDefine(TABLE_COL_WIDTH[4], false, RIGHT),
                 new ColumnDefine(TABLE_COL_WIDTH[5], false, RIGHT),
                 new ColumnDefine(TABLE_COL_WIDTH[6], false, RIGHT),
+                new ColumnDefine(TABLE_COL_WIDTH[7], false, RIGHT),
         })
                 .hasBorder(true)
                 .padding(1)
@@ -625,7 +661,8 @@ public class TimeTunnelCommand implements Command {
                         TABLE_COL_TITLE[3],
                         TABLE_COL_TITLE[4],
                         TABLE_COL_TITLE[5],
-                        TABLE_COL_TITLE[6]
+                        TABLE_COL_TITLE[6],
+                        TABLE_COL_TITLE[7]
                 );
     }
 
@@ -651,6 +688,7 @@ public class TimeTunnelCommand implements Command {
         return tableView.addRow(
                 index,
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(tf.getGmtCreate()),
+                tf.getCost(),
                 advice.isAfterReturning(),
                 advice.isAfterThrowing(),
                 advice.getTarget() == null
@@ -693,6 +731,7 @@ public class TimeTunnelCommand implements Command {
                         .padding(1)
                         .addRow("INDEX", index)
                         .addRow("GMT-CREATE", sdf.format(tf.getGmtCreate()))
+                        .addRow("COST(ms)", tf.getCost())
                         .addRow("OBJECT", objectAddress)
                         .addRow("CLASS", className)
                         .addRow("METHOD", methodName)
