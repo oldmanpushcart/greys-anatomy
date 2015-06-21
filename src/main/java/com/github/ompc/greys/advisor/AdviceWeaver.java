@@ -54,8 +54,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
     private final static Logger logger = LogUtil.getLogger();
 
-    // 线程片段上下文堆栈深度，目前只需要到7
-    private final static int STACK_FRAGMENT_DEEP = 7;
+    // 线程帧栈堆栈大小
+    private final static int FRAME_STACK_SIZE = 7;
 
     // 通知监听器集合
     private final static Map<Integer/*ADVICE_ID*/, AdviceListener> advices
@@ -102,7 +102,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         try {
             // 构建执行帧栈,保护当前的执行现场
-            final GaStack<Object> frameStack = new ThreadUnsafeFixGaStack<Object>(STACK_FRAGMENT_DEEP);
+            final GaStack<Object> frameStack = new ThreadUnsafeFixGaStack<Object>(FRAME_STACK_SIZE);
             frameStack.push(loader);
             frameStack.push(className);
             frameStack.push(methodName);
