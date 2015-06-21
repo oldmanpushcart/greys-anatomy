@@ -35,12 +35,4 @@ public class LogUtil {
         return logger;
     }
 
-
-    public static void main(String... args) {
-
-        final Logger logger = LogUtil.getLogger();
-        logger.info("fuck");
-        logger.info("fuck");
-
-    }
 }

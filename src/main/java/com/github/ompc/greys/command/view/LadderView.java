@@ -62,13 +62,4 @@ public class LadderView implements View {
         return this;
     }
 
-    public static void main(String... args) {
-        LadderView view = new LadderView();
-        view.addItem("test");
-        view.addItem("test2");
-        view.addItem("test3");
-        view.addItem("test4");
-        System.out.println(view.draw());
-    }
-
 }

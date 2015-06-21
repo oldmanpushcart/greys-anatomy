@@ -192,31 +192,4 @@ public class TreeView implements View {
 
     }
 
-
-    public static void main(String... args) {
-
-        final TreeView view = new TreeView(true, "TEST");
-
-        view
-                .begin("SayService:say()")
-                .begin("SayService:say1()")
-                .begin("SayService:say2()")
-                .begin("PrintWriter:println()")
-                .begin("PrintWriter:println()").end()
-                .begin("PrintWriter:println()").end()
-                .end()
-                .begin("PrintWriter:println()").end()
-                .end()
-                .begin("PrintWriter:println()").end()
-                .begin("PrintWriter:println()").end()
-                .end()
-                .end()
-                .begin("PrintWriter:println()").end()
-
-        ;
-
-        System.out.println(view.draw());
-
-    }
-
 }
