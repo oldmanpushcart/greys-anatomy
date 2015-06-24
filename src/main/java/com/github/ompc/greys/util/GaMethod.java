@@ -49,19 +49,21 @@ public class GaMethod {
      * @return 返回方法名称
      */
     public String getName() {
-        if (isInit()) {
-            return "<init>";
-        } else {
-            return method.getName();
-        }
+        return isInit()
+                ? "<init>"
+                : method.getName();
+    }
+
+    public String toString() {
+        return isInit()
+                ? constructor.toString()
+                : method.toString();
     }
 
     public boolean isAccessible() {
-        if (isInit()) {
-            return constructor.isAccessible();
-        } else {
-            return method.isAccessible();
-        }
+        return isInit()
+                ? constructor.isAccessible()
+                : method.isAccessible();
     }
 
     public void setAccessible(boolean accessFlag) {
