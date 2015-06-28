@@ -41,8 +41,8 @@ example:
 parse_arguments()
 {
 
-     TARGET_PID=$(echo ${1}|awk -F "@"   '{print $1}');
-      TARGET_IP=$(echo ${1}|awk -F "@|:" '{print $2}');
+    TARGET_PID=$(echo ${1}|awk -F "@"   '{print $1}');
+    TARGET_IP=$(echo ${1}|awk -F "@|:" '{print $2}');
     TARGET_PORT=$(echo ${1}|awk -F ":"   '{print $2}');
 
     # check pid
@@ -87,10 +87,12 @@ reset_for_env()
 # attach greys to target jvm
 attach_jvm()
 {
-    ${JAVA_HOME}/bin/java \
-        ${BOOT_CLASSPATH} \
-        ${JVM_OPTS} \
-        -jar ${GREYS_ROOT}/greys.jar -pid ${TARGET_PID} -target ${TARGET_IP}":"${TARGET_PORT}
+    if [ ${TARGET_IP} = ${DEFAULT_TARGET_IP} ]; then
+        ${JAVA_HOME}/bin/java \
+            ${BOOT_CLASSPATH} \
+            ${JVM_OPTS} \
+            -jar ${GREYS_ROOT}/greys.jar -pid ${TARGET_PID} -target ${TARGET_IP}":"${TARGET_PORT}
+    fi
 }
 
 # active console
