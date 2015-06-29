@@ -349,9 +349,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
     /**
      * 是否抽象属性
-     *
-     * @param access 属性值
-     * @return true : 抽象 / false : 非抽象
      */
     private boolean isAbstract(int access) {
         return (ACC_ABSTRACT & access) == ACC_ABSTRACT;
@@ -576,7 +573,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             public void visitMaxs(int maxStack, int maxLocals) {
 
                 mark(endLabel);
-                catchException(beginLabel, endLabel, Type.getType(Throwable.class));
+                catchException(beginLabel, endLabel, ASM_TYPE_THROWABLE);
 
                 codeLockForTracing.lock(new Block() {
                     @Override
