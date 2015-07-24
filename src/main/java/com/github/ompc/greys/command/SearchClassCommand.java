@@ -39,6 +39,9 @@ public class SearchClassCommand implements Command {
     @NamedArg(name = "d", summary = "show the detail of class")
     private boolean isDetail = false;
 
+    @NamedArg(name = "f", summary = "show the declared fields of class")
+    private boolean isField = false;
+
     @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
@@ -57,12 +60,11 @@ public class SearchClassCommand implements Command {
                         ? searchSubClass(inst, searchClass(inst, classNameMatcher))
                         : searchClass(inst, classNameMatcher);
 
-
                 // 展示类详情
                 if (isDetail) {
 
                     for (Class<?> clazz : matchedClassSet) {
-                        sender.send(false, new ClassInfoView(clazz).draw() + "\n");
+                        sender.send(false, new ClassInfoView(clazz, isField).draw() + "\n");
                     }
 
                 }

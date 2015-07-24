@@ -19,9 +19,11 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 public class ClassInfoView implements View {
 
     private final Class<?> clazz;
+    private final boolean isPrintField;
 
-    public ClassInfoView(Class<?> clazz) {
+    public ClassInfoView(Class<?> clazz, boolean isPrintField) {
         this.clazz = clazz;
+        this.isPrintField = isPrintField;
     }
 
     @Override
@@ -32,7 +34,7 @@ public class ClassInfoView implements View {
     private String drawClassInfo() {
         final CodeSource cs = clazz.getProtectionDomain().getCodeSource();
 
-        return new TableView(new ColumnDefine[]{
+        final TableView view = new TableView(new ColumnDefine[]{
                 new ColumnDefine(RIGHT),
                 new ColumnDefine(LEFT)
         })
@@ -53,11 +55,13 @@ public class ClassInfoView implements View {
                 .addRow("annotation", drawAnnotation())
                 .addRow("interfaces", drawInterface())
                 .addRow("super-class", drawSuperClass())
-                .addRow("class-loader", drawClassLoader())
-                .addRow("fields", drawField())
-                .hasBorder(true)
-                .padding(1)
-                .draw();
+                .addRow("class-loader", drawClassLoader());
+
+        if( isPrintField ) {
+            view.addRow("fields", drawField());
+        }
+
+        return view.hasBorder(true).padding(1).draw();
     }
 
 
