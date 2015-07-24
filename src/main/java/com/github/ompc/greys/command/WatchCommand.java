@@ -20,6 +20,7 @@ import java.lang.instrument.Instrumentation;
 import static com.github.ompc.greys.util.Advice.*;
 import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Cmd(name = "watch", sort = 4, summary = "The call context information buried point observation methods.",
         eg = {
@@ -42,7 +43,6 @@ public class WatchCommand implements Command {
     @IndexArg(index = 2, name = "express",
             summary = "express, write by groovy.",
             description = ""
-                    + " \n"
                     + "For example\n"
                     + "    : params[0]\n"
                     + "    : params[0]+params[1]\n"
@@ -51,7 +51,6 @@ public class WatchCommand implements Command {
                     + "    : target\n"
                     + "    : clazz\n"
                     + "    : method\n"
-                    + " \n"
                     + "The structure of 'advice'\n"
                     + "          target : the object entity\n"
                     + "           clazz : the object's class\n"
@@ -61,6 +60,18 @@ public class WatchCommand implements Command {
                     + "        throwExp : the throw exception of methods\n"
     )
     private String express;
+
+    @IndexArg(index = 3, name = "condition-express", isRequired = false,
+            summary = "condition express, write by groovy",
+            description = ""
+                    + "For example\n"
+                    + "TRUE  : true\n"
+                    + "FALSE : false\n"
+                    + "TRUE  : params.length>=0"
+                    + "\n"
+                    + "The structure of 'advice' was just like express.\n"
+    )
+    private String conditionExpress;
 
     @NamedArg(name = "b", summary = "is watch on before")
     private boolean isBefore = true;
@@ -174,6 +185,12 @@ public class WatchCommand implements Command {
 
                             private void watching(Advice advice) {
                                 try {
+
+                                    if (isNotBlank(conditionExpress)
+                                            && !newExpress(advice).is(conditionExpress)) {
+                                        return;
+                                    }
+
                                     final Object value = newExpress(advice).get(express);
                                     if (null != expend
                                             && expend >= 0) {
@@ -181,6 +198,7 @@ public class WatchCommand implements Command {
                                     } else {
                                         sender.send(false, value + "\n");
                                     }
+
                                 } catch (Exception e) {
                                     logger.warn("watch failed.", e);
                                     sender.send(false, getCauseMessage(e) + "\n");

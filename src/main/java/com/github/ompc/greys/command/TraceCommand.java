@@ -1,17 +1,24 @@
 package com.github.ompc.greys.command;
 
 import com.github.ompc.greys.advisor.AdviceListener;
-import com.github.ompc.greys.advisor.AdviceTracingListener;
+import com.github.ompc.greys.advisor.ReflectAdviceTracingListenerAdapter;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.command.view.TreeView;
+import com.github.ompc.greys.exception.ExpressException;
 import com.github.ompc.greys.server.Session;
+import com.github.ompc.greys.util.Advice;
+import com.github.ompc.greys.util.GaMethod;
 import com.github.ompc.greys.util.Matcher;
 
 import java.lang.instrument.Instrumentation;
 
+import static com.github.ompc.greys.util.Advice.newForAfterRetuning;
+import static com.github.ompc.greys.util.Advice.newForAfterThrowing;
+import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.util.GaStringUtils.tranClassName;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * 调用跟踪命令<br/>
@@ -31,6 +38,18 @@ public class TraceCommand implements Command {
 
     @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
     private String methodPattern;
+
+    @IndexArg(index = 2, name = "condition-express", isRequired = false,
+            summary = "condition express, write by groovy",
+            description = ""
+                    + "For example\n"
+                    + "TRUE  : true\n"
+                    + "FALSE : false\n"
+                    + "TRUE  : params.length>=0"
+                    + "\n"
+                    + "The structure of 'advice' was just like express.\n"
+    )
+    private String conditionExpress;
 
     @NamedArg(name = "S", summary = "including sub class")
     private boolean isIncludeSub = false;
@@ -72,7 +91,7 @@ public class TraceCommand implements Command {
 
                     @Override
                     public AdviceListener getAdviceListener() {
-                        return new AdviceTracingListener() {
+                        return new ReflectAdviceTracingListenerAdapter() {
 
                             private final ThreadLocal<Entity> threadBoundEntity = new ThreadLocal<Entity>() {
 
@@ -113,35 +132,39 @@ public class TraceCommand implements Command {
                             }
 
                             @Override
-                            public void before(
-                                    ClassLoader loader,
-                                    String className, String methodName, String methodDesc,
-                                    Object target, Object[] args) throws Throwable {
-                                threadBoundEntity.get().view.begin(tranClassName(className) + ":" + methodName + "()");
+                            public void before(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args) throws Throwable {
+                                threadBoundEntity.get().view.begin(clazz.getName() + ":" + method.getName() + "()");
                                 threadBoundEntity.get().deep++;
                             }
 
                             @Override
-                            public void afterReturning(
-                                    ClassLoader loader,
-                                    String className, String methodName, String methodDesc,
-                                    Object target, Object[] args, Object returnObject) throws Throwable {
+                            public void afterReturning(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args, Object returnObject) throws Throwable {
                                 threadBoundEntity.get().view.end();
-                                finishing();
+                                final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
+                                finishing(advice);
                             }
 
                             @Override
-                            public void afterThrowing(
-                                    ClassLoader loader,
-                                    String className, String methodName, String methodDesc,
-                                    Object target, Object[] args, Throwable throwable) throws Throwable {
+                            public void afterThrowing(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args, Throwable throwable) throws Throwable {
                                 threadBoundEntity.get().view.begin("throw:" + throwable.getClass().getName() + "()").end().end();
-                                finishing();
+                                final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
+                                finishing(advice);
                             }
 
-                            private void finishing() {
+                            private boolean isPrintIfNecessary(Advice advice) {
+                                try {
+                                    return isBlank(conditionExpress)
+                                            || newExpress(advice).is(conditionExpress);
+                                } catch (ExpressException e) {
+                                    return false;
+                                }
+                            }
+
+                            private void finishing(Advice advice) {
                                 if (--threadBoundEntity.get().deep == 0) {
-                                    sender.send(false, threadBoundEntity.get().view.draw() + "\n");
+                                    if (isPrintIfNecessary(advice)) {
+                                        sender.send(false, threadBoundEntity.get().view.draw() + "\n");
+                                    }
                                     threadBoundEntity.remove();
                                 }
                             }

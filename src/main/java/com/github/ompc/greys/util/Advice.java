@@ -14,12 +14,14 @@ public class Advice {
     private final Object returnObj;
     private final Throwable throwExp;
 
-
     private final static int ACCESS_BEFORE = 1 << 0;
     private final static int ACCESS_AFTER_RETUNING = 1 << 1;
     private final static int ACCESS_AFTER_THROWING = 1 << 2;
 
     private final int access;
+    private final boolean isThrow;
+    private final boolean isReturn;
+
 
     public boolean isBefore() {
         return (access & ACCESS_BEFORE) == ACCESS_BEFORE;
@@ -90,6 +92,8 @@ public class Advice {
         this.returnObj = returnObj;
         this.throwExp = throwExp;
         this.access = access;
+        isThrow = isAfterThrowing();
+        isReturn = isAfterReturning();
     }
 
 

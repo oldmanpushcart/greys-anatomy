@@ -8,6 +8,7 @@ import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.command.view.ObjectView;
 import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.command.view.TableView.ColumnDefine;
+import com.github.ompc.greys.exception.ExpressException;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Advice;
 import com.github.ompc.greys.util.GaMethod;
@@ -100,6 +101,16 @@ public class TimeTunnelCommand implements Command {
     @IndexArg(index = 1, isRequired = false, name = "method-pattern", summary = "pattern matching of method name")
     private String methodPattern;
 
+    @IndexArg(index = 2, name = "condition-express", isRequired = false,
+            summary = "condition express, write by groovy",
+            description = ""
+                    + "For example\n"
+                    + "TRUE  : true\n"
+                    + "FALSE : false\n"
+                    + "TRUE  : params.length>=0\n"
+    )
+    private String conditionExpress;
+
     // list the TimeTunnel
     @NamedArg(name = "l", summary = "list all the time fragments.")
     private boolean isList = false;
@@ -120,7 +131,6 @@ public class TimeTunnelCommand implements Command {
             hasValue = true,
             summary = "watch-express, watch the time fragment by groovy express, like params[0], returnObj, throwExp and so on.",
             description = ""
-                    + " \n"
                     + "For example\n"
                     + "    : params[0]\n"
                     + "    : params[0]+params[1]\n"
@@ -129,7 +139,6 @@ public class TimeTunnelCommand implements Command {
                     + "    : target\n"
                     + "    : clazz\n"
                     + "    : method\n"
-                    + " \n"
                     + "The structure of 'advice'\n"
                     + "          target : the object entity\n"
                     + "           clazz : the object's class\n"
@@ -137,7 +146,6 @@ public class TimeTunnelCommand implements Command {
                     + "    params[0..n] : the parameters of methods\n"
                     + "       returnObj : the return object of methods\n"
                     + "        throwExp : the throw exception of methods\n"
-                    + " \n"
     )
     private String watchExpress = EMPTY;
 
@@ -147,7 +155,6 @@ public class TimeTunnelCommand implements Command {
             summary = "search-express, searching the time fragments by groovy express"
     )
     private String searchExpress = EMPTY;
-
 
     // play the index TimeTunnel
     @NamedArg(name = "p", summary = "rePlay the time fragment of method called.")
@@ -346,6 +353,16 @@ public class TimeTunnelCommand implements Command {
 
                                 // reset the timestamp
                                 timestampThreadLocal.remove();
+
+
+                                try {
+                                    if (isNotBlank(conditionExpress)
+                                            && !newExpress(advice).is(conditionExpress)) {
+                                        return;
+                                    }
+                                } catch (ExpressException e) {
+                                    // ignore...
+                                }
 
                                 final int index = putTimeTunnel(timeTunnel);
                                 final TableView view = createTableView();
