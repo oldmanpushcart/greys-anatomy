@@ -54,6 +54,8 @@ public class StackCommand implements Command {
             + "    params[0..n] : the parameters of methods\n"
             + "       returnObj : the return object of methods\n"
             + "        throwExp : the throw exception of methods\n"
+            + "        isReturn : the method finish by return\n"
+            + "         isThrow : the method finish by throw an exception\n"
     )
     private String conditionExpress;
 
