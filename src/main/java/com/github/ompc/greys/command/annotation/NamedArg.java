@@ -13,9 +13,9 @@ import java.lang.annotation.Target;
 public @interface NamedArg {
 
     /**
-     * 参数在命令中的位置
+     * 参数在命令中的命名
      *
-     * @return 参数在命令中的位置
+     * @return 参数在命令中的命名
      */
     String name();
 
