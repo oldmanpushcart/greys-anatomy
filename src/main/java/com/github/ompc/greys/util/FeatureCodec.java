@@ -64,7 +64,7 @@ public class FeatureCodec {
         final StringBuilder featureSB = new StringBuilder().append(kvSegmentSeparator);
 
         if (null == map
-                || map.size() == 0) {
+                || map.isEmpty()) {
             return featureSB.toString();
         }
 
