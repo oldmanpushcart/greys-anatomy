@@ -6,6 +6,7 @@ import java.util.NoSuchElementException;
  * 线程不安全固定栈深的堆栈实现<br/>
  * 固定堆栈深度的实现能比JDK自带的堆栈实现提高10倍的性能.
  * Created by vlinux on 15/6/21.
+ * @param <E>
  */
 public class ThreadUnsafeFixGaStack<E> implements GaStack<E> {
 
