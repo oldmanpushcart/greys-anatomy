@@ -180,7 +180,6 @@ public class Enhancer implements ClassFileTransformer {
             affect.getClassDumpFiles().add(dumpClassFile);
         } catch (IOException e) {
             logger.warn("dump class:{} to file {} failed.", className, dumpClassFile, e);
-            return;
         }
 
     }
