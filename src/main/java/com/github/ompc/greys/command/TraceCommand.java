@@ -18,6 +18,7 @@ import static com.github.ompc.greys.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.util.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.util.GaStringUtils.tranClassName;
+import java.util.concurrent.atomic.AtomicInteger;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -64,6 +65,9 @@ public class TraceCommand implements Command {
     @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
+    @NamedArg(name = "n", hasValue = true, summary = "number of limit")
+    private Integer numberOfLimit;
+    
     @Override
     public Action getAction() {
 
@@ -81,6 +85,8 @@ public class TraceCommand implements Command {
             public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
                 return new GetEnhancer() {
 
+                    private final AtomicInteger times = new AtomicInteger();
+                    
                     @Override
                     public Matcher getClassNameMatcher() {
                         return classNameMatcher;
@@ -139,20 +145,37 @@ public class TraceCommand implements Command {
                             }
 
                             @Override
-                            public void before(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args) throws Throwable {
+                            public void before(
+                                    ClassLoader loader, 
+                                    Class<?> clazz, 
+                                    GaMethod method, 
+                                    Object target, 
+                                    Object[] args) throws Throwable {
                                 threadBoundEntity.get().view.begin(clazz.getName() + ":" + method.getName() + "()");
                                 threadBoundEntity.get().deep++;
                             }
 
                             @Override
-                            public void afterReturning(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args, Object returnObject) throws Throwable {
+                            public void afterReturning(
+                                    ClassLoader loader, 
+                                    Class<?> clazz, 
+                                    GaMethod method, 
+                                    Object target, 
+                                    Object[] args, 
+                                    Object returnObject) throws Throwable {
                                 threadBoundEntity.get().view.end();
                                 final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
                                 finishing(advice);
                             }
 
                             @Override
-                            public void afterThrowing(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args, Throwable throwable) throws Throwable {
+                            public void afterThrowing(
+                                    ClassLoader loader, 
+                                    Class<?> clazz, 
+                                    GaMethod method, 
+                                    Object target, 
+                                    Object[] args, 
+                                    Throwable throwable) throws Throwable {
                                 threadBoundEntity.get().view.begin("throw:" + throwable.getClass().getName() + "()").end().end();
                                 final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
                                 finishing(advice);
@@ -166,11 +189,18 @@ public class TraceCommand implements Command {
                                     return false;
                                 }
                             }
+                            
+                            private boolean isLimited(int currentTimes) {
+                                return null != numberOfLimit
+                                        && currentTimes >= numberOfLimit;
+                            }
 
                             private void finishing(Advice advice) {
                                 if (--threadBoundEntity.get().deep == 0) {
+                                    
                                     if (isPrintIfNecessary(advice)) {
-                                        sender.send(false, threadBoundEntity.get().view.draw() + "\n");
+                                        final boolean isF = isLimited(times.incrementAndGet());
+                                        sender.send(isF, threadBoundEntity.get().view.draw() + "\n");
                                     }
                                     threadBoundEntity.remove();
                                 }

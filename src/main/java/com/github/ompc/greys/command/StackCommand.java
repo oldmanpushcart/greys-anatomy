@@ -17,6 +17,7 @@ import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
 import java.lang.instrument.Instrumentation;
+import java.util.concurrent.atomic.AtomicInteger;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -65,6 +66,9 @@ public class StackCommand implements Command {
     @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
+    @NamedArg(name = "n", hasValue = true, summary = "number of limit")
+    private Integer numberOfLimit;
+
     @Override
     public Action getAction() {
 
@@ -81,6 +85,8 @@ public class StackCommand implements Command {
             @Override
             public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
                 return new GetEnhancer() {
+
+                    private final AtomicInteger times = new AtomicInteger();
 
                     @Override
                     public Matcher getClassNameMatcher() {
@@ -104,18 +110,35 @@ public class StackCommand implements Command {
                             private final ThreadLocal<String> stackThreadLocal = new ThreadLocal<String>();
 
                             @Override
-                            public void before(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args) throws Throwable {
+                            public void before(
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    GaMethod method,
+                                    Object target,
+                                    Object[] args) throws Throwable {
                                 stackThreadLocal.set(getStack());
                             }
 
                             @Override
-                            public void afterThrowing(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args, Throwable throwable) throws Throwable {
+                            public void afterThrowing(
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    GaMethod method,
+                                    Object target,
+                                    Object[] args,
+                                    Throwable throwable) throws Throwable {
                                 final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
                                 finishing(advice);
                             }
 
                             @Override
-                            public void afterReturning(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args, Object returnObject) throws Throwable {
+                            public void afterReturning(
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    GaMethod method,
+                                    Object target,
+                                    Object[] args,
+                                    Object returnObject) throws Throwable {
                                 final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
                                 finishing(advice);
                             }
@@ -129,9 +152,15 @@ public class StackCommand implements Command {
                                 }
                             }
 
+                            private boolean isLimited(int currentTimes) {
+                                return null != numberOfLimit
+                                        && currentTimes >= numberOfLimit;
+                            }
+
                             private void finishing(final Advice advice) {
                                 if (isPrintIfNecessary(advice)) {
-                                    sender.send(false, stackThreadLocal.get() + "\n");
+                                    final boolean isF = isLimited(times.incrementAndGet());
+                                    sender.send(isF, stackThreadLocal.get() + "\n");
                                 }
                             }
 

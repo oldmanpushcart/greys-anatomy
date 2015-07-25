@@ -170,6 +170,9 @@ public class TimeTunnelCommand implements Command {
 
     @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
+    
+    @NamedArg(name = "n", hasValue = true, summary = "number of limit")
+    private Integer numberOfLimit;
 
     /**
      * 检查参数是否合法
@@ -211,9 +214,9 @@ public class TimeTunnelCommand implements Command {
      * 记录时间片段
      */
     private int putTimeTunnel(TimeFragment tt) {
-        final int index = sequence.getAndIncrement();
-        timeFragmentMap.put(index, tt);
-        return index;
+        final int indexOfSeq = sequence.getAndIncrement();
+        timeFragmentMap.put(indexOfSeq, tt);
+        return indexOfSeq;
     }
 
 
@@ -264,6 +267,9 @@ public class TimeTunnelCommand implements Command {
             @Override
             public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
                 return new GetEnhancer() {
+                    
+                    private final AtomicInteger times = new AtomicInteger();
+                    
                     @Override
                     public Matcher getClassNameMatcher() {
                         return classNameMatcher;
@@ -340,6 +346,11 @@ public class TimeTunnelCommand implements Command {
                                 ));
                             }
 
+                            private boolean isLimited(int currentTimes) {
+                                return null != numberOfLimit
+                                        && currentTimes >= numberOfLimit;
+                            }
+                            
                             private void afterFinishing(Advice advice) {
 
                                 final TimeFragment timeTunnel = new TimeFragment(
@@ -376,7 +387,11 @@ public class TimeTunnelCommand implements Command {
                                 // 填充表格内容
                                 fillTableRow(view, index, timeTunnel);
 
-                                sender.send(false, view.draw());
+                                final boolean isF = isLimited(times.incrementAndGet());
+                                if( isF ) {
+                                    view.borders(view.borders() | BORDER_BOTTOM);
+                                }
+                                sender.send(isF, view.draw());
                             }
 
                         };
