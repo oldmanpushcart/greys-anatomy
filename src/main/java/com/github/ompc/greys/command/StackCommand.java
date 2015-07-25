@@ -1,7 +1,6 @@
 package com.github.ompc.greys.command;
 
 import com.github.ompc.greys.advisor.AdviceListener;
-import com.github.ompc.greys.advisor.AdviceListenerAdapter;
 import com.github.ompc.greys.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
@@ -13,13 +12,11 @@ import static com.github.ompc.greys.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.util.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import com.github.ompc.greys.util.GaMethod;
+import static com.github.ompc.greys.util.GaStringUtils.getStack;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
-
 import java.lang.instrument.Instrumentation;
-
-import static com.github.ompc.greys.util.GaStringUtils.getStack;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -32,7 +29,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
         eg = {
             "stack -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
             "stack org.apache.commons.lang.StringUtils isBlank",
-            "stack *StringUtils isBlank"
+            "stack *StringUtils isBlank",
+            "stack *StringUtils isBlank params[0].length==1"
         })
 public class StackCommand implements Command {
 
@@ -46,11 +44,16 @@ public class StackCommand implements Command {
             summary = "condition express, write by groovy",
             description = ""
             + "For example\n"
-            + "TRUE  : true\n"
-            + "FALSE : false\n"
-            + "TRUE  : params.length>=0"
-            + "\n"
-            + "The structure of 'advice' was just like express.\n"
+            + "    TRUE  : true\n"
+            + "    FALSE : false\n"
+            + "    TRUE  : params.length>=0"
+            + "The structure of 'advice'\n"
+            + "          target : the object entity\n"
+            + "           clazz : the object's class\n"
+            + "          method : the constructor or method\n"
+            + "    params[0..n] : the parameters of methods\n"
+            + "       returnObj : the return object of methods\n"
+            + "        throwExp : the throw exception of methods\n"
     )
     private String conditionExpress;
 

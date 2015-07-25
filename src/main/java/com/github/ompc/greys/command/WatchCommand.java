@@ -24,11 +24,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Cmd(name = "watch", sort = 4, summary = "The call context information buried point observation methods.",
         eg = {
-                "watch -Eb org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
-                "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
-                "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
-                "watch -bf *StringUtils isBlank params[0]",
-                "watch *StringUtils isBlank params[0]"
+            "watch -Eb org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
+            "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
+            "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
+            "watch -bf *StringUtils isBlank params[0]",
+            "watch *StringUtils isBlank params[0]",
+            "watch *StringUtils isBlank params[0] params[0].length==1"
         })
 public class WatchCommand implements Command {
 
@@ -43,34 +44,35 @@ public class WatchCommand implements Command {
     @IndexArg(index = 2, name = "express",
             summary = "express, write by groovy.",
             description = ""
-                    + "For example\n"
-                    + "    : params[0]\n"
-                    + "    : params[0]+params[1]\n"
-                    + "    : returnObj\n"
-                    + "    : throwExp\n"
-                    + "    : target\n"
-                    + "    : clazz\n"
-                    + "    : method\n"
-                    + "The structure of 'advice'\n"
-                    + "          target : the object entity\n"
-                    + "           clazz : the object's class\n"
-                    + "          method : the constructor or method\n"
-                    + "    params[0..n] : the parameters of methods\n"
-                    + "       returnObj : the return object of methods\n"
-                    + "        throwExp : the throw exception of methods\n"
+            + "For example\n"
+            + "    : params[0]\n"
+            + "    : params[0]+params[1]\n"
+            + "    : returnObj\n"
+            + "    : throwExp\n"
+            + "    : target\n"
+            + "    : clazz\n"
+            + "    : method\n"
+            + "The structure of 'advice'\n"
+            + "          target : the object entity\n"
+            + "           clazz : the object's class\n"
+            + "          method : the constructor or method\n"
+            + "    params[0..n] : the parameters of methods\n"
+            + "       returnObj : the return object of methods\n"
+            + "        throwExp : the throw exception of methods\n"
+            + "        isReturn : the method finish by return\n"
+            + "         isThrow : the method finish by throw an exception\n"
     )
     private String express;
 
     @IndexArg(index = 3, name = "condition-express", isRequired = false,
             summary = "condition express, write by groovy",
             description = ""
-                    + "For example\n"
-                    + "TRUE  : true\n"
-                    + "FALSE : false\n"
-                    + "TRUE  : params.length>=0"
-                    + "\n"
-                    + "The structure of 'advice' was just like express.\n"
-    )
+            + "For example\n"
+            + "    TRUE  : true\n"
+            + "    FALSE : false\n"
+            + "    TRUE  : params.length>=0"
+            + "The structure of 'advice' just like express\n"
+                )
     private String conditionExpress;
 
     @NamedArg(name = "b", summary = "is watch on before")
@@ -104,7 +106,6 @@ public class WatchCommand implements Command {
         final Matcher methodNameMatcher = isRegEx
                 ? new RegexMatcher(methodPattern)
                 : new WildcardMatcher(methodPattern);
-
 
         return new GetEnhancerAction() {
 

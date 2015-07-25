@@ -22,14 +22,14 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * 调用跟踪命令<br/>
- * 负责输出一个类中的所有方法调用路径
- * Created by vlinux on 15/5/27.
+ * 负责输出一个类中的所有方法调用路径 Created by vlinux on 15/5/27.
  */
 @Cmd(name = "trace", sort = 6, summary = "The call stack output buried point method callback each thread.",
         eg = {
-                "trace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
-                "trace org.apache.commons.lang.StringUtils isBlank",
-                "trace *StringUtils isBlank"
+            "trace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
+            "trace org.apache.commons.lang.StringUtils isBlank",
+            "trace *StringUtils isBlank",
+            "trace *StringUtils isBlank params[0].length==1"
         })
 public class TraceCommand implements Command {
 
@@ -42,12 +42,19 @@ public class TraceCommand implements Command {
     @IndexArg(index = 2, name = "condition-express", isRequired = false,
             summary = "condition express, write by groovy",
             description = ""
-                    + "For example\n"
-                    + "TRUE  : true\n"
-                    + "FALSE : false\n"
-                    + "TRUE  : params.length>=0"
-                    + "\n"
-                    + "The structure of 'advice' was just like express.\n"
+            + "For example\n"
+            + "    TRUE  : true\n"
+            + "    FALSE : false\n"
+            + "    TRUE  : params.length>=0"
+            + "The structure of 'advice'\n"
+            + "          target : the object entity\n"
+            + "           clazz : the object's class\n"
+            + "          method : the constructor or method\n"
+            + "    params[0..n] : the parameters of methods\n"
+            + "       returnObj : the return object of methods\n"
+            + "        throwExp : the throw exception of methods\n"
+            + "        isReturn : the method finish by return\n"
+            + "         isThrow : the method finish by throw an exception\n"
     )
     private String conditionExpress;
 
@@ -181,7 +188,6 @@ public class TraceCommand implements Command {
         };
 
     }
-
 
     /**
      * 用于在ThreadLocal中传递的实体
