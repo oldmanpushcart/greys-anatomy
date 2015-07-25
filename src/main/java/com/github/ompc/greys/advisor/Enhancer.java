@@ -64,6 +64,7 @@ public class Enhancer implements ClassFileTransformer {
         this.affect = affect;
     }
 
+    @Override
     public byte[] transform(
             final ClassLoader loader,
             String className,

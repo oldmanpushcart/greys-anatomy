@@ -20,7 +20,7 @@ public class TableView implements View {
     /**
      * 上边框
      */
-    public static final int BORDER_TOP = 1 << 0;
+    public static final int BORDER_TOP = 1;
 
     /**
      * 下边框

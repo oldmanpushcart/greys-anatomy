@@ -18,8 +18,7 @@ import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
 import static com.github.ompc.greys.util.GaCheckUtils.isIn;
 
 /**
- * 反射工具类
- * Created by vlinux on 15/5/18.
+ * 反射工具类 Created by vlinux on 15/5/18.
  */
 public class GaReflectUtils {
 
@@ -28,7 +27,8 @@ public class GaReflectUtils {
      *
      * @param packname 包名称
      * @return 包路径下所有类集合
-     * <p>代码摘抄自 http://www.oschina.net/code/snippet_129830_8767</p>
+     * <p>
+     * 代码摘抄自 http://www.oschina.net/code/snippet_129830_8767</p>
      */
     public static Set<Class<?>> getClasses(String packname) {
 
@@ -119,14 +119,14 @@ public class GaReflectUtils {
         return classes;
     }
 
-
     /**
      * 以文件的形式来获取包下的所有Class
      * <p/>
-     * <p>代码摘抄自 http://www.oschina.net/code/snippet_129830_8767</p>
+     * <p>
+     * 代码摘抄自 http://www.oschina.net/code/snippet_129830_8767</p>
      */
     private static void findAndAddClassesInPackageByFile(String packageName,
-                                                         String packagePath, final boolean recursive, Set<Class<?>> classes) {
+            String packagePath, final boolean recursive, Set<Class<?>> classes) {
         // 获取此包的目录 建立一个File
         File dir = new File(packagePath);
         // 如果不存在或者 也不是目录就直接返回
@@ -137,6 +137,7 @@ public class GaReflectUtils {
         // 如果存在 就获取包下的所有文件 包括目录
         File[] dirfiles = dir.listFiles(new FileFilter() {
             // 自定义过滤规则 如果可以循环(包含子目录) 或则是以.class结尾的文件(编译好的java类文件)
+            @Override
             public boolean accept(File file) {
                 return (recursive && file.isDirectory())
                         || (file.getName().endsWith(".class"));
@@ -162,7 +163,7 @@ public class GaReflectUtils {
                             .loadClass(packageName + '.' + className));
                 } catch (ClassNotFoundException e) {
                     // log.error("添加用户自定义视图类错误 找不到此类的.class文件");
-                    e.printStackTrace();
+//                    e.printStackTrace();
                 }
             }
         }
@@ -171,11 +172,11 @@ public class GaReflectUtils {
     /**
      * 设置对象某个成员的值
      *
-     * @param field  属性对象
-     * @param value  属性值
+     * @param field 属性对象
+     * @param value 属性值
      * @param target 目标对象
      * @throws IllegalArgumentException 非法参数
-     * @throws IllegalAccessException   非法进入
+     * @throws IllegalAccessException 非法进入
      */
     public static void set(Field field, Object value, Object target) throws IllegalArgumentException, IllegalAccessException {
         final boolean isAccessible = field.isAccessible();
@@ -186,7 +187,6 @@ public class GaReflectUtils {
             field.setAccessible(isAccessible);
         }
     }
-
 
     /**
      * 获取一个类下的所有成员(包括父类、私有成员)
@@ -208,7 +208,7 @@ public class GaReflectUtils {
      * 获取一个类下的指定成员
      *
      * @param clazz 目标类
-     * @param name  属性名
+     * @param name 属性名
      * @return 属性
      */
     public static Field getField(Class<?> clazz, String name) {
@@ -220,15 +220,15 @@ public class GaReflectUtils {
         return null;
     }
 
-
     /**
      * 获取对象某个成员的值
      *
+     * @param <T>
      * @param target 目标对象
-     * @param field  目标属性
+     * @param field 目标属性
      * @return 目标属性值
      * @throws IllegalArgumentException 非法参数
-     * @throws IllegalAccessException   非法进入
+     * @throws IllegalAccessException 非法进入
      */
     public static <T> T getFieldValueByField(Object target, Field field) throws IllegalArgumentException, IllegalAccessException {
         final boolean isAccessible = field.isAccessible();
@@ -244,7 +244,7 @@ public class GaReflectUtils {
     /**
      * 将字符串转换为指定类型，目前只支持9种类型：8种基本类型（包括其包装类）以及字符串
      *
-     * @param t     目标对象类型
+     * @param t 目标对象类型
      * @param value 目标值
      * @return 类型转换后的值
      */
@@ -272,6 +272,5 @@ public class GaReflectUtils {
             return null;
         }
     }
-
 
 }
