@@ -517,7 +517,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("time fragment[%d] was not existed.\n", index));
+                    sender.send(true, format("time fragment[%d] was not existed.%n", index));
                     return new RowAffect();
                 }
 
@@ -545,7 +545,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("time fragment[%d] was not existed.\n", index));
+                    sender.send(true, format("time fragment[%d] was not existed.%n", index));
                     return new RowAffect();
                 }
 
@@ -634,7 +634,7 @@ public class TimeTunnelCommand implements Command {
                 }
 
                 sender.send(false, view.hasBorder(true).padding(1).draw());
-                sender.send(true, format("replay time fragment[%d] success.\n", index));
+                sender.send(true, format("replay time fragment[%d] success.%n", index));
                 return new RowAffect(1);
             }
         };
@@ -652,7 +652,7 @@ public class TimeTunnelCommand implements Command {
                 if (timeFragmentMap.remove(index) != null) {
                     affect.rCnt(1);
                 }
-                sender.send(true, format("delete time fragment[%d] success.\n", index));
+                sender.send(true, format("delete time fragment[%d] success.%n", index));
                 return affect;
             }
         };
@@ -732,7 +732,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("time fragment[%d] was not existed.\n", index));
+                    sender.send(true, format("time fragment[%d] was not existed.%n", index));
                     return new RowAffect();
                 }
 

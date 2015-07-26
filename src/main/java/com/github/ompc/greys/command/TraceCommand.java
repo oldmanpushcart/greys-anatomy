@@ -222,7 +222,7 @@ public class TraceCommand implements Command {
     /**
      * 用于在ThreadLocal中传递的实体
      */
-    private class Entity {
+    private static class Entity {
 
         TreeView view;
         int deep;

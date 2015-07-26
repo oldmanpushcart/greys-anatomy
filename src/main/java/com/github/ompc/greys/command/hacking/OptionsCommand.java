@@ -163,7 +163,7 @@ public class OptionsCommand implements Command {
 
                 // name not exists
                 if (fields.isEmpty()) {
-                    sender.send(true, format("options[%s] not found.\n", optionName));
+                    sender.send(true, format("options[%s] not found.%n", optionName));
                     return affect;
                 }
 
@@ -190,13 +190,13 @@ public class OptionsCommand implements Command {
                     } else if (isIn(type, short.class, Short.class)) {
                         writeStaticField(field, afterValue = Short.valueOf(optionValue));
                     } else {
-                        sender.send(true, format("options[%s]'s type[%s] was unsupported.\n", optionName, type.getSimpleName()));
+                        sender.send(true, format("options[%s]'s type[%s] was unsupported.%n", optionName, type.getSimpleName()));
                         return affect;
                     }
 
                     affect.rCnt(1);
                 } catch (Throwable t) {
-                    sender.send(true, format("option value[%s] can not cast to options type[%s].\n", optionValue, type.getSimpleName()));
+                    sender.send(true, format("option value[%s] can not cast to options type[%s].%n", optionValue, type.getSimpleName()));
                     return affect;
                 }
 

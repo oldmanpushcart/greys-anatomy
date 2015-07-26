@@ -91,7 +91,7 @@ public class AgentLauncher {
 
             // 传递的args参数分两个部分:agentJar路径和agentArgs
             // 分别是Agent的JAR包路径和期望传递到服务端的参数
-            final int index = args.indexOf(";");
+            final int index = args.indexOf(';');
             final String agentJar = args.substring(0, index);
             final String agentArgs = args.substring(index, args.length());
 
