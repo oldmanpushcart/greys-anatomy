@@ -105,7 +105,7 @@ public class TreeView implements View {
     /**
      * 树节点
      */
-    private class Node {
+    private static class Node {
 
         /**
          * 父节点

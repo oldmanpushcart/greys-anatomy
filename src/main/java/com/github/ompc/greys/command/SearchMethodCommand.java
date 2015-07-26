@@ -82,7 +82,7 @@ public class SearchMethodCommand implements Command {
                                 /*
                                  * 过滤重复行
 								 */
-                                final String line = format("%s->%s\n", clazz.getName(), method.getName());
+                                final String line = format("%s->%s%n", clazz.getName(), method.getName());
                                 if (uniqueLine.contains(line)) {
                                     continue;
                                 }
@@ -102,5 +102,5 @@ public class SearchMethodCommand implements Command {
 
         };
     }
-
+    
 }

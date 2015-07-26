@@ -145,7 +145,9 @@ public class DefaultCommandHandler implements CommandHandler {
 
                 final BlockingQueue<String> writeQueue = session.getWriteQueue();
                 if (null != message) {
-                    writeQueue.offer(message);
+                    if (!writeQueue.offer(message)) {
+                        logger.warn("offer message failed. write-queue.size() was {}", writeQueue.size());
+                    }
                 }
 
                 if (isF) {

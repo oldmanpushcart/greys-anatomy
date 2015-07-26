@@ -8,6 +8,7 @@ import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.command.view.ObjectView;
 import com.github.ompc.greys.command.view.TableView;
 import com.github.ompc.greys.command.view.TableView.ColumnDefine;
+import com.github.ompc.greys.exception.ExpressException;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Advice;
 import com.github.ompc.greys.util.GaMethod;
@@ -37,7 +38,6 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.*;
 
-
 /**
  * 时间碎片
  */
@@ -66,7 +66,6 @@ class TimeFragment {
     }
 }
 
-
 /**
  * 时光隧道命令<br/>
  * 参数w/d依赖于参数i所传递的记录编号<br/>
@@ -74,13 +73,13 @@ class TimeFragment {
  */
 @Cmd(name = "tt", sort = 5, summary = "TimeTunnel the method call.",
         eg = {
-                "tt -t *StringUtils isEmpty",
-                "tt -l",
-                "tt -D",
-                "tt -i 1000 -w params[0]",
-                "tt -i 1000 -d",
-                "tt -i 1000"
-//                "tt -i 1000 -p"
+            "tt -t *StringUtils isEmpty",
+            "tt -t *StringUtils isEmpty params[0].length==1",
+            "tt -l",
+            "tt -D",
+            "tt -i 1000 -w params[0]",
+            "tt -i 1000 -d",
+            "tt -i 1000"
         })
 public class TimeTunnelCommand implements Command {
 
@@ -99,6 +98,25 @@ public class TimeTunnelCommand implements Command {
 
     @IndexArg(index = 1, isRequired = false, name = "method-pattern", summary = "pattern matching of method name")
     private String methodPattern;
+
+    @IndexArg(index = 2, name = "condition-express", isRequired = false,
+            summary = "condition express, write by groovy",
+            description = ""
+            + "For example\n"
+            + "    TRUE  : true\n"
+            + "    FALSE : false\n"
+            + "    TRUE  : params.length>=0\n"
+            + "The structure of 'advice'\n"
+            + "          target : the object entity\n"
+            + "           clazz : the object's class\n"
+            + "          method : the constructor or method\n"
+            + "    params[0..n] : the parameters of methods\n"
+            + "       returnObj : the return object of methods\n"
+            + "        throwExp : the throw exception of methods\n"
+            + "        isReturn : the method finish by return\n"
+            + "         isThrow : the method finish by throw an exception\n"
+    )
+    private String conditionExpress;
 
     // list the TimeTunnel
     @NamedArg(name = "l", summary = "list all the time fragments.")
@@ -120,34 +138,24 @@ public class TimeTunnelCommand implements Command {
             hasValue = true,
             summary = "watch-express, watch the time fragment by groovy express, like params[0], returnObj, throwExp and so on.",
             description = ""
-                    + " \n"
-                    + "For example\n"
-                    + "    : params[0]\n"
-                    + "    : params[0]+params[1]\n"
-                    + "    : returnObj\n"
-                    + "    : throwExp\n"
-                    + "    : target\n"
-                    + "    : clazz\n"
-                    + "    : method\n"
-                    + " \n"
-                    + "The structure of 'advice'\n"
-                    + "          target : the object entity\n"
-                    + "           clazz : the object's class\n"
-                    + "          method : the constructor or method\n"
-                    + "    params[0..n] : the parameters of methods\n"
-                    + "       returnObj : the return object of methods\n"
-                    + "        throwExp : the throw exception of methods\n"
-                    + " \n"
+            + "For example\n"
+            + "    : params[0]\n"
+            + "    : params[0]+params[1]\n"
+            + "    : returnObj\n"
+            + "    : throwExp\n"
+            + "    : target\n"
+            + "    : clazz\n"
+            + "    : method\n"
+            + "The structure of 'advice' just like condition express\n"
     )
     private String watchExpress = EMPTY;
 
-
     @NamedArg(name = "s",
             hasValue = true,
-            summary = "search-express, searching the time fragments by groovy express"
+            summary = "search-express, searching the time fragments by groovy express",
+            description = "The structure of 'advice' just like condition express\n"
     )
     private String searchExpress = EMPTY;
-
 
     // play the index TimeTunnel
     @NamedArg(name = "p", summary = "rePlay the time fragment of method called.")
@@ -162,6 +170,9 @@ public class TimeTunnelCommand implements Command {
 
     @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
+    
+    @NamedArg(name = "n", hasValue = true, summary = "number of limit")
+    private Integer numberOfLimit;
 
     /**
      * 检查参数是否合法
@@ -203,9 +214,9 @@ public class TimeTunnelCommand implements Command {
      * 记录时间片段
      */
     private int putTimeTunnel(TimeFragment tt) {
-        final int index = sequence.getAndIncrement();
-        timeFragmentMap.put(index, tt);
-        return index;
+        final int indexOfSeq = sequence.getAndIncrement();
+        timeFragmentMap.put(indexOfSeq, tt);
+        return indexOfSeq;
     }
 
 
@@ -213,31 +224,28 @@ public class TimeTunnelCommand implements Command {
      * 各列宽度
      */
     private static final int[] TABLE_COL_WIDTH = new int[]{
-
-            8,  // index
-            20, // timestamp
-            10, // cost(ms)
-            8,  // isRet
-            8,  // isExp
-            15, // object address
-            30, // class
-            30, // method
-
+        8, // index
+        20, // timestamp
+        10, // cost(ms)
+        8, // isRet
+        8, // isExp
+        15, // object address
+        30, // class
+        30, // method
     };
 
     /*
      * 各列名称
      */
     private static final String[] TABLE_COL_TITLE = new String[]{
-
-            "INDEX",
-            "TIMESTAMP",
-            "COST(ms)",
-            "IS-RET",
-            "IS-EXP",
-            "OBJECT",
-            "CLASS",
-            "METHOD"
+        "INDEX",
+        "TIMESTAMP",
+        "COST(ms)",
+        "IS-RET",
+        "IS-EXP",
+        "OBJECT",
+        "CLASS",
+        "METHOD"
 
     };
 
@@ -255,11 +263,13 @@ public class TimeTunnelCommand implements Command {
                 ? new RegexMatcher(methodPattern)
                 : new WildcardMatcher(methodPattern);
 
-
         return new GetEnhancerAction() {
             @Override
             public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
                 return new GetEnhancer() {
+                    
+                    private final AtomicInteger times = new AtomicInteger();
+                    
                     @Override
                     public Matcher getClassNameMatcher() {
                         return classNameMatcher;
@@ -336,6 +346,11 @@ public class TimeTunnelCommand implements Command {
                                 ));
                             }
 
+                            private boolean isLimited(int currentTimes) {
+                                return null != numberOfLimit
+                                        && currentTimes >= numberOfLimit;
+                            }
+                            
                             private void afterFinishing(Advice advice) {
 
                                 final TimeFragment timeTunnel = new TimeFragment(
@@ -346,6 +361,15 @@ public class TimeTunnelCommand implements Command {
 
                                 // reset the timestamp
                                 timestampThreadLocal.remove();
+
+                                try {
+                                    if (isNotBlank(conditionExpress)
+                                            && !newExpress(advice).is(conditionExpress)) {
+                                        return;
+                                    }
+                                } catch (ExpressException e) {
+                                    // ignore...
+                                }
 
                                 final int index = putTimeTunnel(timeTunnel);
                                 final TableView view = createTableView();
@@ -363,7 +387,11 @@ public class TimeTunnelCommand implements Command {
                                 // 填充表格内容
                                 fillTableRow(view, index, timeTunnel);
 
-                                sender.send(false, view.draw());
+                                final boolean isF = isLimited(times.incrementAndGet());
+                                if( isF ) {
+                                    view.borders(view.borders() | BORDER_BOTTOM);
+                                }
+                                sender.send(isF, view.draw());
                             }
 
                         };
@@ -389,7 +417,6 @@ public class TimeTunnelCommand implements Command {
         };
 
     }
-
 
     private boolean hasWatchExpress() {
         return isNotBlank(watchExpress);
@@ -432,8 +459,8 @@ public class TimeTunnelCommand implements Command {
                 if (hasWatchExpress()) {
 
                     final TableView view = new TableView(new ColumnDefine[]{
-                            new ColumnDefine(RIGHT),
-                            new ColumnDefine(LEFT)
+                        new ColumnDefine(RIGHT),
+                        new ColumnDefine(LEFT)
                     })
                             .hasBorder(true)
                             .padding(1)
@@ -451,9 +478,7 @@ public class TimeTunnelCommand implements Command {
                     }
 
                     sender.send(true, view.draw());
-                }
-
-                // 单纯的列表格
+                } // 单纯的列表格
                 else {
                     sender.send(true, drawTimeTunnelTable(matchingTimeSegmentMap));
                 }
@@ -492,7 +517,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("time fragment[%d] was not existed.\n", index));
+                    sender.send(true, format("time fragment[%d] was not existed.%n", index));
                     return new RowAffect();
                 }
 
@@ -520,7 +545,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("time fragment[%d] was not existed.\n", index));
+                    sender.send(true, format("time fragment[%d] was not existed.%n", index));
                     return new RowAffect();
                 }
 
@@ -533,8 +558,8 @@ public class TimeTunnelCommand implements Command {
                 final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
                 final TableView view = new TableView(new ColumnDefine[]{
-                        new ColumnDefine(RIGHT),
-                        new ColumnDefine(50, true, LEFT)
+                    new ColumnDefine(RIGHT),
+                    new ColumnDefine(50, true, LEFT)
                 })
                         .hasBorder(true)
                         .padding(1)
@@ -559,7 +584,6 @@ public class TimeTunnelCommand implements Command {
                     }
 
                 }
-
 
                 final GaMethod method = advice.getMethod();
                 final boolean accessible = advice.getMethod().isAccessible();
@@ -610,7 +634,7 @@ public class TimeTunnelCommand implements Command {
                 }
 
                 sender.send(false, view.hasBorder(true).padding(1).draw());
-                sender.send(true, format("replay time fragment[%d] success.\n", index));
+                sender.send(true, format("replay time fragment[%d] success.%n", index));
                 return new RowAffect(1);
             }
         };
@@ -628,28 +652,25 @@ public class TimeTunnelCommand implements Command {
                 if (timeFragmentMap.remove(index) != null) {
                     affect.rCnt(1);
                 }
-                sender.send(true, format("delete time fragment[%d] success.\n", index));
+                sender.send(true, format("delete time fragment[%d] success.%n", index));
                 return affect;
             }
         };
 
     }
 
-
     private TableView createTableView() {
         return new TableView(new ColumnDefine[]{
-                new ColumnDefine(TABLE_COL_WIDTH[0], false, RIGHT),
-                new ColumnDefine(TABLE_COL_WIDTH[1], false, RIGHT),
-                new ColumnDefine(TABLE_COL_WIDTH[2], false, RIGHT),
-                new ColumnDefine(TABLE_COL_WIDTH[3], false, RIGHT),
-                new ColumnDefine(TABLE_COL_WIDTH[4], false, RIGHT),
-                new ColumnDefine(TABLE_COL_WIDTH[5], false, RIGHT),
-                new ColumnDefine(TABLE_COL_WIDTH[6], false, RIGHT),
-                new ColumnDefine(TABLE_COL_WIDTH[7], false, RIGHT),
-        })
+            new ColumnDefine(TABLE_COL_WIDTH[0], false, RIGHT),
+            new ColumnDefine(TABLE_COL_WIDTH[1], false, RIGHT),
+            new ColumnDefine(TABLE_COL_WIDTH[2], false, RIGHT),
+            new ColumnDefine(TABLE_COL_WIDTH[3], false, RIGHT),
+            new ColumnDefine(TABLE_COL_WIDTH[4], false, RIGHT),
+            new ColumnDefine(TABLE_COL_WIDTH[5], false, RIGHT),
+            new ColumnDefine(TABLE_COL_WIDTH[6], false, RIGHT),
+            new ColumnDefine(TABLE_COL_WIDTH[7], false, RIGHT),})
                 .hasBorder(true)
-                .padding(1)
-                ;
+                .padding(1);
     }
 
     private TableView fillTableTitle(TableView tableView) {
@@ -711,7 +732,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("time fragment[%d] was not existed.\n", index));
+                    sender.send(true, format("time fragment[%d] was not existed.%n", index));
                     return new RowAffect();
                 }
 
@@ -724,8 +745,8 @@ public class TimeTunnelCommand implements Command {
                 final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
                 final TableView view = new TableView(new ColumnDefine[]{
-                        new ColumnDefine(RIGHT),
-                        new ColumnDefine(100, false, LEFT)
+                    new ColumnDefine(RIGHT),
+                    new ColumnDefine(100, false, LEFT)
                 })
                         .hasBorder(true)
                         .padding(1)
@@ -737,7 +758,6 @@ public class TimeTunnelCommand implements Command {
                         .addRow("METHOD", methodName)
                         .addRow("IS-RETURN", advice.isAfterReturning())
                         .addRow("IS-EXCEPTION", advice.isAfterThrowing());
-
 
                 // fill the parameters
                 if (null != advice.getParams()) {
@@ -755,7 +775,6 @@ public class TimeTunnelCommand implements Command {
 
                 }
 
-
                 // fill the returnObj
                 if (advice.isAfterReturning()) {
 
@@ -766,7 +785,6 @@ public class TimeTunnelCommand implements Command {
                     }
 
                 }
-
 
                 // fill the throw exception
                 if (advice.isAfterThrowing()) {
@@ -837,5 +855,3 @@ public class TimeTunnelCommand implements Command {
     }
 
 }
-
-

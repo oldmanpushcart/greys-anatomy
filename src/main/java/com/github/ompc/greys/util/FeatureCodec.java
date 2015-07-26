@@ -34,7 +34,7 @@ public class FeatureCodec {
     /**
      * 转义前缀符
      */
-    private final char ESCAPE_PREFIX_CHAR = '\\';
+    private static final char ESCAPE_PREFIX_CHAR = '\\';
 
     /**
      * 使用指定的KV分割符构造FeatureParser<br/>
@@ -64,7 +64,7 @@ public class FeatureCodec {
         final StringBuilder featureSB = new StringBuilder().append(kvSegmentSeparator);
 
         if (null == map
-                || map.size() == 0) {
+                || map.isEmpty()) {
             return featureSB.toString();
         }
 

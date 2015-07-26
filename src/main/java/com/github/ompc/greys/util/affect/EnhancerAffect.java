@@ -13,7 +13,7 @@ import static java.lang.String.format;
  * 统计影响类/方法/耗时
  * Created by vlinux on 15/5/19.
  */
-public class EnhancerAffect extends Affect {
+public final class EnhancerAffect extends Affect {
 
     private final AtomicInteger cCnt = new AtomicInteger();
     private final AtomicInteger mCnt = new AtomicInteger();
@@ -21,7 +21,7 @@ public class EnhancerAffect extends Affect {
     /*
      * dumpClass的文件存放集合
      */
-    private Collection<File> classDumpFiles = new ArrayList<File>();
+    private final Collection<File> classDumpFiles = new ArrayList<File>();
 
     public EnhancerAffect() {
 
@@ -86,7 +86,7 @@ public class EnhancerAffect extends Affect {
                 && !classDumpFiles.isEmpty()) {
 
             for (File classDumpFile : classDumpFiles) {
-                infoSB.append("[dump: ").append(classDumpFile.getAbsoluteFile() + "]\n");
+                infoSB.append("[dump: ").append(classDumpFile.getAbsoluteFile()).append("]\n");
             }
         }
         infoSB.append(format("Affect(class-cnt:%d , method-cnt:%d) cost in %s ms.",

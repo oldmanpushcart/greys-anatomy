@@ -1,8 +1,7 @@
 package com.github.ompc.greys.util;
 
 /**
- * 通知点
- * Created by vlinux on 15/5/20.
+ * 通知点 Created by vlinux on 15/5/20.
  */
 public class Advice {
 
@@ -14,23 +13,24 @@ public class Advice {
     private final Object returnObj;
     private final Throwable throwExp;
 
-
-    private final static int ACCESS_BEFORE = 1 << 0;
+    private final static int ACCESS_BEFORE = 1;
     private final static int ACCESS_AFTER_RETUNING = 1 << 1;
     private final static int ACCESS_AFTER_THROWING = 1 << 2;
 
-    private final int access;
+    private final boolean isBefore;
+    private final boolean isThrow;
+    private final boolean isReturn;
 
     public boolean isBefore() {
-        return (access & ACCESS_BEFORE) == ACCESS_BEFORE;
+        return isBefore;
     }
 
     public boolean isAfterReturning() {
-        return (access & ACCESS_AFTER_RETUNING) == ACCESS_AFTER_RETUNING;
+        return isReturn;
     }
 
     public boolean isAfterThrowing() {
-        return (access & ACCESS_AFTER_THROWING) == ACCESS_AFTER_THROWING;
+        return isThrow;
     }
 
     public ClassLoader getLoader() {
@@ -64,14 +64,14 @@ public class Advice {
     /**
      * for finish
      *
-     * @param loader    类加载器
-     * @param clazz     类
-     * @param method    方法
-     * @param target    目标类
-     * @param params    调用参数
+     * @param loader 类加载器
+     * @param clazz 类
+     * @param method 方法
+     * @param target 目标类
+     * @param params 调用参数
      * @param returnObj 返回值
-     * @param throwExp  抛出异常
-     * @param access    进入场景
+     * @param throwExp 抛出异常
+     * @param access 进入场景
      */
     private Advice(
             ClassLoader loader,
@@ -89,15 +89,16 @@ public class Advice {
         this.params = params;
         this.returnObj = returnObj;
         this.throwExp = throwExp;
-        this.access = access;
+        isBefore = (access & ACCESS_BEFORE) == ACCESS_BEFORE;
+        isThrow = (access & ACCESS_AFTER_THROWING) == ACCESS_AFTER_THROWING;
+        isReturn = (access & ACCESS_AFTER_RETUNING) == ACCESS_AFTER_RETUNING;
     }
 
-
     public static Advice newForBefore(ClassLoader loader,
-                                      Class<?> clazz,
-                                      GaMethod method,
-                                      Object target,
-                                      Object[] params) {
+            Class<?> clazz,
+            GaMethod method,
+            Object target,
+            Object[] params) {
         return new Advice(
                 loader,
                 clazz,
@@ -111,11 +112,11 @@ public class Advice {
     }
 
     public static Advice newForAfterRetuning(ClassLoader loader,
-                                             Class<?> clazz,
-                                             GaMethod method,
-                                             Object target,
-                                             Object[] params,
-                                             Object returnObj) {
+            Class<?> clazz,
+            GaMethod method,
+            Object target,
+            Object[] params,
+            Object returnObj) {
         return new Advice(
                 loader,
                 clazz,
@@ -129,11 +130,11 @@ public class Advice {
     }
 
     public static Advice newForAfterThrowing(ClassLoader loader,
-                                             Class<?> clazz,
-                                             GaMethod method,
-                                             Object target,
-                                             Object[] params,
-                                             Throwable throwExp) {
+            Class<?> clazz,
+            GaMethod method,
+            Object target,
+            Object[] params,
+            Throwable throwExp) {
         return new Advice(
                 loader,
                 clazz,
@@ -145,6 +146,5 @@ public class Advice {
                 ACCESS_AFTER_THROWING
         );
     }
-
 
 }

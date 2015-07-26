@@ -20,14 +20,17 @@ import java.lang.instrument.Instrumentation;
 import static com.github.ompc.greys.util.Advice.*;
 import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.util.GaStringUtils.getCauseMessage;
+import java.util.concurrent.atomic.AtomicInteger;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Cmd(name = "watch", sort = 4, summary = "The call context information buried point observation methods.",
         eg = {
-                "watch -Eb org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
-                "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
-                "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
-                "watch -bf *StringUtils isBlank params[0]",
-                "watch *StringUtils isBlank params[0]"
+            "watch -Eb org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
+            "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
+            "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
+            "watch -bf *StringUtils isBlank params[0]",
+            "watch *StringUtils isBlank params[0]",
+            "watch *StringUtils isBlank params[0] params[0].length==1"
         })
 public class WatchCommand implements Command {
 
@@ -42,28 +45,39 @@ public class WatchCommand implements Command {
     @IndexArg(index = 2, name = "express",
             summary = "express, write by groovy.",
             description = ""
-                    + " \n"
-                    + "For example\n"
-                    + "    : params[0]\n"
-                    + "    : params[0]+params[1]\n"
-                    + "    : returnObj\n"
-                    + "    : throwExp\n"
-                    + "    : target\n"
-                    + "    : clazz\n"
-                    + "    : method\n"
-                    + " \n"
-                    + "The structure of 'advice'\n"
-                    + "          target : the object entity\n"
-                    + "           clazz : the object's class\n"
-                    + "          method : the constructor or method\n"
-                    + "    params[0..n] : the parameters of methods\n"
-                    + "       returnObj : the return object of methods\n"
-                    + "        throwExp : the throw exception of methods\n"
+            + "For example\n"
+            + "    : params[0]\n"
+            + "    : params[0]+params[1]\n"
+            + "    : returnObj\n"
+            + "    : throwExp\n"
+            + "    : target\n"
+            + "    : clazz\n"
+            + "    : method\n"
+            + "The structure of 'advice'\n"
+            + "          target : the object entity\n"
+            + "           clazz : the object's class\n"
+            + "          method : the constructor or method\n"
+            + "    params[0..n] : the parameters of methods\n"
+            + "       returnObj : the return object of methods\n"
+            + "        throwExp : the throw exception of methods\n"
+            + "        isReturn : the method finish by return\n"
+            + "         isThrow : the method finish by throw an exception\n"
     )
     private String express;
 
+    @IndexArg(index = 3, name = "condition-express", isRequired = false,
+            summary = "condition express, write by groovy",
+            description = ""
+            + "For example\n"
+            + "    TRUE  : true\n"
+            + "    FALSE : false\n"
+            + "    TRUE  : params.length>=0"
+            + "The structure of 'advice' just like express\n"
+    )
+    private String conditionExpress;
+
     @NamedArg(name = "b", summary = "is watch on before")
-    private boolean isBefore = true;
+    private boolean isBefore = false;
 
     @NamedArg(name = "f", summary = "is watch on finish")
     private boolean isFinish = false;
@@ -83,6 +97,9 @@ public class WatchCommand implements Command {
     @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;
 
+    @NamedArg(name = "n", hasValue = true, summary = "number of limit")
+    private Integer numberOfLimit;
+
     @Override
     public Action getAction() {
 
@@ -94,12 +111,14 @@ public class WatchCommand implements Command {
                 ? new RegexMatcher(methodPattern)
                 : new WildcardMatcher(methodPattern);
 
-
         return new GetEnhancerAction() {
 
             @Override
             public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
                 return new GetEnhancer() {
+
+                    private final AtomicInteger times = new AtomicInteger();
+
                     @Override
                     public Matcher getClassNameMatcher() {
                         return classNameMatcher;
@@ -120,6 +139,17 @@ public class WatchCommand implements Command {
 
                         return new ReflectAdviceListenerAdapter() {
 
+                            private boolean isBefore() {
+                                if (isBefore) {
+                                    return true;
+                                }
+
+                                return !isBefore
+                                        && !isFinish
+                                        && !isException
+                                        && !isSuccess;
+                            }
+
                             @Override
                             public void before(
                                     ClassLoader loader,
@@ -127,7 +157,7 @@ public class WatchCommand implements Command {
                                     GaMethod method,
                                     Object target,
                                     Object[] args) throws Throwable {
-                                if (isBefore) {
+                                if (isBefore()) {
                                     watching(newForBefore(loader, clazz, method, target, args));
                                 }
                             }
@@ -172,15 +202,31 @@ public class WatchCommand implements Command {
                                 }
                             }
 
+                            private boolean isLimited(int currentTimes) {
+                                return null != numberOfLimit
+                                        && currentTimes >= numberOfLimit;
+                            }
+
+                            private boolean isNeedExpend() {
+                                return null != expend
+                                        && expend >= 0;
+                            }
+
                             private void watching(Advice advice) {
                                 try {
-                                    final Object value = newExpress(advice).get(express);
-                                    if (null != expend
-                                            && expend >= 0) {
-                                        sender.send(false, new ObjectView(value, expend).draw() + "\n");
-                                    } else {
-                                        sender.send(false, value + "\n");
+
+                                    if (isNotBlank(conditionExpress)
+                                            && !newExpress(advice).is(conditionExpress)) {
+                                        return;
                                     }
+
+                                    final boolean isF = isLimited(times.incrementAndGet());
+                                    final Object value = newExpress(advice).get(express);
+                                    sender.send(
+                                            isF,
+                                            (isNeedExpend() ? new ObjectView(value, expend).draw() : value) + "\n"
+                                    );
+
                                 } catch (Exception e) {
                                     logger.warn("watch failed.", e);
                                     sender.send(false, getCauseMessage(e) + "\n");

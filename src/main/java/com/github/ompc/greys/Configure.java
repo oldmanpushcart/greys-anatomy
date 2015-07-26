@@ -64,6 +64,7 @@ public class Configure {
      *
      * @return 序列化字符串
      */
+    @Override
     public String toString() {
 
         final Map<String, String> map = new HashMap<String, String>();

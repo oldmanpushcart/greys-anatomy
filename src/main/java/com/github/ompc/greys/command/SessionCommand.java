@@ -43,12 +43,12 @@ public class SessionCommand implements Command {
                         final Charset beforeCharset = session.getCharset();
                         session.setCharset(newCharset);
 
-                        sender.send(true, format("change charset before[%s] -> new[%s]\n",
+                        sender.send(true, format("change charset before[%s] -> new[%s]%n",
                                 beforeCharset,
                                 newCharset));
 
                     } catch (UnsupportedCharsetException e) {
-                        sender.send(true, format("unsupported charset : \"%s\"\n", charsetString));
+                        sender.send(true, format("unsupported charset : \"%s\"%n", charsetString));
                     }
 
                 } else {

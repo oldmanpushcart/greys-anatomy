@@ -64,6 +64,7 @@ public class Enhancer implements ClassFileTransformer {
         this.affect = affect;
     }
 
+    @Override
     public byte[] transform(
             final ClassLoader loader,
             String className,
@@ -180,7 +181,6 @@ public class Enhancer implements ClassFileTransformer {
             affect.getClassDumpFiles().add(dumpClassFile);
         } catch (IOException e) {
             logger.warn("dump class:{} to file {} failed.", className, dumpClassFile, e);
-            return;
         }
 
     }
