@@ -7,11 +7,12 @@
 
 # 相关文档
 
-* [关于软件](https://github.com/oldmanpushcart/greys-anatomy/wiki)
-* [程序安装](https://github.com/oldmanpushcart/greys-anatomy/wiki/installing)
-* [入门说明](https://github.com/oldmanpushcart/greys-anatomy/wiki/Getting-Start)
-* [常见问题](https://github.com/oldmanpushcart/greys-anatomy/wiki/FAQ)
-* [更新记事](https://github.com/oldmanpushcart/greys-anatomy/wiki/Chronicle)
+* [关于软件](Home)
+* [程序安装](installing)
+* [入门说明](Getting-Start)
+* [常见问题](FAQ)
+* [更新记事](Chronicle)
+* [详细文档](greys-pdf)
 
 # 程序安装：
 
