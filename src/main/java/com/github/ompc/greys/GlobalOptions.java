@@ -45,6 +45,13 @@ public class GlobalOptions {
     )
     public static volatile boolean isBatchReTransform = true;
 
+    @Option(level = 2,
+            name = "json",
+            summary = "is support using json format to print an object",
+            description = "Using json format to print an object when choice -x option."
+    )
+    public static volatile boolean isUsingJson = false;
+
     /**
      * 选项
      */

@@ -1,5 +1,8 @@
 package com.github.ompc.greys.command.view;
 
+import com.github.ompc.greys.GlobalOptions;
+import com.google.gson.Gson;
+
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -26,6 +29,9 @@ public class ObjectView implements View {
 
     @Override
     public String draw() {
+        if (GlobalOptions.isUsingJson) {
+            return new Gson().toJson(object);
+        }
         return toString(object, 0, deep);
     }
 
