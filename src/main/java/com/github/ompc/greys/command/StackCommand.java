@@ -1,5 +1,6 @@
 package com.github.ompc.greys.command;
 
+import com.github.ompc.greys.GlobalOptions;
 import com.github.ompc.greys.advisor.AdviceListener;
 import com.github.ompc.greys.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.command.annotation.Cmd;
@@ -8,16 +9,18 @@ import com.github.ompc.greys.command.annotation.NamedArg;
 import com.github.ompc.greys.exception.ExpressException;
 import com.github.ompc.greys.server.Session;
 import com.github.ompc.greys.util.Advice;
-import static com.github.ompc.greys.util.Advice.newForAfterRetuning;
-import static com.github.ompc.greys.util.Advice.newForAfterThrowing;
-import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
 import com.github.ompc.greys.util.GaMethod;
-import static com.github.ompc.greys.util.GaStringUtils.getStack;
 import com.github.ompc.greys.util.Matcher;
 import com.github.ompc.greys.util.Matcher.RegexMatcher;
 import com.github.ompc.greys.util.Matcher.WildcardMatcher;
+
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.github.ompc.greys.util.Advice.newForAfterRetuning;
+import static com.github.ompc.greys.util.Advice.newForAfterThrowing;
+import static com.github.ompc.greys.util.Express.ExpressFactory.newExpress;
+import static com.github.ompc.greys.util.GaStringUtils.getStack;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -61,7 +64,7 @@ public class StackCommand implements Command {
     private String conditionExpress;
 
     @NamedArg(name = "S", summary = "including sub class")
-    private boolean isIncludeSub = false;
+    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
     @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;

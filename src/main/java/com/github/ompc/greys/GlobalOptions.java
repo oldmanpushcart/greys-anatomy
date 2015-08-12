@@ -46,11 +46,18 @@ public class GlobalOptions {
     public static volatile boolean isBatchReTransform = true;
 
     @Option(level = 2,
-            name = "json",
+            name = "json-format",
             summary = "is support using json format to print an object",
             description = "Using json format to print an object when choice -x option."
     )
     public static volatile boolean isUsingJson = false;
+
+    @Option(level = 2,
+            name = "include-sub-class",
+            summary = "is support include sub class",
+            description = "Include SubClass."
+    )
+    public static volatile boolean isIncludeSubClass = true;
 
     /**
      * 选项

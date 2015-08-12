@@ -1,5 +1,6 @@
 package com.github.ompc.greys.command;
 
+import com.github.ompc.greys.GlobalOptions;
 import com.github.ompc.greys.advisor.AdviceListener;
 import com.github.ompc.greys.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.command.annotation.Cmd;
@@ -38,7 +39,7 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
     private String scriptFilepath;
 
     @NamedArg(name = "S", summary = "including sub class")
-    private boolean isIncludeSub = false;
+    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
     @NamedArg(name = "E", summary = "enable the regex pattern matching")
     private boolean isRegEx = false;

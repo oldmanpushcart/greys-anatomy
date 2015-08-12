@@ -1,5 +1,6 @@
 package com.github.ompc.greys.command;
 
+import com.github.ompc.greys.GlobalOptions;
 import com.github.ompc.greys.command.annotation.Cmd;
 import com.github.ompc.greys.command.annotation.IndexArg;
 import com.github.ompc.greys.command.annotation.NamedArg;
@@ -34,7 +35,7 @@ public class SearchClassCommand implements Command {
     private String classPattern;
 
     @NamedArg(name = "S", summary = "including sub class")
-    private boolean isIncludeSub = false;
+    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
     @NamedArg(name = "d", summary = "show the detail of class")
     private boolean isDetail = false;
