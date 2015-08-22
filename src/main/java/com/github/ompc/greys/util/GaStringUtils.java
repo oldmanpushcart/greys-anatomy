@@ -183,19 +183,30 @@ public class GaStringUtils {
      * @return 方法堆栈信息
      */
     public static String getStack() {
-        final StackTraceElement[] stes = Thread.currentThread().getStackTrace();
+
+        final Thread currentThread = Thread.currentThread();
+        final StackTraceElement[] stackTraceElementArray = currentThread.getStackTrace();
+
+        final String title = String.format("thread_name=\"%s\" thread_id=0x%s;is_daemon=%s;priority=%s;",
+                currentThread.getName(),
+                Long.toHexString(currentThread.getId()),
+                currentThread.isDaemon(),
+                currentThread.getPriority());
+
+        final StackTraceElement locationStackTraceElement = stackTraceElementArray[10];
+        final String locationString = String.format("    @%s.%s()",
+                locationStackTraceElement.getClassName(),
+                locationStackTraceElement.getMethodName());
+
         final StringBuilder stSB = new StringBuilder()
-                .append("Thread Info:").append(Thread.currentThread().getName()).append("\n");
+                .append(title).append("\n")
+                .append(locationString).append("\n");
 
-        if (null == stes
-                || stes.length == 0
-                || stes.length == 1) {
-            return stSB.toString();
-        }
-
-        for (int index = 4; index < stes.length; index++) {
-            final StackTraceElement ste = stes[index];
-            stSB.append(index == 2 ? "  " : "    at ")
+        final int skip = 11;
+        for (int index = skip; index < stackTraceElementArray.length; index++) {
+            final StackTraceElement ste = stackTraceElementArray[index];
+            stSB
+                    .append("        at ")
                     .append(ste.getClassName()).append(".")
                     .append(ste.getMethodName())
                     .append("(").append(ste.getFileName()).append(":").append(ste.getLineNumber()).append(")\n");
