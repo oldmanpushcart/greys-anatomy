@@ -91,7 +91,7 @@ attach_jvm()
         ${JAVA_HOME}/bin/java \
             ${BOOT_CLASSPATH} \
             ${JVM_OPTS} \
-            -jar ${GREYS_ROOT}/greys.jar -pid ${TARGET_PID} -target ${TARGET_IP}":"${TARGET_PORT}
+            -jar ${GREYS_ROOT}/greys-core.jar -pid ${TARGET_PID} -target ${TARGET_IP}":"${TARGET_PORT}
     fi
 }
 
@@ -102,7 +102,7 @@ active_console()
     if type ${JAVA_HOME}/bin/java 2>&1 >> /dev/null; then
 
         # use default console
-        ${JAVA_HOME}/bin/java -cp ${GREYS_ROOT}/greys.jar com.github.ompc.greys.GreysConsole ${TARGET_IP} ${TARGET_PORT}
+        ${JAVA_HOME}/bin/java -cp ${GREYS_ROOT}/greys-core.jar com.github.ompc.greys.core.GreysConsole ${TARGET_IP} ${TARGET_PORT}
 
     elif type telnet 2>&1 >> /dev/null; then
 
