@@ -1,0 +1,47 @@
+package com.github.ompc.greys.core.command;
+
+import com.github.ompc.greys.core.advisor.Enhancer;
+import com.github.ompc.greys.core.command.annotation.Cmd;
+import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.affect.EnhancerAffect;
+import com.github.ompc.greys.core.util.affect.RowAffect;
+
+import java.lang.instrument.Instrumentation;
+
+import static com.github.ompc.greys.agent.AgentLauncher.resetGreysClassLoader;
+
+/**
+ * 关闭命令
+ * Created by vlinux on 14/10/23.
+ */
+@Cmd(name = "shutdown", sort = 11, summary = "Shutdown the greys server, and exit the console.",
+        eg = {
+                "shutdown"
+        })
+public class ShutdownCommand implements Command {
+
+    @Override
+    public Action getAction() {
+        return new RowAction() {
+            @Override
+            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+
+                // 退出之前需要重置所有的增强类
+                // 重置之前增强的类
+                final EnhancerAffect enhancerAffect = Enhancer.reset(
+                        inst,
+                        new Matcher.WildcardMatcher("*")
+                );
+
+                // 重置整个greys
+                resetGreysClassLoader();
+
+                sender.send(true, "Greys shutdown completed.\n");
+                return new RowAffect(enhancerAffect.cCnt());
+            }
+
+        };
+    }
+
+}
