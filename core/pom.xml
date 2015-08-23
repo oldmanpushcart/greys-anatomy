@@ -102,10 +102,6 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.github.ompc.greys</groupId>
-            <artifactId>agent</artifactId>
-        </dependency>
     </dependencies>
 
 </project>

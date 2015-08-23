@@ -107,7 +107,7 @@ public class Enhancer implements ClassFileTransformer {
             // 初始化间谍
             invokeStaticMethod(
                     spyClassFromTargetClassLoader,
-                    "set",
+                    "init",
                     greysClassLoader,
                     Spy.ON_BEFORE_METHOD,
                     Spy.ON_RETURN_METHOD,

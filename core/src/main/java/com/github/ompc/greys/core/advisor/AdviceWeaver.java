@@ -424,24 +424,24 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
             }
 
-            private void _debug_dup(final String msg) {
-
-                if (!isDebugForAsm) {
-                    return;
-                }
-
-                // print prefix
-                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-                visitLdcInsn(msg);
-                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V", false);
-
-                // println msg
-                dup();
-                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-                swap();
-                visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
-                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
-            }
+//            private void _debug_dup(final String msg) {
+//
+//                if (!isDebugForAsm) {
+//                    return;
+//                }
+//
+//                // print prefix
+//                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+//                visitLdcInsn(msg);
+//                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V", false);
+//
+//                // println msg
+//                dup();
+//                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+//                swap();
+//                visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
+//                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
+//            }
 
             /**
              * 加载通知方法
@@ -482,8 +482,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 }
 
-                _debug_dup("loadAdviceMethod:");
-
             }
 
             /**
@@ -517,43 +515,36 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 push(0);
                 push(adviceId);
                 box(ASM_TYPE_INT);
-                _debug_dup("loadArrayForBefore[0]:");
                 arrayStore(ASM_TYPE_INTEGER);
 
                 dup();
                 push(1);
                 loadClassLoader();
-                _debug_dup("loadArrayForBefore[1]:");
                 arrayStore(ASM_TYPE_CLASS_LOADER);
 
                 dup();
                 push(2);
                 push(className);
-                _debug_dup("loadArrayForBefore[2]:");
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(3);
                 push(name);
-                _debug_dup("loadArrayForBefore[3]:");
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(4);
                 push(desc);
-                _debug_dup("loadArrayForBefore[3]:");
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(5);
                 loadThisOrPushNullIfIsStatic();
-                _debug_dup("loadArrayForBefore[4]:");
                 arrayStore(ASM_TYPE_OBJECT);
 
                 dup();
                 push(6);
                 loadArgArray();
-                _debug_dup("loadArrayForBefore[5]:");
                 arrayStore(ASM_TYPE_OBJECT_ARRAY);
             }
 
@@ -736,7 +727,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 } else {
                     loadThis();
                 }
-                _debug_dup("loadThis:");
             }
 
             /**
@@ -770,7 +760,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                     }
 
                 }
-                _debug_dup("loadReturn:");
             }
 
             /**
@@ -778,7 +767,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
              */
             private void loadThrow() {
                 dup();
-                _debug_dup("loadThrow:");
             }
 
 
@@ -793,25 +781,21 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 push(0);
                 push(adviceId);
                 box(ASM_TYPE_INT);
-                _debug_dup("loadArrayForInvokeTracing[0]:");
                 arrayStore(ASM_TYPE_INTEGER);
 
                 dup();
                 push(1);
                 push(owner);
-                _debug_dup("loadArrayForInvokeTracing[1]:");
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(2);
                 push(name);
-                _debug_dup("loadArrayForInvokeTracing[2]:");
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(3);
                 push(desc);
-                _debug_dup("loadArrayForInvokeTracing[3]:");
                 arrayStore(ASM_TYPE_STRING);
             }
 

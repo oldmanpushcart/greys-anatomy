@@ -12,7 +12,7 @@ import java.net.URLClassLoader;
 public class AgentLauncher {
 
     // 全局持有classloader用于隔离greys实现
-    private static ClassLoader greysClassLoader;
+    private static volatile ClassLoader greysClassLoader;
 
     public static void premain(String args, Instrumentation inst) {
         main(args, inst);
@@ -67,8 +67,9 @@ public class AgentLauncher {
             // 获取各种Hook
             final Class<?> adviceWeaverClass = classLoader.loadClass("com.github.ompc.greys.core.advisor.AdviceWeaver");
             final Class<?> spyClass = classLoader.loadClass("com.github.ompc.greys.core.advisor.Spy");
-            final Method spySetMethod = spyClass.getMethod("set",
+            final Method spySetMethod = spyClass.getMethod("initForAgentLauncher",
                     ClassLoader.class,
+                    Method.class,
                     Method.class,
                     Method.class,
                     Method.class,
@@ -98,8 +99,9 @@ public class AgentLauncher {
                             int.class,
                             String.class,
                             String.class,
-                            String.class)
-                    );
+                            String.class),
+                    AgentLauncher.class.getMethod("resetGreysClassLoader")
+            );
         }
 
         return greysClassLoader = classLoader;

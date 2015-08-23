@@ -1,6 +1,7 @@
 package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.advisor.Enhancer;
+import com.github.ompc.greys.core.advisor.Spy;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Matcher;
@@ -8,8 +9,6 @@ import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
-
-import static com.github.ompc.greys.agent.AgentLauncher.resetGreysClassLoader;
 
 /**
  * 关闭命令
@@ -35,7 +34,7 @@ public class ShutdownCommand implements Command {
                 );
 
                 // 重置整个greys
-                resetGreysClassLoader();
+                Spy.AGENT_RESET_METHOD.invoke(null);
 
                 sender.send(true, "Greys shutdown completed.\n");
                 return new RowAffect(enhancerAffect.cCnt());
