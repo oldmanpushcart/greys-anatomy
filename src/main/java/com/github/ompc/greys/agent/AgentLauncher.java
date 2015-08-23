@@ -1,9 +1,9 @@
 package com.github.ompc.greys.agent;
 
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Properties;
 
 /**
  * 代理启动类
@@ -11,13 +11,8 @@ import java.util.Properties;
  */
 public class AgentLauncher {
 
-
-    public static final String KEY_GREYS_CLASS_LOADER = "KEY_GREYS_CLASS_LOADER";
-    public static final String KEY_GREYS_ADVICE_BEFORE_METHOD = "KEY_GREYS_ADVICE_BEFORE_METHOD";
-    public static final String KEY_GREYS_ADVICE_RETURN_METHOD = "KEY_GREYS_ADVICE_RETURN_METHOD";
-    public static final String KEY_GREYS_ADVICE_THROWS_METHOD = "KEY_GREYS_ADVICE_THROWS_METHOD";
-    public static final String KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD = "KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD";
-    public static final String KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD = "KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD";
+    // 全局持有classloader用于隔离greys实现
+    private static ClassLoader greysClassLoader;
 
     public static void premain(String args, Instrumentation inst) {
         main(args, inst);
@@ -28,13 +23,25 @@ public class AgentLauncher {
     }
 
 
+    /**
+     * 重置greys的classloader<br/>
+     * 让下次再次启动时有机会重新加载
+     */
+    public synchronized static void resetGreysClassLoader() {
+        greysClassLoader = null;
+    }
+
     private static ClassLoader loadOrDefineClassLoader(String agentJar) throws Throwable {
 
-        final Properties props = System.getProperties();
         final ClassLoader classLoader;
-        if (props.containsKey(KEY_GREYS_CLASS_LOADER)) {
-            classLoader = (ClassLoader) props.get(KEY_GREYS_CLASS_LOADER);
-        } else {
+
+        // 如果已经被启动则返回之前启动的classloader
+        if (null != greysClassLoader) {
+            classLoader = greysClassLoader;
+        }
+
+        // 如果未启动则重新加载
+        else {
             classLoader = new URLClassLoader(new URL[]{new URL("file:" + agentJar)}) {
 
                 @Override
@@ -57,33 +64,45 @@ public class AgentLauncher {
 
             };
 
-            final Class<?> clazz = classLoader.loadClass("com.github.ompc.greys.advisor.AdviceWeaver");
-            props.put(KEY_GREYS_CLASS_LOADER, classLoader);
-            props.put(KEY_GREYS_ADVICE_BEFORE_METHOD, clazz.getMethod("methodOnBegin",
-                    int.class,
+            // 获取各种Hook
+            final Class<?> adviceWeaverClass = classLoader.loadClass("com.github.ompc.greys.advisor.AdviceWeaver");
+            final Class<?> spyClass = classLoader.loadClass("com.github.ompc.greys.advisor.Spy");
+            final Method spySetMethod = spyClass.getMethod("set",
                     ClassLoader.class,
-                    String.class,
-                    String.class,
-                    String.class,
-                    Object.class,
-                    Object[].class));
-            props.put(KEY_GREYS_ADVICE_RETURN_METHOD, clazz.getMethod("methodOnReturnEnd",
-                    Object.class));
-            props.put(KEY_GREYS_ADVICE_THROWS_METHOD, clazz.getMethod("methodOnThrowingEnd",
-                    Throwable.class));
-            props.put(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD, clazz.getMethod("methodOnInvokeBeforeTracing",
-                    int.class,
-                    String.class,
-                    String.class,
-                    String.class));
-            props.put(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD, clazz.getMethod("methodOnInvokeAfterTracing",
-                    int.class,
-                    String.class,
-                    String.class,
-                    String.class));
+                    Method.class,
+                    Method.class,
+                    Method.class,
+                    Method.class,
+                    Method.class);
+
+            spySetMethod.invoke(null,
+                    classLoader,
+                    adviceWeaverClass.getMethod("methodOnBegin",
+                            int.class,
+                            ClassLoader.class,
+                            String.class,
+                            String.class,
+                            String.class,
+                            Object.class,
+                            Object[].class),
+                    adviceWeaverClass.getMethod("methodOnReturnEnd",
+                            Object.class),
+                    adviceWeaverClass.getMethod("methodOnThrowingEnd",
+                            Throwable.class),
+                    adviceWeaverClass.getMethod("methodOnInvokeBeforeTracing",
+                            int.class,
+                            String.class,
+                            String.class,
+                            String.class),
+                    adviceWeaverClass.getMethod("methodOnInvokeAfterTracing",
+                            int.class,
+                            String.class,
+                            String.class,
+                            String.class)
+                    );
         }
 
-        return classLoader;
+        return greysClassLoader = classLoader;
     }
 
     private static synchronized void main(final String args, final Instrumentation inst) {
@@ -97,7 +116,6 @@ public class AgentLauncher {
 
             // 构造自定义的类加载器，尽量减少Greys对现有工程的侵蚀
             final ClassLoader agentLoader = loadOrDefineClassLoader(agentJar);
-
 
             // Configure类定义
             final Class<?> classOfConfigure = agentLoader.loadClass("com.github.ompc.greys.Configure");
@@ -129,6 +147,5 @@ public class AgentLauncher {
         }
 
     }
-
 
 }

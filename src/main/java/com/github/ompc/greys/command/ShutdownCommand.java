@@ -8,9 +8,8 @@ import com.github.ompc.greys.util.affect.EnhancerAffect;
 import com.github.ompc.greys.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
-import java.util.Properties;
 
-import static com.github.ompc.greys.agent.AgentLauncher.KEY_GREYS_CLASS_LOADER;
+import static com.github.ompc.greys.agent.AgentLauncher.resetGreysClassLoader;
 
 /**
  * 关闭命令
@@ -29,15 +28,14 @@ public class ShutdownCommand implements Command {
             public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
 
                 // 退出之前需要重置所有的增强类
+                // 重置之前增强的类
                 final EnhancerAffect enhancerAffect = Enhancer.reset(
                         inst,
                         new Matcher.WildcardMatcher("*")
                 );
 
-                // 去掉ClassLoader，逼迫下次重新加载
-                // 这样就不需要重启应用才能得到最新版的Greys了
-                final Properties props = System.getProperties();
-                props.remove(KEY_GREYS_CLASS_LOADER);
+                // 重置整个greys
+                resetGreysClassLoader();
 
                 sender.send(true, "Greys shutdown completed.\n");
                 return new RowAffect(enhancerAffect.cCnt());
@@ -45,4 +43,5 @@ public class ShutdownCommand implements Command {
 
         };
     }
+
 }

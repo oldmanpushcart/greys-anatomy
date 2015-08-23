@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.github.ompc.greys.agent.AgentLauncher.*;
 import static com.github.ompc.greys.util.GaCheckUtils.isEquals;
 import static com.github.ompc.greys.util.GaStringUtils.tranClassName;
 import static java.lang.Thread.currentThread;
@@ -384,11 +383,20 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         return new AdviceAdapter(ASM5, new JSRInlinerAdapter(mv, access, name, desc, signature, exceptions), access, name, desc) {
 
+            // -- Lebel for try...catch block
             private final Label beginLabel = new Label();
             private final Label endLabel = new Label();
 
-            private final CodeLock codeLockForTracing = new TracingAsmCodeLock(this);
+            // -- KEY of advice --
+            private final int KEY_GREYS_ADVICE_BEFORE_METHOD = 0;
+            private final int KEY_GREYS_ADVICE_RETURN_METHOD = 1;
+            private final int KEY_GREYS_ADVICE_THROWS_METHOD = 2;
+            private final int KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD = 3;
+            private final int KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD = 4;
 
+
+            // -- KEY of ASM_TYPE or ASM_METHOD --
+            private final Type ASM_TYPE_SPY = Type.getType(Spy.class);
             private final Type ASM_TYPE_OBJECT = Type.getType(Object.class);
             private final Type ASM_TYPE_OBJECT_ARRAY = Type.getType(Object[].class);
             private final Type ASM_TYPE_CLASS = Type.getType(Class.class);
@@ -402,21 +410,73 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private final Type ASM_TYPE_PROPERTIES = Type.getType(java.util.Properties.class);
             private final Method ASM_METHOD_METHOD_INVOKE = Method.getMethod("Object invoke(Object,Object[])");
 
+            // 代码锁
+            private final CodeLock codeLockForTracing = new TracingAsmCodeLock(this);
+
+
+            private void _debug(final String msg) {
+                // println msg
+                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                visitLdcInsn(msg);
+                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
+            }
+
+            private void _debug_dup(final String msg) {
+
+                // print prefix
+                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                visitLdcInsn(msg);
+                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V", false);
+
+                // println msg
+                dup();
+                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                swap();
+                visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
+                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
+            }
 
             /**
              * 加载通知方法
              * @param keyOfMethod 通知方法KEY
-             *                    AgentLauncher.KEY_GREYS_ADVICE_BEFORE_METHOD
-             *                    AgentLauncher.KEY_GREYS_ADVICE_RETURN_METHOD
-             *                    AgentLauncher.KEY_GREYS_ADVICE_THROWS_METHOD
-             *                    AgentLauncher.KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD
-             *                    AgentLauncher.KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD
              */
-            private void loadAdviceMethod(String keyOfMethod) {
-                invokeStatic(ASM_TYPE_SYSTEM, Method.getMethod("java.util.Properties getProperties()"));
-                push(keyOfMethod);
-                invokeVirtual(ASM_TYPE_PROPERTIES, Method.getMethod("Object get(Object)"));
-                checkCast(ASM_TYPE_METHOD);
+            private void loadAdviceMethod(int keyOfMethod) {
+
+                switch (keyOfMethod) {
+
+                    case KEY_GREYS_ADVICE_BEFORE_METHOD: {
+                        getStatic(ASM_TYPE_SPY, "ON_BEFORE_METHOD", ASM_TYPE_METHOD);
+                        break;
+                    }
+
+                    case KEY_GREYS_ADVICE_RETURN_METHOD: {
+                        getStatic(ASM_TYPE_SPY, "ON_RETURN_METHOD", ASM_TYPE_METHOD);
+                        break;
+                    }
+
+                    case KEY_GREYS_ADVICE_THROWS_METHOD: {
+                        getStatic(ASM_TYPE_SPY, "ON_THROWS_METHOD", ASM_TYPE_METHOD);
+                        break;
+                    }
+
+                    case KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD: {
+                        getStatic(ASM_TYPE_SPY, "BEFORE_INVOKING_METHOD", ASM_TYPE_METHOD);
+                        break;
+                    }
+
+                    case KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD: {
+                        getStatic(ASM_TYPE_SPY, "AFTER_INVOKING_METHOD", ASM_TYPE_METHOD);
+                        break;
+                    }
+
+                    default: {
+                        throw new IllegalArgumentException("illegal keyOfMethod=" + keyOfMethod);
+                    }
+
+                }
+
+                _debug_dup("loadAdviceMethod:");
+
             }
 
             /**
@@ -449,36 +509,43 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 push(0);
                 push(adviceId);
                 box(ASM_TYPE_INT);
+                _debug_dup("loadArrayForBefore[0]:");
                 arrayStore(ASM_TYPE_INTEGER);
 
                 dup();
                 push(1);
                 loadClassLoader();
+                _debug_dup("loadArrayForBefore[1]:");
                 arrayStore(ASM_TYPE_CLASS_LOADER);
 
                 dup();
                 push(2);
                 push(className);
+                _debug_dup("loadArrayForBefore[2]:");
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(3);
                 push(name);
+                _debug_dup("loadArrayForBefore[3]:");
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(4);
                 push(desc);
+                _debug_dup("loadArrayForBefore[3]:");
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
                 push(5);
                 loadThisOrPushNullIfIsStatic();
+                _debug_dup("loadArrayForBefore[4]:");
                 arrayStore(ASM_TYPE_OBJECT);
 
                 dup();
                 push(6);
                 loadArgArray();
+                _debug_dup("loadArrayForBefore[5]:");
                 arrayStore(ASM_TYPE_OBJECT_ARRAY);
             }
 
@@ -489,8 +556,13 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 codeLockForTracing.lock(new Block() {
                     @Override
                     public void code() {
+
+                        _debug("_debug:on-method-enter");
+
                         // 加载before方法
                         loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_METHOD);
+
+                        _debug("_debug:on-method-enter > loadAdviceMethod()");
 
                         // 推入Method.invoke()的第一个参数
                         pushNull();
@@ -498,9 +570,13 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                         // 方法参数
                         loadArrayForBefore();
 
+                        _debug("_debug:on-method-enter > loadAdviceMethod() > loadArrayForBefore()");
+
                         // 调用方法
                         invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
                         pop();
+
+                        _debug("_debug:on-method-enter > loadAdviceMethod() > loadArrayForBefore() > invokeVirtual()");
                     }
                 });
 

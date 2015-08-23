@@ -14,6 +14,7 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
+import java.lang.reflect.InvocationTargetException;
 import java.security.ProtectionDomain;
 import java.util.*;
 
@@ -22,6 +23,9 @@ import static com.github.ompc.greys.util.SearchUtils.searchClass;
 import static com.github.ompc.greys.util.SearchUtils.searchSubClass;
 import static java.lang.System.arraycopy;
 import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
+import static org.apache.commons.io.IOUtils.toByteArray;
+import static org.apache.commons.lang3.reflect.MethodUtils.invokeMethod;
+import static org.apache.commons.lang3.reflect.MethodUtils.invokeStaticMethod;
 import static org.objectweb.asm.ClassReader.EXPAND_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
@@ -64,9 +68,51 @@ public class Enhancer implements ClassFileTransformer {
         this.affect = affect;
     }
 
+
+    /**
+     * 派遣间谍混入对方的classloader中
+     *
+     * @param targetClassLoader 目标classloader
+     */
+    private void spy(final ClassLoader targetClassLoader) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+
+        // 如果对方是bootstrap就算了
+        if (null == targetClassLoader) {
+            return;
+        }
+
+        final ClassLoader greysClassLoader = Spy.CLASSLOADER;
+        final String spyClassName = Spy.class.getName();
+
+        try {
+
+            final Class<?> clazz = targetClassLoader.loadClass(spyClassName);
+            logger.info("target ClassLoader has spy. targetClassLoader={};clazz={}", targetClassLoader, clazz);
+
+        } catch (ClassNotFoundException cnfe) {
+            final byte[] spyByteArray = toByteArray(greysClassLoader.getResourceAsStream("/" + spyClassName.replace('.', '/') + ".class"));
+            final Class<?> spyClassFromTargetClassLoader
+                    = (Class<?>) invokeMethod(targetClassLoader, "defineClass", spyByteArray, 0, spyByteArray.length);
+
+            // 初始化间谍
+            invokeStaticMethod(
+                    spyClassFromTargetClassLoader,
+                    "set",
+                    greysClassLoader,
+                    Spy.ON_BEFORE_METHOD,
+                    Spy.ON_RETURN_METHOD,
+                    Spy.ON_THROWS_METHOD,
+                    Spy.BEFORE_INVOKING_METHOD,
+                    Spy.AFTER_INVOKING_METHOD
+            );
+
+        }
+
+    }
+
     @Override
     public byte[] transform(
-            final ClassLoader loader,
+            final ClassLoader inClassLoader,
             String className,
             Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
@@ -78,7 +124,6 @@ public class Enhancer implements ClassFileTransformer {
         if (!matchingClasses.contains(classBeingRedefined)) {
             return null;
         }
-
 
         final ClassReader cr;
 
@@ -110,7 +155,7 @@ public class Enhancer implements ClassFileTransformer {
             @Override
             protected String getCommonSuperClass(String type1, String type2) {
                 Class<?> c, d;
-                final ClassLoader classLoader = loader;
+                final ClassLoader classLoader = inClassLoader;
                 try {
                     c = Class.forName(type1.replace('/', '.'), false, classLoader);
                     d = Class.forName(type2.replace('/', '.'), false, classLoader);
@@ -150,9 +195,17 @@ public class Enhancer implements ClassFileTransformer {
             // 成功计数
             affect.cCnt(1);
 
+            // 排遣间谍
+            try {
+                spy(inClassLoader);
+            } catch (Throwable t) {
+                logger.warn("send spy failed. classname={};loader={};", className, inClassLoader, t);
+                throw t;
+            }
+
             return enhanceClassByteArray;
         } catch (Throwable t) {
-            logger.warn("transform loader[{}]:class[{}] failed.", loader, className, t);
+            logger.warn("transform loader[{}]:class[{}] failed.", inClassLoader, className, t);
         }
 
         return null;
