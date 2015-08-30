@@ -16,10 +16,16 @@
 
 # 程序安装：
 
-- SH
+- 远程安装
 
-  ```
+  ```shell
   curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|sh
+  ```
+  
+- 远程安装(短链接)
+  
+  ```shell
+  curl -sLk http://t.cn/R2QbHFc|sh
   ```
 
 ## 最新版本
