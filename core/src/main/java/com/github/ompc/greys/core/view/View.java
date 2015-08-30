@@ -1,4 +1,4 @@
-package com.github.ompc.greys.core.command.view;
+package com.github.ompc.greys.core.view;
 
 /**
  * 命令行控件<br/>

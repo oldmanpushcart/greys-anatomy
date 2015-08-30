@@ -45,6 +45,8 @@ public class GreysLauncher {
         parser.accepts("pid").withRequiredArg().ofType(int.class).required();
         parser.accepts("target").withOptionalArg().ofType(String.class);
         parser.accepts("multi").withOptionalArg().ofType(int.class);
+        parser.accepts("core").withOptionalArg().ofType(String.class);
+        parser.accepts("agent").withOptionalArg().ofType(String.class);
 
         final OptionSet os = parser.parse(args);
         final Configure configure = new Configure();
@@ -56,6 +58,9 @@ public class GreysLauncher {
         }
 
         configure.setJavaPid((Integer) os.valueOf("pid"));
+        configure.setGreysAgent((String) os.valueOf("agent"));
+        configure.setGreysCore((String) os.valueOf("core"));
+
         return configure;
     }
 
@@ -87,7 +92,7 @@ public class GreysLauncher {
             } else {
                 vmObj = vmClass.getMethod("attach", vmdClass).invoke(null, attachVmdObj);
             }
-            vmClass.getMethod("loadAgent", String.class, String.class).invoke(vmObj, AGENT_JARFILE, CORE_JARFILE + ";" + configure.toString());
+            vmClass.getMethod("loadAgent", String.class, String.class).invoke(vmObj, configure.getGreysAgent(), configure.getGreysCore() + ";" + configure.toString());
         } finally {
             if (null != vmObj) {
                 vmClass.getMethod("detach", (Class<?>[]) null).invoke(vmObj, (Object[]) null);

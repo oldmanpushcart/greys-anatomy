@@ -1,38 +1,44 @@
 #! /bin/bash
 
-# temp greys file
-TEMP_GREYS_FILE="./greys.zip.$$"
+# temp file of greys.sh
+TEMP_GREYS_FILE="./greys.sh.$$"
+
+# target file of greys.sh
+TARGET_GREYS_FILE="./greys.sh"
+
+# update timeout(sec)
+SO_TIMEOUT=60
+
+
+# exit shell with err_code
+# $1 : err_code
+# $2 : err_msg
+exit_on_err()
+{
+    [[ ! -z "${2}" ]] && echo "${2}" >> /dev/stderr
+    exit ${1}
+}
 
 # check permission to download && install
-if [ ! -w ./ ]; then
-    echo "permission denied, target directory is not writable." >> /dev/stderr
-    exit 1
-fi
-
-
+[ ! -w ./ ] && exit_on_err 1 "permission denied, target directory ./ was not writable."
 
 # download from aliyunos
 echo "downloading... ${TEMP_GREYS_FILE}";
-curl -sLk "http://ompc.oss.aliyuncs.com/greys/greys.zip" -o ${TEMP_GREYS_FILE};
-if [ ! $? -eq 0 ]; then
-    echo "download failed!" >> /dev/stderr
-    exit 1
-fi
+curl \
+    -sLk \
+    --connect-timeout ${SO_TIMEOUT} \
+    "http://ompc.oss.aliyuncs.com/greys/greys.sh" \
+    -o ${TEMP_GREYS_FILE} \
+|| exit_on_err 1 "download failed!"
 
+# check download file format
+[[ -z $(grep "desc : write for july" ${TEMP_GREYS_FILE}) ]] \
+&& exit_on_err 1 "download failed!"
 
-# clean if exists
-rm -rf ./greys
-
-# unzip the greys file
-unzip ${TEMP_GREYS_FILE}
-if [ ! $? -eq 0 ]; then
-    echo "file damage!" >> /dev/stderr
-    exit 1
-fi
-
-# install greys
-rm -rf ${TEMP_GREYS_FILE}
-chmod +x greys/greys.sh
+# wirte or overwrite local file
+rm -rf greys.sh
+mv ${TEMP_GREYS_FILE} ${TARGET_GREYS_FILE}
+chmod +x ${TARGET_GREYS_FILE}
 
 # done
 echo "greys install successed."

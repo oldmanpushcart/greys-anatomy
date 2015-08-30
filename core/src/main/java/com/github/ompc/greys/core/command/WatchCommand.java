@@ -6,7 +6,7 @@ import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.command.view.ObjectView;
+import com.github.ompc.greys.core.view.ObjectView;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.server.Session;

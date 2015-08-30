@@ -1,8 +1,8 @@
 package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.command.annotation.Cmd;
-import com.github.ompc.greys.core.command.view.KVView;
-import com.github.ompc.greys.core.command.view.TableView;
+import com.github.ompc.greys.core.view.KVView;
+import com.github.ompc.greys.core.view.TableView;
 import com.github.ompc.greys.core.server.Session;
 
 import java.lang.instrument.Instrumentation;
@@ -11,8 +11,8 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 
-import static com.github.ompc.greys.core.command.view.TableView.Align.LEFT;
-import static com.github.ompc.greys.core.command.view.TableView.Align.RIGHT;
+import static com.github.ompc.greys.core.view.TableView.Align.LEFT;
+import static com.github.ompc.greys.core.view.TableView.Align.RIGHT;
 
 /**
  * JVM info command

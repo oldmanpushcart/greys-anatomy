@@ -2,7 +2,7 @@ package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.command.view.TableView;
+import com.github.ompc.greys.core.view.TableView;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.server.Session;
 

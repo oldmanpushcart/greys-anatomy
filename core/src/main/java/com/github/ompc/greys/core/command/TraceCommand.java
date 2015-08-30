@@ -6,7 +6,7 @@ import com.github.ompc.greys.core.advisor.ReflectAdviceTracingListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.command.view.TreeView;
+import com.github.ompc.greys.core.view.TreeView;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;

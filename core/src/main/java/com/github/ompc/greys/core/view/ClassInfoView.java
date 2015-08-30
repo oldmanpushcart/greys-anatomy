@@ -1,4 +1,4 @@
-package com.github.ompc.greys.core.command.view;
+package com.github.ompc.greys.core.view;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
