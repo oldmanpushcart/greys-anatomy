@@ -26,9 +26,14 @@ mvn clean package -Dmaven.test.skip=true -f ../pom.xml \
 # reset the target dir
 mkdir -p ${GREYS_TARGET_DIR}
 
-# copy file to TARGET_DIR
+# copy jar to TARGET_DIR
 cp ../core/target/greys-core-jar-with-dependencies.jar ${GREYS_TARGET_DIR}/greys-core.jar
 cp ../agent/target/greys-agent-jar-with-dependencies.jar ${GREYS_TARGET_DIR}/greys-agent.jar
+
+# copy shell to TARGET_DIR
+cat install-local.sh|sed "s/GREYS_VERSION=0.0.0.0/GREYS_VERSION=${GREYS_VERSION}/g" > ${GREYS_TARGET_DIR}/install-local.sh
+chmod +x ${GREYS_TARGET_DIR}/install-local.sh
+cp greys.sh ${GREYS_TARGET_DIR}/greys.sh
 
 # zip the greys
 cd ../target/
