@@ -154,7 +154,7 @@ update_if_necessary()
 
         # download current greys version
         curl \
-            -sLk \
+            -#Lk \
             --connect-timeout ${SO_TIMEOUT} \
             -o ${temp_target_lib_zip} \
             "${GREYS_REMOTE_URL}/greys-${remote_version}.zip" \
