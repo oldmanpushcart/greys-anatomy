@@ -142,7 +142,7 @@ update_if_necessary()
         echo "new version(${remote_version}) detection, update now..."
 
         local temp_target_lib_dir="${GREYS_LIB_DIR}/temp_${remote_version}_$$"
-        local temp_target_lib_zip="${temp_target_lib_dir}/greys-${remote_version}.zip"
+        local temp_target_lib_zip="${temp_target_lib_dir}/greys-${remote_version}-bin.zip"
         local target_lib_dir="${GREYS_LIB_DIR}/${remote_version}"
 
         # clean
@@ -157,7 +157,7 @@ update_if_necessary()
             -#Lk \
             --connect-timeout ${SO_TIMEOUT} \
             -o ${temp_target_lib_zip} \
-            "${GREYS_REMOTE_URL}/greys-${remote_version}.zip" \
+            "${GREYS_REMOTE_URL}/release/greys-${remote_version}-bin.zip" \
         || return 1
 
         # unzip greys lib

@@ -37,7 +37,7 @@ cp greys.sh ${GREYS_TARGET_DIR}/greys.sh
 
 # zip the greys
 cd ../target/
-zip -r greys-${GREYS_VERSION}.zip greys/
+zip -r greys-${GREYS_VERSION}-bin.zip greys/
 cd -
 
 # install to local
