@@ -26,6 +26,9 @@ if [[ ! -x ${GREYS_LIB_HOME} ]]; then
     # copy jar files
     cp *.jar ${GREYS_LIB_HOME}/
 
+    # make it -x
+    chmod +x ./greys.sh
+
 fi
 
 echo "install to local successed."
