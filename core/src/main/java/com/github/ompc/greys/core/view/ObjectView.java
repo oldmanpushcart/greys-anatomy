@@ -1,4 +1,4 @@
-package com.github.ompc.greys.core.command.view;
+package com.github.ompc.greys.core.view;
 
 import com.github.ompc.greys.core.GlobalOptions;
 import com.google.gson.Gson;

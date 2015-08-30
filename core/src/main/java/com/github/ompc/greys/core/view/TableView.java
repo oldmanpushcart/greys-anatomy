@@ -1,4 +1,4 @@
-package com.github.ompc.greys.core.command.view;
+package com.github.ompc.greys.core.view;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -239,7 +239,6 @@ public class TableView implements View {
                 .toString();
     }
 
-
     /**
      * 添加数据行
      *
@@ -261,7 +260,6 @@ public class TableView implements View {
         }
 
         return this;
-
     }
 
 

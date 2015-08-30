@@ -1,10 +1,12 @@
 package com.github.ompc.greys.core.util;
 
+import com.github.ompc.greys.core.view.TableView;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -68,17 +70,34 @@ public class GaStringUtils {
     }
 
     /**
-     * 展示logo
+     * 展示logo<br/>
+     * 这个代码不忍直视，忍吧，不要问我怎么写出来的
      *
      * @return Logo信息
+     * @throws IOException resource not found.
      */
-    public static String getLogo() {
-        final StringBuilder logoSB = new StringBuilder();
-        final Scanner scanner = new Scanner(GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/logo.txt"));
-        while (scanner.hasNextLine()) {
-            logoSB.append(scanner.nextLine()).append("\n");
+    public static String getLogo() throws IOException {
+        final String logo = IOUtils.toString(GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/logo.txt"));
+        final String version = IOUtils.toString(GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/version"));
+
+        final char[] versionPrefixArray = "version:".toCharArray();
+        final String[] versionArray = StringUtils.split(version, '.');
+        final int FIX_VERSION_LENGTH = 4;
+        final Object[] objectArray = new Object[versionPrefixArray.length + versionArray.length + FIX_VERSION_LENGTH];
+        for (int index = 0; index < versionPrefixArray.length; index++) {
+            objectArray[index] = versionPrefixArray[index];
         }
-        return logoSB.toString();
+
+        for (int index = versionPrefixArray.length; index < objectArray.length; index += 2) {
+            objectArray[index] = versionArray[(index - versionPrefixArray.length) / 2];
+            if (index < objectArray.length) {
+                objectArray[index + 1] = ".";
+            }
+        }
+        return new TableView(new TableView.ColumnDefine[]{new TableView.ColumnDefine(TableView.Align.RIGHT)})
+                .addRow(new TableView(1).addRow(logo).draw())
+                .addRow(new TableView(15).addRow(objectArray).hasBorder(true).draw())
+                .draw();
     }
 
     /**

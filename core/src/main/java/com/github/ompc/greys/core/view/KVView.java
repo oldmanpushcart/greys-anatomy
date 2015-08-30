@@ -1,4 +1,4 @@
-package com.github.ompc.greys.core.command.view;
+package com.github.ompc.greys.core.view;
 
 /**
  * KV排版控件

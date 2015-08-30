@@ -21,6 +21,8 @@ public class Configure {
     private int targetPort;                 // 目标进程号
     private int javaPid;                    // 对方java进程号
     private int connectTimeout = 6000;      // 连接超时时间(ms)
+    private String greysCore;
+    private String greysAgent;
 
     public String getTargetIp() {
         return targetIp;
@@ -54,6 +56,21 @@ public class Configure {
         this.connectTimeout = connectTimeout;
     }
 
+    public String getGreysAgent() {
+        return greysAgent;
+    }
+
+    public void setGreysAgent(String greysAgent) {
+        this.greysAgent = greysAgent;
+    }
+
+    public String getGreysCore() {
+        return greysCore;
+    }
+
+    public void setGreysCore(String greysCore) {
+        this.greysCore = greysCore;
+    }
 
     // 对象的编码解码器
     private final static FeatureCodec codec = new FeatureCodec(';', '=');

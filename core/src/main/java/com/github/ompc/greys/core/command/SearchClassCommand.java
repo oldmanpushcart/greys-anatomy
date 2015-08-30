@@ -4,7 +4,7 @@ import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.command.view.ClassInfoView;
+import com.github.ompc.greys.core.view.ClassInfoView;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.SearchUtils;
