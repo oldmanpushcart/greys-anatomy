@@ -104,7 +104,7 @@ get_local_version()
     ls ${GREYS_LIB_DIR}\
         |awk -F "." '{printf("%03d.%03d.%03d.%03d\n",$1,$2,$3,$4)}'\
         |sort\
-        |awk '/^([0-9]{3}.){3}[0-9]{3}$/'\
+        |awk --posix '/^([0-9]{3}.){3}[0-9]{3}$/'\
         |tail -1\
         |awk -F "." '{printf("%d.%d.%d.%d\n",$1,$2,$3,$4)}'
 }
@@ -114,7 +114,7 @@ get_remote_version()
 {
     curl -sLk --connect-timeout ${SO_TIMEOUT} "${GREYS_REMOTE_URL}/version"\
         |awk -F "." '{printf("%03d.%03d.%03d.%03d\n",$1,$2,$3,$4)}'\
-        |awk '/^([0-9]{3}.){3}[0-9]{3}$/'\
+        |awk --posix '/^([0-9]{3}.){3}[0-9]{3}$/'\
         |awk -F "." '{printf("%d.%d.%d.%d\n",$1,$2,$3,$4)}'
 
 }
@@ -197,7 +197,7 @@ parse_arguments()
 
     # check pid
     if [ -z ${TARGET_PID} ];then
-        echo "illegal arguments, the <PID> is required." >> /dev/stderr
+        echo "illegal arguments, the <PID> is required." 1>&2
         return 1
     fi
 
@@ -257,7 +257,7 @@ active_console()
 
     else
 
-        echo "'telnet' or 'nc' is required." >> /dev/stderr
+        echo "'telnet' or 'nc' is required." 1>&2
         return 1
 
     fi
@@ -276,7 +276,7 @@ main()
         || exit_on_err 1 "$(usage)"
 
     update_if_necessary \
-        || echo "update fail, ignore this update." >> /dev/stderr
+        || echo "update fail, ignore this update." 1>&2
 
     local greys_local_version=$(default $(get_local_version) ${DEFAULT_VERSION})
 

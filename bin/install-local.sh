@@ -12,7 +12,7 @@ GREYS_LIB_HOME=${HOME}/.greys/lib/${GREYS_VERSION}/greys
 # $2 : err_msg
 exit_on_err()
 {
-    [[ ! -z "${2}" ]] && echo "${2}" >> /dev/stderr
+    [[ ! -z "${2}" ]] && echo "${2}" 1>&2
     exit ${1}
 }
 
