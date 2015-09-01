@@ -3,6 +3,7 @@ package com.github.ompc.greys.core.command.hacking;
 import com.github.ompc.greys.core.command.Command;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.server.Session;
+import org.apache.commons.io.IOUtils;
 
 import java.lang.instrument.Instrumentation;
 
@@ -11,12 +12,12 @@ import java.lang.instrument.Instrumentation;
  * 感谢
  * Created by vlinux on 15/9/1.
  */
-@Cmd(isHacking = true, name = "about", summary = "About",
+@Cmd(isHacking = true, name = "thanks", summary = "Thanks",
         eg = {
-                "about"
+                "thanks"
         }
 )
-public class AboutCommand implements Command {
+public class ThanksCommand implements Command {
 
     @Override
     public Action getAction() {
@@ -24,6 +25,8 @@ public class AboutCommand implements Command {
 
             @Override
             public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
+
+                printer.println(IOUtils.toString(getClass().getResourceAsStream("/com/github/ompc/greys/core/res/thanks.txt"))).finish();
 
             }
         };
