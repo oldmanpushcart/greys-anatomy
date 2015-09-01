@@ -83,10 +83,10 @@ public class OptionsCommand implements Command {
     private RowAction doShow() {
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                 final RowAffect affect = new RowAffect();
                 final Collection<Field> fields = findOptions(new Matcher.RegexMatcher(".*"));
-                sender.send(true, drawShowTable(fields));
+                printer.print(drawShowTable(fields)).finish();
                 affect.rCnt(fields.size());
                 return affect;
             }
@@ -96,10 +96,10 @@ public class OptionsCommand implements Command {
     private RowAction doShowName() {
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                 final RowAffect affect = new RowAffect();
                 final Collection<Field> fields = findOptions(new Matcher.EqualsMatcher(optionName));
-                sender.send(true, drawShowTable(fields));
+                printer.print(drawShowTable(fields)).finish();
                 affect.rCnt(fields.size());
                 return affect;
             }
@@ -156,14 +156,14 @@ public class OptionsCommand implements Command {
     private RowAction doChangeNameValue() {
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 final RowAffect affect = new RowAffect();
                 final Collection<Field> fields = findOptions(new Matcher.EqualsMatcher(optionName));
 
                 // name not exists
                 if (fields.isEmpty()) {
-                    sender.send(true, format("options[%s] not found.%n", optionName));
+                    printer.println(format("options[%s] not found.", optionName)).finish();
                     return affect;
                 }
 
@@ -190,13 +190,13 @@ public class OptionsCommand implements Command {
                     } else if (isIn(type, short.class, Short.class)) {
                         writeStaticField(field, afterValue = Short.valueOf(optionValue));
                     } else {
-                        sender.send(true, format("Options[%s]  type[%s] desupported.%n", optionName, type.getSimpleName()));
+                        printer.println(format("Options[%s] type[%s] desupported.", optionName, type.getSimpleName())).finish();
                         return affect;
                     }
 
                     affect.rCnt(1);
                 } catch (Throwable t) {
-                    sender.send(true, format("Cannot cast option value[%s] to type[%s].%n", optionValue, type.getSimpleName()));
+                    printer.println(format("Cannot cast option value[%s] to type[%s].", optionValue, type.getSimpleName())).finish();
                     return affect;
                 }
 
@@ -206,7 +206,7 @@ public class OptionsCommand implements Command {
                         .addRow("NAME", "BEFORE-VALUE", "AFTER-VALUE")
                         .addRow(optionAnnotation.name(), newString(beforeValue), newString(afterValue));
 
-                sender.send(true, view.draw());
+                printer.print(view.draw()).finish();
                 return affect;
             }
         };

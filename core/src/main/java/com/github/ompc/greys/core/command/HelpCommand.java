@@ -40,13 +40,13 @@ public class HelpCommand implements Command {
         return new RowAction() {
 
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                 if (isBlank(cmd)
                         || !Commands.getInstance().listCommands().containsKey(cmd)) {
-                    sender.send(true, mainHelp());
+                    printer.print(mainHelp()).finish();
                 } else {
                     final Class<?> clazz = Commands.getInstance().listCommands().get(cmd);
-                    sender.send(true, commandHelp(clazz));
+                    printer.print(commandHelp(clazz)).finish();
                 }
 
                 return new RowAffect(1);

@@ -39,7 +39,7 @@ public class JvmCommand implements Command {
     public Action getAction() {
         return new SilentAction() {
             @Override
-            public void action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 final TableView view = new TableView(new TableView.ColumnDefine[]{
                         new TableView.ColumnDefine(RIGHT),
@@ -65,7 +65,7 @@ public class JvmCommand implements Command {
                 view.addRow("OPERATING-SYSTEM", drawOperatingSystemMXBeanTable());
                 view.addRow("THREAD", drawThreadTable());
 
-                sender.send(true, view.draw());
+                printer.print(view.draw()).finish();
 
             }
         };

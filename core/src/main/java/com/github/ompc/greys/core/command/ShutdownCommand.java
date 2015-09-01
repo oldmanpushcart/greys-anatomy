@@ -24,7 +24,7 @@ public class ShutdownCommand implements Command {
     public Action getAction() {
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 // 退出之前需要重置所有的增强类
                 // 重置之前增强的类
@@ -36,7 +36,7 @@ public class ShutdownCommand implements Command {
                 // 重置整个greys
                 Spy.AGENT_RESET_METHOD.invoke(null);
 
-                sender.send(true, "Greys Server is shut down\n");
+                printer.println("Greys Server is shut down.").finish();
                 return new RowAffect(enhancerAffect.cCnt());
             }
 

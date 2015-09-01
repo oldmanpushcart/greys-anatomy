@@ -209,7 +209,7 @@ public class Enhancer implements ClassFileTransformer {
             try {
                 spy(inClassLoader);
             } catch (Throwable t) {
-                logger.warn("send spy failed. classname={};loader={};", className, inClassLoader, t);
+                logger.warn("print spy failed. classname={};loader={};", className, inClassLoader, t);
                 throw t;
             }
 

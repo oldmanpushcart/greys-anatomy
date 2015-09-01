@@ -1,19 +1,22 @@
-package com.github.ompc.greys.core.command;
+package com.github.ompc.greys.core.command.hacking;
 
+import com.github.ompc.greys.core.command.Command;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.server.Session;
 
 import java.lang.instrument.Instrumentation;
 
 /**
- * 退出命令
- * Created by vlinux on 15/5/18.
+ * 工具介绍<br/>
+ * 感谢
+ * Created by vlinux on 15/9/1.
  */
-@Cmd(name = "quit", sort = 8, summary = "Quit Greys console",
+@Cmd(isHacking = true, name = "about", summary = "About",
         eg = {
-                "quit"
-        })
-public class QuitCommand implements Command {
+                "about"
+        }
+)
+public class AboutCommand implements Command {
 
     @Override
     public Action getAction() {
@@ -21,9 +24,9 @@ public class QuitCommand implements Command {
 
             @Override
             public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
-                printer.println("Bye!").finish();
-            }
 
+            }
         };
     }
+
 }

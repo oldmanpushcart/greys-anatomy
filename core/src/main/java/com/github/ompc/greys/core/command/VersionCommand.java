@@ -25,8 +25,8 @@ public class VersionCommand implements Command {
         return new RowAction() {
 
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
-                sender.send(true, getLogo());
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
+                printer.print(getLogo()).finish();
                 return new RowAffect(1);
             }
 

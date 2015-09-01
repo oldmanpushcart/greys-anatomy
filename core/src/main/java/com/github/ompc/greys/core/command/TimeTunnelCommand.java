@@ -8,10 +8,7 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Advice;
-import com.github.ompc.greys.core.util.Express;
-import com.github.ompc.greys.core.util.GaMethod;
-import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.*;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.ObjectView;
 import com.github.ompc.greys.core.view.TableView;
@@ -26,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.github.ompc.greys.core.util.GaStringUtils.newString;
 import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
@@ -273,7 +271,7 @@ public class TimeTunnelCommand implements Command {
 
         return new GetEnhancerAction() {
             @Override
-            public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
+            public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
                     private final AtomicInteger times = new AtomicInteger();
@@ -399,7 +397,7 @@ public class TimeTunnelCommand implements Command {
                                 if (isF) {
                                     view.borders(view.borders() | TableView.BORDER_BOTTOM);
                                 }
-                                sender.send(isF, view.draw());
+                                printer.print(isF, view.draw());
                             }
 
                         };
@@ -418,8 +416,8 @@ public class TimeTunnelCommand implements Command {
 
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
-                sender.send(true, drawTimeTunnelTable(timeFragmentMap));
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
+                printer.print(drawTimeTunnelTable(timeFragmentMap)).finish();
                 return new RowAffect(timeFragmentMap.size());
             }
         };
@@ -446,7 +444,7 @@ public class TimeTunnelCommand implements Command {
 
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 // 匹配的时间片段
                 final Map<Integer, TimeFragment> matchingTimeSegmentMap = new LinkedHashMap<Integer, TimeFragment>();
@@ -485,10 +483,10 @@ public class TimeTunnelCommand implements Command {
 
                     }
 
-                    sender.send(true, view.draw());
+                    printer.print(view.draw()).finish();
                 } // 单纯的列表格
                 else {
-                    sender.send(true, drawTimeTunnelTable(matchingTimeSegmentMap));
+                    printer.print(drawTimeTunnelTable(matchingTimeSegmentMap)).finish();
                 }
 
                 return new RowAffect(matchingTimeSegmentMap.size());
@@ -504,10 +502,10 @@ public class TimeTunnelCommand implements Command {
         return new RowAction() {
 
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                 final int count = timeFragmentMap.size();
                 timeFragmentMap.clear();
-                sender.send(true, "Time fragments are cleaned\n");
+                printer.println("Time fragments are cleaned.").finish();
                 return new RowAffect(count);
             }
         };
@@ -521,20 +519,20 @@ public class TimeTunnelCommand implements Command {
 
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("Time fragment[%d] does not exist.%n", index));
+                    printer.println(format("Time fragment[%d] does not exist.", index)).finish();
                     return new RowAffect();
                 }
 
                 final Advice advice = tf.getAdvice();
                 final Object value = Express.ExpressFactory.newExpress(advice).get(watchExpress);
                 if (isNeedExpend()) {
-                    sender.send(true, new ObjectView(value, expend).draw() + "\n");
+                    printer.println(new ObjectView(value, expend).draw()).finish();
                 } else {
-                    sender.send(true, value + "\n");
+                    printer.println(newString(value)).finish();
                 }
 
                 return new RowAffect(1);
@@ -549,11 +547,11 @@ public class TimeTunnelCommand implements Command {
     private RowAction doPlay() {
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("Time fragment[%d] does not exist.%n", index));
+                    printer.println(format("Time fragment[%d] does not exist.", index)).finish();
                     return new RowAffect();
                 }
 
@@ -641,8 +639,9 @@ public class TimeTunnelCommand implements Command {
                     method.setAccessible(accessible);
                 }
 
-                sender.send(false, view.hasBorder(true).padding(1).draw());
-                sender.send(true, format("Time fragment[%d] successfully replayed.%n", index));
+                printer.print(view.hasBorder(true).padding(1).draw())
+                        .println(format("Time fragment[%d] successfully replayed.", index))
+                        .finish();
                 return new RowAffect(1);
             }
         };
@@ -655,12 +654,12 @@ public class TimeTunnelCommand implements Command {
 
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                 final RowAffect affect = new RowAffect();
                 if (timeFragmentMap.remove(index) != null) {
                     affect.rCnt(1);
                 }
-                sender.send(true, format("Time fragment[%d] successfully deleted.%n", index));
+                printer.println(format("Time fragment[%d] successfully deleted.", index)).finish();
                 return affect;
             }
         };
@@ -736,11 +735,11 @@ public class TimeTunnelCommand implements Command {
 
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    sender.send(true, format("Time fragment[%d] does not exist.%n", index));
+                    printer.println(format("Time fragment[%d] does not exist.%n", index)).finish();
                     return new RowAffect();
                 }
 
@@ -816,7 +815,7 @@ public class TimeTunnelCommand implements Command {
 
                 }
 
-                sender.send(true, view.draw());
+                printer.print(view.draw()).finish();
 
                 return new RowAffect(1);
             }
@@ -852,7 +851,7 @@ public class TimeTunnelCommand implements Command {
         } else {
             action = new SilentAction() {
                 @Override
-                public void action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+                public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                     throw new UnsupportedOperationException("not support operation.");
                 }
             };

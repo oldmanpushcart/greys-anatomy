@@ -18,15 +18,42 @@ public interface Command {
      *
      * @author vlinux
      */
-    interface Sender {
+    interface Printer {
 
         /**
          * 发送信息
          *
-         * @param isF     是否结束发送
+         * @param isF     是否结束打印
          * @param message 发送信息内容
          */
-        void send(boolean isF, String message);
+        Printer print(boolean isF, String message);
+
+        /**
+         * 发送信息
+         *
+         * @param message 发送信息内容
+         */
+        Printer print(String message);
+
+        /**
+         * 换行发送信息
+         *
+         * @param isF     是否结束打印
+         * @param message 发送信息内容
+         */
+        Printer println(boolean isF, String message);
+
+        /**
+         * 换行发送信息
+         *
+         * @param message 发送信息内容
+         */
+        Printer println(String message);
+
+        /**
+         * 结束打印
+         */
+        void finish();
 
     }
 
@@ -85,11 +112,11 @@ public interface Command {
          *
          * @param session 会话
          * @param inst    inst
-         * @param sender  信息发送者
+         * @param printer  信息发送者
          * @return 类增强
          * @throws Throwable 动作执行出错
          */
-        GetEnhancer action(Session session, Instrumentation inst, Sender sender) throws Throwable;
+        GetEnhancer action(Session session, Instrumentation inst, Printer printer) throws Throwable;
 
     }
 
@@ -103,10 +130,10 @@ public interface Command {
          *
          * @param session 会话
          * @param inst    inst
-         * @param sender  信息发送者
+         * @param printer  信息发送者
          * @throws Throwable 动作执行出错
          */
-        void action(Session session, Instrumentation inst, Sender sender) throws Throwable;
+        void action(Session session, Instrumentation inst, Printer printer) throws Throwable;
 
     }
 
@@ -121,11 +148,11 @@ public interface Command {
          *
          * @param session 会话
          * @param inst    inst
-         * @param sender  信息发送者
+         * @param printer  信息发送者
          * @return 影响范围
          * @throws Throwable 动作执行出错
          */
-        RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable;
+        RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable;
 
     }
 

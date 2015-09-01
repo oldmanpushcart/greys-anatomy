@@ -7,10 +7,10 @@ import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.view.TableView;
-import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.view.TableView;
 
 import java.lang.instrument.Instrumentation;
 import java.text.DecimalFormat;
@@ -148,7 +148,7 @@ public class MonitorCommand implements Command {
         return new GetEnhancerAction() {
 
             @Override
-            public GetEnhancer action(final Session session, Instrumentation inst, final Sender sender) throws Throwable {
+            public GetEnhancer action(final Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
                     @Override
                     public Matcher getClassNameMatcher() {
@@ -245,7 +245,7 @@ public class MonitorCommand implements Command {
                                         tableView.padding(1);
                                         tableView.hasBorder(true);
 
-                                        sender.send(false, tableView.draw() + "\n");
+                                        printer.println(tableView.draw());
                                     }
 
                                 }, 0, cycle * 1000);

@@ -64,7 +64,7 @@ public class SearchMethodCommand implements Command {
         return new RowAction() {
 
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 final Set<String> uniqueLine = new HashSet<String>();
                 final StringBuilder message = new StringBuilder();
@@ -96,7 +96,7 @@ public class SearchMethodCommand implements Command {
                     }//for
                 }//for
 
-                sender.send(true, message.toString());
+                printer.print(message.toString()).finish();
                 return affect;
             }
 

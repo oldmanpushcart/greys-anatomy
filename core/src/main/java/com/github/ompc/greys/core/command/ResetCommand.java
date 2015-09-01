@@ -50,10 +50,10 @@ public class ResetCommand implements Command {
             public RowAffect action(
                     Session session,
                     Instrumentation inst,
-                    Sender sender) throws Throwable {
+                    Printer printer) throws Throwable {
 
                 final EnhancerAffect enhancerAffect = Enhancer.reset(inst, classNameMatcher);
-                sender.send(true, EMPTY);
+                printer.print(EMPTY).finish();
                 return new RowAffect(enhancerAffect.cCnt());
             }
 

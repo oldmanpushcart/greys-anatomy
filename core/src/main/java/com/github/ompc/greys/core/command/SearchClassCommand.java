@@ -48,7 +48,7 @@ public class SearchClassCommand implements Command {
         return new RowAction() {
 
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 final Matcher classNameMatcher = isRegEx
                         ? new Matcher.RegexMatcher(classPattern)
@@ -62,7 +62,7 @@ public class SearchClassCommand implements Command {
                 if (isDetail) {
 
                     for (Class<?> clazz : matchedClassSet) {
-                        sender.send(false, new ClassInfoView(clazz, isField).draw() + "\n");
+                        printer.println(new ClassInfoView(clazz, isField).draw());
                     }
 
                 }
@@ -71,12 +71,12 @@ public class SearchClassCommand implements Command {
                 else {
 
                     for (Class<?> clazz : matchedClassSet) {
-                        sender.send(false, clazz.getName() + "\n");
+                        printer.println(clazz.getName());
                     }
 
                 }
 
-                sender.send(true, EMPTY);
+                printer.print(EMPTY).finish();
                 return new RowAffect(matchedClassSet.size());
             }
 

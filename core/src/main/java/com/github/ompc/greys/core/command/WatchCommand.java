@@ -7,10 +7,7 @@ import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Advice;
-import com.github.ompc.greys.core.util.GaMethod;
-import com.github.ompc.greys.core.util.LogUtil;
-import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.*;
 import com.github.ompc.greys.core.view.ObjectView;
 import org.slf4j.Logger;
 
@@ -20,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.github.ompc.greys.core.util.Advice.*;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getCauseMessage;
+import static com.github.ompc.greys.core.util.GaStringUtils.newString;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Cmd(name = "watch", sort = 4, summary = "Display the details of specified class and method",
@@ -128,7 +126,7 @@ public class WatchCommand implements Command {
         return new GetEnhancerAction() {
 
             @Override
-            public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
+            public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
                     private final AtomicInteger times = new AtomicInteger();
@@ -236,14 +234,14 @@ public class WatchCommand implements Command {
 
                                     final boolean isF = isLimited(times.incrementAndGet());
                                     final Object value = newExpress(advice).get(express);
-                                    sender.send(
+                                    printer.println(
                                             isF,
-                                            (isNeedExpend() ? new ObjectView(value, expend).draw() : value) + "\n"
+                                            newString(isNeedExpend() ? new ObjectView(value, expend).draw() : value)
                                     );
 
                                 } catch (Exception e) {
                                     logger.warn("watch failed.", e);
-                                    sender.send(false, getCauseMessage(e) + "\n");
+                                    printer.println(getCauseMessage(e));
                                 }
                             }
 

@@ -7,7 +7,7 @@ import com.github.ompc.greys.core.advisor.InvokeTraceable;
 import com.github.ompc.greys.core.command.Command;
 import com.github.ompc.greys.core.command.Command.Action;
 import com.github.ompc.greys.core.command.Command.GetEnhancerAction;
-import com.github.ompc.greys.core.command.Command.Sender;
+import com.github.ompc.greys.core.command.Command.Printer;
 import com.github.ompc.greys.core.command.Commands;
 import com.github.ompc.greys.core.command.QuitCommand;
 import com.github.ompc.greys.core.command.ShutdownCommand;
@@ -140,10 +140,10 @@ public class DefaultCommandHandler implements CommandHandler {
         final AtomicBoolean isFinishRef = new AtomicBoolean(false);
 
         // 消息发送者
-        final Sender sender = new Sender() {
+        final Printer printer = new Printer() {
 
             @Override
-            public void send(boolean isF, String message) {
+            public Printer print(boolean isF, String message) {
 
                 final BlockingQueue<String> writeQueue = session.getWriteQueue();
                 if (null != message) {
@@ -153,9 +153,31 @@ public class DefaultCommandHandler implements CommandHandler {
                 }
 
                 if (isF) {
-                    isFinishRef.set(true);
+                    finish();
                 }
 
+                return this;
+
+            }
+
+            @Override
+            public Printer println(boolean isF, String message) {
+                return print(isF, message + "\n");
+            }
+
+            @Override
+            public Printer print(String message) {
+                return print(false, message);
+            }
+
+            @Override
+            public Printer println(String message) {
+                return println(false, message);
+            }
+
+            @Override
+            public void finish() {
+                isFinishRef.set(true);
             }
 
         };
@@ -170,13 +192,13 @@ public class DefaultCommandHandler implements CommandHandler {
             // 无任何后续动作的动作
             if (action instanceof Command.SilentAction) {
                 affect = new Affect();
-                ((Command.SilentAction) action).action(session, inst, sender);
+                ((Command.SilentAction) action).action(session, inst, printer);
             }
 
             // 需要反馈行影响范围的动作
             else if (action instanceof Command.RowAction) {
                 affect = new RowAffect();
-                final RowAffect rowAffect = ((Command.RowAction) action).action(session, inst, sender);
+                final RowAffect rowAffect = ((Command.RowAction) action).action(session, inst, printer);
                 ((RowAffect) affect).rCnt(rowAffect.rCnt());
             }
 
@@ -186,7 +208,7 @@ public class DefaultCommandHandler implements CommandHandler {
                 affect = new EnhancerAffect();
 
                 // 执行命令动作 & 获取增强器
-                final Command.GetEnhancer getEnhancer = ((GetEnhancerAction) action).action(session, inst, sender);
+                final Command.GetEnhancer getEnhancer = ((GetEnhancerAction) action).action(session, inst, printer);
                 final int lock = session.getLock();
                 final AdviceListener listener = getEnhancer.getAdviceListener();
                 final EnhancerAffect enhancerAffect = Enhancer.enhance(
@@ -202,7 +224,7 @@ public class DefaultCommandHandler implements CommandHandler {
                 if (session.getLock() == lock) {
                     // 注册通知监听器
                     AdviceWeaver.reg(lock, listener);
-                    sender.send(false, ABORT_MSG + "\n");
+                    printer.println(ABORT_MSG);
 
                     ((EnhancerAffect) affect).cCnt(enhancerAffect.cCnt());
                     ((EnhancerAffect) affect).mCnt(enhancerAffect.mCnt());
@@ -217,7 +239,7 @@ public class DefaultCommandHandler implements CommandHandler {
             }
 
             // 记录下命令执行的执行信息
-            sender.send(false, affect.toString() + "\n");
+            printer.print(false, affect.toString() + "\n");
         }
 
         // 命令执行错误必须纪录

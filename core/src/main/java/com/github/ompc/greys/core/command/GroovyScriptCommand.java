@@ -53,33 +53,33 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
                 || !scriptFile.isFile()) {
             return new SilentAction() {
                 @Override
-                public void action(Session session, Instrumentation inst, Sender sender) throws Throwable {
-                    sender.send(true, "Groovy script not found\n");
+                public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
+                    printer.println("Groovy script not found").finish();
                 }
             };
         }
 
         return new GetEnhancerAction() {
             @Override
-            public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
+            public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
 
                 final Output output = new Output() {
 
                     @Override
                     public Output print(String string) {
-                        sender.send(false, string);
+                        printer.print(string);
                         return this;
                     }
 
                     @Override
                     public Output println(String string) {
-                        sender.send(false, string + "\n");
+                        printer.println(string);
                         return this;
                     }
 
                     @Override
                     public Output finish() {
-                        sender.send(true, EMPTY);
+                        printer.print(EMPTY).finish();
                         return this;
                     }
                 };

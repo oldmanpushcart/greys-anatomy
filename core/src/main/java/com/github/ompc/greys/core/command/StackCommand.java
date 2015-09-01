@@ -90,7 +90,7 @@ public class StackCommand implements Command {
         return new GetEnhancerAction() {
 
             @Override
-            public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
+            public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
                     private final AtomicInteger times = new AtomicInteger();
@@ -167,7 +167,7 @@ public class StackCommand implements Command {
                             private void finishing(final Advice advice) {
                                 if (isPrintIfNecessary(advice)) {
                                     final boolean isF = isLimited(times.incrementAndGet());
-                                    sender.send(isF, stackThreadLocal.get() + "\n");
+                                    printer.println(isF, stackThreadLocal.get());
                                 }
                             }
 

@@ -89,7 +89,7 @@ public class TraceCommand implements Command {
         return new GetEnhancerAction() {
 
             @Override
-            public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
+            public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
                     private final AtomicInteger times = new AtomicInteger();
@@ -207,7 +207,7 @@ public class TraceCommand implements Command {
                                     
                                     if (isPrintIfNecessary(advice)) {
                                         final boolean isF = isLimited(times.incrementAndGet());
-                                        sender.send(isF, threadBoundEntity.get().view.draw() + "\n");
+                                        printer.println(isF, threadBoundEntity.get().view.draw());
                                     }
                                     threadBoundEntity.remove();
                                 }
