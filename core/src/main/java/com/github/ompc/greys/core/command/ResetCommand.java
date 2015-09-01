@@ -18,7 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * 恢复所有增强类<br/>
  * Created by vlinux on 15/5/29.
  */
-@Cmd(name = "reset", sort = 11, summary = "Reset all the enhancer class.",
+@Cmd(name = "reset", sort = 11, summary = "Reset all the enhanced classes",
         eg = {
                 "reset",
                 "reset *List",
@@ -26,10 +26,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
         })
 public class ResetCommand implements Command {
 
-    @IndexArg(index = 0, name = "class-pattern", isRequired = false, summary = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", isRequired = false, summary = "Path and classname of Pattern Matching")
     private String classPattern;
 
-    @NamedArg(name = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
     @Override

@@ -18,7 +18,7 @@ import static com.github.ompc.greys.core.view.TableView.Align.RIGHT;
  * JVM info command
  * Created by vlinux on 15/6/6.
  */
-@Cmd(name = "jvm", sort = 10, summary = "Show the target JVM info",
+@Cmd(name = "jvm", sort = 10, summary = "Display the target JVM information",
         eg = {
                 "jvm"
         }

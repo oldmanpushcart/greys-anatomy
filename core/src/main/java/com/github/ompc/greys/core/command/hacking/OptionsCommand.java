@@ -29,7 +29,7 @@ import static org.apache.commons.lang3.reflect.FieldUtils.writeStaticField;
  * 选项开关命令
  * Created by vlinux on 15/6/6.
  */
-@Cmd(isHacking = true, name = "options", summary = "Change the options",
+@Cmd(isHacking = true, name = "options", summary = "Greys options",
         eg = {
                 "options dump true",
                 "options unsafe true"
@@ -37,10 +37,10 @@ import static org.apache.commons.lang3.reflect.FieldUtils.writeStaticField;
 )
 public class OptionsCommand implements Command {
 
-    @IndexArg(index = 0, name = "options-name", isRequired = false, summary = "the name of options")
+    @IndexArg(index = 0, name = "options-name", isRequired = false, summary = "Option name")
     private String optionName;
 
-    @IndexArg(index = 1, name = "options-value", isRequired = false, summary = "the value of the name in options")
+    @IndexArg(index = 1, name = "options-value", isRequired = false, summary = "Option value")
     private String optionValue;
 
     @Override
@@ -190,13 +190,13 @@ public class OptionsCommand implements Command {
                     } else if (isIn(type, short.class, Short.class)) {
                         writeStaticField(field, afterValue = Short.valueOf(optionValue));
                     } else {
-                        sender.send(true, format("options[%s]'s type[%s] was unsupported.%n", optionName, type.getSimpleName()));
+                        sender.send(true, format("Options[%s]  type[%s] desupported.%n", optionName, type.getSimpleName()));
                         return affect;
                     }
 
                     affect.rCnt(1);
                 } catch (Throwable t) {
-                    sender.send(true, format("option value[%s] can not cast to options type[%s].%n", optionValue, type.getSimpleName()));
+                    sender.send(true, format("Cannot cast option value[%s] to type[%s].%n", optionValue, type.getSimpleName()));
                     return affect;
                 }
 

@@ -20,7 +20,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  *
  * @author vlinux
  */
-@Cmd(name = "sc", sort = 0, summary = "Search all have been loaded by the JVM class.",
+@Cmd(name = "sc", sort = 0, summary = "Search all the classes loaded by JVM",
         eg = {
                 "sc -E org\\.apache\\.commons\\.lang\\.StringUtils",
                 "sc -d org.apache.commons.lang.StringUtils",
@@ -28,19 +28,19 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
         })
 public class SearchClassCommand implements Command {
 
-    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
 
-    @NamedArg(name = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "Include subclass")
     private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
-    @NamedArg(name = "d", summary = "show the detail of class")
+    @NamedArg(name = "d", summary = "Display the details of class")
     private boolean isDetail = false;
 
-    @NamedArg(name = "f", summary = "show the declared fields of class")
+    @NamedArg(name = "f", summary = "Display all the member variables")
     private boolean isField = false;
 
-    @NamedArg(name = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
     @Override

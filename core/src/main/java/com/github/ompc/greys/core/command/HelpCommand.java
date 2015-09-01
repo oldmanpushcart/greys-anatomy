@@ -23,7 +23,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * <p/>
  * Created by vlinux on 14/10/26.
  */
-@Cmd(name = "help", sort = 12, summary = "List of the Greys command list.",
+@Cmd(name = "help", sort = 12, summary = "Display Greys Help",
         eg = {
                 "help",
                 "help sc",
@@ -32,7 +32,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
         })
 public class HelpCommand implements Command {
 
-    @IndexArg(index = 0, isRequired = false, name = "command-name", summary = "the name of command")
+    @IndexArg(index = 0, isRequired = false, name = "command-name", summary = "Command name")
     private String cmd;
 
     @Override

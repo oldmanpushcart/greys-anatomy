@@ -109,9 +109,9 @@ public class DefaultCommandHandler implements CommandHandler {
             if (t instanceof CommandNotFoundException) {
                 message = format("command \"%s\" not found.", t.getCommand());
             } else if (t instanceof CommandInitializationException) {
-                message = format("command \"%s\" init failed.", t.getCommand());
+                message = format("command \"%s\" failed to initiate.", t.getCommand());
             } else {
-                message = format("command \"%s\" prepare failed : %s.", t.getCommand(), getCauseMessage(t));
+                message = format("Command \"%s\" preprocessor failed : %s.", t.getCommand(), getCauseMessage(t));
             }
 
             write(socketChannel, message + "\n", session.getCharset());
@@ -124,7 +124,7 @@ public class DefaultCommandHandler implements CommandHandler {
         // 命令执行错误
         catch (GaExecuteException e) {
             logger.warn("command execute failed.", e);
-            write(socketChannel, "command execute failed.\n", session.getCharset());
+            write(socketChannel, "Command execution failed.\n", session.getCharset());
             reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
         }
 

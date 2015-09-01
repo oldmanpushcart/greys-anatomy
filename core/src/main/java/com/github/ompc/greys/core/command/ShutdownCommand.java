@@ -14,7 +14,7 @@ import java.lang.instrument.Instrumentation;
  * 关闭命令
  * Created by vlinux on 14/10/23.
  */
-@Cmd(name = "shutdown", sort = 11, summary = "Shutdown the greys server, and exit the console.",
+@Cmd(name = "shutdown", sort = 11, summary = "Shut down Greys server and exit the console",
         eg = {
                 "shutdown"
         })
@@ -36,7 +36,7 @@ public class ShutdownCommand implements Command {
                 // 重置整个greys
                 Spy.AGENT_RESET_METHOD.invoke(null);
 
-                sender.send(true, "Greys shutdown completed.\n");
+                sender.send(true, "Greys Server is shut down\n");
                 return new RowAffect(enhancerAffect.cCnt());
             }
 

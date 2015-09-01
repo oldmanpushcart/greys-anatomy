@@ -6,99 +6,112 @@ import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.view.ObjectView;
-import com.github.ompc.greys.core.util.LogUtil;
-import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.LogUtil;
+import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.view.ObjectView;
 import org.slf4j.Logger;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
-import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
-import static com.github.ompc.greys.core.util.Advice.newForBefore;
+import static com.github.ompc.greys.core.util.Advice.*;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getCauseMessage;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-@Cmd(name = "watch", sort = 4, summary = "The call context information buried point observation methods.",
+@Cmd(name = "watch", sort = 4, summary = "Display the details of specified class and method",
         eg = {
-            "watch -Eb org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
-            "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
-            "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
-            "watch -bf *StringUtils isBlank params[0]",
-            "watch *StringUtils isBlank params[0]",
-            "watch *StringUtils isBlank params[0] params[0].length==1"
+                "watch -Eb org\\.apache\\.commons\\.lang\\.StringUtils isBlank params[0]",
+                "watch -b org.apache.commons.lang.StringUtils isBlank params[0]",
+                "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
+                "watch -bf *StringUtils isBlank params[0]",
+                "watch *StringUtils isBlank params[0]",
+                "watch *StringUtils isBlank params[0] params[0].length==1"
         })
 public class WatchCommand implements Command {
 
     private final Logger logger = LogUtil.getLogger();
 
-    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
+    @IndexArg(index = 1, name = "method-pattern", summary = "Method of Pattern Matching")
     private String methodPattern;
 
     @IndexArg(index = 2, name = "express",
             summary = "express, write by groovy.",
             description = ""
-            + "For example\n"
-            + "    : params[0]\n"
-            + "    : params[0]+params[1]\n"
-            + "    : returnObj\n"
-            + "    : throwExp\n"
-            + "    : target\n"
-            + "    : clazz\n"
-            + "    : method\n"
-            + "The structure of 'advice'\n"
-            + "          target : the object entity\n"
-            + "           clazz : the object's class\n"
-            + "          method : the constructor or method\n"
-            + "    params[0..n] : the parameters of methods\n"
-            + "       returnObj : the return object of methods\n"
-            + "        throwExp : the throw exception of methods\n"
-            + "        isReturn : the method finish by return\n"
-            + "         isThrow : the method finish by throw an exception\n"
+                    + "For example\n" +
+                    "    params[0]\n" +
+                    "    params[0]+params[1]\n" +
+                    "    returnObj\n" +
+                    "    throwExp\n" +
+                    "    target\n" +
+                    "    clazz\n" +
+                    "    method\n" +
+                    "\n" +
+                    "The structure\n" +
+                    "          target : the object\n" +
+                    "           clazz : the object's class\n" +
+                    "          method : the constructor or method\n" +
+                    "    params[0..n] : the parameters of method\n" +
+                    "       returnObj : the returned object of method\n" +
+                    "        throwExp : the throw exception of method\n" +
+                    "        isReturn : the method ended by return\n" +
+                    "         isThrow : the method ended by throwing exception"
     )
     private String express;
 
     @IndexArg(index = 3, name = "condition-express", isRequired = false,
-            summary = "condition express, write by groovy",
-            description = ""
-            + "For example\n"
-            + "    TRUE  : true\n"
-            + "    FALSE : false\n"
-            + "    TRUE  : params.length>=0"
-            + "The structure of 'advice' just like express\n"
+            summary = "Conditional expression by groovy",
+            description = "" +
+                    "For example\n" +
+                    "\n" +
+                    "    TRUE  : 1==1\n" +
+                    "    TRUE  : true\n" +
+                    "    FALSE : false\n" +
+                    "    TRUE  : params.length>=0\n" +
+                    "    FALSE : 1==2\n" +
+                    "\n" +
+                    "\n" +
+                    "The structure\n" +
+                    "\n" +
+                    "          target : the object \n" +
+                    "           clazz : the object's class\n" +
+                    "          method : the constructor or method\n" +
+                    "    params[0..n] : the parameters of method\n" +
+                    "       returnObj : the returned object of method\n" +
+                    "        throwExp : the throw exception of method\n" +
+                    "        isReturn : the method ended by return\n" +
+                    "         isThrow : the method ended by throwing exception"
     )
     private String conditionExpress;
 
-    @NamedArg(name = "b", summary = "is watch on before")
+    @NamedArg(name = "b", summary = "Watch before invocation")
     private boolean isBefore = false;
 
-    @NamedArg(name = "f", summary = "is watch on finish")
+    @NamedArg(name = "f", summary = "Watch after invocation")
     private boolean isFinish = false;
 
-    @NamedArg(name = "e", summary = "is watch on exception")
+    @NamedArg(name = "e", summary = "Watch after throw exception")
     private boolean isException = false;
 
-    @NamedArg(name = "s", summary = "is watch on success")
+    @NamedArg(name = "s", summary = "Watch after successful invocation")
     private boolean isSuccess = false;
 
-    @NamedArg(name = "x", hasValue = true, summary = "expend level of object. Default level-0")
+    @NamedArg(name = "x", hasValue = true, summary = "Expand level of object (0 by default)")
     private Integer expend;
 
-    @NamedArg(name = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "Include subclass")
     private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
-    @NamedArg(name = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
-    @NamedArg(name = "n", hasValue = true, summary = "number of limit")
+    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer numberOfLimit;
 
     @Override

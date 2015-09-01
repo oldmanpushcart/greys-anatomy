@@ -14,7 +14,7 @@ import static com.github.ompc.greys.core.util.GaStringUtils.getLogo;
  *
  * @author vlinux
  */
-@Cmd(name = "version", sort = 9, summary = "Output the target's greys version",
+@Cmd(name = "version", sort = 9, summary = "Display Greys version",
         eg = {
                 "version"
         })
