@@ -81,7 +81,7 @@ public class MonitorCommand implements Command {
     @IndexArg(index = 1, name = "method-pattern", summary = "Method of Pattern Matching")
     private String methodPattern;
 
-    @NamedArg(name = "c", hasValue = true, summary = "the cycle of output")
+    @NamedArg(name = "c", hasValue = true, summary = "The cycle of monitor")
     private int cycle = 120;
 
     @NamedArg(name = "S", summary = "Include subclass")
