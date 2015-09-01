@@ -18,11 +18,11 @@ public class GlobalOptions {
      */
     @Option(level = 0,
             name = "unsafe",
-            summary = "is support system class",
-            description =
-                    "After this option is activated, the class will be able to come from the JVM class. "
-                            + "Because of a very strong security risk can cause a system crash, so the switch is turned off by default. "
-                            + "Please don't activate unless you know what you need to do."
+            summary = "Option to support system-level class",
+            description  =
+                    "This option enables to proxy functionality of JVM classes."
+                            +  "Due to serious security risk a JVM crash is possibly be introduced."
+                            +  "Do not activate it unless you are able to manage."
     )
     public static volatile boolean isUnsafe = false;
 
@@ -32,37 +32,52 @@ public class GlobalOptions {
      */
     @Option(level = 1,
             name = "dump",
-            summary = "is support dump the enhance class",
+            summary = "Option to dump the enhanced classes",
             description =
-                    "After this option is activated, each time the enhanced class will be dump to the file, to facilitate the reverse compiler analysis."
+                    "This option enables the enhanced classes to be dumped to external file for further de-compilation and analysis."
     )
     public static volatile boolean isDump = false;
 
+    /**
+     * 是否支持批量增强<br/>
+     * 这个开关打开后，每次均是批量增强类
+     */
     @Option(level = 1,
             name = "batch-re-transform",
-            summary = "is support batch reTransform Class",
-            description = "After this option is activated, each time the reTransform class in batch model."
+            summary = "Option to support batch reTransform Class",
+            description = "This options enables to reTransform classes with batch mode."
     )
     public static volatile boolean isBatchReTransform = true;
 
+    /**
+     * 是否支持json格式化输出<br/>
+     * 这个开关打开后，使用json格式输出目标对象，配合-x参数使用
+     */
     @Option(level = 2,
             name = "json-format",
-            summary = "is support using json format to print an object",
-            description = "Using json format to print an object when choice -x option."
+            summary = "Option to support JSON format of object output",
+            description = "This option enables to format object output with JSON when -x option selected."
     )
     public static volatile boolean isUsingJson = false;
 
+    /**
+     * 是否支持子类<br/>
+     * 这个开关打开后，默认所有的-S参数都激活
+     */
     @Option(level = 2,
             name = "include-sub-class",
-            summary = "is support include sub class",
-            description = "Include SubClass."
+            summary = "Option to include subclass",
+            description = "This option defines if to include subclass."
     )
     public static volatile boolean isIncludeSubClass = true;
 
+    /**
+     * 是否在asm中输出
+     */
     @Option(level = 1,
             name = "debug-for-asm",
-            summary = "is support print debug message when asm weaver.",
-            description = "After this options is activated, each invoke will print the asm weaver debug message."
+            summary = "Option to print DEBUG message if ASM is involved",
+            description = "This option enables to print DEBUG message of ASM for each method invocation."
     )
     public static volatile boolean isDebugForAsm = false;
 
