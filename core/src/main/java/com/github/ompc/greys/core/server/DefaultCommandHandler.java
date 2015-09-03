@@ -15,10 +15,12 @@ import com.github.ompc.greys.core.exception.CommandException;
 import com.github.ompc.greys.core.exception.CommandInitializationException;
 import com.github.ompc.greys.core.exception.CommandNotFoundException;
 import com.github.ompc.greys.core.exception.GaExecuteException;
+import com.github.ompc.greys.core.util.GaStringUtils;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.affect.Affect;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.affect.RowAffect;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -107,9 +109,9 @@ public class DefaultCommandHandler implements CommandHandler {
 
             final String message;
             if (t instanceof CommandNotFoundException) {
-                message = format("command \"%s\" not found.", t.getCommand());
+                message = format("Command \"%s\" not found.", t.getCommand());
             } else if (t instanceof CommandInitializationException) {
-                message = format("command \"%s\" failed to initiate.", t.getCommand());
+                message = format("Command \"%s\" failed to initiate.", t.getCommand());
             } else {
                 message = format("Command \"%s\" preprocessor failed : %s.", t.getCommand(), getCauseMessage(t));
             }
@@ -124,7 +126,14 @@ public class DefaultCommandHandler implements CommandHandler {
         // 命令执行错误
         catch (GaExecuteException e) {
             logger.warn("command execute failed.", e);
-            write(socketChannel, "Command execution failed.\n", session.getCharset());
+
+            final String cause = GaStringUtils.getCauseMessage(e);
+            if (StringUtils.isNotBlank(cause)) {
+                write(socketChannel, format("Command execution failed. cause : %s\n", cause), session.getCharset());
+            } else {
+                write(socketChannel, "Command execution failed.\n", session.getCharset());
+            }
+
             reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
         }
 

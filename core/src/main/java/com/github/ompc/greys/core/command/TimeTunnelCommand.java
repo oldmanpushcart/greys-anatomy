@@ -8,7 +8,10 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.*;
+import com.github.ompc.greys.core.util.Advice;
+import com.github.ompc.greys.core.util.Express;
+import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.ObjectView;
 import com.github.ompc.greys.core.view.TableView;
@@ -739,7 +742,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment tf = timeFragmentMap.get(index);
                 if (null == tf) {
-                    printer.println(format("Time fragment[%d] does not exist.%n", index)).finish();
+                    printer.println(format("Time fragment[%d] does not exist.", index)).finish();
                     return new RowAffect();
                 }
 
