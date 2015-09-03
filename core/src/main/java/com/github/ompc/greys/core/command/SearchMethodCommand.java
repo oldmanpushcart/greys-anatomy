@@ -24,7 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  *
  * @author vlinux
  */
-@Cmd(name = "sm", sort = 1, summary = "Search all have been class method JVM loading.",
+@Cmd(name = "sm", sort = 1, summary = "Search the method of classes loaded by JVM",
         eg = {
                 "sm -Ed org\\.apache\\.commons\\.lang\\.StringUtils .*",
                 "sm org.apache.commons.????.StringUtils *",
@@ -33,16 +33,16 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
         })
 public class SearchMethodCommand implements Command {
 
-    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", isRequired = false, summary = "pattern matching of method name")
+    @IndexArg(index = 1, name = "method-pattern", isRequired = false, summary = "Method of Pattern Matching")
     private String methodPattern;
 
-    @NamedArg(name = "d", summary = "show the detail of method")
+    @NamedArg(name = "d", summary = "Display the details of method")
     private boolean isDetail = false;
 
-    @NamedArg(name = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
     @Override
@@ -64,7 +64,7 @@ public class SearchMethodCommand implements Command {
         return new RowAction() {
 
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 final Set<String> uniqueLine = new HashSet<String>();
                 final StringBuilder message = new StringBuilder();
@@ -96,7 +96,7 @@ public class SearchMethodCommand implements Command {
                     }//for
                 }//for
 
-                sender.send(true, message.toString());
+                printer.print(message.toString()).finish();
                 return affect;
             }
 

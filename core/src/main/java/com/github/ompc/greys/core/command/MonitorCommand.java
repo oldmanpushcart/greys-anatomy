@@ -7,10 +7,10 @@ import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.view.TableView;
-import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.view.TableView;
 
 import java.lang.instrument.Instrumentation;
 import java.text.DecimalFormat;
@@ -75,19 +75,19 @@ import static java.lang.System.currentTimeMillis;
 @Cmd(name = "monitor", sort = 2, summary = "Buried point method for monitoring the operation.")
 public class MonitorCommand implements Command {
 
-    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
+    @IndexArg(index = 1, name = "method-pattern", summary = "Method of Pattern Matching")
     private String methodPattern;
 
-    @NamedArg(name = "c", hasValue = true, summary = "the cycle of output")
+    @NamedArg(name = "c", hasValue = true, summary = "The cycle of monitor")
     private int cycle = 120;
 
-    @NamedArg(name = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "Include subclass")
     private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
-    @NamedArg(name = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
     /**
@@ -148,7 +148,7 @@ public class MonitorCommand implements Command {
         return new GetEnhancerAction() {
 
             @Override
-            public GetEnhancer action(final Session session, Instrumentation inst, final Sender sender) throws Throwable {
+            public GetEnhancer action(final Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
                     @Override
                     public Matcher getClassNameMatcher() {
@@ -245,7 +245,7 @@ public class MonitorCommand implements Command {
                                         tableView.padding(1);
                                         tableView.hasBorder(true);
 
-                                        sender.send(false, tableView.draw() + "\n");
+                                        printer.println(tableView.draw());
                                     }
 
                                 }, 0, cycle * 1000);

@@ -29,7 +29,7 @@ import static org.apache.commons.lang3.reflect.FieldUtils.writeStaticField;
  * 选项开关命令
  * Created by vlinux on 15/6/6.
  */
-@Cmd(isHacking = true, name = "options", summary = "Change the options",
+@Cmd(isHacking = true, name = "options", summary = "Greys options",
         eg = {
                 "options dump true",
                 "options unsafe true"
@@ -37,10 +37,10 @@ import static org.apache.commons.lang3.reflect.FieldUtils.writeStaticField;
 )
 public class OptionsCommand implements Command {
 
-    @IndexArg(index = 0, name = "options-name", isRequired = false, summary = "the name of options")
+    @IndexArg(index = 0, name = "options-name", isRequired = false, summary = "Option name")
     private String optionName;
 
-    @IndexArg(index = 1, name = "options-value", isRequired = false, summary = "the value of the name in options")
+    @IndexArg(index = 1, name = "options-value", isRequired = false, summary = "Option value")
     private String optionValue;
 
     @Override
@@ -83,10 +83,10 @@ public class OptionsCommand implements Command {
     private RowAction doShow() {
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                 final RowAffect affect = new RowAffect();
                 final Collection<Field> fields = findOptions(new Matcher.RegexMatcher(".*"));
-                sender.send(true, drawShowTable(fields));
+                printer.print(drawShowTable(fields)).finish();
                 affect.rCnt(fields.size());
                 return affect;
             }
@@ -96,10 +96,10 @@ public class OptionsCommand implements Command {
     private RowAction doShowName() {
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                 final RowAffect affect = new RowAffect();
                 final Collection<Field> fields = findOptions(new Matcher.EqualsMatcher(optionName));
-                sender.send(true, drawShowTable(fields));
+                printer.print(drawShowTable(fields)).finish();
                 affect.rCnt(fields.size());
                 return affect;
             }
@@ -156,14 +156,14 @@ public class OptionsCommand implements Command {
     private RowAction doChangeNameValue() {
         return new RowAction() {
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 final RowAffect affect = new RowAffect();
                 final Collection<Field> fields = findOptions(new Matcher.EqualsMatcher(optionName));
 
                 // name not exists
                 if (fields.isEmpty()) {
-                    sender.send(true, format("options[%s] not found.%n", optionName));
+                    printer.println(format("options[%s] not found.", optionName)).finish();
                     return affect;
                 }
 
@@ -190,13 +190,13 @@ public class OptionsCommand implements Command {
                     } else if (isIn(type, short.class, Short.class)) {
                         writeStaticField(field, afterValue = Short.valueOf(optionValue));
                     } else {
-                        sender.send(true, format("options[%s]'s type[%s] was unsupported.%n", optionName, type.getSimpleName()));
+                        printer.println(format("Options[%s] type[%s] desupported.", optionName, type.getSimpleName())).finish();
                         return affect;
                     }
 
                     affect.rCnt(1);
                 } catch (Throwable t) {
-                    sender.send(true, format("option value[%s] can not cast to options type[%s].%n", optionValue, type.getSimpleName()));
+                    printer.println(format("Cannot cast option value[%s] to type[%s].", optionValue, type.getSimpleName())).finish();
                     return affect;
                 }
 
@@ -206,7 +206,7 @@ public class OptionsCommand implements Command {
                         .addRow("NAME", "BEFORE-VALUE", "AFTER-VALUE")
                         .addRow(optionAnnotation.name(), newString(beforeValue), newString(afterValue));
 
-                sender.send(true, view.draw());
+                printer.print(view.draw()).finish();
                 return affect;
             }
         };

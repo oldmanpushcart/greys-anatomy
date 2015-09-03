@@ -26,7 +26,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * 调用跟踪命令<br/>
  * 负责输出一个类中的所有方法调用路径 Created by vlinux on 15/5/27.
  */
-@Cmd(name = "trace", sort = 6, summary = "The call stack output buried point method callback each thread.",
+@Cmd(name = "trace", sort = 6, summary = "Display the detailed thread stack of specified class and method",
         eg = {
             "trace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
             "trace org.apache.commons.lang.StringUtils isBlank",
@@ -35,38 +35,44 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
         })
 public class TraceCommand implements Command {
 
-    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
+    @IndexArg(index = 1, name = "method-pattern", summary = "Method of Pattern Matching")
     private String methodPattern;
 
     @IndexArg(index = 2, name = "condition-express", isRequired = false,
-            summary = "condition express, write by groovy",
-            description = ""
-            + "For example\n"
-            + "    TRUE  : true\n"
-            + "    FALSE : false\n"
-            + "    TRUE  : params.length>=0"
-            + "The structure of 'advice'\n"
-            + "          target : the object entity\n"
-            + "           clazz : the object's class\n"
-            + "          method : the constructor or method\n"
-            + "    params[0..n] : the parameters of methods\n"
-            + "       returnObj : the return object of methods\n"
-            + "        throwExp : the throw exception of methods\n"
-            + "        isReturn : the method finish by return\n"
-            + "         isThrow : the method finish by throw an exception\n"
+            summary = "Conditional expression by groovy",
+            description = "" +
+                    "For example\n" +
+                    "\n" +
+                    "    TRUE  : 1==1\n" +
+                    "    TRUE  : true\n" +
+                    "    FALSE : false\n" +
+                    "    TRUE  : params.length>=0\n" +
+                    "    FALSE : 1==2\n" +
+                    "\n" +
+                    "\n" +
+                    "The structure\n" +
+                    "\n" +
+                    "          target : the object \n" +
+                    "           clazz : the object's class\n" +
+                    "          method : the constructor or method\n" +
+                    "    params[0..n] : the parameters of method\n" +
+                    "       returnObj : the returned object of method\n" +
+                    "        throwExp : the throw exception of method\n" +
+                    "        isReturn : the method ended by return\n" +
+                    "         isThrow : the method ended by throwing exception"
     )
     private String conditionExpress;
 
-    @NamedArg(name = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "Include subclass")
     private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
-    @NamedArg(name = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
-    @NamedArg(name = "n", hasValue = true, summary = "number of limit")
+    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer numberOfLimit;
     
     @Override
@@ -83,7 +89,7 @@ public class TraceCommand implements Command {
         return new GetEnhancerAction() {
 
             @Override
-            public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
+            public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
                     private final AtomicInteger times = new AtomicInteger();
@@ -201,7 +207,7 @@ public class TraceCommand implements Command {
                                     
                                     if (isPrintIfNecessary(advice)) {
                                         final boolean isF = isLimited(times.incrementAndGet());
-                                        sender.send(isF, threadBoundEntity.get().view.draw() + "\n");
+                                        printer.println(isF, threadBoundEntity.get().view.draw());
                                     }
                                     threadBoundEntity.remove();
                                 }

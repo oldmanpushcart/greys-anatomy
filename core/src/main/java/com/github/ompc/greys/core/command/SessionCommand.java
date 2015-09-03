@@ -2,9 +2,9 @@ package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.view.TableView;
-import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.util.affect.RowAffect;
+import com.github.ompc.greys.core.view.TableView;
 
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.Charset;
@@ -17,7 +17,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * 查看会话状态命令
  * Created by vlinux on 15/5/3.
  */
-@Cmd(name = "session", sort = 8, summary = "Show the session state.",
+@Cmd(name = "session", sort = 8, summary = "Display current session information",
         eg = {
                 "session",
                 "session -c GBK",
@@ -25,7 +25,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
         })
 public class SessionCommand implements Command {
 
-    @NamedArg(name = "c", hasValue = true, summary = "change the charset of session")
+    @NamedArg(name = "c", hasValue = true, summary = "Modify the character set of session")
     private String charsetString;
 
     @Override
@@ -33,7 +33,7 @@ public class SessionCommand implements Command {
         return new RowAction() {
 
             @Override
-            public RowAffect action(Session session, Instrumentation inst, Sender sender) throws Throwable {
+            public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 // 设置字符集
                 if (isNotBlank(charsetString)) {
@@ -43,16 +43,17 @@ public class SessionCommand implements Command {
                         final Charset beforeCharset = session.getCharset();
                         session.setCharset(newCharset);
 
-                        sender.send(true, format("change charset before[%s] -> new[%s]%n",
+                        printer.println(format("Character set is modified. [%s] -> [%s]",
                                 beforeCharset,
-                                newCharset));
+                                newCharset))
+                                .finish();
 
                     } catch (UnsupportedCharsetException e) {
-                        sender.send(true, format("unsupported charset : \"%s\"%n", charsetString));
+                        printer.println(format("Desupported character set : \"%s\"", charsetString)).finish();
                     }
 
                 } else {
-                    sender.send(true, sessionToString(session));
+                    printer.print(sessionToString(session)).finish();
                 }
 
                 return new RowAffect(1);

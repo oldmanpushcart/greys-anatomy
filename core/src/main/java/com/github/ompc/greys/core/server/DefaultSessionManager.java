@@ -94,7 +94,7 @@ public class DefaultSessionManager implements SessionManager {
 
                                 try {
                                     // 会话超时，关闭之前输出超时信息
-                                    session.getSocketChannel().write(ByteBuffer.wrap("session expired.\n".getBytes(session.getCharset())));
+                                    session.getSocketChannel().write(ByteBuffer.wrap("Session timed out.\n".getBytes(session.getCharset())));
                                 } catch (IOException e) {
                                     logger.debug("write expired message to session[{}] failed.", sessionId, e);
                                 }

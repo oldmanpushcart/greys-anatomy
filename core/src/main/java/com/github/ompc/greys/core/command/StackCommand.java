@@ -6,11 +6,11 @@ import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.Matcher;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,47 +27,53 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  *
  * @author vlinux
  */
-@Cmd(name = "stack", sort = 6, summary = "The call stack output buried point method callback each thread.",
+@Cmd(name = "stack", sort = 6, summary = "Display the stack trace of specified class and method",
         eg = {
-            "stack -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
-            "stack org.apache.commons.lang.StringUtils isBlank",
-            "stack *StringUtils isBlank",
-            "stack *StringUtils isBlank params[0].length==1"
+                "stack -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
+                "stack org.apache.commons.lang.StringUtils isBlank",
+                "stack *StringUtils isBlank",
+                "stack *StringUtils isBlank params[0].length==1"
         })
 public class StackCommand implements Command {
 
-    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
+    @IndexArg(index = 1, name = "method-pattern", isRequired = false, summary = "Method of Pattern Matching")
     private String methodPattern;
 
     @IndexArg(index = 2, name = "condition-express", isRequired = false,
-            summary = "condition express, write by groovy",
-            description = ""
-            + "For example\n"
-            + "    TRUE  : true\n"
-            + "    FALSE : false\n"
-            + "    TRUE  : params.length>=0"
-            + "The structure of 'advice'\n"
-            + "          target : the object entity\n"
-            + "           clazz : the object's class\n"
-            + "          method : the constructor or method\n"
-            + "    params[0..n] : the parameters of methods\n"
-            + "       returnObj : the return object of methods\n"
-            + "        throwExp : the throw exception of methods\n"
-            + "        isReturn : the method finish by return\n"
-            + "         isThrow : the method finish by throw an exception\n"
+            summary = "Conditional expression by groovy",
+            description = "" +
+                    "For example\n" +
+                    "\n" +
+                    "    TRUE  : 1==1\n" +
+                    "    TRUE  : true\n" +
+                    "    FALSE : false\n" +
+                    "    TRUE  : params.length>=0\n" +
+                    "    FALSE : 1==2\n" +
+                    "\n" +
+                    "\n" +
+                    "The structure\n" +
+                    "\n" +
+                    "          target : the object \n" +
+                    "           clazz : the object's class\n" +
+                    "          method : the constructor or method\n" +
+                    "    params[0..n] : the parameters of method\n" +
+                    "       returnObj : the returned object of method\n" +
+                    "        throwExp : the throw exception of method\n" +
+                    "        isReturn : the method ended by return\n" +
+                    "         isThrow : the method ended by throwing exception"
     )
     private String conditionExpress;
 
-    @NamedArg(name = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "Include subclass")
     private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
-    @NamedArg(name = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
-    @NamedArg(name = "n", hasValue = true, summary = "number of limit")
+    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer numberOfLimit;
 
     @Override
@@ -84,7 +90,7 @@ public class StackCommand implements Command {
         return new GetEnhancerAction() {
 
             @Override
-            public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
+            public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
                     private final AtomicInteger times = new AtomicInteger();
@@ -161,7 +167,7 @@ public class StackCommand implements Command {
                             private void finishing(final Advice advice) {
                                 if (isPrintIfNecessary(advice)) {
                                     final boolean isF = isLimited(times.incrementAndGet());
-                                    sender.send(isF, stackThreadLocal.get() + "\n");
+                                    printer.println(isF, stackThreadLocal.get());
                                 }
                             }
 

@@ -21,7 +21,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  * 脚本增强命令
  * Created by vlinux on 15/5/31.
  */
-@Cmd(name = "groovy", sort = 6, summary = "The groovy script enhance.",
+@Cmd(name = "groovy", sort = 6, summary = "Enhanced Groovy",
         eg = {
                 "groovy -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank /tmp/watch.groovy",
                 "groovy org.apache.commons.lang.StringUtils isBlank /tmp/watch.groovy",
@@ -29,19 +29,19 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
         })
 public class GroovyScriptCommand implements ScriptSupportCommand, Command {
 
-    @IndexArg(index = 0, name = "class-pattern", summary = "pattern matching of classpath.classname")
+    @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", summary = "pattern matching of method name")
+    @IndexArg(index = 1, name = "method-pattern", summary = "Method of Pattern Matching")
     private String methodPattern;
 
-    @IndexArg(index = 2, name = "script-filepath", summary = "script file path")
+    @IndexArg(index = 2, name = "script-filepath", summary = "Filepath of Groovy script")
     private String scriptFilepath;
 
-    @NamedArg(name = "S", summary = "including sub class")
+    @NamedArg(name = "S", summary = "Include subclass")
     private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
-    @NamedArg(name = "E", summary = "enable the regex pattern matching")
+    @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
     @Override
@@ -53,33 +53,33 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
                 || !scriptFile.isFile()) {
             return new SilentAction() {
                 @Override
-                public void action(Session session, Instrumentation inst, Sender sender) throws Throwable {
-                    sender.send(true, "script file not found.\n");
+                public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
+                    printer.println("Groovy script not found").finish();
                 }
             };
         }
 
         return new GetEnhancerAction() {
             @Override
-            public GetEnhancer action(Session session, Instrumentation inst, final Sender sender) throws Throwable {
+            public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
 
                 final Output output = new Output() {
 
                     @Override
                     public Output print(String string) {
-                        sender.send(false, string);
+                        printer.print(string);
                         return this;
                     }
 
                     @Override
                     public Output println(String string) {
-                        sender.send(false, string + "\n");
+                        printer.println(string);
                         return this;
                     }
 
                     @Override
                     public Output finish() {
-                        sender.send(true, EMPTY);
+                        printer.print(EMPTY).finish();
                         return this;
                     }
                 };
