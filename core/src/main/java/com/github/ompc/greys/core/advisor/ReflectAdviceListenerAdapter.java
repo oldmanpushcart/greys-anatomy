@@ -32,54 +32,20 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
     }
 
     private Class<?> toClass(ClassLoader loader, String className) throws ClassNotFoundException {
-        final String tranClassName = tranClassName(className);
-        if (GaCheckUtils.isEquals(className, "boolean")) {
-            return boolean.class;
-        } else if (GaCheckUtils.isEquals(className, "char")) {
-            return char.class;
-        } else if (GaCheckUtils.isEquals(className, "byte")) {
-            return byte.class;
-        } else if (GaCheckUtils.isEquals(className, "short")) {
-            return short.class;
-        } else if (GaCheckUtils.isEquals(className, "int")) {
-            return int.class;
-        } else if (GaCheckUtils.isEquals(className, "float")) {
-            return float.class;
-        } else if (GaCheckUtils.isEquals(className, "long")) {
-            return long.class;
-        } else if (GaCheckUtils.isEquals(className, "double")) {
-            return double.class;
-        } else if (GaCheckUtils.isEquals(className, "boolean[]")) {
-            return boolean[].class;
-        } else if (GaCheckUtils.isEquals(className, "char[]")) {
-            return char[].class;
-        } else if (GaCheckUtils.isEquals(className, "byte[]")) {
-            return byte[].class;
-        } else if (GaCheckUtils.isEquals(className, "short[]")) {
-            return short[].class;
-        } else if (GaCheckUtils.isEquals(className, "int[]")) {
-            return int[].class;
-        } else if (GaCheckUtils.isEquals(className, "float[]")) {
-            return float[].class;
-        } else if (GaCheckUtils.isEquals(className, "long[]")) {
-            return long[].class;
-        } else if (GaCheckUtils.isEquals(className, "double[]")) {
-            return double[].class;
-        } else if (className.endsWith("[]")) {
-            return Class.forName("[L" + tranClassName.replaceFirst("\\[]$", ";"), true, toClassLoader(loader));
-        } else {
-            return Class.forName(tranClassName, true, toClassLoader(loader));
-        }
+        return Class.forName(tranClassName(className), true, toClassLoader(loader));
     }
 
     private GaMethod toMethod(ClassLoader loader, Class<?> clazz, String methodName, String methodDesc)
             throws ClassNotFoundException, NoSuchMethodException {
         final org.objectweb.asm.Type asmType = org.objectweb.asm.Type.getMethodType(methodDesc);
+
+        // to arg types
         final Class<?>[] argsClasses = new Class<?>[asmType.getArgumentTypes().length];
         for (int index = 0; index < argsClasses.length; index++) {
-            argsClasses[index] = toClass(loader, asmType.getArgumentTypes()[index].getClassName());
+            argsClasses[index] = toClass(loader, asmType.getArgumentTypes()[index].getInternalName());
         }
 
+        // to method or constructor
         if (GaCheckUtils.isEquals(methodName, "<init>")) {
             return GaMethod.newInit(toConstructor(clazz, argsClasses));
         } else {
