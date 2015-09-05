@@ -68,12 +68,11 @@ public class Enhancer implements ClassFileTransformer {
     }
 
 
-    /**
+    /*
      * 派遣间谍混入对方的classloader中
-     *
-     * @param targetClassLoader 目标classloader
      */
-    private void spy(final ClassLoader targetClassLoader) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    private void spy(final ClassLoader targetClassLoader)
+            throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 
         // 如果对方是bootstrap就算了
         if (null == targetClassLoader) {
@@ -82,39 +81,47 @@ public class Enhancer implements ClassFileTransformer {
 
         final ClassLoader greysClassLoader = Spy.CLASSLOADER;
         final String spyClassName = Spy.class.getName();
+        Class<?> spyClassFromTargetClassLoader = null;
 
         try {
 
             // 去目标类加载起中找下是否已经存在间谍
             // 如果间谍已经存在就算了
-            targetClassLoader.loadClass(spyClassName);
+            spyClassFromTargetClassLoader = targetClassLoader.loadClass(spyClassName);
 
         }
 
         // 看来间谍不存在啊
         catch (ClassNotFoundException cnfe) {
 
-            // 获取间谍字节码
-            final byte[] spyByteArray = toByteArray(Spy.class.getResourceAsStream("/" + spyClassName.replace('.', '/') + ".class"));
-
             // 在目标类加载起中混入间谍
-            final Class<?> spyClassFromTargetClassLoader = defineClass(
+            spyClassFromTargetClassLoader = defineClass(
                     targetClassLoader,
                     spyClassName,
-                    spyByteArray
+                    toByteArray(Spy.class.getResourceAsStream("/" + spyClassName.replace('.', '/') + ".class"))
             );
 
-            // 初始化间谍
-            invokeStaticMethod(
-                    spyClassFromTargetClassLoader,
-                    "init",
-                    greysClassLoader,
-                    Spy.ON_BEFORE_METHOD,
-                    Spy.ON_RETURN_METHOD,
-                    Spy.ON_THROWS_METHOD,
-                    Spy.BEFORE_INVOKING_METHOD,
-                    Spy.AFTER_INVOKING_METHOD
-            );
+        }
+
+
+        // 无论从哪里取到spyClass，都需要重新初始化一次
+        // 用以兼容重新加载的场景
+        // 当然，这样做会给渲染的过程带来一定的性能开销，不过能简化编码复杂度
+        finally {
+
+            if( null != spyClassFromTargetClassLoader ) {
+                // 初始化间谍
+                invokeStaticMethod(
+                        spyClassFromTargetClassLoader,
+                        "init",
+                        greysClassLoader,
+                        Spy.ON_BEFORE_METHOD,
+                        Spy.ON_RETURN_METHOD,
+                        Spy.ON_THROWS_METHOD,
+                        Spy.BEFORE_INVOKING_METHOD,
+                        Spy.AFTER_INVOKING_METHOD
+                );
+            }
 
         }
 
