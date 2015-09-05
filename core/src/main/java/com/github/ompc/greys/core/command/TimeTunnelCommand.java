@@ -147,6 +147,7 @@ public class TimeTunnelCommand implements Command {
                     "    method\n" +
                     "\n" +
                     "The structure\n" +
+                    "\n" +
                     "          target : the object\n" +
                     "           clazz : the object's class\n" +
                     "          method : the constructor or method\n" +
