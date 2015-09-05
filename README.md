@@ -14,7 +14,7 @@
 * [更新记事](https://github.com/oldmanpushcart/greys-anatomy/wiki/Chronicle)
 * [详细文档](https://github.com/oldmanpushcart/greys-anatomy/wiki/greys-pdf)
 
-# 程序安装：
+# 程序安装
 
 - 远程安装
 
@@ -61,7 +61,24 @@
 
   - `漏洞修复`保证向下兼容
 
-## 维护者
+# 维护者
 
 * [李夏驰](http://www.weibo.com/vlinux)
 * [姜小逸又胖了](http://weibo.com/chengtd)
+
+
+# 程序编译
+
+- 打开终端
+
+  ```shell
+  git clone git@github.com:oldmanpushcart/greys-anatomy.git
+  cd greys-anatomy/bin
+  ./greys-packages.sh
+  ```
+  
+- 程序执行
+
+  在`target/`目录下生成对应版本的release文件，比如当前版本是`1.7.0.4`，则生成文件`target/greys-1.7.0.4-bin.zip`
+  
+  程序在本地编译时会主动在本地安装当前编译的版本，所以编译完成后即相当在本地完成了安装。
