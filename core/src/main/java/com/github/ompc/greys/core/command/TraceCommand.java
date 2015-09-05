@@ -52,7 +52,6 @@ public class TraceCommand implements Command {
                     "    TRUE  : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "\n" +
                     "The structure\n" +
                     "\n" +
                     "          target : the object \n" +
