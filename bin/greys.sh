@@ -164,7 +164,10 @@ update_if_necessary()
         unzip ${temp_target_lib_zip} -d ${temp_target_lib_dir} || return 1
 
         # rename
-        mv ${temp_target_lib_dir} ${target_lib_dir}
+        mv ${temp_target_lib_dir} ${target_lib_dir} || return 1
+
+        # print success
+        echo "update completed."
 
     fi
 
