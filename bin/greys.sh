@@ -56,8 +56,8 @@ default()
 # check greys permission
 check_permission()
 {
-    [ ! -w ./ ] \
-        && exit_on_err 1 "permission denied."
+    [ ! -w ${HOME} ] \
+        && exit_on_err 1 "permission denied, ${HOME} is not writeable."
 }
 
 
@@ -272,6 +272,7 @@ active_console()
 # the main
 main()
 {
+
     check_permission
     reset_for_env
 
