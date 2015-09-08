@@ -29,7 +29,7 @@ import static com.googlecode.greysanatomy.util.GaStringUtils.isBlank;
 
 
 /**
- * 控制台
+ * 命令行控制台
  *
  * @author vlinux
  */
@@ -230,6 +230,7 @@ public class GreysAnatomyConsole {
             }
 
         });
+        //从控制台读取命令、把结果写入控制台的线程
         new Thread(new GaConsoleReader(consoleServer), "ga-console-reader").start();
         new Thread(new GaConsoleWriter(consoleServer), "ga-console-writer").start();
     }

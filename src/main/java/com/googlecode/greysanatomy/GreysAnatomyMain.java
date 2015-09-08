@@ -28,7 +28,7 @@ public class GreysAnatomyMain {
 
         // 如果是本地IP,则尝试加载Agent
         if (HostUtils.isLocalHostIp(configure.getTargetIp())) {
-            // 加载agent
+            // 本地另外一个vm加载agent
             attachAgent(configure);
         }
 

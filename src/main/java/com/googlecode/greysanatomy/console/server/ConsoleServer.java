@@ -65,6 +65,7 @@ public class ConsoleServer extends UnicastRemoteObject implements ConsoleServerS
      */
     public synchronized void rebind() throws MalformedURLException, RemoteException, AlreadyBoundException {
 
+    	//·þÎñÆ÷¶Ë×¢²á¶Ë¿Ú
         registry = LocateRegistry.createRegistry(configure.getTargetPort());
         for (String ip : HostUtils.getAllLocalHostIP()) {
             final String bindName = String.format("rmi://%s:%d/RMI_GREYS_ANATOMY", ip, configure.getTargetPort());
