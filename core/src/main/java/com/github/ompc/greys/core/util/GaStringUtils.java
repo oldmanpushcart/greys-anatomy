@@ -24,7 +24,7 @@ public class GaStringUtils {
     /**
      * 中断提示
      */
-    public static final String ABORT_MSG = "Press Ctrl+D or Ctrl+X to abort.";
+    public static final String ABORT_MSG = "Press Ctrl+D to abort.";
 
 
     /**

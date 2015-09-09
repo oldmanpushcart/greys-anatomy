@@ -4,6 +4,7 @@ import jline.console.ConsoleReader;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -79,6 +80,7 @@ public class GreysConsole {
 
     private ConsoleReader initConsoleReader() throws IOException {
         final ConsoleReader console = new ConsoleReader(System.in, System.out);
+
         console.getKeys().bind("" + CTRL_D, new ActionListener() {
 
             @Override
@@ -94,6 +96,7 @@ public class GreysConsole {
             }
 
         });
+
         return console;
     }
 
@@ -124,7 +127,9 @@ public class GreysConsole {
                     while (isRunning) {
 
                         final String line = console.readLine();
-                        history.add(line);
+
+                        // replace ! to \!
+                        history.add(StringUtils.replace(line, "!", "\\!"));
 
                         // flush if need
                         if (history instanceof Flushable) {
