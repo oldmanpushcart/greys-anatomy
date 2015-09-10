@@ -3,6 +3,7 @@ package com.github.ompc.greys.agent;
 import java.lang.instrument.Instrumentation;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.jar.JarFile;
 
 /**
  * 代理启动类
@@ -106,6 +107,11 @@ public class AgentLauncher {
             final int index = args.indexOf(';');
             final String agentJar = args.substring(0, index);
             final String agentArgs = args.substring(index, args.length());
+
+            // 将Spy添加到BootstrapClassLoader
+            inst.appendToBootstrapClassLoaderSearch(
+                    new JarFile(AgentLauncher.class.getProtectionDomain().getCodeSource().getLocation().getFile())
+            );
 
             // 构造自定义的类加载器，尽量减少Greys对现有工程的侵蚀
             final ClassLoader agentLoader = loadOrDefineClassLoader(agentJar);
