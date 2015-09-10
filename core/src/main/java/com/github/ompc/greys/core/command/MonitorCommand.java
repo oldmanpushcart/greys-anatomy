@@ -72,7 +72,7 @@ import static java.lang.System.currentTimeMillis;
  *
  * @author vlinux
  */
-@Cmd(name = "monitor", sort = 2, summary = "Buried point method for monitoring the operation.")
+@Cmd(name = "monitor", sort = 2, summary = "Monitor the specified class and method")
 public class MonitorCommand implements Command {
 
     @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")

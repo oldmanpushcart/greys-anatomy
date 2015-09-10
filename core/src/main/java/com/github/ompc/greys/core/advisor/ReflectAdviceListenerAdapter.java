@@ -2,6 +2,7 @@ package com.github.ompc.greys.core.advisor;
 
 import com.github.ompc.greys.core.util.GaCheckUtils;
 import com.github.ompc.greys.core.util.GaMethod;
+import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -42,7 +43,60 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
         // to arg types
         final Class<?>[] argsClasses = new Class<?>[asmType.getArgumentTypes().length];
         for (int index = 0; index < argsClasses.length; index++) {
-            argsClasses[index] = toClass(loader, asmType.getArgumentTypes()[index].getInternalName());
+
+            // asm class descriptor to jvm class
+            final Class<?> argumentClass;
+            final Type argumentAsmType = asmType.getArgumentTypes()[index];
+            switch (argumentAsmType.getSort()) {
+                case Type.BOOLEAN: {
+                    argumentClass = boolean.class;
+                    break;
+                }
+                case Type.CHAR: {
+                    argumentClass = char.class;
+                    break;
+                }
+                case Type.BYTE: {
+                    argumentClass = byte.class;
+                    break;
+                }
+                case Type.SHORT: {
+                    argumentClass = short.class;
+                    break;
+                }
+                case Type.INT: {
+                    argumentClass = int.class;
+                    break;
+                }
+                case Type.FLOAT: {
+                    argumentClass = float.class;
+                    break;
+                }
+                case Type.LONG: {
+                    argumentClass = long.class;
+                    break;
+                }
+                case Type.DOUBLE: {
+                    argumentClass = double.class;
+                    break;
+                }
+                case Type.ARRAY: {
+                    argumentClass = toClass(loader, argumentAsmType.getInternalName());
+                    break;
+                }
+                case Type.VOID: {
+                    argumentClass = void.class;
+                    break;
+                }
+                case Type.OBJECT:
+                case Type.METHOD:
+                default: {
+                    argumentClass = toClass(loader, argumentAsmType.getClassName());
+                    break;
+                }
+            }
+
+            argsClasses[index] = argumentClass;
         }
 
         // to method or constructor
@@ -52,6 +106,7 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
             return GaMethod.newMethod(toMethod(clazz, methodName, argsClasses));
         }
     }
+
 
     private Method toMethod(Class<?> clazz, String methodName, Class<?>[] argClasses) throws NoSuchMethodException {
         return clazz.getDeclaredMethod(methodName, argClasses);

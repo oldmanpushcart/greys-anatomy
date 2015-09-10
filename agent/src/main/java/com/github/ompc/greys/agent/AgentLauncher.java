@@ -1,9 +1,9 @@
 package com.github.ompc.greys.agent;
 
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.jar.JarFile;
 
 /**
  * 代理启动类
@@ -66,17 +66,9 @@ public class AgentLauncher {
 
             // 获取各种Hook
             final Class<?> adviceWeaverClass = classLoader.loadClass("com.github.ompc.greys.core.advisor.AdviceWeaver");
-            final Class<?> spyClass = classLoader.loadClass("com.github.ompc.greys.core.advisor.Spy");
-            final Method spySetMethod = spyClass.getMethod("initForAgentLauncher",
-                    ClassLoader.class,
-                    Method.class,
-                    Method.class,
-                    Method.class,
-                    Method.class,
-                    Method.class,
-                    Method.class);
 
-            spySetMethod.invoke(null,
+            // 初始化全局间谍
+            Spy.initForAgentLauncher(
                     classLoader,
                     adviceWeaverClass.getMethod("methodOnBegin",
                             int.class,
@@ -115,6 +107,11 @@ public class AgentLauncher {
             final int index = args.indexOf(';');
             final String agentJar = args.substring(0, index);
             final String agentArgs = args.substring(index, args.length());
+
+            // 将Spy添加到BootstrapClassLoader
+            inst.appendToBootstrapClassLoaderSearch(
+                    new JarFile(AgentLauncher.class.getProtectionDomain().getCodeSource().getLocation().getFile())
+            );
 
             // 构造自定义的类加载器，尽量减少Greys对现有工程的侵蚀
             final ClassLoader agentLoader = loadOrDefineClassLoader(agentJar);
