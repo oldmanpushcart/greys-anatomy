@@ -1,7 +1,6 @@
 package com.github.ompc.greys.agent;
 
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -66,17 +65,9 @@ public class AgentLauncher {
 
             // 获取各种Hook
             final Class<?> adviceWeaverClass = classLoader.loadClass("com.github.ompc.greys.core.advisor.AdviceWeaver");
-            final Class<?> spyClass = classLoader.loadClass("com.github.ompc.greys.core.advisor.Spy");
-            final Method spySetMethod = spyClass.getMethod("initForAgentLauncher",
-                    ClassLoader.class,
-                    Method.class,
-                    Method.class,
-                    Method.class,
-                    Method.class,
-                    Method.class,
-                    Method.class);
 
-            spySetMethod.invoke(null,
+            // 初始化全局间谍
+            Spy.initForAgentLauncher(
                     classLoader,
                     adviceWeaverClass.getMethod("methodOnBegin",
                             int.class,

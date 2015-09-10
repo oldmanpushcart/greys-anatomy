@@ -1,6 +1,7 @@
 package com.github.ompc.greys.core.advisor;
 
 import com.github.ompc.greys.core.GlobalOptions;
+import com.github.ompc.greys.core.util.GaStringUtils;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.SearchUtils;
@@ -24,6 +25,7 @@ import static com.github.ompc.greys.core.util.GaReflectUtils.defineClass;
 import static java.lang.System.arraycopy;
 import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
 import static org.apache.commons.io.IOUtils.toByteArray;
+import static org.apache.commons.lang3.reflect.FieldUtils.getField;
 import static org.apache.commons.lang3.reflect.MethodUtils.invokeStaticMethod;
 import static org.objectweb.asm.ClassReader.EXPAND_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
@@ -69,6 +71,18 @@ public class Enhancer implements ClassFileTransformer {
 
 
     /*
+     * 从GreysClassLoader中加载Spy
+     */
+    private Class<?> loadSpyClassFromGreysClassLoader(final ClassLoader greysClassLoader, final String spyClassName) {
+        try {
+            return greysClassLoader.loadClass(spyClassName);
+        } catch (ClassNotFoundException e) {
+            logger.warn("Spy load failed from GreysClassLoader, that is impossible!", e);
+            return null;
+        }
+    }
+
+    /*
      * 派遣间谍混入对方的classloader中
      */
     private void spy(final ClassLoader targetClassLoader)
@@ -79,15 +93,27 @@ public class Enhancer implements ClassFileTransformer {
             return;
         }
 
-        final ClassLoader greysClassLoader = Spy.CLASSLOADER;
-        final String spyClassName = Spy.class.getName();
-        Class<?> spyClassFromTargetClassLoader = null;
 
+        // Enhancer类只可能从greysClassLoader中加载
+        // 所以找他要ClassLoader是靠谱的
+        final ClassLoader greysClassLoader = Enhancer.class.getClassLoader();
+
+        final String spyClassName = GaStringUtils.SPY_CLASSNAME;
+
+        // 从GreysClassLoader中加载Spy
+        final Class<?> spyClassFromGreysClassLoader = loadSpyClassFromGreysClassLoader(greysClassLoader, spyClassName);
+        if( null == spyClassFromGreysClassLoader ) {
+            return;
+        }
+
+        // 从目标ClassLoader中尝试加载或定义ClassLoader
+        Class<?> spyClassFromTargetClassLoader = null;
         try {
 
             // 去目标类加载起中找下是否已经存在间谍
             // 如果间谍已经存在就算了
             spyClassFromTargetClassLoader = targetClassLoader.loadClass(spyClassName);
+            logger.info("Spy already in targetClassLoader : " + targetClassLoader);
 
         }
 
@@ -98,7 +124,7 @@ public class Enhancer implements ClassFileTransformer {
             spyClassFromTargetClassLoader = defineClass(
                     targetClassLoader,
                     spyClassName,
-                    toByteArray(Spy.class.getResourceAsStream("/" + spyClassName.replace('.', '/') + ".class"))
+                        toByteArray(Enhancer.class.getResourceAsStream("/" + spyClassName.replace('.', '/') + ".class"))
             );
 
         }
@@ -115,11 +141,11 @@ public class Enhancer implements ClassFileTransformer {
                         spyClassFromTargetClassLoader,
                         "init",
                         greysClassLoader,
-                        Spy.ON_BEFORE_METHOD,
-                        Spy.ON_RETURN_METHOD,
-                        Spy.ON_THROWS_METHOD,
-                        Spy.BEFORE_INVOKING_METHOD,
-                        Spy.AFTER_INVOKING_METHOD
+                        getField(spyClassFromGreysClassLoader, "ON_BEFORE_METHOD").get(null),
+                        getField(spyClassFromGreysClassLoader, "ON_RETURN_METHOD").get(null),
+                        getField(spyClassFromGreysClassLoader, "ON_THROWS_METHOD").get(null),
+                        getField(spyClassFromGreysClassLoader, "BEFORE_INVOKING_METHOD").get(null),
+                        getField(spyClassFromGreysClassLoader, "AFTER_INVOKING_METHOD").get(null)
                 );
             }
 

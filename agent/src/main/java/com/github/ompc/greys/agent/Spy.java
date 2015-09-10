@@ -1,4 +1,4 @@
-package com.github.ompc.greys.core.advisor;
+package com.github.ompc.greys.agent;
 
 import java.lang.reflect.Method;
 

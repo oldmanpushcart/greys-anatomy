@@ -26,6 +26,10 @@ public class GaStringUtils {
      */
     public static final String ABORT_MSG = "Press Ctrl+D to abort.";
 
+    /**
+     * Spy类名
+     */
+    public static final String SPY_CLASSNAME = "com.github.ompc.greys.agent.Spy";
 
     /**
      * 解析状态

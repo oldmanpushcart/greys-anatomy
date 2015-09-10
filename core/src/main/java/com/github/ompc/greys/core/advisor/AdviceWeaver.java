@@ -396,7 +396,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
 
             // -- KEY of ASM_TYPE or ASM_METHOD --
-            private final Type ASM_TYPE_SPY = Type.getType(Spy.class);
+            private final Type ASM_TYPE_SPY = Type.getType("Lcom/github/ompc/greys/agent/Spy;");
             private final Type ASM_TYPE_OBJECT = Type.getType(Object.class);
             private final Type ASM_TYPE_OBJECT_ARRAY = Type.getType(Object[].class);
             private final Type ASM_TYPE_CLASS = Type.getType(Class.class);
