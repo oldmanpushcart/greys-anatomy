@@ -72,7 +72,12 @@ import static java.lang.System.currentTimeMillis;
  *
  * @author vlinux
  */
-@Cmd(name = "monitor", sort = 2, summary = "Monitor the specified class and method")
+@Cmd(name = "monitor", sort = 2, summary = "Monitor the specified class and method",
+        eg = {
+                "monitor -c 5 -E org\\.apache\\.commons\\.lang\\.StringUtils *",
+                "monitor -c 5 org.apache.commons.lang.StringUtils is*",
+                "monitor *StringUtils isBlank"
+        })
 public class MonitorCommand implements Command {
 
     @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
