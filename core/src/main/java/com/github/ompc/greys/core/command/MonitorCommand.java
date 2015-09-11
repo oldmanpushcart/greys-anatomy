@@ -72,7 +72,7 @@ import static java.lang.System.currentTimeMillis;
  *
  * @author vlinux
  */
-@Cmd(name = "monitor", sort = 2, summary = "Monitor the specified class and method",
+@Cmd(name = "monitor", sort = 2, summary = "Monitor the execution of specified Class and its method",
         eg = {
                 "monitor -c 5 -E org\\.apache\\.commons\\.lang\\.StringUtils *",
                 "monitor -c 5 org.apache.commons.lang.StringUtils is*",
