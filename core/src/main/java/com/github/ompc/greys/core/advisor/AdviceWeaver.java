@@ -620,7 +620,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                             loadReturn(opcode);
                             _debug(append, "loadReturn()");
 
-
                             // 加载returning方法
                             loadAdviceMethod(KEY_GREYS_ADVICE_RETURN_METHOD);
                             _debug(append, "loadAdviceMethod()");
