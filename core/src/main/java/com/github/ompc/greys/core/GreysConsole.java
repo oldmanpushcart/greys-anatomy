@@ -1,21 +1,28 @@
 package com.github.ompc.greys.core;
 
 import jline.console.ConsoleReader;
+import jline.console.completer.Completer;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
 import org.apache.commons.lang3.StringUtils;
+
+import com.github.ompc.greys.core.command.Commands;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import static com.github.ompc.greys.core.util.GaStringUtils.DEFAULT_PROMPT;
 import static java.io.File.separatorChar;
 import static java.lang.System.getProperty;
 import static jline.console.KeyMap.CTRL_D;
+import static jline.internal.Preconditions.checkNotNull;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -59,6 +66,40 @@ public class GreysConsole {
         this.console.setHistoryEnabled(true);
         this.console.setHistory(history);
         this.socket = connect(address);
+        
+        final SortedSet<String> commands = new TreeSet<String>();
+        commands.addAll(Commands.getInstance().listCommands().keySet());
+
+        console.addCompleter(new Completer() {
+            @Override
+            public int complete(String buffer, int cursor, List<CharSequence> candidates) {
+                // buffer could be null
+                checkNotNull(candidates);
+
+                if (buffer == null) {
+                    candidates.addAll(commands);
+                } else {
+                    String prefix = buffer;
+                    if (buffer.length() > cursor) {
+                        prefix = buffer.substring(0, cursor);
+                    }
+                    for (String match : commands.tailSet(prefix)) {
+                        if (!match.startsWith(prefix)) {
+                            break;
+                        }
+
+                        candidates.add(match);
+                    }
+                }
+
+                if (candidates.size() == 1) {
+                    candidates.set(0, candidates.get(0) + " ");
+                }
+
+                return candidates.isEmpty() ? -1 : 0;
+            }
+
+        });
 
         this.isRunning = true;
         activeConsoleReader();
