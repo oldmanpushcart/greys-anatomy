@@ -1,13 +1,12 @@
 package com.github.ompc.greys.core;
 
+import com.github.ompc.greys.core.command.Commands;
 import jline.console.ConsoleReader;
 import jline.console.completer.Completer;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
 import org.apache.commons.lang3.StringUtils;
-
-import com.github.ompc.greys.core.command.Commands;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -66,7 +65,18 @@ public class GreysConsole {
         this.console.setHistoryEnabled(true);
         this.console.setHistory(history);
         this.socket = connect(address);
-        
+
+        // 初始化自动补全
+        initCompleter();
+
+        this.isRunning = true;
+        activeConsoleReader();
+        loopForWriter();
+
+    }
+
+    // jLine的自动补全
+    private void initCompleter() {
         final SortedSet<String> commands = new TreeSet<String>();
         commands.addAll(Commands.getInstance().listCommands().keySet());
 
@@ -100,11 +110,6 @@ public class GreysConsole {
             }
 
         });
-
-        this.isRunning = true;
-        activeConsoleReader();
-        loopForWriter();
-
     }
 
 
