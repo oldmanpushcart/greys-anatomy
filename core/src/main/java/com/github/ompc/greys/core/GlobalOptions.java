@@ -60,16 +60,16 @@ public class GlobalOptions {
     )
     public static volatile boolean isUsingJson = false;
 
-    /**
-     * 是否支持子类<br/>
-     * 这个开关打开后，默认所有的-S参数都激活
-     */
-    @Option(level = 2,
-            name = "include-sub-class",
-            summary = "Option to include subclass",
-            description = "This option defines if to include subclass."
-    )
-    public static volatile boolean isIncludeSubClass = true;
+//    /**
+//     * 是否支持子类<br/>
+//     * 这个开关打开后，默认所有的-S参数都激活
+//     */
+//    @Option(level = 2,
+//            name = "include-sub-class",
+//            summary = "Option to include subclass",
+//            description = "This option defines if to include subclass."
+//    )
+//    public static volatile boolean isIncludeSubClass = true;
 
     /**
      * 是否在asm中输出

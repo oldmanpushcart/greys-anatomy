@@ -1,6 +1,7 @@
 package com.github.ompc.greys.core.util;
 
 import java.lang.instrument.Instrumentation;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,6 +46,27 @@ public class SearchUtils {
             }
         }
         return matches;
+    }
+
+    /**
+     * 搜索目标类的父类
+     *
+     * @param clazz 目标类
+     * @return 目标类的父类列表(顺序按照类继承顺序倒序)
+     */
+    public static ArrayList<Class<?>> searchSuperClass(Class<?> clazz) {
+
+        final ArrayList<Class<?>> superClassList = new ArrayList<Class<?>>();
+        Class<?> currentClass = clazz;
+        do {
+            final Class<?> superClass = currentClass.getSuperclass();
+            if (null == superClass) {
+                break;
+            }
+            superClassList.add(currentClass = superClass);
+        } while (true);
+        return superClassList;
+
     }
 
 }

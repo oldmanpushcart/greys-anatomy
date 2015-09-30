@@ -1,18 +1,18 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.view.ClassInfoView;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.SearchUtils;
 import com.github.ompc.greys.core.util.affect.RowAffect;
+import com.github.ompc.greys.core.view.ClassInfoView;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Set;
 
+import static com.github.ompc.greys.core.util.SearchUtils.searchClass;
+import static com.github.ompc.greys.core.util.SearchUtils.searchSubClass;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
@@ -30,9 +30,6 @@ public class SearchClassCommand implements Command {
 
     @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
-
-    @NamedArg(name = "S", summary = "Include subclass")
-    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
     @NamedArg(name = "d", summary = "Display the details of class")
     private boolean isDetail = false;
@@ -54,9 +51,7 @@ public class SearchClassCommand implements Command {
                         ? new Matcher.RegexMatcher(classPattern)
                         : new Matcher.WildcardMatcher(classPattern);
 
-                final Set<Class<?>> matchedClassSet = isIncludeSub
-                        ? SearchUtils.searchSubClass(inst, SearchUtils.searchClass(inst, classNameMatcher))
-                        : SearchUtils.searchClass(inst, classNameMatcher);
+                final Set<Class<?>> matchedClassSet = searchSubClass(inst, searchClass(inst, classNameMatcher));
 
                 // 展示类详情
                 if (isDetail) {

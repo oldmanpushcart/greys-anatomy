@@ -77,13 +77,6 @@ public interface Command {
         Matcher getMethodNameMatcher();
 
         /**
-         * 是否包括子类
-         *
-         * @return 返回是否包括子类
-         */
-        boolean isIncludeSub();
-
-        /**
          * 获取监听器
          *
          * @return 返回监听器

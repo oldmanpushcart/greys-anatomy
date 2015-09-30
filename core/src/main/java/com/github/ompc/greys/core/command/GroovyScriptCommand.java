@@ -1,6 +1,5 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.advisor.AdviceListener;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
@@ -37,9 +36,6 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
 
     @IndexArg(index = 2, name = "script-filepath", summary = "Filepath of Groovy script")
     private String scriptFilepath;
-
-    @NamedArg(name = "S", summary = "Include subclass")
-    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
 
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
@@ -101,11 +97,6 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
                         return isRegEx
                                 ? new Matcher.RegexMatcher(methodPattern)
                                 : new Matcher.WildcardMatcher(methodPattern);
-                    }
-
-                    @Override
-                    public boolean isIncludeSub() {
-                        return isIncludeSub;
                     }
 
                     @Override

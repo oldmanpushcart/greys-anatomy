@@ -1,17 +1,16 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.advisor.AdviceListener;
 import com.github.ompc.greys.core.advisor.ReflectAdviceTracingListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.view.TreeView;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.view.TreeView;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -65,9 +64,6 @@ public class TraceCommand implements Command {
     )
     private String conditionExpress;
 
-    @NamedArg(name = "S", summary = "Include subclass")
-    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
-
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
@@ -101,11 +97,6 @@ public class TraceCommand implements Command {
                     @Override
                     public Matcher getMethodNameMatcher() {
                         return methodNameMatcher;
-                    }
-
-                    @Override
-                    public boolean isIncludeSub() {
-                        return isIncludeSub;
                     }
 
                     @Override

@@ -1,6 +1,5 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.advisor.AdviceListener;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
@@ -174,9 +173,6 @@ public class TimeTunnelCommand implements Command {
     @NamedArg(name = "d", summary = "Delete time fragment specified by index")
     private boolean isDelete = false;
 
-    @NamedArg(name = "S", summary = "Include subclass")
-    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
-
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
@@ -287,11 +283,6 @@ public class TimeTunnelCommand implements Command {
                     @Override
                     public Matcher getMethodNameMatcher() {
                         return methodNameMatcher;
-                    }
-
-                    @Override
-                    public boolean isIncludeSub() {
-                        return isIncludeSub;
                     }
 
                     @Override

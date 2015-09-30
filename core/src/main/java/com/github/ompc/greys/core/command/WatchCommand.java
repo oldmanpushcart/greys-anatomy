@@ -1,13 +1,15 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.advisor.AdviceListener;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.*;
+import com.github.ompc.greys.core.util.Advice;
+import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.LogUtil;
+import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.view.ObjectView;
 import org.slf4j.Logger;
 
@@ -103,9 +105,6 @@ public class WatchCommand implements Command {
     @NamedArg(name = "x", hasValue = true, summary = "Expand level of object (0 by default)")
     private Integer expend;
 
-    @NamedArg(name = "S", summary = "Include subclass")
-    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
-
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
@@ -139,11 +138,6 @@ public class WatchCommand implements Command {
                     @Override
                     public Matcher getMethodNameMatcher() {
                         return methodNameMatcher;
-                    }
-
-                    @Override
-                    public boolean isIncludeSub() {
-                        return isIncludeSub;
                     }
 
                     @Override
