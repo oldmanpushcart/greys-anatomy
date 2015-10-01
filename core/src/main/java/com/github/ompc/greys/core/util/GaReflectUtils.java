@@ -6,13 +6,11 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -313,6 +311,78 @@ public class GaReflectUtils {
             }
         }
 
+
+    }
+
+
+
+    /**
+     * 获取目标类的父类
+     *
+     * @param clazz 目标类
+     * @return 目标类的父类列表(顺序按照类继承顺序倒序)
+     */
+    public static ArrayList<Class<?>> getSuperClass(Class<?> clazz) {
+
+        final ArrayList<Class<?>> superClassList = new ArrayList<Class<?>>();
+        Class<?> currentClass = clazz;
+        do {
+            final Class<?> superClass = currentClass.getSuperclass();
+            if (null == superClass) {
+                break;
+            }
+            superClassList.add(currentClass = superClass);
+        } while (true);
+        return superClassList;
+
+    }
+
+
+    /**
+     * 获取类内部可用的方法<br/>
+     * 可使用的方法并不一定是当前类所声明的方法，也有可能是来自于父类的protected/public/default的方法
+     *
+     * @param clazz 目标类
+     * @return 可用方法集合(严格有序)
+     */
+    public static LinkedHashMap<Class<?>, LinkedHashSet<Method>> getVisibleMethods(Class<?> clazz) {
+
+        final LinkedHashMap<Class<?>, LinkedHashSet<Method>> classMethodMap = new LinkedHashMap<Class<?>, LinkedHashSet<Method>>();
+
+        //1. 列出当前类内自己声明的方法
+        final Method[] declaredMethodArray = clazz.getDeclaredMethods();
+        if (null != declaredMethodArray) {
+            final LinkedHashSet<Method> methodSet = new LinkedHashSet<Method>();
+            classMethodMap.put(clazz, methodSet);
+            for (Method declaredMethod : declaredMethodArray) {
+                methodSet.add(declaredMethod);
+            }
+        }
+
+        //2. 列出父类所有public/protected/default的方法
+        for (Class<?> superClass : getSuperClass(clazz)) {
+            final Method[] methodOfSuperClassArray = superClass.getDeclaredMethods();
+            if (null != methodOfSuperClassArray) {
+                final LinkedHashSet<Method> methodSet = new LinkedHashSet<Method>();
+                classMethodMap.put(superClass, methodSet);
+                for (Method methodOfSuperClass : methodOfSuperClassArray) {
+                    final int m = methodOfSuperClass.getModifiers();
+                    /*
+                     * 抽象方法
+                     * 接口方法
+                     * 私有方法
+                     */
+                    if (Modifier.isAbstract(m)
+                            || Modifier.isInterface(m)
+                            || Modifier.isPrivate(m)) {
+                        continue;
+                    }
+                    methodSet.add(methodOfSuperClass);
+                }
+            }
+        }
+
+        return classMethodMap;
 
     }
 

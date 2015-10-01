@@ -11,8 +11,7 @@ import com.github.ompc.greys.core.view.ClassInfoView;
 import java.lang.instrument.Instrumentation;
 import java.util.Set;
 
-import static com.github.ompc.greys.core.util.SearchUtils.searchClass;
-import static com.github.ompc.greys.core.util.SearchUtils.searchSubClass;
+import static com.github.ompc.greys.core.util.SearchUtils.searchClassWithSubClass;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
@@ -51,7 +50,7 @@ public class SearchClassCommand implements Command {
                         ? new Matcher.RegexMatcher(classPattern)
                         : new Matcher.WildcardMatcher(classPattern);
 
-                final Set<Class<?>> matchedClassSet = searchSubClass(inst, searchClass(inst, classNameMatcher));
+                final Set<Class<?>> matchedClassSet = searchClassWithSubClass(inst, classNameMatcher);
 
                 // 展示类详情
                 if (isDetail) {

@@ -353,7 +353,7 @@ public class Enhancer implements ClassFileTransformer {
         // 获取需要增强的类集合
         final Set<Class<?>> enhanceClassSet = !isIncludeSub
                 ? SearchUtils.searchClass(inst, classNameMatcher)
-                : SearchUtils.searchSubClass(inst, SearchUtils.searchClass(inst, classNameMatcher));
+                : SearchUtils.searchClassWithSubClass(inst, classNameMatcher);
 
         // 过滤掉无法被增强的类
         filter(enhanceClassSet);
