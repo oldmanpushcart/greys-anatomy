@@ -4,7 +4,6 @@ import com.github.ompc.greys.core.advisor.Enhancer;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.LogUtil;
-import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import org.slf4j.Logger;
@@ -64,10 +63,7 @@ public class ShutdownCommand implements Command {
 
                 // 退出之前需要重置所有的增强类
                 // 重置之前增强的类
-                final EnhancerAffect enhancerAffect = Enhancer.reset(
-                        inst,
-                        new Matcher.WildcardMatcher("*")
-                );
+                final EnhancerAffect enhancerAffect = Enhancer.reset(inst);
 
                 // reset for agent ClassLoader
                 reset();

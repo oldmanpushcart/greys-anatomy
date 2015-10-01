@@ -278,7 +278,7 @@ public class GaStringUtils {
      *
      * @return 方法堆栈信息
      */
-    public static String getStack() {
+    public static String getStack(int skip) {
 
         final Thread currentThread = Thread.currentThread();
         final StackTraceElement[] stackTraceElementArray = currentThread.getStackTrace();
@@ -289,7 +289,7 @@ public class GaStringUtils {
                 currentThread.isDaemon(),
                 currentThread.getPriority());
 
-        final StackTraceElement locationStackTraceElement = stackTraceElementArray[10];
+        final StackTraceElement locationStackTraceElement = stackTraceElementArray[skip];
         final String locationString = String.format("    @%s.%s()",
                 locationStackTraceElement.getClassName(),
                 locationStackTraceElement.getMethodName());
@@ -298,8 +298,7 @@ public class GaStringUtils {
                 .append(title).append("\n")
                 .append(locationString).append("\n");
 
-        final int skip = 11;
-        for (int index = skip; index < stackTraceElementArray.length; index++) {
+        for (int index = skip + 1; index < stackTraceElementArray.length; index++) {
             final StackTraceElement ste = stackTraceElementArray[index];
             stSB
                     .append("        at ")

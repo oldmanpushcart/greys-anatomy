@@ -71,6 +71,9 @@ public class StackCommand implements Command {
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer numberOfLimit;
 
+    // 针对stack命令调整
+    private static final int STACK_DEEP = 9;
+
     @Override
     public Action getAction() {
 
@@ -113,7 +116,7 @@ public class StackCommand implements Command {
                                     GaMethod method,
                                     Object target,
                                     Object[] args) throws Throwable {
-                                stackThreadLocal.set(getStack());
+                                stackThreadLocal.set(getStack(STACK_DEEP));
                             }
 
                             @Override
@@ -168,5 +171,8 @@ public class StackCommand implements Command {
 
         };
     }
+
+
+
 
 }

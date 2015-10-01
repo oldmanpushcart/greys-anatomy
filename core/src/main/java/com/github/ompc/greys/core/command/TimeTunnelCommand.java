@@ -7,10 +7,7 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Advice;
-import com.github.ompc.greys.core.util.Express;
-import com.github.ompc.greys.core.util.GaMethod;
-import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.*;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.ObjectView;
 import com.github.ompc.greys.core.view.TableView;
@@ -25,6 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
+import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.GaStringUtils.newString;
 import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
@@ -36,15 +35,17 @@ import static org.apache.commons.lang3.StringUtils.*;
  */
 class TimeFragment {
 
-    public TimeFragment(Advice advice, Date gmtCreate, long cost) {
+    public TimeFragment(Advice advice, Date gmtCreate, long cost, String stack) {
         this.advice = advice;
         this.gmtCreate = gmtCreate;
         this.cost = cost;
+        this.stack = stack;
     }
 
     private final Advice advice;
     private final Date gmtCreate;
     private final long cost;
+    private final String stack;
 
     public Advice getAdvice() {
         return advice;
@@ -56,6 +57,10 @@ class TimeFragment {
 
     public long getCost() {
         return cost;
+    }
+
+    public String getStack() {
+        return stack;
     }
 }
 
@@ -178,6 +183,9 @@ public class TimeTunnelCommand implements Command {
 
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer numberOfLimit;
+
+    // 针对tt命令调整
+    private static final int STACK_DEEP = 11;
 
     /**
      * 检查参数是否合法
@@ -318,14 +326,15 @@ public class TimeTunnelCommand implements Command {
                                     Object target,
                                     Object[] args,
                                     Object returnObject) throws Throwable {
-                                afterFinishing(Advice.newForAfterRetuning(
-                                        loader,
-                                        clazz,
-                                        method,
-                                        target,
-                                        args,
-                                        returnObject
-                                ));
+                                afterFinishing(
+                                        newForAfterRetuning(
+                                                loader,
+                                                clazz,
+                                                method,
+                                                target,
+                                                args,
+                                                returnObject
+                                        ));
                             }
 
                             @Override
@@ -336,14 +345,15 @@ public class TimeTunnelCommand implements Command {
                                     Object target,
                                     Object[] args,
                                     Throwable throwable) {
-                                afterFinishing(Advice.newForAfterThrowing(
-                                        loader,
-                                        clazz,
-                                        method,
-                                        target,
-                                        args,
-                                        throwable
-                                ));
+                                afterFinishing(
+                                        newForAfterThrowing(
+                                                loader,
+                                                clazz,
+                                                method,
+                                                target,
+                                                args,
+                                                throwable
+                                        ));
                             }
 
                             private boolean isLimited(int currentTimes) {
@@ -356,7 +366,8 @@ public class TimeTunnelCommand implements Command {
                                 final TimeFragment timeTunnel = new TimeFragment(
                                         advice,
                                         new Date(),
-                                        currentTimeMillis() - timestampThreadLocal.get()
+                                        currentTimeMillis() - timestampThreadLocal.get(),
+                                        GaStringUtils.getStack(STACK_DEEP)
                                 );
 
                                 // reset the timestamp
@@ -808,6 +819,9 @@ public class TimeTunnelCommand implements Command {
                     }
 
                 }
+
+                // fill the stack
+                view.addRow("STACK", tf.getStack());
 
                 printer.print(view.draw()).finish();
 
