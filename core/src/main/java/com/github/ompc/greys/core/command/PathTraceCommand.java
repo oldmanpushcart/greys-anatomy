@@ -21,14 +21,14 @@ import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
  * 调用跟踪命令<br/>
  * 负责输出一个类中的所有方法调用路径 Created by vlinux on 15/10/01.
  */
-@Cmd(name = "strace", sort = 6, summary = "Display the detailed thread serious stack of specified class and method",
+@Cmd(name = "ptrace", sort = 6, summary = "Display the detailed thread path stack of specified class and method",
         eg = {
-                "strace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank org\\.apache\\.commons\\.lang\\..*",
-                "strace org.apache.commons.lang.StringUtils isBlank org.apache.commons.lang.*",
-                "strace *StringUtils isBlank org.apache.commons.lang.*",
-                "strace *StringUtils isBlank org.apache.commons.lang.* params[0].length==1"
+                "ptrace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank org\\.apache\\.commons\\.lang\\..*",
+                "ptrace org.apache.commons.lang.StringUtils isBlank org.apache.commons.lang.*",
+                "ptrace *StringUtils isBlank org.apache.commons.lang.*",
+                "ptrace *StringUtils isBlank org.apache.commons.lang.* params[0].length==1"
         })
-public class SeriousTraceCommand implements Command {
+public class PathTraceCommand implements Command {
 
     @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
