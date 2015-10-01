@@ -1,7 +1,10 @@
 package com.github.ompc.greys.core.advisor;
 
 import com.github.ompc.greys.core.GlobalOptions;
-import com.github.ompc.greys.core.util.*;
+import com.github.ompc.greys.core.util.GaStringUtils;
+import com.github.ompc.greys.core.util.LogUtil;
+import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.SearchUtils;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -101,7 +104,7 @@ public class Enhancer implements ClassFileTransformer {
 
         // 从GreysClassLoader中加载Spy
         final Class<?> spyClassFromGreysClassLoader = loadSpyClassFromGreysClassLoader(greysClassLoader, spyClassName);
-        if( null == spyClassFromGreysClassLoader ) {
+        if (null == spyClassFromGreysClassLoader) {
             return;
         }
 
@@ -123,7 +126,7 @@ public class Enhancer implements ClassFileTransformer {
             spyClassFromTargetClassLoader = defineClass(
                     targetClassLoader,
                     spyClassName,
-                        toByteArray(Enhancer.class.getResourceAsStream("/" + spyClassName.replace('.', '/') + ".class"))
+                    toByteArray(Enhancer.class.getResourceAsStream("/" + spyClassName.replace('.', '/') + ".class"))
             );
 
         }
@@ -134,7 +137,7 @@ public class Enhancer implements ClassFileTransformer {
         // 当然，这样做会给渲染的过程带来一定的性能开销，不过能简化编码复杂度
         finally {
 
-            if( null != spyClassFromTargetClassLoader ) {
+            if (null != spyClassFromTargetClassLoader) {
                 // 初始化间谍
                 invokeStaticMethod(
                         spyClassFromTargetClassLoader,
@@ -334,7 +337,7 @@ public class Enhancer implements ClassFileTransformer {
         returnClassSet.addAll(matchedClassSet);
 
         // 2. 添加一级类的可见方法所对应的类
-        for( Class<?> matchedClass : matchedClassSet ) {
+        for (Class<?> matchedClass : matchedClassSet) {
             for (Map.Entry<Class<?>, LinkedHashSet<Method>> entry : getVisibleMethods(matchedClass).entrySet()) {
                 returnClassSet.add(entry.getKey());
             }
@@ -415,24 +418,14 @@ public class Enhancer implements ClassFileTransformer {
     /**
      * 重置指定的Class
      *
-     * @param inst             inst
-     * @param classNameMatcher 类名匹配
+     * @param inst inst
      * @return 增强影响范围
      * @throws UnmodifiableClassException
      */
-    public static synchronized EnhancerAffect reset(
-            final Instrumentation inst,
-            final Matcher classNameMatcher) throws UnmodifiableClassException {
+    public static synchronized EnhancerAffect reset(final Instrumentation inst) throws UnmodifiableClassException {
 
+        final int size = classBytesCache.size();
         final EnhancerAffect affect = new EnhancerAffect();
-        final Set<Class<?>> enhanceClassSet = new HashSet<Class<?>>();
-
-        for (Class<?> classInCache : classBytesCache.keySet()) {
-            if (classNameMatcher.matching(classInCache.getName())) {
-                enhanceClassSet.add(classInCache);
-            }
-        }
-
         final ClassFileTransformer resetClassFileTransformer = new ClassFileTransformer() {
             @Override
             public byte[] transform(
@@ -449,20 +442,17 @@ public class Enhancer implements ClassFileTransformer {
 
             inst.addTransformer(resetClassFileTransformer, true);
 
-            // 批量增强
-            final int size = enhanceClassSet.size();
-            final Class<?>[] classArray = new Class<?>[size];
-            arraycopy(enhanceClassSet.toArray(), 0, classArray, 0, size);
-            if (classArray.length > 0) {
+            if (!classBytesCache.isEmpty()) {
+                // 批量增强
+                final Class<?>[] classArray = new Class<?>[size];
+                arraycopy(classBytesCache.keySet().toArray(), 0, classArray, 0, size);
                 inst.retransformClasses(classArray);
             }
 
         } finally {
             inst.removeTransformer(resetClassFileTransformer);
-            for (Class<?> resetClass : enhanceClassSet) {
-                classBytesCache.remove(resetClass);
-                affect.cCnt(1);
-            }
+            affect.cCnt(classBytesCache.size());
+            classBytesCache.clear();
         }
 
         return affect;
