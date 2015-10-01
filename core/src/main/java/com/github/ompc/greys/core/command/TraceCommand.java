@@ -99,6 +99,9 @@ public class TraceCommand implements Command {
                         return methodNameMatcher;
                     }
 
+                    // 跟踪深度
+                    private int tracingDeep = 0;
+
                     @Override
                     public AdviceListener getAdviceListener() {
                         return new ReflectAdviceTracingListenerAdapter() {
@@ -131,6 +134,7 @@ public class TraceCommand implements Command {
                                     String tracingMethodName,
                                     String tracingMethodDesc) throws Throwable {
                                 threadBoundEntity.get().view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                tracingDeep++;
                             }
 
                             @Override
@@ -139,6 +143,7 @@ public class TraceCommand implements Command {
                                     String tracingMethodName,
                                     String tracingMethodDesc) throws Throwable {
                                 threadBoundEntity.get().view.end();
+                                tracingDeep--;
                             }
 
                             @Override
@@ -173,7 +178,13 @@ public class TraceCommand implements Command {
                                     Object target, 
                                     Object[] args, 
                                     Throwable throwable) throws Throwable {
-                                threadBoundEntity.get().view.begin("throw:" + throwable.getClass().getName() + "()").end().end();
+                                threadBoundEntity.get().view.begin("throw:" + throwable.getClass().getName() + "()").end();
+
+                                // 这里将堆栈的end全部补上
+                                while( tracingDeep-- >= 0 ) {
+                                    threadBoundEntity.get().view.end();
+                                }
+
                                 final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
                                 finishing(advice);
                             }

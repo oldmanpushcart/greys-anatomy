@@ -1,5 +1,8 @@
 package com.github.ompc.greys.core.util;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
 
 /**
@@ -15,6 +18,75 @@ public interface Matcher {
      * @return 目标字符串是否匹配表达式
      */
     boolean matching(String target);
+
+    /**
+     * 组关系枚举
+     */
+    enum GroupRelation {
+
+        /**
+         * 与
+         */
+        AND,
+
+        /**
+         * 或
+         */
+        OR
+    }
+
+    abstract class GroupMatcher implements Matcher {
+
+        private final GroupRelation relation;
+        private final List<Matcher> matcherList;
+
+        public GroupMatcher(GroupRelation relation, List<Matcher> matcherList) {
+            this.relation = relation;
+            this.matcherList = matcherList;
+        }
+
+        @Override
+        public boolean matching(String target) {
+
+            // and
+            if (relation.equals(GroupRelation.AND)) {
+                for (Matcher matcher : matcherList) {
+                    if (!matcher.matching(target)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            // or
+            else if (relation.equals(GroupRelation.OR)) {
+                for (Matcher matcher : matcherList) {
+                    if (matcher.matching(target)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // others
+            return false;
+
+        }
+    }
+
+    class GroupAndMatcher extends GroupMatcher {
+
+        public GroupAndMatcher(Matcher... matcherArray) {
+            super(GroupRelation.AND, Arrays.asList(matcherArray));
+        }
+    }
+
+    class GroupOrMatcher extends GroupMatcher {
+
+        public GroupOrMatcher(Matcher... matcherArray) {
+            super(GroupRelation.OR, Arrays.asList(matcherArray));
+        }
+    }
 
 
     /**
