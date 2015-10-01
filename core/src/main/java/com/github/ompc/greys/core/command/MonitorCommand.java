@@ -133,6 +133,9 @@ public class MonitorCommand implements Command {
         private int success;
         private int failed;
         private long cost;
+        private long maxCost;
+        private long minCost;
+        private int concurrent;
     }
 
     @Override
@@ -193,20 +196,22 @@ public class MonitorCommand implements Command {
 
                                     @Override
                                     public void run() {
-                                        if (monitorData.isEmpty()) {
-                                            return;
-                                        }
+//                                        if (monitorData.isEmpty()) {
+//                                            return;
+//                                        }
 
-                                        final TableView tableView = new TableView(8)
+                                        final TableView tableView = new TableView(10)
                                                 .addRow(
-                                                        "timestamp",
-                                                        "class",
-                                                        "method",
-                                                        "total",
-                                                        "success",
-                                                        "fail",
-                                                        "rt",
-                                                        "fail-rate"
+                                                        "TIMESTAMP",
+                                                        "CLASS",
+                                                        "METHOD",
+                                                        "TOTAL",
+                                                        "SUCCESS",
+                                                        "FAIL",
+                                                        "FAIL-RATE",
+                                                        "AVG-RT(ms)",
+                                                        "MIN-RT(ms)",
+                                                        "MAX-RT(ms)"
                                                 );
 
                                         for (Map.Entry<Key, AtomicReference<Data>> entry : monitorData.entrySet()) {
@@ -231,8 +236,10 @@ public class MonitorCommand implements Command {
                                                         data.total,
                                                         data.success,
                                                         data.failed,
+                                                        df.format(100.0d * div(data.failed, data.total)) + "%",
                                                         df.format(div(data.cost, data.total)),
-                                                        df.format(100.0d * div(data.failed, data.total)) + "%"
+                                                        data.minCost,
+                                                        data.maxCost
                                                 );
 
                                             }
@@ -295,9 +302,10 @@ public class MonitorCommand implements Command {
                                 final Key key = new Key(clazz.getName(), method.getName());
 
                                 while (true) {
-                                    AtomicReference<Data> value = monitorData.get(key);
+                                    final AtomicReference<Data> value = monitorData.get(key);
                                     if (null == value) {
                                         monitorData.putIfAbsent(key, new AtomicReference<Data>(new Data()));
+                                        // 这里不去判断返回值，用continue去强制获取一次
                                         continue;
                                     }
 
@@ -313,6 +321,8 @@ public class MonitorCommand implements Command {
                                             nData.success = oData.success + 1;
                                         }
                                         nData.total = oData.total + 1;
+                                        nData.maxCost = Math.max(oData.maxCost, cost);
+                                        nData.minCost = Math.min(oData.minCost, cost);
                                         if (value.compareAndSet(oData, nData)) {
                                             break;
                                         }

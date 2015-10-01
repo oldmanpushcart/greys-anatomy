@@ -1,10 +1,7 @@
 package com.github.ompc.greys.core.advisor;
 
 import com.github.ompc.greys.core.GlobalOptions;
-import com.github.ompc.greys.core.util.GaStringUtils;
-import com.github.ompc.greys.core.util.LogUtil;
-import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.SearchUtils;
+import com.github.ompc.greys.core.util.*;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -17,11 +14,13 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 import java.util.*;
 
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
 import static com.github.ompc.greys.core.util.GaReflectUtils.defineClass;
+import static com.github.ompc.greys.core.util.GaReflectUtils.getVisibleMethods;
 import static java.lang.System.arraycopy;
 import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
 import static org.apache.commons.io.IOUtils.toByteArray;
@@ -185,7 +184,6 @@ public class Enhancer implements ClassFileTransformer {
         // 字节码增强
         final ClassWriter cw = new ClassWriter(cr, COMPUTE_FRAMES | COMPUTE_MAXS) {
 
-
             /*
              * 注意，为了自动计算帧的大小，有时必须计算两个类共同的父类。
              * 缺省情况下，ClassWriter将会在getCommonSuperClass方法中计算这些，通过在加载这两个类进入虚拟机时，使用反射API来计算。
@@ -198,10 +196,9 @@ public class Enhancer implements ClassFileTransformer {
             @Override
             protected String getCommonSuperClass(String type1, String type2) {
                 Class<?> c, d;
-                final ClassLoader classLoader = inClassLoader;
                 try {
-                    c = Class.forName(type1.replace('/', '.'), false, classLoader);
-                    d = Class.forName(type2.replace('/', '.'), false, classLoader);
+                    c = Class.forName(type1.replace('/', '.'), false, inClassLoader);
+                    d = Class.forName(type2.replace('/', '.'), false, inClassLoader);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -328,6 +325,24 @@ public class Enhancer implements ClassFileTransformer {
                 ;
     }
 
+    private static Set<Class<?>> searchEnhanceClasses(final Instrumentation inst, final Matcher classNameMatcher) {
+
+        final Set<Class<?>> returnClassSet = new LinkedHashSet<Class<?>>();
+
+        // 1. 添加匹配的一级类
+        final Set<Class<?>> matchedClassSet = SearchUtils.searchClassWithSubClass(inst, classNameMatcher);
+        returnClassSet.addAll(matchedClassSet);
+
+        // 2. 添加一级类的可见方法所对应的类
+        for( Class<?> matchedClass : matchedClassSet ) {
+            for (Map.Entry<Class<?>, LinkedHashSet<Method>> entry : getVisibleMethods(matchedClass).entrySet()) {
+                returnClassSet.add(entry.getKey());
+            }
+        }
+
+        return returnClassSet;
+    }
+
     /**
      * 对象增强
      *
@@ -336,7 +351,6 @@ public class Enhancer implements ClassFileTransformer {
      * @param isTracing         可跟踪方法调用
      * @param classNameMatcher  类名匹配
      * @param methodNameMatcher 方法名匹配
-     * @param isIncludeSub      是否包括子类
      * @return 增强影响范围
      * @throws UnmodifiableClassException 增强失败
      */
@@ -345,15 +359,12 @@ public class Enhancer implements ClassFileTransformer {
             final int adviceId,
             final boolean isTracing,
             final Matcher classNameMatcher,
-            final Matcher methodNameMatcher,
-            final boolean isIncludeSub) throws UnmodifiableClassException {
+            final Matcher methodNameMatcher) throws UnmodifiableClassException {
 
         final EnhancerAffect affect = new EnhancerAffect();
 
         // 获取需要增强的类集合
-        final Set<Class<?>> enhanceClassSet = !isIncludeSub
-                ? SearchUtils.searchClass(inst, classNameMatcher)
-                : SearchUtils.searchClassWithSubClass(inst, classNameMatcher);
+        final Set<Class<?>> enhanceClassSet = searchEnhanceClasses(inst, classNameMatcher);
 
         // 过滤掉无法被增强的类
         filter(enhanceClassSet);

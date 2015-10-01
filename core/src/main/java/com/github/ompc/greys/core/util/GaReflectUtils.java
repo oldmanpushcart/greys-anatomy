@@ -315,7 +315,6 @@ public class GaReflectUtils {
     }
 
 
-
     /**
      * 获取目标类的父类
      *
@@ -382,8 +381,32 @@ public class GaReflectUtils {
             }
         }
 
-        return classMethodMap;
+        return removeObjectMethods(classMethodMap);
+    }
 
+    /**
+     * 移除来自{@link java.lang.Object}的方法
+     *
+     * @param map 方法集合
+     * @return 方法集合
+     */
+    private static LinkedHashMap<Class<?>, LinkedHashSet<Method>> removeObjectMethods(LinkedHashMap<Class<?>, LinkedHashSet<Method>> map) {
+        if (null == map
+                || map.isEmpty()) {
+            return map;
+        }
+
+        final Iterator<Class<?>> classIt = map.keySet().iterator();
+        while (classIt.hasNext()) {
+
+            final Class<?> clazz = classIt.next();
+            if (GaCheckUtils.isEquals(clazz, Object.class)) {
+                classIt.remove();
+            }
+
+        }
+
+        return map;
     }
 
 }

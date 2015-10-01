@@ -19,10 +19,10 @@ public class GlobalOptions {
     @Option(level = 0,
             name = "unsafe",
             summary = "Option to support system-level class",
-            description  =
-                    "This option enables to proxy functionality of JVM classes."
-                            +  "Due to serious security risk a JVM crash is possibly be introduced."
-                            +  "Do not activate it unless you are able to manage."
+            description =
+                    "This option enables to proxy functionality of JVM classes. "
+                            + "Due to serious security risk a JVM crash is possibly be introduced. "
+                            + "Do not activate it unless you are able to manage."
     )
     public static volatile boolean isUnsafe = false;
 
@@ -81,6 +81,13 @@ public class GlobalOptions {
     )
     public static volatile boolean isDebugForAsm = false;
 
+    @Option(level = 1,
+            name = "remove-object-methods",
+            summary = "Option to remove java.lang.Object's methods when searching methods",
+            description = "This option enables to remove java.lang.Object's methods when greys searching class's methods. "
+                    + "Do not activate it unless you are able to manage."
+    )
+    public static volatile boolean isRemoveObjectMethods = true;
 
     /**
      * 选项
