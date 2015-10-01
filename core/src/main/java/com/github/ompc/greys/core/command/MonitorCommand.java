@@ -100,9 +100,9 @@ public class MonitorCommand implements Command {
         private final String className;
         private final String methodName;
 
-        private Key(String className, String behaviorName) {
-            this.className = className;
-            this.methodName = behaviorName;
+        private Key(Class<?> clazz, GaMethod method) {
+            this.className = clazz.getName();
+            this.methodName = method.getName();
         }
 
         @Override
@@ -116,9 +116,9 @@ public class MonitorCommand implements Command {
                     || !(obj instanceof Key)) {
                 return false;
             }
-            Key okey = (Key) obj;
-            return isEquals(okey.className, className)
-                    && isEquals(okey.methodName, methodName);
+            Key oKey = (Key) obj;
+            return isEquals(oKey.className, className)
+                    && isEquals(oKey.methodName, methodName);
         }
 
     }
@@ -133,9 +133,8 @@ public class MonitorCommand implements Command {
         private int success;
         private int failed;
         private long cost;
-        private long maxCost;
-        private long minCost;
-        private int concurrent;
+        private Long maxCost;
+        private Long minCost;
     }
 
     @Override
@@ -177,10 +176,13 @@ public class MonitorCommand implements Command {
                             /*
                              * 监控数据
                              */
-                            private ConcurrentHashMap<Key, AtomicReference<Data>> monitorData
+                            private final ConcurrentHashMap<Key, AtomicReference<Data>> monitorData
                                     = new ConcurrentHashMap<Key, AtomicReference<Data>>();
 
-                            private final ThreadLocal<Long> beginTimestamp = new ThreadLocal<Long>();
+                            /*
+                             * 起始时间戳
+                             */
+                            private final ThreadLocal<Long> beginTimestampThreadBound = new ThreadLocal<Long>();
 
                             private double div(double a, double b) {
                                 if (b == 0) {
@@ -259,6 +261,7 @@ public class MonitorCommand implements Command {
                                 if (null != timer) {
                                     timer.cancel();
                                 }
+                                beginTimestampThreadBound.remove();
                             }
 
                             @Override
@@ -268,7 +271,7 @@ public class MonitorCommand implements Command {
                                     GaMethod method,
                                     Object target,
                                     Object[] args) throws Throwable {
-                                beginTimestamp.set(currentTimeMillis());
+                                beginTimestampThreadBound.set(currentTimeMillis());
                             }
 
                             @Override
@@ -294,12 +297,12 @@ public class MonitorCommand implements Command {
                             }
 
                             private void finishing(Class<?> clazz, GaMethod method, boolean isThrowing) {
-                                final Long startTime = beginTimestamp.get();
+                                final Long startTime = beginTimestampThreadBound.get();
                                 if (null == startTime) {
                                     return;
                                 }
                                 final long cost = currentTimeMillis() - startTime;
-                                final Key key = new Key(clazz.getName(), method.getName());
+                                final Key key = new Key(clazz, method);
 
                                 while (true) {
                                     final AtomicReference<Data> value = monitorData.get(key);
@@ -321,8 +324,22 @@ public class MonitorCommand implements Command {
                                             nData.success = oData.success + 1;
                                         }
                                         nData.total = oData.total + 1;
-                                        nData.maxCost = Math.max(oData.maxCost, cost);
-                                        nData.minCost = Math.min(oData.minCost, cost);
+
+                                        // set max-cost
+                                        if( null == oData.maxCost ) {
+                                            nData.maxCost = cost;
+                                        } else {
+                                            nData.maxCost = Math.max(oData.maxCost, cost);
+                                        }
+
+                                        // set min-cost
+                                        if( null == oData.minCost ) {
+                                            nData.minCost = cost;
+                                        } else {
+                                            nData.minCost = Math.min(oData.minCost, cost);
+                                        }
+
+
                                         if (value.compareAndSet(oData, nData)) {
                                             break;
                                         }
