@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
+import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
 
 /**
  * 调用跟踪命令<br/>
@@ -108,16 +109,26 @@ public class PathTraceCommand implements Command {
                     public AdviceListener getAdviceListener() {
                         return new ReflectAdviceListenerAdapter() {
 
+                            private volatile boolean isInit = false;
+
                             // 执行计数器
-                            private final AtomicInteger times = new AtomicInteger();
+                            private final AtomicInteger timesRef = new AtomicInteger();
+
+                            // 上下文跟踪标记
+                            private final ThreadLocal<Boolean> isTracingRef = new ThreadLocal<Boolean>() {
+                                @Override
+                                protected Boolean initialValue() {
+                                    return false;
+                                }
+                            };
 
                             // 上下文调用关联
-                            private final ThreadLocal<Entity> threadBoundEntity = new ThreadLocal<Entity>() {
+                            private final ThreadLocal<Entity> entityRef = new ThreadLocal<Entity>() {
 
                                 @Override
                                 protected Entity initialValue() {
                                     final Entity e = new Entity();
-                                    e.view = new TreeView(true, "Tracing...");
+                                    e.view = new TreeView(true, "Tracing for : "+ getThreadInfo());
                                     e.deep = 0;
                                     return e;
                                 }
@@ -126,12 +137,12 @@ public class PathTraceCommand implements Command {
 
                             @Override
                             public void create() {
-                                super.create();
+                                isInit = true;
                             }
 
                             @Override
                             public void destroy() {
-                                super.destroy();
+                                isInit = false;
                             }
 
 
@@ -148,16 +159,23 @@ public class PathTraceCommand implements Command {
                                     final GaMethod method,
                                     final Object target,
                                     final Object[] args) throws Throwable {
-                                final Entity entity = threadBoundEntity.get();
-                                entity.deep++;
-                                if (!entity.isTracing
-                                        && isTracingEnter(clazz, method)) {
-                                    entity.isTracing = true;
+
+                                if (!isInit) {
+                                    return;
                                 }
 
-                                if (entity.isTracing) {
-                                    entity.view.begin(clazz.getCanonicalName() + ":" + method.getName() + "()");
+                                final boolean isTracing = isTracingRef.get();
+                                if (!isTracing) {
+                                    if (isTracingEnter(clazz, method)) {
+                                        isTracingRef.set(true);
+                                    } else {
+                                        return;
+                                    }
                                 }
+
+                                final Entity entity = entityRef.get();
+                                entity.view.begin(clazz.getCanonicalName() + ":" + method.getName() + "()");
+                                entity.deep++;
                             }
 
                             @Override
@@ -168,6 +186,10 @@ public class PathTraceCommand implements Command {
                                     final Object target,
                                     final Object[] args,
                                     final Object returnObject) throws Throwable {
+                                if (!isInit
+                                        || !isTracingRef.get()) {
+                                    return;
+                                }
                                 finishing(newForAfterRetuning(loader, clazz, method, target, args, returnObject));
                             }
 
@@ -179,6 +201,10 @@ public class PathTraceCommand implements Command {
                                     final Object target,
                                     final Object[] args,
                                     final Throwable throwable) throws Throwable {
+                                if (!isInit
+                                        || !isTracingRef.get()) {
+                                    return;
+                                }
                                 finishing(newForAfterThrowing(loader, clazz, method, target, args, throwable));
                             }
 
@@ -188,32 +214,30 @@ public class PathTraceCommand implements Command {
                             }
 
                             private void finishing(Advice advice) {
-                                final Entity entity = threadBoundEntity.get();
+                                final Entity entity = entityRef.get();
                                 entity.deep--;
-                                if (entity.isTracing) {
 
-                                    // add throw exception
-                                    if (advice.isAfterThrowing()) {
-                                        entity.view
-                                                .begin("throw:" + advice.getThrowExp().getClass().getCanonicalName())
-                                                .end();
-                                    }
-
-                                    entity.view.end();
-                                    if (entity.deep <= 0) {
-                                        printer.println(entity.view.draw());
-
-                                        // 超过调用限制就关闭掉跟踪
-                                        if( isOverThreshold(times.incrementAndGet()) ) {
-                                            printer.finish();
-                                        }
-                                    }
+                                // add throw exception
+                                if (advice.isAfterThrowing()) {
+                                    entity.view
+                                            .begin("throw:" + advice.getThrowExp().getClass().getCanonicalName())
+                                            .end();
                                 }
 
-                                // remove thread local
+                                entity.view.end();
                                 if (entity.deep <= 0) {
-                                    threadBoundEntity.remove();
+                                    printer.println(entity.view.draw());
+
+                                    // 超过调用限制就关闭掉跟踪
+                                    if (isOverThreshold(timesRef.incrementAndGet())) {
+                                        printer.finish();
+                                    }
+
+                                    // remove thread local
+                                    entityRef.remove();
+                                    isTracingRef.set(false);
                                 }
+
                             }
 
                         };
@@ -233,7 +257,16 @@ public class PathTraceCommand implements Command {
 
         TreeView view;
         int deep;
-        boolean isTracing = false;
+
+    }
+
+
+    public static void main(String... args) {
+
+        final TreeView view = new TreeView(true, "Tracing for : "+ getThreadInfo());
+        view.begin("A1").begin("A11").end().end();
+        view.begin("B1").begin("B11").end().end();
+        System.out.println(view.draw());
 
     }
 

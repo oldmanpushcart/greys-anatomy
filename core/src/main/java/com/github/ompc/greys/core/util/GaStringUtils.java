@@ -274,6 +274,19 @@ public class GaStringUtils {
 
 
     /**
+     * 统一获取线程信息
+     * @return 线程摘要信息(一行)
+     */
+    public static String getThreadInfo() {
+        final Thread currentThread = Thread.currentThread();
+        return String.format("thread_name=\"%s\" thread_id=0x%s;is_daemon=%s;priority=%s;",
+                currentThread.getName(),
+                Long.toHexString(currentThread.getId()),
+                currentThread.isDaemon(),
+                currentThread.getPriority());
+    }
+
+    /**
      * 获取方法执行堆栈信息
      *
      * @return 方法堆栈信息
@@ -283,11 +296,7 @@ public class GaStringUtils {
         final Thread currentThread = Thread.currentThread();
         final StackTraceElement[] stackTraceElementArray = currentThread.getStackTrace();
 
-        final String title = String.format("thread_name=\"%s\" thread_id=0x%s;is_daemon=%s;priority=%s;",
-                currentThread.getName(),
-                Long.toHexString(currentThread.getId()),
-                currentThread.isDaemon(),
-                currentThread.getPriority());
+        final String title = getThreadInfo();
 
         final StackTraceElement locationStackTraceElement = stackTraceElementArray[skip];
         final String locationString = String.format("    @%s.%s()",

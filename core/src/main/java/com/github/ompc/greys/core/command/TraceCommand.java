@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
+import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
 import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -106,7 +107,7 @@ public class TraceCommand implements Command {
                     public AdviceListener getAdviceListener() {
                         return new ReflectAdviceTracingListenerAdapter() {
 
-                            private final ThreadLocal<Entity> threadBoundEntity = new ThreadLocal<Entity>() {
+                            private final ThreadLocal<Entity> entityRef = new ThreadLocal<Entity>() {
 
                                 @Override
                                 protected Entity initialValue() {
@@ -125,7 +126,7 @@ public class TraceCommand implements Command {
 
                             @Override
                             public void destroy() {
-                                threadBoundEntity.remove();
+                                entityRef.remove();
                             }
 
                             @Override
@@ -133,7 +134,7 @@ public class TraceCommand implements Command {
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc) throws Throwable {
-                                threadBoundEntity.get().view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                entityRef.get().view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
                                 tracingDeep++;
                             }
 
@@ -142,7 +143,7 @@ public class TraceCommand implements Command {
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc) throws Throwable {
-                                threadBoundEntity.get().view.end();
+                                entityRef.get().view.end();
                                 tracingDeep--;
                             }
 
@@ -153,8 +154,8 @@ public class TraceCommand implements Command {
                                     GaMethod method, 
                                     Object target, 
                                     Object[] args) throws Throwable {
-                                threadBoundEntity.get().view.begin(clazz.getName() + ":" + method.getName() + "()");
-                                threadBoundEntity.get().deep++;
+                                entityRef.get().view.begin(clazz.getName() + ":" + method.getName() + "()");
+                                entityRef.get().deep++;
                             }
 
                             @Override
@@ -165,7 +166,7 @@ public class TraceCommand implements Command {
                                     Object target, 
                                     Object[] args, 
                                     Object returnObject) throws Throwable {
-                                threadBoundEntity.get().view.end();
+                                entityRef.get().view.end();
                                 final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
                                 finishing(advice);
                             }
@@ -178,11 +179,11 @@ public class TraceCommand implements Command {
                                     Object target, 
                                     Object[] args, 
                                     Throwable throwable) throws Throwable {
-                                threadBoundEntity.get().view.begin("throw:" + throwable.getClass().getName() + "()").end();
+                                entityRef.get().view.begin("throw:" + throwable.getClass().getName() + "()").end();
 
                                 // 这里将堆栈的end全部补上
                                 while( tracingDeep-- >= 0 ) {
-                                    threadBoundEntity.get().view.end();
+                                    entityRef.get().view.end();
                                 }
 
                                 final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
@@ -204,18 +205,18 @@ public class TraceCommand implements Command {
                             }
 
                             private void finishing(Advice advice) {
-                                if (--threadBoundEntity.get().deep == 0) {
+                                if (--entityRef.get().deep == 0) {
                                     
                                     if (isPrintIfNecessary(advice)) {
                                         final boolean isF = isLimited(times.incrementAndGet());
-                                        printer.println(isF, threadBoundEntity.get().view.draw());
+                                        printer.println(isF, entityRef.get().view.draw());
                                     }
-                                    threadBoundEntity.remove();
+                                    entityRef.remove();
                                 }
                             }
 
                             private TreeView createTreeView() {
-                                return new TreeView(true, "Tracing...");
+                                return new TreeView(true, "Tracing for : "+ getThreadInfo());
                             }
 
                         };
