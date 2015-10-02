@@ -6,8 +6,13 @@ import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
+import com.github.ompc.greys.core.manager.TimeFragmentManager;
+import com.github.ompc.greys.core.manager.TimeFragmentManager.TimeFragment;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.*;
+import com.github.ompc.greys.core.util.Advice;
+import com.github.ompc.greys.core.util.Express;
+import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.ObjectView;
@@ -18,13 +23,13 @@ import java.io.StringWriter;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
+import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
 import static com.github.ompc.greys.core.util.GaStringUtils.newString;
 import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
@@ -49,11 +54,8 @@ import static org.apache.commons.lang3.StringUtils.*;
         })
 public class TimeTunnelCommand implements Command {
 
-    // 时间隧道(时间碎片的集合)
-    private static final Map<Integer, TimeFragment> timeFragmentMap = new LinkedHashMap<Integer, TimeFragment>();
-
-    // 时间碎片序列生成器
-    private static final AtomicInteger sequence = new AtomicInteger(1000);
+    // 时间片段管理
+    private final TimeFragmentManager timeFragmentManager = TimeFragmentManager.Factory.getInstance();
 
     // TimeTunnel the method call
     @NamedArg(name = "t", summary = "Record the method invocation within time fragments")
@@ -191,20 +193,11 @@ public class TimeTunnelCommand implements Command {
     }
 
     /*
-     * 记录时间片段
-     */
-    private int putTimeTunnel(TimeFragment tt) {
-        final int indexOfSeq = sequence.getAndIncrement();
-        timeFragmentMap.put(indexOfSeq, tt);
-        return indexOfSeq;
-    }
-
-
-    /*
      * 各列宽度
      */
     private static final int[] TABLE_COL_WIDTH = new int[]{
             8, // index
+            8, // processId
             20, // timestamp
             10, // cost(ms)
             8, // isRet
@@ -219,6 +212,7 @@ public class TimeTunnelCommand implements Command {
      */
     private static final String[] TABLE_COL_TITLE = new String[]{
             "INDEX",
+            "PROCESS",
             "TIMESTAMP",
             "COST(ms)",
             "IS-RET",
@@ -323,19 +317,14 @@ public class TimeTunnelCommand implements Command {
                                         ));
                             }
 
-                            private boolean isLimited(int currentTimes) {
+                            private boolean isOverThreshold(int currentTimes) {
                                 return null != numberOfLimit
                                         && currentTimes >= numberOfLimit;
                             }
 
                             private void afterFinishing(Advice advice) {
 
-                                final TimeFragment timeTunnel = new TimeFragment(
-                                        advice,
-                                        new Date(),
-                                        currentTimeMillis() - timestampRef.get(),
-                                        GaStringUtils.getStack(STACK_DEEP)
-                                );
+                                final long cost = currentTimeMillis() - timestampRef.get();
 
                                 // reset the timestamp
                                 timestampRef.remove();
@@ -349,7 +338,14 @@ public class TimeTunnelCommand implements Command {
                                     // ignore...
                                 }
 
-                                final int index = putTimeTunnel(timeTunnel);
+                                final TimeFragment timeFragment = timeFragmentManager.append(
+                                        timeFragmentManager.generateProcessId(),
+                                        advice,
+                                        new Date(),
+                                        cost,
+                                        getStack(STACK_DEEP)
+                                );
+
                                 final TableView view = createTableView();
 
                                 if (isFirst) {
@@ -363,9 +359,9 @@ public class TimeTunnelCommand implements Command {
                                 view.borders(view.borders() & ~TableView.BORDER_BOTTOM);
 
                                 // 填充表格内容
-                                fillTableRow(view, index, timeTunnel);
+                                fillTableRow(view, timeFragment.id, timeFragment);
 
-                                final boolean isF = isLimited(times.incrementAndGet());
+                                final boolean isF = isOverThreshold(times.incrementAndGet());
                                 if (isF) {
                                     view.borders(view.borders() | TableView.BORDER_BOTTOM);
                                 }
@@ -389,8 +385,9 @@ public class TimeTunnelCommand implements Command {
         return new RowAction() {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
-                printer.print(drawTimeTunnelTable(timeFragmentMap)).finish();
-                return new RowAffect(timeFragmentMap.size());
+                final ArrayList<TimeFragment> timeFragments = timeFragmentManager.list();
+                printer.print(drawTimeTunnelTable(timeFragments)).finish();
+                return new RowAffect(timeFragments.size());
             }
         };
 
@@ -419,19 +416,7 @@ public class TimeTunnelCommand implements Command {
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 // 匹配的时间片段
-                final Map<Integer, TimeFragment> matchingTimeSegmentMap = new LinkedHashMap<Integer, TimeFragment>();
-
-                for (Map.Entry<Integer, TimeFragment> entry : timeFragmentMap.entrySet()) {
-                    final int index = entry.getKey();
-                    final TimeFragment tf = entry.getValue();
-                    final Advice advice = tf.advice;
-
-                    // 搜索出匹配的时间片段
-                    if ((Express.ExpressFactory.newExpress(advice)).is(searchExpress)) {
-                        matchingTimeSegmentMap.put(index, tf);
-                    }
-
-                }
+                final ArrayList<TimeFragment> matchingTimeFragments = timeFragmentManager.search(searchExpress);
 
                 // 执行watchExpress
                 if (hasWatchExpress()) {
@@ -444,10 +429,10 @@ public class TimeTunnelCommand implements Command {
                             .padding(1)
                             .addRow("INDEX", "SEARCH-RESULT");
 
-                    for (Map.Entry<Integer, TimeFragment> entry : matchingTimeSegmentMap.entrySet()) {
-                        final Object value = Express.ExpressFactory.newExpress(entry.getValue().advice).get(watchExpress);
+                    for (TimeFragment timeFragment : matchingTimeFragments) {
+                        final Object value = Express.ExpressFactory.newExpress(timeFragment.advice).get(watchExpress);
                         view.addRow(
-                                entry.getKey(),
+                                timeFragment.id,
                                 isNeedExpend()
                                         ? new ObjectView(value, expend).draw()
                                         : value
@@ -458,10 +443,10 @@ public class TimeTunnelCommand implements Command {
                     printer.print(view.draw()).finish();
                 } // 单纯的列表格
                 else {
-                    printer.print(drawTimeTunnelTable(matchingTimeSegmentMap)).finish();
+                    printer.print(drawTimeTunnelTable(matchingTimeFragments)).finish();
                 }
 
-                return new RowAffect(matchingTimeSegmentMap.size());
+                return new RowAffect(matchingTimeFragments.size());
             }
         };
 
@@ -475,8 +460,7 @@ public class TimeTunnelCommand implements Command {
 
             @Override
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
-                final int count = timeFragmentMap.size();
-                timeFragmentMap.clear();
+                final int count = timeFragmentManager.clean();
                 printer.println("Time fragments are cleaned.").finish();
                 return new RowAffect(count);
             }
@@ -493,13 +477,13 @@ public class TimeTunnelCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
-                final TimeFragment tf = timeFragmentMap.get(index);
-                if (null == tf) {
+                final TimeFragment timeFragment = timeFragmentManager.get(index);
+                if (null == timeFragment) {
                     printer.println(format("Time fragment[%d] does not exist.", index)).finish();
                     return new RowAffect();
                 }
 
-                final Advice advice = tf.advice;
+                final Advice advice = timeFragment.advice;
                 final Object value = Express.ExpressFactory.newExpress(advice).get(watchExpress);
                 if (isNeedExpend()) {
                     printer.println(new ObjectView(value, expend).draw()).finish();
@@ -521,13 +505,13 @@ public class TimeTunnelCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
-                final TimeFragment tf = timeFragmentMap.get(index);
-                if (null == tf) {
+                final TimeFragment timeFragment = timeFragmentManager.get(index);
+                if (null == timeFragment) {
                     printer.println(format("Time fragment[%d] does not exist.", index)).finish();
                     return new RowAffect();
                 }
 
-                final Advice advice = tf.advice;
+                final Advice advice = timeFragment.advice;
                 final String className = advice.getClazz().getName();
                 final String methodName = advice.getMethod().getName();
                 final String objectAddress = advice.getTarget() == null
@@ -628,7 +612,7 @@ public class TimeTunnelCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                 final RowAffect affect = new RowAffect();
-                if (timeFragmentMap.remove(index) != null) {
+                if (timeFragmentManager.delete(index) != null) {
                     affect.rCnt(1);
                 }
                 printer.println(format("Time fragment[%d] successfully deleted.", index)).finish();
@@ -662,19 +646,18 @@ public class TimeTunnelCommand implements Command {
                         TABLE_COL_TITLE[4],
                         TABLE_COL_TITLE[5],
                         TABLE_COL_TITLE[6],
-                        TABLE_COL_TITLE[7]
+                        TABLE_COL_TITLE[7],
+                        TABLE_COL_TITLE[8]
                 );
     }
 
     /*
      * 绘制TimeTunnel表格
      */
-    private String drawTimeTunnelTable(final Map<Integer, TimeFragment> timeTunnelMap) {
+    private String drawTimeTunnelTable(final ArrayList<TimeFragment> timeFragments) {
         final TableView view = fillTableTitle(createTableView());
-        for (Map.Entry<Integer, TimeFragment> entry : timeTunnelMap.entrySet()) {
-            final int index = entry.getKey();
-            final TimeFragment tf = entry.getValue();
-            fillTableRow(view, index, tf);
+        for (TimeFragment timeFragment : timeFragments) {
+            fillTableRow(view, timeFragment.id, timeFragment);
         }
         return view.draw();
     }
@@ -687,6 +670,7 @@ public class TimeTunnelCommand implements Command {
         final Advice advice = tf.advice;
         return tableView.addRow(
                 index,
+                tf.processId,
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(tf.gmtCreate),
                 tf.cost,
                 advice.isAfterReturning(),
@@ -709,13 +693,13 @@ public class TimeTunnelCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
-                final TimeFragment tf = timeFragmentMap.get(index);
-                if (null == tf) {
+                final TimeFragment timeFragment = timeFragmentManager.get(index);
+                if (null == timeFragment) {
                     printer.println(format("Time fragment[%d] does not exist.", index)).finish();
                     return new RowAffect();
                 }
 
-                final Advice advice = tf.advice;
+                final Advice advice = timeFragment.advice;
                 final String className = advice.getClazz().getName();
                 final String methodName = advice.getMethod().getName();
                 final String objectAddress = advice.getTarget() == null
@@ -730,8 +714,8 @@ public class TimeTunnelCommand implements Command {
                         .hasBorder(true)
                         .padding(1)
                         .addRow("INDEX", index)
-                        .addRow("GMT-CREATE", sdf.format(tf.gmtCreate))
-                        .addRow("COST(ms)", tf.cost)
+                        .addRow("GMT-CREATE", sdf.format(timeFragment.gmtCreate))
+                        .addRow("COST(ms)", timeFragment.cost)
                         .addRow("OBJECT", objectAddress)
                         .addRow("CLASS", className)
                         .addRow("METHOD", methodName)
@@ -788,7 +772,7 @@ public class TimeTunnelCommand implements Command {
                 }
 
                 // fill the stack
-                view.addRow("STACK", tf.stack);
+                view.addRow("STACK", timeFragment.stack);
 
                 printer.print(view.draw()).finish();
 
@@ -833,26 +817,6 @@ public class TimeTunnelCommand implements Command {
         }
 
         return action;
-
-    }
-
-
-    /**
-     * 时间碎片
-     */
-    class TimeFragment {
-
-        public TimeFragment(Advice advice, Date gmtCreate, long cost, String stack) {
-            this.advice = advice;
-            this.gmtCreate = gmtCreate;
-            this.cost = cost;
-            this.stack = stack;
-        }
-
-        private final Advice advice;
-        private final Date gmtCreate;
-        private final long cost;
-        private final String stack;
 
     }
 
