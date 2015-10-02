@@ -137,7 +137,27 @@ public class TimeTunnelCommand implements Command {
     @NamedArg(name = "s",
             hasValue = true,
             summary = "Search-expression, to search the time fragments by groovy express",
-            description = "The structure of 'advice' like conditional expression"
+            description = "" +
+                    "For example\n" +
+                    "\n" +
+                    "    TRUE  : 1==1\n" +
+                    "    TRUE  : true\n" +
+                    "    FALSE : false\n" +
+                    "    TRUE  : params.length>=0\n" +
+                    "    FALSE : 1==2\n" +
+                    "\n" +
+                    "The structure\n" +
+                    "\n" +
+                    "          target : the object \n" +
+                    "           clazz : the object's class\n" +
+                    "          method : the constructor or method\n" +
+                    "    params[0..n] : the parameters of method\n" +
+                    "       returnObj : the returned object of method\n" +
+                    "        throwExp : the throw exception of method\n" +
+                    "        isReturn : the method ended by return\n" +
+                    "         isThrow : the method ended by throwing exception" +
+                    "       processId : the process ID of time fragment record" +
+                    "           index : the index of time fragment record"
     )
     private String searchExpress = EMPTY;
 
@@ -470,7 +490,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment timeFragment = timeFragmentManager.get(index);
                 if (null == timeFragment) {
-                    printer.println(format("Time fragment[%d] does not exist.", index)).finish();
+                    printer.println(format("Time fragment[%d] does not exist.", timeFragment.id)).finish();
                     return new RowAffect();
                 }
 
@@ -488,7 +508,8 @@ public class TimeTunnelCommand implements Command {
                 })
                         .hasBorder(true)
                         .padding(1)
-                        .addRow("RE-INDEX", index)
+                        .addRow("RE-INDEX", timeFragment.id)
+                        .addRow("PROCESS", timeFragment.processId)
                         .addRow("GMT-REPLAY", sdf.format(new Date()))
                         .addRow("OBJECT", objectAddress)
                         .addRow("CLASS", className)

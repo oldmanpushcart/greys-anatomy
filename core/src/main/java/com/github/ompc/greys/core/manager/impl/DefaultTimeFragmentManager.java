@@ -63,19 +63,32 @@ public class DefaultTimeFragmentManager implements TimeFragmentManager {
     /*
      * 搜索匹配
      */
-    private boolean is(final Advice advice, final String express) {
+    private boolean is(final TimeFragment timeFragment, final String express) {
         try {
-            return Express.ExpressFactory.newExpress(advice).is(express);
+            return Express.ExpressFactory
+                    .newExpress(timeFragment.advice)
+                    .bind("processId", timeFragment.processId)
+                    .bind("index", timeFragment.id)
+                    .is(express);
         } catch (ExpressException e) {
             return false;
         }
+    }
+
+
+    /**
+     * 搜索对象
+     */
+    class SearchDO {
+
+
     }
 
     @Override
     public ArrayList<TimeFragment> search(final String express) {
         final ArrayList<TimeFragment> timeFragments = new ArrayList<TimeFragment>();
         for (TimeFragment timeFragment : timeFragmentStore.values()) {
-            if (is(timeFragment.advice, express)) {
+            if (is(timeFragment, express)) {
                 timeFragments.add(timeFragment);
             }
         }

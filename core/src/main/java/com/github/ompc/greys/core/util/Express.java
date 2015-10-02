@@ -32,6 +32,15 @@ public interface Express {
      */
     boolean is(String express) throws ExpressException;
 
+    /**
+     * 绑定变量
+     *
+     * @param name  变量名
+     * @param value 变量值
+     * @return this
+     */
+    Express bind(String name, Object value);
+
 
     /**
      * 表达式工厂类
@@ -88,6 +97,12 @@ public interface Express {
             } catch (Throwable t) {
                 return false;
             }
+        }
+
+        @Override
+        public Express bind(String name, Object value) {
+            bind.setVariable(name, value);
+            return this;
         }
 
     }

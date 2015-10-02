@@ -297,8 +297,7 @@ public class PathTraceCommand implements Command {
 
                                         // 输出打印内容
                                         if(isTimeTunnel) {
-                                            printer.print(entity.view.draw());
-                                            printer.println(entity.tfView.draw());
+                                            printer.println(entity.view.draw()+entity.tfView.draw());
                                         } else {
                                             printer.println(entity.view.draw());
                                         }
