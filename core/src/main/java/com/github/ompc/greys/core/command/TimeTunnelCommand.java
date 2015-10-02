@@ -570,7 +570,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TableView view = new TableView(new TableView.ColumnDefine[]{
                         new TableView.ColumnDefine(TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(50, true, TableView.Align.LEFT)
+                        new TableView.ColumnDefine(100, false, TableView.Align.LEFT)
                 })
                         .hasBorder(true)
                         .padding(1)
@@ -600,7 +600,7 @@ public class TimeTunnelCommand implements Command {
                 final boolean accessible = advice.getMethod().isAccessible();
                 try {
                     method.setAccessible(true);
-                    method.invoke(advice.getTarget(), advice.getParams());
+                    final Object returnObj = method.invoke(advice.getTarget(), advice.getParams());
 
                     // 执行成功:输出成功状态
                     view.addRow("IS-RETURN", true);
@@ -608,9 +608,9 @@ public class TimeTunnelCommand implements Command {
 
                     // 执行成功:输出成功结果
                     if (isNeedExpend()) {
-                        view.addRow("RETURN-OBJ", new ObjectView(advice.getReturnObj(), expend).draw());
+                        view.addRow("RETURN-OBJ", new ObjectView(returnObj, expend).draw());
                     } else {
-                        view.addRow("RETURN-OBJ", advice.getReturnObj());
+                        view.addRow("RETURN-OBJ", returnObj);
                     }
 
                 } catch (Throwable t) {
