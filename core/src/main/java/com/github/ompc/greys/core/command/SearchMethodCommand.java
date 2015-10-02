@@ -86,7 +86,7 @@ public class SearchMethodCommand implements Command {
     private Matcher getMethodNameMatcher() {
         // auto fix default methodPattern
         if (isBlank(methodPattern)) {
-            methodPattern = isRegEx ? ".*" : "*";
+            return new Matcher.TrueMatcher();
         }
 
         return isRegEx

@@ -70,6 +70,23 @@ public class GlobalOptions {
     )
     public static volatile boolean isDebugForAsm = false;
 
+    @Option(
+            level=1,
+            name="ptrace-class-matcher-lru-capacity",
+            summary = "...",
+            description = "..."
+    )
+    public static volatile int ptraceClassMatcherLruCapacity = 1024;
+
+    @Option(
+            level=1,
+            name="ptrace-method-matcher-lru-capacity",
+            summary = "...",
+            description = "..."
+    )
+    public static volatile int ptraceMethodMatcherLruCapacity = 2048;
+
+
     /**
      * 选项
      */

@@ -1,5 +1,6 @@
 package com.github.ompc.greys.core.command;
 
+import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.advisor.AdviceListener;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
@@ -8,6 +9,7 @@ import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.NonThreadsafeLRUHashMap;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.view.TreeView;
 
@@ -70,17 +72,22 @@ public class PathTraceCommand implements Command {
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer threshold;
 
-
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(classPattern)
-                : new Matcher.WildcardMatcher(classPattern);
+        final Matcher classNameMatcher = new Matcher.CacheMatcher(
+                isRegEx
+                        ? new Matcher.RegexMatcher(classPattern)
+                        : new Matcher.WildcardMatcher(classPattern),
+                new NonThreadsafeLRUHashMap(GlobalOptions.ptraceClassMatcherLruCapacity)
+        );
 
-        final Matcher methodNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(methodPattern)
-                : new Matcher.WildcardMatcher(methodPattern);
+        final Matcher methodNameMatcher = new Matcher.CacheMatcher(
+                isRegEx
+                        ? new Matcher.RegexMatcher(methodPattern)
+                        : new Matcher.WildcardMatcher(methodPattern),
+                new NonThreadsafeLRUHashMap(GlobalOptions.ptraceMethodMatcherLruCapacity)
+        );
 
         final Matcher tracingPathMatcher = isRegEx
                 ? new Matcher.RegexMatcher(tracingPathPattern)
@@ -94,7 +101,7 @@ public class PathTraceCommand implements Command {
 
                     @Override
                     public Matcher getClassNameMatcher() {
-                        return new Matcher.GroupOrMatcher(
+                        return new Matcher.RelationOrMatcher(
                                 classNameMatcher,
                                 tracingPathMatcher
                         );
@@ -102,7 +109,7 @@ public class PathTraceCommand implements Command {
 
                     @Override
                     public Matcher getMethodNameMatcher() {
-                        return new Matcher.WildcardMatcher("*");
+                        return new Matcher.TrueMatcher();
                     }
 
                     @Override
@@ -128,7 +135,7 @@ public class PathTraceCommand implements Command {
                                 @Override
                                 protected Entity initialValue() {
                                     final Entity e = new Entity();
-                                    e.view = new TreeView(true, "Tracing for : "+ getThreadInfo());
+                                    e.view = new TreeView(true, "Tracing for : " + getThreadInfo());
                                     e.deep = 0;
                                     return e;
                                 }
@@ -257,16 +264,6 @@ public class PathTraceCommand implements Command {
 
         TreeView view;
         int deep;
-
-    }
-
-
-    public static void main(String... args) {
-
-        final TreeView view = new TreeView(true, "Tracing for : "+ getThreadInfo());
-        view.begin("A1").begin("A11").end().end();
-        view.begin("B1").begin("B11").end().end();
-        System.out.println(view.draw());
 
     }
 

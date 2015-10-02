@@ -2,6 +2,7 @@ package com.github.ompc.greys.core.util;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
 
@@ -20,9 +21,9 @@ public interface Matcher {
     boolean matching(String target);
 
     /**
-     * 组关系枚举
+     * 关系枚举
      */
-    enum GroupRelation {
+    enum RelationEnum {
 
         /**
          * 与
@@ -35,12 +36,15 @@ public interface Matcher {
         OR
     }
 
-    abstract class GroupMatcher implements Matcher {
+    /**
+     * 关系匹配
+     */
+    abstract class RelationMatcher implements Matcher {
 
-        private final GroupRelation relation;
+        private final RelationEnum relation;
         private final List<Matcher> matcherList;
 
-        public GroupMatcher(GroupRelation relation, List<Matcher> matcherList) {
+        public RelationMatcher(RelationEnum relation, List<Matcher> matcherList) {
             this.relation = relation;
             this.matcherList = matcherList;
         }
@@ -49,7 +53,7 @@ public interface Matcher {
         public boolean matching(String target) {
 
             // and
-            if (relation.equals(GroupRelation.AND)) {
+            if (relation.equals(RelationEnum.AND)) {
                 for (Matcher matcher : matcherList) {
                     if (!matcher.matching(target)) {
                         return false;
@@ -59,7 +63,7 @@ public interface Matcher {
             }
 
             // or
-            else if (relation.equals(GroupRelation.OR)) {
+            else if (relation.equals(RelationEnum.OR)) {
                 for (Matcher matcher : matcherList) {
                     if (matcher.matching(target)) {
                         return true;
@@ -74,18 +78,62 @@ public interface Matcher {
         }
     }
 
-    class GroupAndMatcher extends GroupMatcher {
-
-        public GroupAndMatcher(Matcher... matcherArray) {
-            super(GroupRelation.AND, Arrays.asList(matcherArray));
+    /**
+     * 与关系匹配
+     */
+    class RelationAndMatcher extends RelationMatcher {
+        public RelationAndMatcher(Matcher... matcherArray) {
+            super(RelationEnum.AND, Arrays.asList(matcherArray));
         }
     }
 
-    class GroupOrMatcher extends GroupMatcher {
-
-        public GroupOrMatcher(Matcher... matcherArray) {
-            super(GroupRelation.OR, Arrays.asList(matcherArray));
+    /**
+     * 或关系匹配
+     */
+    class RelationOrMatcher extends RelationMatcher {
+        public RelationOrMatcher(Matcher... matcherArray) {
+            super(RelationEnum.OR, Arrays.asList(matcherArray));
         }
+    }
+
+    /**
+     * 永远匹配
+     */
+    class TrueMatcher implements Matcher {
+
+        @Override
+        public boolean matching(String target) {
+            return true;
+        }
+    }
+
+    /**
+     * 带缓存的匹配
+     */
+    class CacheMatcher implements Matcher {
+
+        private final Matcher matcher;
+        private final Map<String, Boolean> cacheMap;
+
+        public CacheMatcher(Matcher matcher, Map<String, Boolean> cacheMap) {
+            this.matcher = matcher;
+            this.cacheMap = cacheMap;
+        }
+
+        @Override
+        public boolean matching(String target) {
+
+            final Boolean valueInCache = cacheMap.get(target);
+            if( null == valueInCache ) {
+                final boolean value = matcher.matching(target);
+                cacheMap.put(target, value);
+                return value;
+            } else {
+                return valueInCache;
+            }
+
+        }
+
     }
 
 
