@@ -17,6 +17,7 @@ import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.ObjectView;
 import com.github.ompc.greys.core.view.TableView;
+import com.github.ompc.greys.core.view.TimeFragmentTableView;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -151,8 +152,8 @@ public class TimeTunnelCommand implements Command {
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
-    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
-    private Integer numberOfLimit;
+    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution timesRef")
+    private Integer threshold;
 
     // 针对tt命令调整
     private static final int STACK_DEEP = 11;
@@ -192,37 +193,6 @@ public class TimeTunnelCommand implements Command {
 
     }
 
-    /*
-     * 各列宽度
-     */
-    private static final int[] TABLE_COL_WIDTH = new int[]{
-            8, // index
-            8, // processId
-            20, // timestamp
-            10, // cost(ms)
-            8, // isRet
-            8, // isExp
-            15, // object address
-            30, // class
-            30, // method
-    };
-
-    /*
-     * 各列名称
-     */
-    private static final String[] TABLE_COL_TITLE = new String[]{
-            "INDEX",
-            "PROCESS",
-            "TIMESTAMP",
-            "COST(ms)",
-            "IS-RET",
-            "IS-EXP",
-            "OBJECT",
-            "CLASS",
-            "METHOD"
-
-    };
-
 
     /*
      * do the TimeTunnel command
@@ -237,7 +207,7 @@ public class TimeTunnelCommand implements Command {
             public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
-                    private final AtomicInteger times = new AtomicInteger();
+                    private final AtomicInteger timesRef = new AtomicInteger();
 
                     @Override
                     public Matcher getClassNameMatcher() {
@@ -318,8 +288,8 @@ public class TimeTunnelCommand implements Command {
                             }
 
                             private boolean isOverThreshold(int currentTimes) {
-                                return null != numberOfLimit
-                                        && currentTimes >= numberOfLimit;
+                                return null != threshold
+                                        && currentTimes >= threshold;
                             }
 
                             private void afterFinishing(Advice advice) {
@@ -346,24 +316,17 @@ public class TimeTunnelCommand implements Command {
                                         getStack(STACK_DEEP)
                                 );
 
-                                final TableView view = createTableView();
-
+                                final TimeFragmentTableView view = new TimeFragmentTableView(isFirst)
+                                        .turnOffBottom()    // 表格控件不输出表格上边框,这样两个表格就能拼凑在一起
+                                        .add(timeFragment)  // 填充表格内容
+                                        ;
                                 if (isFirst) {
                                     isFirst = false;
-
-                                    // 填充表格头部
-                                    fillTableTitle(view);
                                 }
 
-                                // 表格控件不输出表格上边框,这样两个表格就能拼凑在一起
-                                view.borders(view.borders() & ~TableView.BORDER_BOTTOM);
-
-                                // 填充表格内容
-                                fillTableRow(view, timeFragment.id, timeFragment);
-
-                                final boolean isF = isOverThreshold(times.incrementAndGet());
+                                final boolean isF = isOverThreshold(timesRef.incrementAndGet());
                                 if (isF) {
-                                    view.borders(view.borders() | TableView.BORDER_BOTTOM);
+                                    view.turnOnBottom();
                                 }
                                 printer.print(isF, view.draw());
                             }
@@ -622,65 +585,15 @@ public class TimeTunnelCommand implements Command {
 
     }
 
-    private TableView createTableView() {
-        return new TableView(new TableView.ColumnDefine[]{
-                new TableView.ColumnDefine(TABLE_COL_WIDTH[0], false, TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TABLE_COL_WIDTH[1], false, TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TABLE_COL_WIDTH[2], false, TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TABLE_COL_WIDTH[3], false, TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TABLE_COL_WIDTH[4], false, TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TABLE_COL_WIDTH[5], false, TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TABLE_COL_WIDTH[6], false, TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TABLE_COL_WIDTH[7], false, TableView.Align.RIGHT),})
-                .hasBorder(true)
-                .padding(1);
-    }
-
-    private TableView fillTableTitle(TableView tableView) {
-        return tableView
-                .addRow(
-                        TABLE_COL_TITLE[0],
-                        TABLE_COL_TITLE[1],
-                        TABLE_COL_TITLE[2],
-                        TABLE_COL_TITLE[3],
-                        TABLE_COL_TITLE[4],
-                        TABLE_COL_TITLE[5],
-                        TABLE_COL_TITLE[6],
-                        TABLE_COL_TITLE[7],
-                        TABLE_COL_TITLE[8]
-                );
-    }
-
     /*
      * 绘制TimeTunnel表格
      */
     private String drawTimeTunnelTable(final ArrayList<TimeFragment> timeFragments) {
-        final TableView view = fillTableTitle(createTableView());
+        final TimeFragmentTableView view = new TimeFragmentTableView(true);
         for (TimeFragment timeFragment : timeFragments) {
-            fillTableRow(view, timeFragment.id, timeFragment);
+            view.add(timeFragment);
         }
         return view.draw();
-    }
-
-    /*
-     * 填充表格行
-     */
-    private TableView fillTableRow(TableView tableView, int index, TimeFragment tf) {
-
-        final Advice advice = tf.advice;
-        return tableView.addRow(
-                index,
-                tf.processId,
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(tf.gmtCreate),
-                tf.cost,
-                advice.isAfterReturning(),
-                advice.isAfterThrowing(),
-                advice.getTarget() == null
-                        ? "NULL"
-                        : "0x" + toHexString(advice.getTarget().hashCode()),
-                substringAfterLast("." + advice.getClazz().getName(), "."),
-                advice.getMethod().getName()
-        );
     }
 
 
@@ -713,7 +626,8 @@ public class TimeTunnelCommand implements Command {
                 })
                         .hasBorder(true)
                         .padding(1)
-                        .addRow("INDEX", index)
+                        .addRow("INDEX", timeFragment.id)
+                        .addRow("PROCESS", timeFragment.processId)
                         .addRow("GMT-CREATE", sdf.format(timeFragment.gmtCreate))
                         .addRow("COST(ms)", timeFragment.cost)
                         .addRow("OBJECT", objectAddress)

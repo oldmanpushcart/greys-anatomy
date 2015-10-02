@@ -7,6 +7,8 @@ import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
+import com.github.ompc.greys.core.manager.TimeFragmentManager;
+import com.github.ompc.greys.core.manager.TimeFragmentManager.TimeFragment;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
@@ -16,15 +18,19 @@ import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.Matcher.RelationOrMatcher;
 import com.github.ompc.greys.core.util.Matcher.TrueMatcher;
 import com.github.ompc.greys.core.util.NonThreadsafeLRUHashMap;
+import com.github.ompc.greys.core.view.TimeFragmentTableView;
 import com.github.ompc.greys.core.view.TreeView;
 
 import java.lang.instrument.Instrumentation;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
+import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
 import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
+import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -39,6 +45,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
                 "ptrace *StringUtils isBlank org.apache.commons.lang.* params[0].length==1"
         })
 public class PathTraceCommand implements Command {
+
+    // 时间片段管理
+    private final TimeFragmentManager timeFragmentManager = TimeFragmentManager.Factory.getInstance();
+
+    // TimeTunnel the method call
+    @NamedArg(name = "t", summary = "Record the method invocation within time fragments")
+    private boolean isTimeTunnel = false;
 
     @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
@@ -78,6 +91,9 @@ public class PathTraceCommand implements Command {
 
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer threshold;
+
+    // 针对ptrace命令调整
+    private static final int STACK_DEEP = 11;
 
     @Override
     public Action getAction() {
@@ -136,11 +152,23 @@ public class PathTraceCommand implements Command {
                                 @Override
                                 protected Entity initialValue() {
                                     final Entity e = new Entity();
-                                    e.view = new TreeView(true, "Tracing for : " + getThreadInfo());
+                                    e.processId = timeFragmentManager.generateProcessId();
+                                    e.tfView = new TimeFragmentTableView(true);
+                                    e.view = new TreeView(true, "pTracing for : " + getThreadInfo()+"process="+e.processId+";");
                                     e.deep = 0;
                                     return e;
                                 }
 
+                            };
+
+                            /*
+                             * 方法执行时间戳
+                             */
+                            final ThreadLocal<Long> timestampRef = new ThreadLocal<Long>() {
+                                @Override
+                                protected Long initialValue() {
+                                    return currentTimeMillis();
+                                }
                             };
 
                             @Override
@@ -179,6 +207,8 @@ public class PathTraceCommand implements Command {
                                         return;
                                     }
                                 }
+
+                                timestampRef.get();
 
                                 final Entity entity = entityRef.get();
                                 entity.view.begin(clazz.getCanonicalName() + ":" + method.getName() + "()");
@@ -221,7 +251,8 @@ public class PathTraceCommand implements Command {
                                         && currentTimes >= threshold;
                             }
 
-                            private boolean isPrintIfNecessary(Advice advice) {
+                            // 匹配过滤规则
+                            private boolean isInCondition(Advice advice) {
                                 try {
                                     return isBlank(conditionExpress)
                                             || newExpress(advice).is(conditionExpress);
@@ -231,6 +262,10 @@ public class PathTraceCommand implements Command {
                             }
 
                             private void finishing(Advice advice) {
+
+                                final long cost = currentTimeMillis() - timestampRef.get();
+                                timestampRef.remove();
+
                                 final Entity entity = entityRef.get();
                                 entity.deep--;
 
@@ -242,17 +277,37 @@ public class PathTraceCommand implements Command {
                                 }
 
                                 entity.view.end();
+
+                                // 记录下调用过程
+                                if(isTimeTunnel) {
+                                    final TimeFragment timeFragment = timeFragmentManager.append(
+                                            entity.processId,
+                                            advice,
+                                            new Date(),
+                                            cost,
+                                            getStack(STACK_DEEP)
+                                    );
+                                    entity.tfView.add(timeFragment);
+                                }
+
                                 if (entity.deep <= 0) {
 
-                                    // 是否有必要输出打印内容
-                                    if(isPrintIfNecessary(advice)) {
-                                        printer.println(entity.view.draw());
-                                    }
+                                    // 是否有匹配到条件
+                                    if(isInCondition(advice)) {
 
+                                        // 输出打印内容
+                                        if(isTimeTunnel) {
+                                            printer.print(entity.view.draw());
+                                            printer.println(entity.tfView.draw());
+                                        } else {
+                                            printer.println(entity.view.draw());
+                                        }
 
-                                    // 超过调用限制就关闭掉跟踪
-                                    if (isOverThreshold(timesRef.incrementAndGet())) {
-                                        printer.finish();
+                                        // 超过调用限制就关闭掉跟踪
+                                        if (isOverThreshold(timesRef.incrementAndGet())) {
+                                            printer.finish();
+                                        }
+
                                     }
 
                                     // remove thread local
@@ -277,8 +332,10 @@ public class PathTraceCommand implements Command {
      */
     private static class Entity {
 
+        TimeFragmentTableView tfView;
         TreeView view;
         int deep;
+        int processId;
 
     }
 
