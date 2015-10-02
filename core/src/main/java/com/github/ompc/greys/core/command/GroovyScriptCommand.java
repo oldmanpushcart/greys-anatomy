@@ -8,6 +8,7 @@ import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import groovy.lang.GroovyClassLoader;
 
 import java.io.File;
@@ -42,6 +43,9 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
 
     @Override
     public Action getAction() {
+
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         final File scriptFile = new File(scriptFilepath);
         if (!scriptFile.exists()
@@ -87,16 +91,12 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
                 return new GetEnhancer() {
                     @Override
                     public Matcher getClassNameMatcher() {
-                        return isRegEx
-                                ? new Matcher.RegexMatcher(classPattern)
-                                : new Matcher.WildcardMatcher(classPattern);
+                        return classNameMatcher;
                     }
 
                     @Override
                     public Matcher getMethodNameMatcher() {
-                        return isRegEx
-                                ? new Matcher.RegexMatcher(methodPattern)
-                                : new Matcher.WildcardMatcher(methodPattern);
+                        return methodNameMatcher;
                     }
 
                     @Override

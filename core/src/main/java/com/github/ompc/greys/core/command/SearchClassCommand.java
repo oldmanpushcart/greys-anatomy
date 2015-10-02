@@ -5,6 +5,7 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.ClassInfoView;
 
@@ -46,9 +47,7 @@ public class SearchClassCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
-                final Matcher classNameMatcher = isRegEx
-                        ? new Matcher.RegexMatcher(classPattern)
-                        : new Matcher.WildcardMatcher(classPattern);
+                final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
 
                 final Set<Class<?>> matchedClassSet = searchClassWithSubClass(inst, classNameMatcher);
 

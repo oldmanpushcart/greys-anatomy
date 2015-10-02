@@ -10,6 +10,7 @@ import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -77,13 +78,8 @@ public class StackCommand implements Command {
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(classPattern)
-                : new Matcher.WildcardMatcher(classPattern);
-
-        final Matcher methodNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(methodPattern)
-                : new Matcher.WildcardMatcher(methodPattern);
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         return new GetEnhancerAction() {
 
@@ -127,8 +123,7 @@ public class StackCommand implements Command {
                                     Object target,
                                     Object[] args,
                                     Throwable throwable) throws Throwable {
-                                final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
-                                finishing(advice);
+                                finishing(newForAfterThrowing(loader, clazz, method, target, args, throwable));
                             }
 
                             @Override
@@ -139,8 +134,7 @@ public class StackCommand implements Command {
                                     Object target,
                                     Object[] args,
                                     Object returnObject) throws Throwable {
-                                final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
-                                finishing(advice);
+                                finishing(newForAfterRetuning(loader, clazz, method, target, args, returnObject));
                             }
 
                             private boolean isPrintIfNecessary(Advice advice) {

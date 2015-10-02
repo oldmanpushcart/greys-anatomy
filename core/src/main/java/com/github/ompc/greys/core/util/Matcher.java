@@ -124,7 +124,7 @@ public interface Matcher {
         public boolean matching(String target) {
 
             final Boolean valueInCache = cacheMap.get(target);
-            if( null == valueInCache ) {
+            if (null == valueInCache) {
                 final boolean value = matcher.matching(target);
                 cacheMap.put(target, value);
                 return value;
@@ -151,6 +151,26 @@ public interface Matcher {
         @Override
         public boolean matching(String target) {
             return isEquals(target, pattern);
+        }
+    }
+
+
+    /**
+     * 模式匹配
+     */
+    class PatternMatcher implements Matcher {
+
+        private final Matcher matcher;
+
+        public PatternMatcher(boolean isRegEx, String pattern) {
+            this.matcher = isRegEx
+                    ? new Matcher.RegexMatcher(pattern)
+                    : new Matcher.WildcardMatcher(pattern);
+        }
+
+        @Override
+        public boolean matching(String target) {
+            return matcher.matching(target);
         }
     }
 

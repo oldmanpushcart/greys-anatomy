@@ -10,6 +10,7 @@ import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.view.TreeView;
 
 import java.lang.instrument.Instrumentation;
@@ -68,19 +69,14 @@ public class TraceCommand implements Command {
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
-    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
-    private Integer numberOfLimit;
+    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution timesRef")
+    private Integer threshold;
     
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(classPattern)
-                : new Matcher.WildcardMatcher(classPattern);
-
-        final Matcher methodNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(methodPattern)
-                : new Matcher.WildcardMatcher(methodPattern);
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         return new GetEnhancerAction() {
 
@@ -88,7 +84,8 @@ public class TraceCommand implements Command {
             public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
-                    private final AtomicInteger times = new AtomicInteger();
+                    // 访问计数器
+                    private final AtomicInteger timesRef = new AtomicInteger();
                     
                     @Override
                     public Matcher getClassNameMatcher() {
@@ -118,11 +115,6 @@ public class TraceCommand implements Command {
                                 }
 
                             };
-
-                            @Override
-                            public void create() {
-
-                            }
 
                             @Override
                             public void destroy() {
@@ -167,8 +159,7 @@ public class TraceCommand implements Command {
                                     Object[] args, 
                                     Object returnObject) throws Throwable {
                                 entityRef.get().view.end();
-                                final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
-                                finishing(advice);
+                                finishing(newForAfterRetuning(loader, clazz, method, target, args, returnObject));
                             }
 
                             @Override
@@ -186,8 +177,7 @@ public class TraceCommand implements Command {
                                     entityRef.get().view.end();
                                 }
 
-                                final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
-                                finishing(advice);
+                                finishing(newForAfterThrowing(loader, clazz, method, target, args, throwable));
                             }
 
                             private boolean isPrintIfNecessary(Advice advice) {
@@ -200,15 +190,14 @@ public class TraceCommand implements Command {
                             }
                             
                             private boolean isLimited(int currentTimes) {
-                                return null != numberOfLimit
-                                        && currentTimes >= numberOfLimit;
+                                return null != threshold
+                                        && currentTimes >= threshold;
                             }
 
                             private void finishing(Advice advice) {
                                 if (--entityRef.get().deep == 0) {
-                                    
                                     if (isPrintIfNecessary(advice)) {
-                                        final boolean isF = isLimited(times.incrementAndGet());
+                                        final boolean isF = isLimited(timesRef.incrementAndGet());
                                         printer.println(isF, entityRef.get().view.draw());
                                     }
                                     entityRef.remove();

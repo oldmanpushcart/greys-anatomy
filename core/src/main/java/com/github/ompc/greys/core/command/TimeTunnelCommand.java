@@ -8,6 +8,7 @@ import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.*;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.ObjectView;
 import com.github.ompc.greys.core.view.TableView;
@@ -30,39 +31,6 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.*;
 
-/**
- * 时间碎片
- */
-class TimeFragment {
-
-    public TimeFragment(Advice advice, Date gmtCreate, long cost, String stack) {
-        this.advice = advice;
-        this.gmtCreate = gmtCreate;
-        this.cost = cost;
-        this.stack = stack;
-    }
-
-    private final Advice advice;
-    private final Date gmtCreate;
-    private final long cost;
-    private final String stack;
-
-    public Advice getAdvice() {
-        return advice;
-    }
-
-    public Date getGmtCreate() {
-        return gmtCreate;
-    }
-
-    public long getCost() {
-        return cost;
-    }
-
-    public String getStack() {
-        return stack;
-    }
-}
 
 /**
  * 时光隧道命令<br/>
@@ -218,7 +186,6 @@ public class TimeTunnelCommand implements Command {
                 && isBlank(searchExpress)
                 && !isPlay) {
             throw new IllegalArgumentException("Argument(s) is/are expected, type 'help tt' to read usage");
-
         }
 
     }
@@ -268,13 +235,8 @@ public class TimeTunnelCommand implements Command {
      */
     private GetEnhancerAction doTimeTunnel() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(classPattern)
-                : new Matcher.WildcardMatcher(classPattern);
-
-        final Matcher methodNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(methodPattern)
-                : new Matcher.WildcardMatcher(methodPattern);
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         return new GetEnhancerAction() {
             @Override
@@ -301,12 +263,12 @@ public class TimeTunnelCommand implements Command {
                             /*
                              * 第一次启动标记
                              */
-                            volatile boolean isFirst = true;
+                            private volatile boolean isFirst = true;
 
                             /*
                              * 方法执行时间戳
                              */
-                            final ThreadLocal<Long> timestampThreadLocal = new ThreadLocal<Long>() {
+                            final ThreadLocal<Long> timestampRef = new ThreadLocal<Long>() {
                                 @Override
                                 protected Long initialValue() {
                                     return currentTimeMillis();
@@ -314,8 +276,13 @@ public class TimeTunnelCommand implements Command {
                             };
 
                             @Override
-                            public void before(ClassLoader loader, Class<?> clazz, GaMethod method, Object target, Object[] args) throws Throwable {
-                                timestampThreadLocal.get();
+                            public void before(
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    GaMethod method,
+                                    Object target,
+                                    Object[] args) throws Throwable {
+                                timestampRef.get();
                             }
 
                             @Override
@@ -366,12 +333,12 @@ public class TimeTunnelCommand implements Command {
                                 final TimeFragment timeTunnel = new TimeFragment(
                                         advice,
                                         new Date(),
-                                        currentTimeMillis() - timestampThreadLocal.get(),
+                                        currentTimeMillis() - timestampRef.get(),
                                         GaStringUtils.getStack(STACK_DEEP)
                                 );
 
                                 // reset the timestamp
-                                timestampThreadLocal.remove();
+                                timestampRef.remove();
 
                                 try {
                                     if (isNotBlank(conditionExpress)
@@ -457,7 +424,7 @@ public class TimeTunnelCommand implements Command {
                 for (Map.Entry<Integer, TimeFragment> entry : timeFragmentMap.entrySet()) {
                     final int index = entry.getKey();
                     final TimeFragment tf = entry.getValue();
-                    final Advice advice = tf.getAdvice();
+                    final Advice advice = tf.advice;
 
                     // 搜索出匹配的时间片段
                     if ((Express.ExpressFactory.newExpress(advice)).is(searchExpress)) {
@@ -478,7 +445,7 @@ public class TimeTunnelCommand implements Command {
                             .addRow("INDEX", "SEARCH-RESULT");
 
                     for (Map.Entry<Integer, TimeFragment> entry : matchingTimeSegmentMap.entrySet()) {
-                        final Object value = Express.ExpressFactory.newExpress(entry.getValue().getAdvice()).get(watchExpress);
+                        final Object value = Express.ExpressFactory.newExpress(entry.getValue().advice).get(watchExpress);
                         view.addRow(
                                 entry.getKey(),
                                 isNeedExpend()
@@ -532,7 +499,7 @@ public class TimeTunnelCommand implements Command {
                     return new RowAffect();
                 }
 
-                final Advice advice = tf.getAdvice();
+                final Advice advice = tf.advice;
                 final Object value = Express.ExpressFactory.newExpress(advice).get(watchExpress);
                 if (isNeedExpend()) {
                     printer.println(new ObjectView(value, expend).draw()).finish();
@@ -560,7 +527,7 @@ public class TimeTunnelCommand implements Command {
                     return new RowAffect();
                 }
 
-                final Advice advice = tf.getAdvice();
+                final Advice advice = tf.advice;
                 final String className = advice.getClazz().getName();
                 final String methodName = advice.getMethod().getName();
                 final String objectAddress = advice.getTarget() == null
@@ -717,11 +684,11 @@ public class TimeTunnelCommand implements Command {
      */
     private TableView fillTableRow(TableView tableView, int index, TimeFragment tf) {
 
-        final Advice advice = tf.getAdvice();
+        final Advice advice = tf.advice;
         return tableView.addRow(
                 index,
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(tf.getGmtCreate()),
-                tf.getCost(),
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(tf.gmtCreate),
+                tf.cost,
                 advice.isAfterReturning(),
                 advice.isAfterThrowing(),
                 advice.getTarget() == null
@@ -748,7 +715,7 @@ public class TimeTunnelCommand implements Command {
                     return new RowAffect();
                 }
 
-                final Advice advice = tf.getAdvice();
+                final Advice advice = tf.advice;
                 final String className = advice.getClazz().getName();
                 final String methodName = advice.getMethod().getName();
                 final String objectAddress = advice.getTarget() == null
@@ -763,8 +730,8 @@ public class TimeTunnelCommand implements Command {
                         .hasBorder(true)
                         .padding(1)
                         .addRow("INDEX", index)
-                        .addRow("GMT-CREATE", sdf.format(tf.getGmtCreate()))
-                        .addRow("COST(ms)", tf.getCost())
+                        .addRow("GMT-CREATE", sdf.format(tf.gmtCreate))
+                        .addRow("COST(ms)", tf.cost)
                         .addRow("OBJECT", objectAddress)
                         .addRow("CLASS", className)
                         .addRow("METHOD", methodName)
@@ -821,7 +788,7 @@ public class TimeTunnelCommand implements Command {
                 }
 
                 // fill the stack
-                view.addRow("STACK", tf.getStack());
+                view.addRow("STACK", tf.stack);
 
                 printer.print(view.draw()).finish();
 
@@ -866,6 +833,26 @@ public class TimeTunnelCommand implements Command {
         }
 
         return action;
+
+    }
+
+
+    /**
+     * 时间碎片
+     */
+    class TimeFragment {
+
+        public TimeFragment(Advice advice, Date gmtCreate, long cost, String stack) {
+            this.advice = advice;
+            this.gmtCreate = gmtCreate;
+            this.cost = cost;
+            this.stack = stack;
+        }
+
+        private final Advice advice;
+        private final Date gmtCreate;
+        private final long cost;
+        private final String stack;
 
     }
 

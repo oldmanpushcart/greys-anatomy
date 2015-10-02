@@ -10,6 +10,7 @@ import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.view.ObjectView;
 import org.slf4j.Logger;
 
@@ -108,19 +109,14 @@ public class WatchCommand implements Command {
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
-    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
-    private Integer numberOfLimit;
+    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution timesRef")
+    private Integer threshold;
 
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(classPattern)
-                : new Matcher.WildcardMatcher(classPattern);
-
-        final Matcher methodNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(methodPattern)
-                : new Matcher.WildcardMatcher(methodPattern);
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         return new GetEnhancerAction() {
 
@@ -128,7 +124,7 @@ public class WatchCommand implements Command {
             public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
-                    private final AtomicInteger times = new AtomicInteger();
+                    private final AtomicInteger timesRef = new AtomicInteger();
 
                     @Override
                     public Matcher getClassNameMatcher() {
@@ -208,9 +204,9 @@ public class WatchCommand implements Command {
                                 }
                             }
 
-                            private boolean isLimited(int currentTimes) {
-                                return null != numberOfLimit
-                                        && currentTimes >= numberOfLimit;
+                            private boolean isOverThreshold(int currentTimes) {
+                                return null != threshold
+                                        && currentTimes >= threshold;
                             }
 
                             private boolean isNeedExpend() {
@@ -226,7 +222,7 @@ public class WatchCommand implements Command {
                                         return;
                                     }
 
-                                    final boolean isF = isLimited(times.incrementAndGet());
+                                    final boolean isF = isOverThreshold(timesRef.incrementAndGet());
                                     final Object value = newExpress(advice).get(express);
                                     printer.println(
                                             isF,

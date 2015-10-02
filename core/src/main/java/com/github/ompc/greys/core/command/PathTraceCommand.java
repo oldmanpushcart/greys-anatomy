@@ -9,6 +9,10 @@ import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.Matcher.CacheMatcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
+import com.github.ompc.greys.core.util.Matcher.RelationOrMatcher;
+import com.github.ompc.greys.core.util.Matcher.TrueMatcher;
 import com.github.ompc.greys.core.util.NonThreadsafeLRUHashMap;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.view.TreeView;
@@ -75,23 +79,17 @@ public class PathTraceCommand implements Command {
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = new Matcher.CacheMatcher(
-                isRegEx
-                        ? new Matcher.RegexMatcher(classPattern)
-                        : new Matcher.WildcardMatcher(classPattern),
+        final Matcher classNameMatcher = new CacheMatcher(
+                new PatternMatcher(isRegEx, classPattern),
                 new NonThreadsafeLRUHashMap(GlobalOptions.ptraceClassMatcherLruCapacity)
         );
 
-        final Matcher methodNameMatcher = new Matcher.CacheMatcher(
-                isRegEx
-                        ? new Matcher.RegexMatcher(methodPattern)
-                        : new Matcher.WildcardMatcher(methodPattern),
+        final Matcher methodNameMatcher = new CacheMatcher(
+                new PatternMatcher(isRegEx, methodPattern),
                 new NonThreadsafeLRUHashMap(GlobalOptions.ptraceMethodMatcherLruCapacity)
         );
 
-        final Matcher tracingPathMatcher = isRegEx
-                ? new Matcher.RegexMatcher(tracingPathPattern)
-                : new Matcher.WildcardMatcher(tracingPathPattern);
+        final Matcher tracingPathMatcher = new PatternMatcher(isRegEx, tracingPathPattern);
 
         return new GetEnhancerAction() {
 
@@ -101,7 +99,7 @@ public class PathTraceCommand implements Command {
 
                     @Override
                     public Matcher getClassNameMatcher() {
-                        return new Matcher.RelationOrMatcher(
+                        return new RelationOrMatcher(
                                 classNameMatcher,
                                 tracingPathMatcher
                         );
@@ -109,7 +107,7 @@ public class PathTraceCommand implements Command {
 
                     @Override
                     public Matcher getMethodNameMatcher() {
-                        return new Matcher.TrueMatcher();
+                        return new TrueMatcher();
                     }
 
                     @Override
@@ -215,6 +213,7 @@ public class PathTraceCommand implements Command {
                                 finishing(newForAfterThrowing(loader, clazz, method, target, args, throwable));
                             }
 
+                            // 是否到达节制阀值
                             private boolean isOverThreshold(int currentTimes) {
                                 return null != threshold
                                         && currentTimes >= threshold;

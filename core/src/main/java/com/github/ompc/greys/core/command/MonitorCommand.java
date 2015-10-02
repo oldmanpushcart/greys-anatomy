@@ -9,6 +9,7 @@ import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.view.TableView;
 
 import java.lang.instrument.Instrumentation;
@@ -140,13 +141,8 @@ public class MonitorCommand implements Command {
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(classPattern)
-                : new Matcher.WildcardMatcher(classPattern);
-
-        final Matcher methodNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(methodPattern)
-                : new Matcher.WildcardMatcher(methodPattern);
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         return new GetEnhancerAction() {
 
@@ -182,7 +178,7 @@ public class MonitorCommand implements Command {
                             /*
                              * 起始时间戳
                              */
-                            private final ThreadLocal<Long> beginTimestampThreadBound = new ThreadLocal<Long>();
+                            private final ThreadLocal<Long> beginTimestampRef = new ThreadLocal<Long>();
 
                             private double div(double a, double b) {
                                 if (b == 0) {
@@ -261,7 +257,7 @@ public class MonitorCommand implements Command {
                                 if (null != timer) {
                                     timer.cancel();
                                 }
-                                beginTimestampThreadBound.remove();
+                                beginTimestampRef.remove();
                             }
 
                             @Override
@@ -271,7 +267,7 @@ public class MonitorCommand implements Command {
                                     GaMethod method,
                                     Object target,
                                     Object[] args) throws Throwable {
-                                beginTimestampThreadBound.set(currentTimeMillis());
+                                beginTimestampRef.set(currentTimeMillis());
                             }
 
                             @Override
@@ -297,7 +293,7 @@ public class MonitorCommand implements Command {
                             }
 
                             private void finishing(Class<?> clazz, GaMethod method, boolean isThrowing) {
-                                final Long startTime = beginTimestampThreadBound.get();
+                                final Long startTime = beginTimestampRef.get();
                                 if (null == startTime) {
                                     return;
                                 }

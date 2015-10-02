@@ -5,8 +5,7 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.Matcher.RegexMatcher;
-import com.github.ompc.greys.core.util.Matcher.WildcardMatcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.LadderView;
 import com.github.ompc.greys.core.view.MethodInfoView;
@@ -19,7 +18,6 @@ import java.util.Map;
 
 import static com.github.ompc.greys.core.util.GaReflectUtils.getVisibleMethods;
 import static com.github.ompc.greys.core.util.SearchUtils.searchClassWithSubClass;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * 展示方法信息
@@ -38,7 +36,7 @@ public class SearchMethodCommand implements Command {
     @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", isRequired = false, summary = "Method of Pattern Matching")
+    @IndexArg(index = 1, name = "method-pattern", summary = "Method of Pattern Matching")
     private String methodPattern;
 
     @NamedArg(name = "d", summary = "Display the details of method")
@@ -50,11 +48,8 @@ public class SearchMethodCommand implements Command {
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new RegexMatcher(classPattern)
-                : new WildcardMatcher(classPattern);
-
-        final Matcher methodNameMatcher = getMethodNameMatcher();
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         return new RowAction() {
 
@@ -82,17 +77,6 @@ public class SearchMethodCommand implements Command {
         };
     }
 
-
-    private Matcher getMethodNameMatcher() {
-        // auto fix default methodPattern
-        if (isBlank(methodPattern)) {
-            return new Matcher.TrueMatcher();
-        }
-
-        return isRegEx
-                ? new RegexMatcher(methodPattern)
-                : new WildcardMatcher(methodPattern);
-    }
 
     /*
      * 绘制类方法摘要信息
