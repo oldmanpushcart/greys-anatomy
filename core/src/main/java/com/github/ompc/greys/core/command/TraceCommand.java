@@ -189,7 +189,7 @@ public class TraceCommand implements Command {
                                 }
                             }
                             
-                            private boolean isLimited(int currentTimes) {
+                            private boolean isOverThreshold(int currentTimes) {
                                 return null != threshold
                                         && currentTimes >= threshold;
                             }
@@ -197,7 +197,7 @@ public class TraceCommand implements Command {
                             private void finishing(Advice advice) {
                                 if (--entityRef.get().deep == 0) {
                                     if (isPrintIfNecessary(advice)) {
-                                        final boolean isF = isLimited(timesRef.incrementAndGet());
+                                        final boolean isF = isOverThreshold(timesRef.incrementAndGet());
                                         printer.println(isF, entityRef.get().view.draw());
                                     }
                                     entityRef.remove();

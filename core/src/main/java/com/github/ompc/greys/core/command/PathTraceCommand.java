@@ -6,15 +6,16 @@ import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
+import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.CacheMatcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.Matcher.RelationOrMatcher;
 import com.github.ompc.greys.core.util.Matcher.TrueMatcher;
 import com.github.ompc.greys.core.util.NonThreadsafeLRUHashMap;
-import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.view.TreeView;
 
 import java.lang.instrument.Instrumentation;
@@ -22,7 +23,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
+import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * 调用跟踪命令<br/>
@@ -169,8 +172,7 @@ public class PathTraceCommand implements Command {
                                     return;
                                 }
 
-                                final boolean isTracing = isTracingRef.get();
-                                if (!isTracing) {
+                                if (!isTracingRef.get()) {
                                     if (isTracingEnter(clazz, method)) {
                                         isTracingRef.set(true);
                                     } else {
@@ -219,6 +221,15 @@ public class PathTraceCommand implements Command {
                                         && currentTimes >= threshold;
                             }
 
+                            private boolean isPrintIfNecessary(Advice advice) {
+                                try {
+                                    return isBlank(conditionExpress)
+                                            || newExpress(advice).is(conditionExpress);
+                                } catch (ExpressException e) {
+                                    return false;
+                                }
+                            }
+
                             private void finishing(Advice advice) {
                                 final Entity entity = entityRef.get();
                                 entity.deep--;
@@ -232,7 +243,12 @@ public class PathTraceCommand implements Command {
 
                                 entity.view.end();
                                 if (entity.deep <= 0) {
-                                    printer.println(entity.view.draw());
+
+                                    // 是否有必要输出打印内容
+                                    if(isPrintIfNecessary(advice)) {
+                                        printer.println(entity.view.draw());
+                                    }
+
 
                                     // 超过调用限制就关闭掉跟踪
                                     if (isOverThreshold(timesRef.incrementAndGet())) {
