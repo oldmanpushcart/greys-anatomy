@@ -18,15 +18,10 @@ import static com.github.ompc.greys.core.view.TableView.Align.RIGHT;
  */
 public class TimeFragmentDetailView implements View {
 
-    private final TableView view;
     private final TimeFragment timeFragment;
     private final Integer expend;
 
     public TimeFragmentDetailView(final TimeFragment timeFragment, final Integer expend) {
-        this.view = new TableView(new ColumnDefine[]{
-                new ColumnDefine(RIGHT),
-                new ColumnDefine(150, false, LEFT)
-        }).hasBorder(true).padding(1);
         this.timeFragment = timeFragment;
         this.expend = expend;
     }
