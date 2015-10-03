@@ -17,7 +17,7 @@ import com.github.ompc.greys.core.util.Matcher.CacheMatcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.Matcher.RelationOrMatcher;
 import com.github.ompc.greys.core.util.Matcher.TrueMatcher;
-import com.github.ompc.greys.core.util.NonThreadsafeLRUHashMap;
+import com.github.ompc.greys.core.util.collection.ThreadUnsafeLRUHashMap;
 import com.github.ompc.greys.core.view.TimeFragmentTableView;
 import com.github.ompc.greys.core.view.TreeView;
 
@@ -100,12 +100,12 @@ public class PathTraceCommand implements Command {
 
         final Matcher classNameMatcher = new CacheMatcher(
                 new PatternMatcher(isRegEx, classPattern),
-                new NonThreadsafeLRUHashMap(GlobalOptions.ptraceClassMatcherLruCapacity)
+                new ThreadUnsafeLRUHashMap(GlobalOptions.ptraceClassMatcherLruCapacity)
         );
 
         final Matcher methodNameMatcher = new CacheMatcher(
                 new PatternMatcher(isRegEx, methodPattern),
-                new NonThreadsafeLRUHashMap(GlobalOptions.ptraceMethodMatcherLruCapacity)
+                new ThreadUnsafeLRUHashMap(GlobalOptions.ptraceMethodMatcherLruCapacity)
         );
 
         final Matcher tracingPathMatcher = new PatternMatcher(isRegEx, tracingPathPattern);

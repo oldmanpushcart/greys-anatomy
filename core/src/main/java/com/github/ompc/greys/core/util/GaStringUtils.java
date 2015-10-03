@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
+import static java.lang.Integer.toHexString;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
@@ -275,6 +276,7 @@ public class GaStringUtils {
 
     /**
      * 统一获取线程信息
+     *
      * @return 线程摘要信息(一行)
      */
     public static String getThreadInfo() {
@@ -348,6 +350,18 @@ public class GaStringUtils {
 
         }
         return sb.toString();
+    }
+
+    /**
+     * 将对象hashCode转换16进制字符串
+     *
+     * @param object 目标对象
+     * @return 16进制字符串
+     */
+    public static String hashCodeToHexString(Object object) {
+        return object == null
+                ? "NULL"
+                : "0x" + toHexString(object.hashCode());
     }
 
 }

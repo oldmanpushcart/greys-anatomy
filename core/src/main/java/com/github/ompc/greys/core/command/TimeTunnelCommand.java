@@ -9,10 +9,7 @@ import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.manager.TimeFragmentManager;
 import com.github.ompc.greys.core.manager.TimeFragmentManager.TimeFragment;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Advice;
-import com.github.ompc.greys.core.util.Express;
-import com.github.ompc.greys.core.util.GaMethod;
-import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.*;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.ObjectView;
@@ -31,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
+import static com.github.ompc.greys.core.util.GaStringUtils.hashCodeToHexString;
 import static com.github.ompc.greys.core.util.GaStringUtils.newString;
 import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
@@ -156,8 +154,9 @@ public class TimeTunnelCommand implements Command {
                     "        throwExp : the throw exception of method\n" +
                     "        isReturn : the method ended by return\n" +
                     "         isThrow : the method ended by throwing exception" +
-                    "       processId : the process ID of time fragment record" +
-                    "           index : the index of time fragment record"
+                    "           index : the index of time-fragment record" +
+                    "       processId : the process ID of time-fragment record" +
+                    "            cost : the cost time of time-fragment record"
     )
     private String searchExpress = EMPTY;
 
@@ -312,6 +311,15 @@ public class TimeTunnelCommand implements Command {
                                         && currentTimes >= threshold;
                             }
 
+                            private boolean isInCondition(final Advice advice) {
+                                try {
+                                    return isNotBlank(conditionExpress)
+                                            || Express.ExpressFactory.newExpress(advice).is(conditionExpress);
+                                } catch (ExpressException e) {
+                                    return false;
+                                }
+                            }
+
                             private void afterFinishing(Advice advice) {
 
                                 final long cost = currentTimeMillis() - timestampRef.get();
@@ -319,13 +327,8 @@ public class TimeTunnelCommand implements Command {
                                 // reset the timestamp
                                 timestampRef.remove();
 
-                                try {
-                                    if (isNotBlank(conditionExpress)
-                                            && !Express.ExpressFactory.newExpress(advice).is(conditionExpress)) {
-                                        return;
-                                    }
-                                } catch (ExpressException e) {
-                                    // ignore...
+                                if( !isInCondition(advice) ) {
+                                    return;
                                 }
 
                                 final TimeFragment timeFragment = timeFragmentManager.append(
@@ -497,21 +500,19 @@ public class TimeTunnelCommand implements Command {
                 final Advice advice = timeFragment.advice;
                 final String className = advice.getClazz().getName();
                 final String methodName = advice.getMethod().getName();
-                final String objectAddress = advice.getTarget() == null
-                        ? "NULL"
-                        : "0x" + toHexString(advice.getTarget().hashCode());
                 final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
                 final TableView view = new TableView(new TableView.ColumnDefine[]{
                         new TableView.ColumnDefine(TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(100, false, TableView.Align.LEFT)
+                        new TableView.ColumnDefine(150, false, TableView.Align.LEFT)
                 })
                         .hasBorder(true)
                         .padding(1)
-                        .addRow("RE-INDEX", timeFragment.id)
-                        .addRow("PROCESS", timeFragment.processId)
+                        .addRow("INDEX", timeFragment.id)
+                        .addRow("PROCESS-ID", timeFragment.processId)
+                        .addRow("GMT-CREATE", sdf.format(timeFragment.gmtCreate))
                         .addRow("GMT-REPLAY", sdf.format(new Date()))
-                        .addRow("OBJECT", objectAddress)
+                        .addRow("OBJECT", hashCodeToHexString(advice.getTarget()))
                         .addRow("CLASS", className)
                         .addRow("METHOD", methodName);
 
@@ -643,7 +644,7 @@ public class TimeTunnelCommand implements Command {
 
                 final TableView view = new TableView(new TableView.ColumnDefine[]{
                         new TableView.ColumnDefine(TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(100, false, TableView.Align.LEFT)
+                        new TableView.ColumnDefine(150, false, TableView.Align.LEFT)
                 })
                         .hasBorder(true)
                         .padding(1)

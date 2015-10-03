@@ -69,19 +69,11 @@ public class DefaultTimeFragmentManager implements TimeFragmentManager {
                     .newExpress(timeFragment.advice)
                     .bind("processId", timeFragment.processId)
                     .bind("index", timeFragment.id)
+                    .bind("cost", timeFragment.cost)
                     .is(express);
         } catch (ExpressException e) {
             return false;
         }
-    }
-
-
-    /**
-     * 搜索对象
-     */
-    class SearchDO {
-
-
     }
 
     @Override

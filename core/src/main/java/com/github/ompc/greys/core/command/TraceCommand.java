@@ -29,10 +29,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  */
 @Cmd(name = "trace", sort = 6, summary = "Display the detailed thread stack of specified class and method",
         eg = {
-            "trace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
-            "trace org.apache.commons.lang.StringUtils isBlank",
-            "trace *StringUtils isBlank",
-            "trace *StringUtils isBlank params[0].length==1"
+                "trace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
+                "trace org.apache.commons.lang.StringUtils isBlank",
+                "trace *StringUtils isBlank",
+                "trace *StringUtils isBlank params[0].length==1"
         })
 public class TraceCommand implements Command {
 
@@ -71,7 +71,7 @@ public class TraceCommand implements Command {
 
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution timesRef")
     private Integer threshold;
-    
+
     @Override
     public Action getAction() {
 
@@ -86,7 +86,7 @@ public class TraceCommand implements Command {
 
                     // 访问计数器
                     private final AtomicInteger timesRef = new AtomicInteger();
-                    
+
                     @Override
                     public Matcher getClassNameMatcher() {
                         return classNameMatcher;
@@ -141,10 +141,10 @@ public class TraceCommand implements Command {
 
                             @Override
                             public void before(
-                                    ClassLoader loader, 
-                                    Class<?> clazz, 
-                                    GaMethod method, 
-                                    Object target, 
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    GaMethod method,
+                                    Object target,
                                     Object[] args) throws Throwable {
                                 entityRef.get().view.begin(clazz.getName() + ":" + method.getName() + "()");
                                 entityRef.get().deep++;
@@ -152,11 +152,11 @@ public class TraceCommand implements Command {
 
                             @Override
                             public void afterReturning(
-                                    ClassLoader loader, 
-                                    Class<?> clazz, 
-                                    GaMethod method, 
-                                    Object target, 
-                                    Object[] args, 
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    GaMethod method,
+                                    Object target,
+                                    Object[] args,
                                     Object returnObject) throws Throwable {
                                 entityRef.get().view.end();
                                 finishing(newForAfterRetuning(loader, clazz, method, target, args, returnObject));
@@ -164,23 +164,23 @@ public class TraceCommand implements Command {
 
                             @Override
                             public void afterThrowing(
-                                    ClassLoader loader, 
-                                    Class<?> clazz, 
-                                    GaMethod method, 
-                                    Object target, 
-                                    Object[] args, 
+                                    ClassLoader loader,
+                                    Class<?> clazz,
+                                    GaMethod method,
+                                    Object target,
+                                    Object[] args,
                                     Throwable throwable) throws Throwable {
                                 entityRef.get().view.begin("throw:" + throwable.getClass().getName() + "()").end();
 
                                 // 这里将堆栈的end全部补上
-                                while( tracingDeep-- >= 0 ) {
+                                while (tracingDeep-- >= 0) {
                                     entityRef.get().view.end();
                                 }
 
                                 finishing(newForAfterThrowing(loader, clazz, method, target, args, throwable));
                             }
 
-                            private boolean isPrintIfNecessary(Advice advice) {
+                            private boolean isInCondition(Advice advice) {
                                 try {
                                     return isBlank(conditionExpress)
                                             || newExpress(advice).is(conditionExpress);
@@ -188,7 +188,7 @@ public class TraceCommand implements Command {
                                     return false;
                                 }
                             }
-                            
+
                             private boolean isOverThreshold(int currentTimes) {
                                 return null != threshold
                                         && currentTimes >= threshold;
@@ -196,16 +196,18 @@ public class TraceCommand implements Command {
 
                             private void finishing(Advice advice) {
                                 if (--entityRef.get().deep == 0) {
-                                    if (isPrintIfNecessary(advice)) {
-                                        final boolean isF = isOverThreshold(timesRef.incrementAndGet());
-                                        printer.println(isF, entityRef.get().view.draw());
+                                    if (isInCondition(advice)) {
+                                        printer.println(
+                                                isOverThreshold(timesRef.incrementAndGet()),
+                                                entityRef.get().view.draw()
+                                        );
                                     }
                                     entityRef.remove();
                                 }
                             }
 
                             private TreeView createTreeView() {
-                                return new TreeView(true, "Tracing for : "+ getThreadInfo());
+                                return new TreeView(true, "Tracing for : " + getThreadInfo());
                             }
 
                         };

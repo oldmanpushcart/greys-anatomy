@@ -5,7 +5,7 @@ import com.github.ompc.greys.core.util.Advice;
 
 import java.text.SimpleDateFormat;
 
-import static java.lang.Integer.toHexString;
+import static com.github.ompc.greys.core.util.GaStringUtils.hashCodeToHexString;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 
 /**
@@ -34,7 +34,7 @@ public class TimeFragmentTableView implements View {
      */
     private static final String[] TABLE_COL_TITLE = new String[]{
             "INDEX",
-            "PROCESS",
+            "PROCESS-ID",
             "TIMESTAMP",
             "COST(ms)",
             "IS-RET",
@@ -97,9 +97,7 @@ public class TimeFragmentTableView implements View {
                 timeFragment.cost,
                 advice.isAfterReturning(),
                 advice.isAfterThrowing(),
-                advice.getTarget() == null
-                        ? "NULL"
-                        : "0x" + toHexString(advice.getTarget().hashCode()),
+                hashCodeToHexString(advice.getTarget()),
                 substringAfterLast("." + advice.getClazz().getName(), "."),
                 advice.getMethod().getName()
         );
