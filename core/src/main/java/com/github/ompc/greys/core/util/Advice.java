@@ -94,7 +94,8 @@ public class Advice {
         isReturn = (access & ACCESS_AFTER_RETUNING) == ACCESS_AFTER_RETUNING;
     }
 
-    public static Advice newForBefore(ClassLoader loader,
+    public static Advice newForBefore(
+            ClassLoader loader,
             Class<?> clazz,
             GaMethod method,
             Object target,
@@ -111,7 +112,8 @@ public class Advice {
         );
     }
 
-    public static Advice newForAfterRetuning(ClassLoader loader,
+    public static Advice newForAfterRetuning(
+            ClassLoader loader,
             Class<?> clazz,
             GaMethod method,
             Object target,
@@ -129,7 +131,8 @@ public class Advice {
         );
     }
 
-    public static Advice newForAfterThrowing(ClassLoader loader,
+    public static Advice newForAfterThrowing(
+            ClassLoader loader,
             Class<?> clazz,
             GaMethod method,
             Object target,

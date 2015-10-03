@@ -69,7 +69,7 @@ public class TraceCommand implements Command {
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
-    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution timesRef")
+    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer threshold;
 
     @Override
@@ -197,10 +197,10 @@ public class TraceCommand implements Command {
                             private void finishing(Advice advice) {
                                 if (--entityRef.get().deep == 0) {
                                     if (isInCondition(advice)) {
-                                        printer.println(
-                                                isOverThreshold(timesRef.incrementAndGet()),
-                                                entityRef.get().view.draw()
-                                        );
+                                        printer.println(entityRef.get().view.draw());
+                                        if( isOverThreshold(timesRef.incrementAndGet()) ) {
+                                            printer.finish();
+                                        }
                                     }
                                     entityRef.remove();
                                 }

@@ -9,28 +9,27 @@ import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.manager.TimeFragmentManager;
 import com.github.ompc.greys.core.manager.TimeFragmentManager.TimeFragment;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.*;
+import com.github.ompc.greys.core.util.Advice;
+import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.ObjectView;
 import com.github.ompc.greys.core.view.TableView;
+import com.github.ompc.greys.core.view.TimeFragmentDetailView;
 import com.github.ompc.greys.core.view.TimeFragmentTableView;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
 import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
+import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
-import static com.github.ompc.greys.core.util.GaStringUtils.hashCodeToHexString;
 import static com.github.ompc.greys.core.util.GaStringUtils.newString;
-import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.*;
@@ -171,7 +170,7 @@ public class TimeTunnelCommand implements Command {
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
-    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution timesRef")
+    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer threshold;
 
     // 针对tt命令调整
@@ -313,8 +312,8 @@ public class TimeTunnelCommand implements Command {
 
                             private boolean isInCondition(final Advice advice) {
                                 try {
-                                    return isNotBlank(conditionExpress)
-                                            || Express.ExpressFactory.newExpress(advice).is(conditionExpress);
+                                    return isBlank(conditionExpress)
+                                            || newExpress(advice).is(conditionExpress);
                                 } catch (ExpressException e) {
                                     return false;
                                 }
@@ -327,7 +326,7 @@ public class TimeTunnelCommand implements Command {
                                 // reset the timestamp
                                 timestampRef.remove();
 
-                                if( !isInCondition(advice) ) {
+                                if (!isInCondition(advice)) {
                                     return;
                                 }
 
@@ -416,7 +415,7 @@ public class TimeTunnelCommand implements Command {
                             .addRow("INDEX", "SEARCH-RESULT");
 
                     for (TimeFragment timeFragment : matchingTimeFragments) {
-                        final Object value = Express.ExpressFactory.newExpress(timeFragment.advice).get(watchExpress);
+                        final Object value = newExpress(timeFragment.advice).get(watchExpress);
                         view.addRow(
                                 timeFragment.id,
                                 isNeedExpend()
@@ -470,7 +469,7 @@ public class TimeTunnelCommand implements Command {
                 }
 
                 final Advice advice = timeFragment.advice;
-                final Object value = Express.ExpressFactory.newExpress(advice).get(watchExpress);
+                final Object value = newExpress(advice).get(watchExpress);
                 if (isNeedExpend()) {
                     printer.println(new ObjectView(value, expend).draw()).finish();
                 } else {
@@ -493,67 +492,29 @@ public class TimeTunnelCommand implements Command {
 
                 final TimeFragment timeFragment = timeFragmentManager.get(index);
                 if (null == timeFragment) {
-                    printer.println(format("Time fragment[%d] does not exist.", timeFragment.id)).finish();
+                    printer.println(format("Time fragment[%d] does not exist.", index)).finish();
                     return new RowAffect();
                 }
 
                 final Advice advice = timeFragment.advice;
-                final String className = advice.getClazz().getName();
-                final String methodName = advice.getMethod().getName();
-                final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-                final TableView view = new TableView(new TableView.ColumnDefine[]{
-                        new TableView.ColumnDefine(TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(150, false, TableView.Align.LEFT)
-                })
-                        .hasBorder(true)
-                        .padding(1)
-                        .addRow("INDEX", timeFragment.id)
-                        .addRow("PROCESS-ID", timeFragment.processId)
-                        .addRow("GMT-CREATE", sdf.format(timeFragment.gmtCreate))
-                        .addRow("GMT-REPLAY", sdf.format(new Date()))
-                        .addRow("OBJECT", hashCodeToHexString(advice.getTarget()))
-                        .addRow("CLASS", className)
-                        .addRow("METHOD", methodName);
-
-                // fill the parameters
-                if (null != advice.getParams()) {
-
-                    int paramIndex = 0;
-                    for (Object param : advice.getParams()) {
-
-                        if (isNeedExpend()) {
-                            view.addRow("PARAMETERS[" + paramIndex++ + "]", new ObjectView(param, expend).draw());
-                        } else {
-                            view.addRow("PARAMETERS[" + paramIndex++ + "]", param);
-                        }
-
-                    }
-
-                }
-
                 final GaMethod method = advice.getMethod();
                 final boolean accessible = advice.getMethod().isAccessible();
+
+                final long beginTimestamp = System.currentTimeMillis();
+                final long cost;
+                Advice reAdvice = null;
                 try {
                     method.setAccessible(true);
                     final Object returnObj = method.invoke(advice.getTarget(), advice.getParams());
-
-                    // 执行成功:输出成功状态
-                    view.addRow("IS-RETURN", true);
-                    view.addRow("IS-EXCEPTION", false);
-
-                    // 执行成功:输出成功结果
-                    if (isNeedExpend()) {
-                        view.addRow("RETURN-OBJ", new ObjectView(returnObj, expend).draw());
-                    } else {
-                        view.addRow("RETURN-OBJ", returnObj);
-                    }
-
+                    reAdvice = newForAfterRetuning(
+                            advice.getLoader(),
+                            advice.getClazz(),
+                            advice.getMethod(),
+                            advice.getTarget(),
+                            advice.getParams(),
+                            returnObj
+                    );
                 } catch (Throwable t) {
-
-                    // 执行失败:输出失败状态
-                    view.addRow("IS-RETURN", false);
-                    view.addRow("IS-EXCEPTION", true);
 
                     // 执行失败:输出失败异常信息
                     final Throwable cause;
@@ -563,24 +524,32 @@ public class TimeTunnelCommand implements Command {
                         cause = t;
                     }
 
-                    if (isNeedExpend()) {
-                        view.addRow("THROW-EXCEPTION", new ObjectView(cause, expend).draw());
-                    } else {
-                        final StringWriter stringWriter = new StringWriter();
-                        final PrintWriter printWriter = new PrintWriter(stringWriter);
-                        try {
-                            cause.printStackTrace(printWriter);
-                            view.addRow("THROW-EXCEPTION", stringWriter.toString());
-                        } finally {
-                            printWriter.close();
-                        }
-                    }
+                    reAdvice = newForAfterThrowing(
+                            advice.getLoader(),
+                            advice.getClazz(),
+                            advice.getMethod(),
+                            advice.getTarget(),
+                            advice.getParams(),
+                            cause
+                    );
 
                 } finally {
                     method.setAccessible(accessible);
+                    cost = System.currentTimeMillis() - beginTimestamp;
                 }
 
-                printer.print(view.hasBorder(true).padding(1).draw())
+                final TimeFragment reTimeFragment = new TimeFragment(
+                        timeFragment.id,
+                        timeFragment.processId,
+                        reAdvice,
+                        timeFragment.gmtCreate,
+                        cost,
+                        getStack(2)
+                );
+
+
+                final TimeFragmentDetailView view = new TimeFragmentDetailView(reTimeFragment, expend);
+                printer.print(view.draw())
                         .println(format("Time fragment[%d] successfully replayed.", index))
                         .finish();
                 return new RowAffect(1);
@@ -634,85 +603,9 @@ public class TimeTunnelCommand implements Command {
                     return new RowAffect();
                 }
 
-                final Advice advice = timeFragment.advice;
-                final String className = advice.getClazz().getName();
-                final String methodName = advice.getMethod().getName();
-                final String objectAddress = advice.getTarget() == null
-                        ? "NULL"
-                        : "0x" + toHexString(advice.getTarget().hashCode());
-                final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-                final TableView view = new TableView(new TableView.ColumnDefine[]{
-                        new TableView.ColumnDefine(TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(150, false, TableView.Align.LEFT)
-                })
-                        .hasBorder(true)
-                        .padding(1)
-                        .addRow("INDEX", timeFragment.id)
-                        .addRow("PROCESS", timeFragment.processId)
-                        .addRow("GMT-CREATE", sdf.format(timeFragment.gmtCreate))
-                        .addRow("COST(ms)", timeFragment.cost)
-                        .addRow("OBJECT", objectAddress)
-                        .addRow("CLASS", className)
-                        .addRow("METHOD", methodName)
-                        .addRow("IS-RETURN", advice.isAfterReturning())
-                        .addRow("IS-EXCEPTION", advice.isAfterThrowing());
-
-                // fill the parameters
-                if (null != advice.getParams()) {
-
-                    int paramIndex = 0;
-                    for (Object param : advice.getParams()) {
-
-                        if (isNeedExpend()) {
-                            view.addRow("PARAMETERS[" + paramIndex++ + "]", new ObjectView(param, expend).draw());
-                        } else {
-                            view.addRow("PARAMETERS[" + paramIndex++ + "]", param);
-                        }
-
-                    }
-
-                }
-
-                // fill the returnObj
-                if (advice.isAfterReturning()) {
-
-                    if (isNeedExpend()) {
-                        view.addRow("RETURN-OBJ", new ObjectView(advice.getReturnObj(), expend).draw());
-                    } else {
-                        view.addRow("RETURN-OBJ", advice.getReturnObj());
-                    }
-
-                }
-
-                // fill the throw exception
-                if (advice.isAfterThrowing()) {
-
-                    //noinspection ThrowableResultOfMethodCallIgnored
-                    final Throwable throwable = advice.getThrowExp();
-
-                    if (isNeedExpend()) {
-                        view.addRow("THROW-EXCEPTION", new ObjectView(advice.getThrowExp(), expend).draw());
-                    } else {
-                        final StringWriter stringWriter = new StringWriter();
-                        final PrintWriter printWriter = new PrintWriter(stringWriter);
-                        try {
-                            throwable.printStackTrace(printWriter);
-                            view.addRow("THROW-EXCEPTION", stringWriter.toString());
-                        } finally {
-                            printWriter.close();
-                        }
-
-                    }
-
-                }
-
-                // fill the stack
-                view.addRow("STACK", timeFragment.stack);
-
-                printer.print(view.draw()).finish();
-
+                printer.print(new TimeFragmentDetailView(timeFragment, expend).draw()).finish();
                 return new RowAffect(1);
+
             }
         };
 

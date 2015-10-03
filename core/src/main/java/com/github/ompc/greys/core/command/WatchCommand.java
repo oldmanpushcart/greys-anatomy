@@ -5,6 +5,7 @@ import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
+import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
@@ -21,7 +22,7 @@ import static com.github.ompc.greys.core.util.Advice.*;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getCauseMessage;
 import static com.github.ompc.greys.core.util.GaStringUtils.newString;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Cmd(name = "watch", sort = 4, summary = "Display the details of specified class and method",
         eg = {
@@ -109,7 +110,7 @@ public class WatchCommand implements Command {
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
-    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution timesRef")
+    @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer threshold;
 
     @Override
@@ -214,20 +215,32 @@ public class WatchCommand implements Command {
                                         && expend >= 0;
                             }
 
+                            private boolean isInCondition(Advice advice) {
+                                try {
+                                    return isBlank(conditionExpress)
+                                            || newExpress(advice).is(conditionExpress);
+                                } catch (ExpressException e) {
+                                    return false;
+                                }
+                            }
+
                             private void watching(Advice advice) {
                                 try {
 
-                                    if (isNotBlank(conditionExpress)
-                                            && !newExpress(advice).is(conditionExpress)) {
-                                        return;
-                                    }
+                                    if (isInCondition(advice)) {
+                                        final Object value = newExpress(advice).get(express);
 
-                                    final boolean isF = isOverThreshold(timesRef.incrementAndGet());
-                                    final Object value = newExpress(advice).get(express);
-                                    printer.println(
-                                            isF,
-                                            newString(isNeedExpend() ? new ObjectView(value, expend).draw() : value)
-                                    );
+                                        printer.println(
+                                                newString(isNeedExpend()
+                                                        ? new ObjectView(value, expend).draw()
+                                                        : value)
+                                        );
+
+                                        if (isOverThreshold(timesRef.incrementAndGet())) {
+                                            printer.finish();
+                                        }
+
+                                    }
 
                                 } catch (Exception e) {
                                     logger.warn("watch failed.", e);

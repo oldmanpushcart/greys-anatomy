@@ -19,7 +19,7 @@ public class TimeFragmentTableView implements View {
      */
     private static final int[] TABLE_COL_WIDTH = new int[]{
             8, // index
-            8, // processId
+            10, // processId
             20, // timestamp
             10, // cost(ms)
             8, // isRet
