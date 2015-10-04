@@ -195,7 +195,7 @@ public class TraceCommand implements Command {
                             }
 
                             private void finishing(Advice advice) {
-                                if (--entityRef.get().deep == 0) {
+                                if (--entityRef.get().deep <= 0) {
                                     if (isInCondition(advice)) {
                                         printer.println(entityRef.get().view.draw());
                                         if( isOverThreshold(timesRef.incrementAndGet()) ) {

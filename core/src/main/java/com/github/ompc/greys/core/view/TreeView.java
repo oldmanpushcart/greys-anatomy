@@ -32,6 +32,7 @@ public class TreeView implements View {
         this.isPrintCost = isPrintCost;
     }
 
+
     @Override
     public String draw() {
 
@@ -81,7 +82,7 @@ public class TreeView implements View {
      * @param data 节点数据
      * @return this
      */
-    public TreeView begin(String data) {
+    public TreeView begin(Object data) {
         current = new Node(current, data);
         current.markBegin();
         return this;
@@ -115,7 +116,7 @@ public class TreeView implements View {
         /**
          * 节点数据
          */
-        final String data;
+        final Object data;
 
         /**
          * 子节点
@@ -135,7 +136,7 @@ public class TreeView implements View {
         /**
          * 构造树节点(根节点)
          */
-        private Node(String data) {
+        private Node(Object data) {
             this.parent = null;
             this.data = data;
         }
@@ -146,7 +147,7 @@ public class TreeView implements View {
          * @param parent 父节点
          * @param data   节点数据
          */
-        private Node(Node parent, String data) {
+        private Node(Node parent, Object data) {
             this.parent = parent;
             this.data = data;
             parent.children.add(this);
