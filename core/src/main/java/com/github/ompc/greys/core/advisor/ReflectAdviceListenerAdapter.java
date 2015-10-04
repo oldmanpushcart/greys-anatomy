@@ -4,6 +4,7 @@ import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaCheckUtils;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.collection.GaStack;
+import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
@@ -134,10 +135,33 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
     }
 
 
-    protected final ThreadLocal<PC> processContextRef = new ThreadLocal<PC>() {
+    /**
+     * ProcessContext的内部封装
+     */
+    class ProcessContextBound {
+
+        final PC processContext;
+        final GaStack<IC> innerContextGaStack = new ThreadUnsafeGaStack<IC>();
+
+        private ProcessContextBound(PC processContext) {
+            this.processContext = processContext;
+        }
+
+        /**
+         * 是否顶层
+         *
+         * @return 是否顶层上下文
+         */
+        private boolean isTop() {
+            return innerContextGaStack.isEmpty();
+        }
+
+    }
+
+    protected final ThreadLocal<ProcessContextBound> processContextBoundRef = new ThreadLocal<ProcessContextBound>() {
         @Override
-        protected PC initialValue() {
-            return newProcessContext();
+        protected ProcessContextBound initialValue() {
+            return new ProcessContextBound(newProcessContext());
         }
     };
 
@@ -146,10 +170,11 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args) throws Throwable {
         final Class<?> clazz = toClass(loader, className);
-        final PC processContext = processContextRef.get();
+        final ProcessContextBound bound = processContextBoundRef.get();
+        final PC processContext = bound.processContext;
         final IC innerContext = newInnerContext();
 
-        final GaStack<IC> innerContextGaStack = processContext.innerContextGaStack;
+        final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
         innerContextGaStack.push(innerContext);
 
         before(
@@ -164,15 +189,17 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
     final public void afterReturning(
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Object returnObject) throws Throwable {
-        final Class<?> clazz = toClass(loader, className);
-        final PC processContext = processContextRef.get();
-        final GaStack<IC> innerContextGaStack = processContext.innerContextGaStack;
+
+        final ProcessContextBound bound = processContextBoundRef.get();
+        final PC processContext = bound.processContext;
+        final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
         final IC innerContext = innerContextGaStack.pop();
         try {
 
             // 关闭上下文
             innerContext.close();
 
+            final Class<?> clazz = toClass(loader, className);
             final Advice advice = newForAfterRetuning(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, returnObject);
             afterReturning(advice, processContext, innerContext);
             afterFinishing(advice, processContext, innerContext);
@@ -180,8 +207,9 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
         } finally {
 
             // 如果过程上下文已经到了顶层则需要清除掉上下文
-            if (processContext.isTop()) {
-                processContextRef.remove();
+            if (bound.isTop()) {
+                processContext.close();
+                processContextBoundRef.remove();
             }
 
         }
@@ -192,9 +220,10 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
     final public void afterThrowing(
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Throwable throwable) throws Throwable {
-        final Class<?> clazz = toClass(loader, className);
-        final PC processContext = processContextRef.get();
-        final GaStack<IC> innerContextGaStack = processContext.innerContextGaStack;
+
+        final ProcessContextBound bound = processContextBoundRef.get();
+        final PC processContext = bound.processContext;
+        final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
         final IC innerContext = innerContextGaStack.pop();
 
         try {
@@ -202,6 +231,7 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
             // 关闭上下文
             innerContext.close();
 
+            final Class<?> clazz = toClass(loader, className);
             final Advice advice = newForAfterThrowing(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, throwable);
             afterThrowing(advice, processContext, innerContext);
             afterFinishing(advice, processContext, innerContext);
@@ -209,8 +239,9 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
         } finally {
 
             // 如果过程上下文已经到了顶层则需要清除掉上下文
-            if (processContext.isTop()) {
-                processContextRef.remove();
+            if (bound.isTop()) {
+                processContext.close();
+                processContextBoundRef.remove();
             }
 
         }
@@ -270,11 +301,11 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
     /**
      * 默认实现
      */
-    public static class DefaultReflectAdviceListenerAdapter extends ReflectAdviceListenerAdapter<ProcessContext<InnerContext>, InnerContext> {
+    public static class DefaultReflectAdviceListenerAdapter extends ReflectAdviceListenerAdapter<ProcessContext, InnerContext> {
 
         @Override
-        protected ProcessContext<InnerContext> newProcessContext() {
-            return new ProcessContext<InnerContext>();
+        protected ProcessContext newProcessContext() {
+            return new ProcessContext();
         }
 
         @Override

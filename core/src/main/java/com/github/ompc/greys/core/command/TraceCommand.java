@@ -100,7 +100,7 @@ public class TraceCommand implements Command {
 
                     @Override
                     public AdviceListener getAdviceListener() {
-                        return new ReflectAdviceTracingListenerAdapter<ProcessContext<TraceInnerContext>, TraceInnerContext>() {
+                        return new ReflectAdviceTracingListenerAdapter<ProcessContext, TraceInnerContext>() {
 
                             @Override
                             public void invokeBeforeTracing(

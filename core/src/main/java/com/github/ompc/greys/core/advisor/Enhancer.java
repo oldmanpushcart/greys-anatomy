@@ -6,6 +6,7 @@ import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.SearchUtils;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
+import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.slf4j.Logger;
@@ -294,7 +295,8 @@ public class Enhancer implements ClassFileTransformer {
             if (null == clazz
                     || isSelf(clazz)
                     || isUnsafeClass(clazz)
-                    || isUnsupportedClass(clazz)) {
+                    || isUnsupportedClass(clazz)
+                    || isGreysClass(clazz)) {
                 it.remove();
             }
         }
@@ -326,6 +328,15 @@ public class Enhancer implements ClassFileTransformer {
                 || clazz.isEnum()
                 || clazz.isArray()
                 ;
+    }
+
+    /**
+     * Greys唯一不能看到的就是自己<br/>
+     * 理论上有isSelf()挡住为啥这里还需要再次判断呢?
+     * 原因很简单，因为Spy被派遣到对方的ClassLoader中去了
+     */
+    private static boolean isGreysClass(Class<?> clazz) {
+        return StringUtils.startsWith(clazz.getCanonicalName(), "com.github.ompc.greys.");
     }
 
     private static Set<Class<?>> searchEnhanceClasses(final Instrumentation inst, final Matcher classNameMatcher) {
