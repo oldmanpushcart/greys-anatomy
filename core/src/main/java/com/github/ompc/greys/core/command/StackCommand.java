@@ -100,11 +100,11 @@ public class StackCommand implements Command {
 
                     @Override
                     public AdviceListener getAdviceListener() {
-                        return new ReflectAdviceListenerAdapter<ProcessContext, StackInnerContext>() {
+                        return new ReflectAdviceListenerAdapter<ProcessContext<StackInnerContext>, StackInnerContext>() {
 
                             @Override
-                            protected ProcessContext newProcessContext() {
-                                return new ProcessContext();
+                            protected ProcessContext<StackInnerContext> newProcessContext() {
+                                return new ProcessContext<StackInnerContext>();
                             }
 
                             @Override
@@ -113,7 +113,7 @@ public class StackCommand implements Command {
                             }
 
                             @Override
-                            public void before(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
+                            public void before(Advice advice, ProcessContext<StackInnerContext> processContext, StackInnerContext innerContext) throws Throwable {
                                 innerContext.setStack(getStack(STACK_DEEP));
                             }
 
@@ -132,7 +132,7 @@ public class StackCommand implements Command {
                             }
 
                             @Override
-                            public void afterFinishing(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
+                            public void afterFinishing(Advice advice, ProcessContext<StackInnerContext> processContext, StackInnerContext innerContext) throws Throwable {
                                 if (isInCondition(advice)) {
                                     printer.println(innerContext.getStack());
                                     if (isOverThreshold(times.incrementAndGet())) {
