@@ -1,7 +1,8 @@
 package com.github.ompc.greys.core.manager;
 
+import com.github.ompc.greys.core.Advice;
+import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.manager.impl.DefaultTimeFragmentManager;
-import com.github.ompc.greys.core.util.Advice;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -88,40 +89,6 @@ public interface TimeFragmentManager {
 
             return instance;
         }
-
-    }
-
-    /**
-     * 时间片段
-     */
-    class TimeFragment {
-
-        public TimeFragment(int id, int processId, Advice advice, Date gmtCreate, long cost, String stack) {
-            this.id = id;
-            this.processId = processId;
-            this.advice = advice;
-            this.gmtCreate = gmtCreate;
-            this.cost = cost;
-            this.stack = stack;
-        }
-
-        // 时间片段ID
-        public final int id;
-
-        // 过程ID
-        public final int processId;
-
-        // 通知数据
-        public final Advice advice;
-
-        // 记录时间戳
-        public final Date gmtCreate;
-
-        // 片段耗时
-        public final long cost;
-
-        // 片段堆栈
-        public final String stack;
 
     }
 

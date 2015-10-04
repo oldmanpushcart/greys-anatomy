@@ -1,7 +1,7 @@
 package com.github.ompc.greys.core.view;
 
-import com.github.ompc.greys.core.manager.TimeFragmentManager.TimeFragment;
-import com.github.ompc.greys.core.util.Advice;
+import com.github.ompc.greys.core.TimeFragment;
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaStringUtils;
 import com.github.ompc.greys.core.view.TableView.ColumnDefine;
 
@@ -38,8 +38,8 @@ public class TimeFragmentDetailView implements View {
     public String draw() {
 
         final Advice advice = timeFragment.advice;
-        final String className = advice.getClazz().getName();
-        final String methodName = advice.getMethod().getName();
+        final String className = advice.clazz.getName();
+        final String methodName = advice.method.getName();
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         final TableView view = new TableView(
@@ -53,17 +53,17 @@ public class TimeFragmentDetailView implements View {
                 .addRow("PROCESS-ID", timeFragment.processId)
                 .addRow("GMT-CREATE", sdf.format(timeFragment.gmtCreate))
                 .addRow("COST(ms)", timeFragment.cost)
-                .addRow("OBJECT", GaStringUtils.hashCodeToHexString(advice.getTarget()))
+                .addRow("OBJECT", GaStringUtils.hashCodeToHexString(advice.target))
                 .addRow("CLASS", className)
                 .addRow("METHOD", methodName)
-                .addRow("IS-RETURN", advice.isAfterReturning())
-                .addRow("IS-EXCEPTION", advice.isAfterThrowing());
+                .addRow("IS-RETURN", advice.isReturn)
+                .addRow("IS-EXCEPTION", advice.isThrow);
 
         // fill the parameters
-        if (null != advice.getParams()) {
+        if (null != advice.params) {
 
             int paramIndex = 0;
-            for (Object param : advice.getParams()) {
+            for (Object param : advice.params) {
 
                 if (isNeedExpend()) {
                     view.addRow("PARAMETERS[" + paramIndex++ + "]", new ObjectView(param, expend).draw());
@@ -76,25 +76,25 @@ public class TimeFragmentDetailView implements View {
         }
 
         // fill the returnObj
-        if (advice.isAfterReturning()) {
+        if (advice.isThrow) {
 
             view.addRow(
                     "RETURN-OBJ",
                     isNeedExpend()
-                            ? new ObjectView(advice.getReturnObj(), expend).draw()
-                            : advice.getReturnObj()
+                            ? new ObjectView(advice.returnObj, expend).draw()
+                            : advice.returnObj
             );
 
         }
 
         // fill the throw exception
-        if (advice.isAfterThrowing()) {
+        if (advice.isThrow) {
 
             //noinspection ThrowableResultOfMethodCallIgnored
-            final Throwable throwable = advice.getThrowExp();
+            final Throwable throwable = advice.throwExp;
 
             if (isNeedExpend()) {
-                view.addRow("THROW-EXCEPTION", new ObjectView(advice.getThrowExp(), expend).draw());
+                view.addRow("THROW-EXCEPTION", new ObjectView(advice.throwExp, expend).draw());
             } else {
                 final StringWriter stringWriter = new StringWriter();
                 final PrintWriter printWriter = new PrintWriter(stringWriter);

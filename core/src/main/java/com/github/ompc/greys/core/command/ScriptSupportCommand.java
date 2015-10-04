@@ -1,6 +1,6 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.util.Advice;
+import com.github.ompc.greys.core.Advice;
 
 /**
  * 脚本支持命令

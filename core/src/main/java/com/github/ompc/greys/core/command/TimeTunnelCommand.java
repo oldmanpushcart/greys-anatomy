@@ -7,9 +7,9 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.manager.TimeFragmentManager;
-import com.github.ompc.greys.core.manager.TimeFragmentManager.TimeFragment;
+import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Advice;
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
-import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
+import static com.github.ompc.greys.core.Advice.newForAfterRetuning;
+import static com.github.ompc.greys.core.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
 import static com.github.ompc.greys.core.util.GaStringUtils.newString;
@@ -497,21 +497,21 @@ public class TimeTunnelCommand implements Command {
                 }
 
                 final Advice advice = timeFragment.advice;
-                final GaMethod method = advice.getMethod();
-                final boolean accessible = advice.getMethod().isAccessible();
+                final GaMethod method = advice.method;
+                final boolean accessible = advice.method.isAccessible();
 
                 final long beginTimestamp = System.currentTimeMillis();
                 final long cost;
                 Advice reAdvice = null;
                 try {
                     method.setAccessible(true);
-                    final Object returnObj = method.invoke(advice.getTarget(), advice.getParams());
+                    final Object returnObj = method.invoke(advice.target, advice.params);
                     reAdvice = newForAfterRetuning(
-                            advice.getLoader(),
-                            advice.getClazz(),
-                            advice.getMethod(),
-                            advice.getTarget(),
-                            advice.getParams(),
+                            advice.loader,
+                            advice.clazz,
+                            advice.method,
+                            advice.target,
+                            advice.params,
                             returnObj
                     );
                 } catch (Throwable t) {
@@ -525,11 +525,11 @@ public class TimeTunnelCommand implements Command {
                     }
 
                     reAdvice = newForAfterThrowing(
-                            advice.getLoader(),
-                            advice.getClazz(),
-                            advice.getMethod(),
-                            advice.getTarget(),
-                            advice.getParams(),
+                            advice.loader,
+                            advice.clazz,
+                            advice.method,
+                            advice.target,
+                            advice.params,
                             cause
                     );
 

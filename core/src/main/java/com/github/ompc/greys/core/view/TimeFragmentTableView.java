@@ -1,7 +1,7 @@
 package com.github.ompc.greys.core.view;
 
-import com.github.ompc.greys.core.manager.TimeFragmentManager.TimeFragment;
-import com.github.ompc.greys.core.util.Advice;
+import com.github.ompc.greys.core.TimeFragment;
+import com.github.ompc.greys.core.Advice;
 
 import java.text.SimpleDateFormat;
 
@@ -95,11 +95,11 @@ public class TimeFragmentTableView implements View {
                 timeFragment.processId,
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(timeFragment.gmtCreate),
                 timeFragment.cost,
-                advice.isAfterReturning(),
-                advice.isAfterThrowing(),
-                hashCodeToHexString(advice.getTarget()),
-                substringAfterLast("." + advice.getClazz().getName(), "."),
-                advice.getMethod().getName()
+                advice.isReturn,
+                advice.isThrow,
+                hashCodeToHexString(advice.target),
+                substringAfterLast("." + advice.clazz.getName(), "."),
+                advice.method.getName()
         );
         return this;
     }

@@ -1,65 +1,27 @@
-package com.github.ompc.greys.core.util;
+package com.github.ompc.greys.core;
+
+import com.github.ompc.greys.core.util.GaMethod;
 
 /**
- * 通知点 Created by vlinux on 15/5/20.
+ * 通知上下文
  */
-public class Advice {
+public final class Advice {
 
-    private final ClassLoader loader;
-    private final Class<?> clazz;
-    private final GaMethod method;
-    private final Object target;
-    private final Object[] params;
-    private final Object returnObj;
-    private final Throwable throwExp;
+    public final ClassLoader loader;
+    public final Class<?> clazz;
+    public final GaMethod method;
+    public final Object target;
+    public final Object[] params;
+    public final Object returnObj;
+    public final Throwable throwExp;
 
-    private final static int ACCESS_BEFORE = 1;
-    private final static int ACCESS_AFTER_RETUNING = 1 << 1;
-    private final static int ACCESS_AFTER_THROWING = 1 << 2;
+    public final static int ACCESS_BEFORE = 1;
+    public final static int ACCESS_AFTER_RETUNING = 1 << 1;
+    public final static int ACCESS_AFTER_THROWING = 1 << 2;
 
-    private final boolean isBefore;
-    private final boolean isThrow;
-    private final boolean isReturn;
-
-    public boolean isBefore() {
-        return isBefore;
-    }
-
-    public boolean isAfterReturning() {
-        return isReturn;
-    }
-
-    public boolean isAfterThrowing() {
-        return isThrow;
-    }
-
-    public ClassLoader getLoader() {
-        return loader;
-    }
-
-    public Object getTarget() {
-        return target;
-    }
-
-    public Object[] getParams() {
-        return params;
-    }
-
-    public Object getReturnObj() {
-        return returnObj;
-    }
-
-    public Throwable getThrowExp() {
-        return throwExp;
-    }
-
-    public Class<?> getClazz() {
-        return clazz;
-    }
-
-    public GaMethod getMethod() {
-        return method;
-    }
+    public final boolean isBefore;
+    public final boolean isThrow;
+    public final boolean isReturn;
 
     /**
      * for finish
@@ -94,6 +56,9 @@ public class Advice {
         isReturn = (access & ACCESS_AFTER_RETUNING) == ACCESS_AFTER_RETUNING;
     }
 
+    /**
+     * 构建Before通知上下文
+     */
     public static Advice newForBefore(
             ClassLoader loader,
             Class<?> clazz,
@@ -112,6 +77,9 @@ public class Advice {
         );
     }
 
+    /**
+     * 构建正常返回通知上下文
+     */
     public static Advice newForAfterRetuning(
             ClassLoader loader,
             Class<?> clazz,
@@ -131,6 +99,9 @@ public class Advice {
         );
     }
 
+    /**
+     * 构建抛异常返回通知上下文
+     */
     public static Advice newForAfterThrowing(
             ClassLoader loader,
             Class<?> clazz,

@@ -8,9 +8,9 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.manager.TimeFragmentManager;
-import com.github.ompc.greys.core.manager.TimeFragmentManager.TimeFragment;
+import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Advice;
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.CacheMatcher;
@@ -25,8 +25,8 @@ import java.lang.instrument.Instrumentation;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
-import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
+import static com.github.ompc.greys.core.Advice.newForAfterRetuning;
+import static com.github.ompc.greys.core.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
 import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
@@ -100,12 +100,12 @@ public class PathTraceCommand implements Command {
 
         final Matcher classNameMatcher = new CacheMatcher(
                 new PatternMatcher(isRegEx, classPattern),
-                new ThreadUnsafeLRUHashMap(GlobalOptions.ptraceClassMatcherLruCapacity)
+                new ThreadUnsafeLRUHashMap<String, Boolean>(GlobalOptions.ptraceClassMatcherLruCapacity)
         );
 
         final Matcher methodNameMatcher = new CacheMatcher(
                 new PatternMatcher(isRegEx, methodPattern),
-                new ThreadUnsafeLRUHashMap(GlobalOptions.ptraceMethodMatcherLruCapacity)
+                new ThreadUnsafeLRUHashMap<String, Boolean>(GlobalOptions.ptraceMethodMatcherLruCapacity)
         );
 
         final Matcher tracingPathMatcher = new PatternMatcher(isRegEx, tracingPathPattern);
@@ -276,9 +276,9 @@ public class PathTraceCommand implements Command {
                                 }
 
                                 // add throw exception
-                                if (advice.isAfterThrowing()) {
+                                if (advice.isThrow) {
                                     entity.view
-                                            .begin("throw:" + advice.getThrowExp().getClass().getCanonicalName())
+                                            .begin("throw:" + advice.throwExp.getClass().getCanonicalName())
                                             .end();
                                 }
 

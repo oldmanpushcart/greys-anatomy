@@ -7,7 +7,7 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Advice;
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.Matcher;
@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.util.Advice.*;
+import static com.github.ompc.greys.core.Advice.*;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getCauseMessage;
 import static com.github.ompc.greys.core.util.GaStringUtils.newString;

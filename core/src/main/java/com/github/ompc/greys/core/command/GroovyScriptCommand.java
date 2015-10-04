@@ -14,7 +14,7 @@ import groovy.lang.GroovyClassLoader;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 
-import static com.github.ompc.greys.core.util.Advice.*;
+import static com.github.ompc.greys.core.Advice.*;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
