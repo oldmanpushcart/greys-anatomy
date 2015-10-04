@@ -3,10 +3,7 @@ package com.github.ompc.greys.core.command;
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.TimeFragment;
-import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.InnerContext;
-import com.github.ompc.greys.core.advisor.ProcessContext;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
+import com.github.ompc.greys.core.advisor.*;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
@@ -30,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
 import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
-import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -93,7 +89,7 @@ public class PathTraceCommand implements Command {
     private Integer threshold;
 
     // 针对ptrace命令调整
-    private static final int STACK_DEEP = 11;
+    private static final int STACK_DEEP = 12;
 
     @Override
     public Action getAction() {
@@ -131,45 +127,22 @@ public class PathTraceCommand implements Command {
 
                     @Override
                     public AdviceListener getAdviceListener() {
-                        return new ReflectAdviceListenerAdapter() {
+                        return new ReflectAdviceListenerAdapter<PathTraceProcessContext, InnerContext>() {
 
                             private volatile boolean isInit = false;
 
                             // 执行计数器
                             private final AtomicInteger timesRef = new AtomicInteger();
 
-                            // 上下文跟踪标记
-                            private final ThreadLocal<Boolean> isTracingRef = new ThreadLocal<Boolean>() {
-                                @Override
-                                protected Boolean initialValue() {
-                                    return false;
-                                }
-                            };
+                            @Override
+                            protected PathTraceProcessContext newProcessContext() {
+                                return new PathTraceProcessContext();
+                            }
 
-                            // 上下文调用关联
-                            private final ThreadLocal<Entity> entityRef = new ThreadLocal<Entity>() {
-
-                                @Override
-                                protected Entity initialValue() {
-                                    final Entity e = new Entity();
-                                    e.processId = timeFragmentManager.generateProcessId();
-                                    e.tfView = new TimeFragmentTableView(true);
-                                    e.view = new TreeView(true, "pTracing for : " + getThreadInfo() + "process=" + e.processId + ";");
-                                    e.deep = 0;
-                                    return e;
-                                }
-
-                            };
-
-                            /*
-                             * 方法执行时间戳
-                             */
-                            final ThreadLocal<Long> timestampRef = new ThreadLocal<Long>() {
-                                @Override
-                                protected Long initialValue() {
-                                    return currentTimeMillis();
-                                }
-                            };
+                            @Override
+                            protected InnerContext newInnerContext() {
+                                return new InnerContext();
+                            }
 
                             @Override
                             public void create() {
@@ -189,43 +162,91 @@ public class PathTraceCommand implements Command {
                             }
 
                             @Override
-                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void before(Advice advice, PathTraceProcessContext processContext, InnerContext innerContext) throws Throwable {
 
                                 if (!isInit) {
                                     return;
                                 }
 
-                                if (!isTracingRef.get()) {
+                                if (!processContext.isTracing) {
                                     if (isTracingEnter(advice.clazz, advice.method)) {
-                                        isTracingRef.set(true);
+                                        processContext.isTracing = true;
                                     } else {
                                         return;
                                     }
                                 }
 
-                                timestampRef.get();
+                                final Entity entity = processContext.getEntity(new InitCallback<Entity>() {
+                                    @Override
+                                    public Entity init() {
+                                        return new Entity(timeFragmentManager.generateProcessId());
+                                    }
+                                });
 
-                                final Entity entity = entityRef.get();
                                 entity.view.begin(advice.clazz.getCanonicalName() + ":" + advice.method.getName() + "()");
                                 entity.deep++;
                             }
 
                             @Override
-                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void afterFinishing(Advice advice, PathTraceProcessContext processContext, InnerContext innerContext) throws Throwable {
                                 if (!isInit
-                                        || !isTracingRef.get()) {
+                                        || !processContext.isTracing){
                                     return;
                                 }
-                                finishing(advice);
-                            }
 
-                            @Override
-                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                if (!isInit
-                                        || !isTracingRef.get()) {
+                                final long cost = innerContext.getCost();
+
+                                final Entity entity = processContext.getEntity();
+                                entity.deep--;
+
+                                // 是否有匹配到条件
+                                // 之所以在这里主要是需要照顾到上下文参数对齐
+                                if (!isInCondition(advice)) {
                                     return;
                                 }
-                                finishing(advice);
+
+                                // add throw exception
+                                if (advice.isThrow) {
+                                    entity.view
+                                            .begin("throw:" + advice.throwExp.getClass().getCanonicalName())
+                                            .end();
+                                }
+
+
+
+                                // 记录下调用过程
+                                if (isTimeTunnel) {
+                                    final TimeFragment timeFragment = timeFragmentManager.append(
+                                            entity.processId,
+                                            advice,
+                                            new Date(),
+                                            cost,
+                                            getStack(STACK_DEEP)
+                                    );
+                                    entity.tfView.add(timeFragment);
+                                    entity.view.set(entity.view.get()+"; index="+timeFragment.id+";");
+                                }
+
+                                entity.view.end();
+
+                                if (entity.deep <= 0) {
+
+                                    // 输出打印内容
+                                    if (isTimeTunnel) {
+                                        printer.println(entity.view.draw() + entity.tfView.draw());
+                                    } else {
+                                        printer.println(entity.view.draw());
+                                    }
+
+                                    // 超过调用限制就关闭掉跟踪
+                                    if (isOverThreshold(timesRef.incrementAndGet())) {
+                                        printer.finish();
+                                    }
+
+                                    processContext.isTracing = false;
+                                    processContext.removeEntity();
+                                }
+
                             }
 
                             // 是否到达节制阀值
@@ -244,62 +265,6 @@ public class PathTraceCommand implements Command {
                                 }
                             }
 
-                            private void finishing(Advice advice) {
-
-                                final long cost = currentTimeMillis() - timestampRef.get();
-                                timestampRef.remove();
-
-                                final Entity entity = entityRef.get();
-                                entity.deep--;
-
-                                // 是否有匹配到条件
-                                // 之所以在这里主要是需要照顾到上下文参数对齐
-                                if (!isInCondition(advice)) {
-                                    return;
-                                }
-
-                                // add throw exception
-                                if (advice.isThrow) {
-                                    entity.view
-                                            .begin("throw:" + advice.throwExp.getClass().getCanonicalName())
-                                            .end();
-                                }
-
-                                entity.view.end();
-
-                                // 记录下调用过程
-                                if (isTimeTunnel) {
-                                    final TimeFragment timeFragment = timeFragmentManager.append(
-                                            entity.processId,
-                                            advice,
-                                            new Date(),
-                                            cost,
-                                            getStack(STACK_DEEP)
-                                    );
-                                    entity.tfView.add(timeFragment);
-                                }
-
-                                if (entity.deep <= 0) {
-
-                                    // 输出打印内容
-                                    if (isTimeTunnel) {
-                                        printer.println(entity.view.draw() + entity.tfView.draw());
-                                    } else {
-                                        printer.println(entity.view.draw());
-                                    }
-
-                                    // 超过调用限制就关闭掉跟踪
-                                    if (isOverThreshold(timesRef.incrementAndGet())) {
-                                        printer.finish();
-                                    }
-
-                                    // remove thread local
-                                    entityRef.remove();
-                                    isTracingRef.set(false);
-                                }
-
-                            }
-
                         };
                     }
 
@@ -313,12 +278,41 @@ public class PathTraceCommand implements Command {
     /**
      * 用于在ThreadLocal中传递的实体
      */
-    private static class Entity {
+    private class Entity {
+
+        private Entity(int processId) {
+            this.processId = processId;
+            this.tfView = new TimeFragmentTableView(true);
+            this.view = new TreeView(true, "pTracing for : " + getThreadInfo() + "process=" + processId + ";");
+            this.deep = 0;
+        }
 
         TimeFragmentTableView tfView;
         TreeView view;
         int deep;
-        int processId;
+        final int processId;
+
+    }
+
+    private class PathTraceProcessContext extends ProcessContext {
+        boolean isTracing;
+        Entity entity;
+
+        Entity getEntity() {
+            return entity;
+        }
+
+        Entity getEntity(InitCallback<Entity> initCallback) {
+            if( null == entity ) {
+                return entity = initCallback.init();
+            } else {
+                return entity;
+            }
+        }
+
+        void removeEntity() {
+            entity = null;
+        }
 
     }
 

@@ -18,7 +18,21 @@ import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
  * 通过反射拿到对应的Class/Method类，而不是原始的ClassName/MethodNam
  * 当然性能开销要比普通监听器高许多
  */
-public class ReflectAdviceListenerAdapter implements AdviceListener {
+public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC extends InnerContext> implements AdviceListener {
+
+    /**
+     * 构造过程上下文
+     *
+     * @return 返回过程上下文
+     */
+    abstract protected PC newProcessContext();
+
+    /**
+     * 构造方法内部上下文
+     *
+     * @return 返回方法内部上下文
+     */
+    abstract protected IC newInnerContext();
 
     @Override
     public void create() {
@@ -121,17 +135,17 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
     }
 
 
-    protected final ThreadLocal<ProcessContext> processContextRef = new ThreadLocal<ProcessContext>() {
+    protected final ThreadLocal<PC> processContextRef = new ThreadLocal<PC>() {
         @Override
-        protected ProcessContext initialValue() {
-            return new ProcessContext();
+        protected PC initialValue() {
+            return newProcessContext();
         }
     };
 
-    protected final ThreadLocal<GaStack<InnerContext>> innerContextStackRef = new ThreadLocal<GaStack<InnerContext>>() {
+    protected final ThreadLocal<GaStack<IC>> innerContextStackRef = new ThreadLocal<GaStack<IC>>() {
         @Override
-        protected GaStack<InnerContext> initialValue() {
-            return new ThreadUnsafeGaStack<InnerContext>();
+        protected GaStack<IC> initialValue() {
+            return new ThreadUnsafeGaStack<IC>();
         }
     };
 
@@ -140,10 +154,10 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args) throws Throwable {
         final Class<?> clazz = toClass(loader, className);
-        final ProcessContext processContext = processContextRef.get();
-        final InnerContext innerContext = new InnerContext();
+        final PC processContext = processContextRef.get();
+        final IC innerContext = newInnerContext();
 
-        final GaStack<InnerContext> innerContextGaStack = innerContextStackRef.get();
+        final GaStack<IC> innerContextGaStack = innerContextStackRef.get();
         innerContextGaStack.push(innerContext);
 
         // 过程上下文自增
@@ -162,9 +176,9 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Object returnObject) throws Throwable {
         final Class<?> clazz = toClass(loader, className);
-        final ProcessContext processContext = processContextRef.get();
-        final GaStack<InnerContext> innerContextGaStack = innerContextStackRef.get();
-        final InnerContext innerContext = innerContextGaStack.pop();
+        final PC processContext = processContextRef.get();
+        final GaStack<IC> innerContextGaStack = innerContextStackRef.get();
+        final IC innerContext = innerContextGaStack.pop();
         try {
 
             // 过程上下文自减少
@@ -198,9 +212,9 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Throwable throwable) throws Throwable {
         final Class<?> clazz = toClass(loader, className);
-        final ProcessContext processContext = processContextRef.get();
-        final GaStack<InnerContext> innerContextGaStack = innerContextStackRef.get();
-        final InnerContext innerContext = innerContextGaStack.pop();
+        final PC processContext = processContextRef.get();
+        final GaStack<IC> innerContextGaStack = innerContextStackRef.get();
+        final IC innerContext = innerContextGaStack.pop();
 
         try {
 
@@ -239,7 +253,7 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
      * @param innerContext   当前方法调用上下文
      * @throws Throwable 通知过程出错
      */
-    public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+    public void before(Advice advice, PC processContext, IC innerContext) throws Throwable {
 
     }
 
@@ -251,7 +265,7 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
      * @param innerContext   当前方法调用上下文
      * @throws Throwable 通知过程出错
      */
-    public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+    public void afterReturning(Advice advice, PC processContext, IC innerContext) throws Throwable {
 
     }
 
@@ -263,7 +277,7 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
      * @param innerContext   当前方法调用上下文
      * @throws Throwable 通知过程出错
      */
-    public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+    public void afterThrowing(Advice advice, PC processContext, IC innerContext) throws Throwable {
 
     }
 
@@ -275,8 +289,25 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
      * @param innerContext   当前方法调用上下文
      * @throws Throwable 通知过程出错
      */
-    public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+    public void afterFinishing(Advice advice, PC processContext, IC innerContext) throws Throwable {
 
+    }
+
+
+    /**
+     * 默认实现
+     */
+    public static class DefaultReflectAdviceListenerAdapter extends ReflectAdviceListenerAdapter<ProcessContext, InnerContext> {
+
+        @Override
+        protected ProcessContext newProcessContext() {
+            return new ProcessContext();
+        }
+
+        @Override
+        protected InnerContext newInnerContext() {
+            return new InnerContext();
+        }
     }
 
 }

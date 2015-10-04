@@ -4,7 +4,7 @@ import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
 import com.github.ompc.greys.core.advisor.InnerContext;
 import com.github.ompc.greys.core.advisor.ProcessContext;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
+import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter.DefaultReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
@@ -139,7 +139,7 @@ public class WatchCommand implements Command {
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new ReflectAdviceListenerAdapter() {
+                        return new DefaultReflectAdviceListenerAdapter() {
 
                             @Override
                             public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {

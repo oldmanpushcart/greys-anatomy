@@ -44,7 +44,7 @@ public class TimeFragmentDetailView implements View {
 
         final TableView view = new TableView(
                 new ColumnDefine[]{
-                        new ColumnDefine(RIGHT),
+                        new ColumnDefine(15, false, RIGHT),
                         new ColumnDefine(150, false, LEFT)
                 })
                 .hasBorder(true)

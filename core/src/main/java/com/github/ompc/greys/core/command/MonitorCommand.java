@@ -5,7 +5,7 @@ import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
 import com.github.ompc.greys.core.advisor.InnerContext;
 import com.github.ompc.greys.core.advisor.ProcessContext;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
+import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter.DefaultReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
-import static java.lang.System.currentTimeMillis;
 
 /**
  * 监控请求命令<br/>
@@ -165,7 +164,7 @@ public class MonitorCommand implements Command {
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new ReflectAdviceListenerAdapter() {
+                        return new DefaultReflectAdviceListenerAdapter() {
 
                             /*
                              * 输出定时任务
@@ -177,11 +176,6 @@ public class MonitorCommand implements Command {
                              */
                             private final ConcurrentHashMap<Key, AtomicReference<Data>> monitorData
                                     = new ConcurrentHashMap<Key, AtomicReference<Data>>();
-
-                            /*
-                             * 起始时间戳
-                             */
-                            private final ThreadLocal<Long> beginTimestampRef = new ThreadLocal<Long>();
 
                             private double div(double a, double b) {
                                 if (b == 0) {
@@ -260,31 +254,12 @@ public class MonitorCommand implements Command {
                                 if (null != timer) {
                                     timer.cancel();
                                 }
-                                beginTimestampRef.remove();
                             }
 
                             @Override
-                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                beginTimestampRef.set(currentTimeMillis());
-                            }
-
-                            @Override
-                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                finishing(advice);
-                            }
-
-                            @Override
-                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) {
-                                finishing(advice);
-                            }
-
-                            private void finishing(Advice advice) {
-                                final Long startTime = beginTimestampRef.get();
-                                if (null == startTime) {
-                                    return;
-                                }
-                                final long cost = currentTimeMillis() - startTime;
+                            public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
                                 final Key key = new Key(advice.clazz, advice.method);
+                                final long cost = innerContext.getCost();
 
                                 while (true) {
                                     final AtomicReference<Data> value = monitorData.get(key);

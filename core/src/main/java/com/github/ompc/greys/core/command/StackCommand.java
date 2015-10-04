@@ -69,10 +69,7 @@ public class StackCommand implements Command {
     private boolean isRegEx = false;
 
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
-    private Integer numberOfLimit;
-
-    // 针对stack命令调整
-    private static final int STACK_DEEP = 9;
+    private Integer threshold;
 
     @Override
     public Action getAction() {
@@ -88,6 +85,9 @@ public class StackCommand implements Command {
 
                     private final AtomicInteger times = new AtomicInteger();
 
+                    // 针对stack命令调整
+                    private static final int STACK_DEEP = 9;
+
                     @Override
                     public Matcher getClassNameMatcher() {
                         return classNameMatcher;
@@ -100,26 +100,24 @@ public class StackCommand implements Command {
 
                     @Override
                     public AdviceListener getAdviceListener() {
-                        return new ReflectAdviceListenerAdapter() {
-
-                            private final ThreadLocal<String> stackThreadLocal = new ThreadLocal<String>();
+                        return new ReflectAdviceListenerAdapter<ProcessContext, StackInnerContext>() {
 
                             @Override
-                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                stackThreadLocal.set(getStack(STACK_DEEP));
+                            protected ProcessContext newProcessContext() {
+                                return new ProcessContext();
                             }
 
                             @Override
-                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                finishing(advice);
+                            protected StackInnerContext newInnerContext() {
+                                return new StackInnerContext();
                             }
 
                             @Override
-                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                finishing(advice);
+                            public void before(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
+                                innerContext.setStack(getStack(STACK_DEEP));
                             }
 
-                            private boolean isPrintIfNecessary(Advice advice) {
+                            private boolean isInCondition(Advice advice) {
                                 try {
                                     return isBlank(conditionExpress)
                                             || newExpress(advice).is(conditionExpress);
@@ -128,15 +126,18 @@ public class StackCommand implements Command {
                                 }
                             }
 
-                            private boolean isLimited(int currentTimes) {
-                                return null != numberOfLimit
-                                        && currentTimes >= numberOfLimit;
+                            private boolean isOverThreshold(int currentTimes) {
+                                return null != threshold
+                                        && currentTimes >= threshold;
                             }
 
-                            private void finishing(final Advice advice) {
-                                if (isPrintIfNecessary(advice)) {
-                                    final boolean isF = isLimited(times.incrementAndGet());
-                                    printer.println(isF, stackThreadLocal.get());
+                            @Override
+                            public void afterFinishing(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
+                                if (isInCondition(advice)) {
+                                    printer.println(innerContext.getStack());
+                                    if (isOverThreshold(times.incrementAndGet())) {
+                                        printer.finish();
+                                    }
                                 }
                             }
 
@@ -148,7 +149,17 @@ public class StackCommand implements Command {
         };
     }
 
+    private class StackInnerContext extends InnerContext {
 
+        private String stack;
 
+        public String getStack() {
+            return stack;
+        }
+
+        public void setStack(String stack) {
+            this.stack = stack;
+        }
+    }
 
 }

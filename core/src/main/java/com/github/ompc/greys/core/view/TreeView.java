@@ -44,7 +44,7 @@ public class TreeView implements View {
                 treeSB.append(prefix).append(isLast ? STEP_FIRST_CHAR : STEP_NORMAL_CHAR);
                 if (isPrintCost
                         && !node.isRoot()) {
-                    treeSB.append("[").append(node.endTimestamp - root.beginTimestamp).append(",").append(node.endTimestamp - node.beginTimestamp).append("ms]");
+                    treeSB.append("[").append(node.endTimestamp - root.beginTimestamp).append(",").append(node.endTimestamp - node.beginTimestamp).append("ms] ");
                 }
                 treeSB.append(node.data).append("\n");
             }
@@ -88,6 +88,25 @@ public class TreeView implements View {
         return this;
     }
 
+    public TreeView begin() {
+        return begin(null);
+    }
+
+    public Object get() {
+        if(current.isRoot()) {
+            throw new IllegalStateException("current node is root.");
+        }
+        return current.data;
+    }
+
+    public TreeView set(Object data) {
+        if(current.isRoot()) {
+            throw new IllegalStateException("current node is root.");
+        }
+        current.data = data;
+        return this;
+    }
+
     /**
      * 结束一个分支节点
      *
@@ -116,7 +135,7 @@ public class TreeView implements View {
         /**
          * 节点数据
          */
-        final Object data;
+        Object data;
 
         /**
          * 子节点
