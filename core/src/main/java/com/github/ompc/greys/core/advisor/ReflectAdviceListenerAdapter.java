@@ -1,12 +1,16 @@
 package com.github.ompc.greys.core.advisor;
 
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaCheckUtils;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.collection.GaStack;
+import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import static com.github.ompc.greys.core.Advice.*;
 import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
 
 /**
@@ -117,12 +121,40 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
     }
 
 
+    protected final ThreadLocal<ProcessContext> processContextRef = new ThreadLocal<ProcessContext>() {
+        @Override
+        protected ProcessContext initialValue() {
+            return new ProcessContext();
+        }
+    };
+
+    protected final ThreadLocal<GaStack<InnerContext>> innerContextStackRef = new ThreadLocal<GaStack<InnerContext>>() {
+        @Override
+        protected GaStack<InnerContext> initialValue() {
+            return new ThreadUnsafeGaStack<InnerContext>();
+        }
+    };
+
     @Override
     final public void before(
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args) throws Throwable {
         final Class<?> clazz = toClass(loader, className);
-        before(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args);
+        final ProcessContext processContext = processContextRef.get();
+        final InnerContext innerContext = new InnerContext();
+
+        final GaStack<InnerContext> innerContextGaStack = innerContextStackRef.get();
+        innerContextGaStack.push(innerContext);
+
+        // 过程上下文自增
+        processContext.inc();
+
+        before(
+                newForBefore(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args),
+                processContext,
+                innerContext
+        );
+
     }
 
     @Override
@@ -130,7 +162,35 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Object returnObject) throws Throwable {
         final Class<?> clazz = toClass(loader, className);
-        afterReturning(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, returnObject);
+        final ProcessContext processContext = processContextRef.get();
+        final GaStack<InnerContext> innerContextGaStack = innerContextStackRef.get();
+        final InnerContext innerContext = innerContextGaStack.pop();
+        try {
+
+            // 过程上下文自减少
+            processContext.dec();
+
+            // 关闭上下文
+            innerContext.close();
+
+            final Advice advice = newForAfterRetuning(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, returnObject);
+            afterReturning(advice, processContext, innerContext);
+            afterFinishing(advice, processContext, innerContext);
+
+        } finally {
+
+            // 如果堆栈已经弹空,则直接清除掉上下文
+            if (innerContextGaStack.isEmpty()) {
+                innerContextStackRef.remove();
+            }
+
+            // 如果过程上下文已经到了顶层则需要清除掉上下文
+            if (processContext.isTop()) {
+                processContextRef.remove();
+            }
+
+        }
+
     }
 
     @Override
@@ -138,63 +198,84 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Throwable throwable) throws Throwable {
         final Class<?> clazz = toClass(loader, className);
-        afterThrowing(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, throwable);
+        final ProcessContext processContext = processContextRef.get();
+        final GaStack<InnerContext> innerContextGaStack = innerContextStackRef.get();
+        final InnerContext innerContext = innerContextGaStack.pop();
+
+        try {
+
+            // 过程上下文自减少
+            processContext.dec();
+
+            // 关闭上下文
+            innerContext.close();
+
+            final Advice advice = newForAfterThrowing(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, throwable);
+            afterThrowing(advice, processContext, innerContext);
+            afterFinishing(advice, processContext, innerContext);
+
+        } finally {
+
+            // 如果堆栈已经弹空,则直接清除掉上下文
+            if (innerContextGaStack.isEmpty()) {
+                innerContextStackRef.remove();
+            }
+
+            // 如果过程上下文已经到了顶层则需要清除掉上下文
+            if (processContext.isTop()) {
+                processContextRef.remove();
+            }
+
+        }
+
     }
 
 
     /**
      * 前置通知
      *
-     * @param loader 类加载器
-     * @param clazz  类
-     * @param method 方法
-     * @param target 目标类实例
-     *               若目标为静态方法,则为null
-     * @param args   参数列表
+     * @param advice         通知点
+     * @param processContext 处理上下文
+     * @param innerContext   当前方法调用上下文
      * @throws Throwable 通知过程出错
      */
-    public void before(
-            ClassLoader loader, Class<?> clazz, GaMethod method,
-            Object target, Object[] args) throws Throwable {
+    public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
 
     }
 
     /**
      * 返回通知
      *
-     * @param loader       类加载器
-     * @param clazz        类
-     * @param method       方法
-     * @param target       目标类实例
-     *                     若目标为静态方法,则为null
-     * @param args         参数列表
-     * @param returnObject 返回结果
-     *                     若为无返回值方法(void),则为null
+     * @param advice         通知点
+     * @param processContext 处理上下文
+     * @param innerContext   当前方法调用上下文
      * @throws Throwable 通知过程出错
      */
-    public void afterReturning(
-            ClassLoader loader, Class<?> clazz, GaMethod method,
-            Object target, Object[] args,
-            Object returnObject) throws Throwable {
+    public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
 
     }
 
     /**
      * 异常通知
      *
-     * @param loader    类加载器
-     * @param clazz     类
-     * @param method    方法
-     * @param target    目标类实例
-     *                  若目标为静态方法,则为null
-     * @param args      参数列表
-     * @param throwable 目标异常
+     * @param advice         通知点
+     * @param processContext 处理上下文
+     * @param innerContext   当前方法调用上下文
      * @throws Throwable 通知过程出错
      */
-    public void afterThrowing(
-            ClassLoader loader, Class<?> clazz, GaMethod method,
-            Object target, Object[] args,
-            Throwable throwable) throws Throwable {
+    public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+
+    }
+
+    /**
+     * 结束通知
+     *
+     * @param advice         通知点
+     * @param processContext 处理上下文
+     * @param innerContext   当前方法调用上下文
+     * @throws Throwable 通知过程出错
+     */
+    public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
 
     }
 

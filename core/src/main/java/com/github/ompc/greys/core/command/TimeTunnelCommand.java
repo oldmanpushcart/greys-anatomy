@@ -1,15 +1,17 @@
 package com.github.ompc.greys.core.command;
 
+import com.github.ompc.greys.core.Advice;
+import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.advisor.AdviceListener;
+import com.github.ompc.greys.core.advisor.InnerContext;
+import com.github.ompc.greys.core.advisor.ProcessContext;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.manager.TimeFragmentManager;
-import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
@@ -31,7 +33,6 @@ import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
 import static com.github.ompc.greys.core.util.GaStringUtils.newString;
 import static java.lang.String.format;
-import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.*;
 
 
@@ -247,64 +248,6 @@ public class TimeTunnelCommand implements Command {
                              */
                             private volatile boolean isFirst = true;
 
-                            /*
-                             * 方法执行时间戳
-                             */
-                            final ThreadLocal<Long> timestampRef = new ThreadLocal<Long>() {
-                                @Override
-                                protected Long initialValue() {
-                                    return currentTimeMillis();
-                                }
-                            };
-
-                            @Override
-                            public void before(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args) throws Throwable {
-                                timestampRef.get();
-                            }
-
-                            @Override
-                            public void afterReturning(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Object returnObject) throws Throwable {
-                                afterFinishing(
-                                        newForAfterRetuning(
-                                                loader,
-                                                clazz,
-                                                method,
-                                                target,
-                                                args,
-                                                returnObject
-                                        ));
-                            }
-
-                            @Override
-                            public void afterThrowing(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Throwable throwable) {
-                                afterFinishing(
-                                        newForAfterThrowing(
-                                                loader,
-                                                clazz,
-                                                method,
-                                                target,
-                                                args,
-                                                throwable
-                                        ));
-                            }
-
                             private boolean isOverThreshold(int currentTimes) {
                                 return null != threshold
                                         && currentTimes >= threshold;
@@ -319,12 +262,8 @@ public class TimeTunnelCommand implements Command {
                                 }
                             }
 
-                            private void afterFinishing(Advice advice) {
-
-                                final long cost = currentTimeMillis() - timestampRef.get();
-
-                                // reset the timestamp
-                                timestampRef.remove();
+                            @Override
+                            public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) {
 
                                 if (!isInCondition(advice)) {
                                     return;
@@ -334,7 +273,7 @@ public class TimeTunnelCommand implements Command {
                                         timeFragmentManager.generateProcessId(),
                                         advice,
                                         new Date(),
-                                        cost,
+                                        innerContext.getCost(),
                                         getStack(STACK_DEEP)
                                 );
 

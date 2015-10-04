@@ -1,16 +1,18 @@
 package com.github.ompc.greys.core.command;
 
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.GlobalOptions;
+import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.advisor.AdviceListener;
+import com.github.ompc.greys.core.advisor.InnerContext;
+import com.github.ompc.greys.core.advisor.ProcessContext;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.manager.TimeFragmentManager;
-import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.CacheMatcher;
@@ -25,8 +27,6 @@ import java.lang.instrument.Instrumentation;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.Advice.newForAfterRetuning;
-import static com.github.ompc.greys.core.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
 import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
@@ -154,7 +154,7 @@ public class PathTraceCommand implements Command {
                                     final Entity e = new Entity();
                                     e.processId = timeFragmentManager.generateProcessId();
                                     e.tfView = new TimeFragmentTableView(true);
-                                    e.view = new TreeView(true, "pTracing for : " + getThreadInfo()+"process="+e.processId+";");
+                                    e.view = new TreeView(true, "pTracing for : " + getThreadInfo() + "process=" + e.processId + ";");
                                     e.deep = 0;
                                     return e;
                                 }
@@ -189,19 +189,14 @@ public class PathTraceCommand implements Command {
                             }
 
                             @Override
-                            public void before(
-                                    final ClassLoader loader,
-                                    final Class<?> clazz,
-                                    final GaMethod method,
-                                    final Object target,
-                                    final Object[] args) throws Throwable {
+                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
 
                                 if (!isInit) {
                                     return;
                                 }
 
                                 if (!isTracingRef.get()) {
-                                    if (isTracingEnter(clazz, method)) {
+                                    if (isTracingEnter(advice.clazz, advice.method)) {
                                         isTracingRef.set(true);
                                     } else {
                                         return;
@@ -211,38 +206,26 @@ public class PathTraceCommand implements Command {
                                 timestampRef.get();
 
                                 final Entity entity = entityRef.get();
-                                entity.view.begin(clazz.getCanonicalName() + ":" + method.getName() + "()");
+                                entity.view.begin(advice.clazz.getCanonicalName() + ":" + advice.method.getName() + "()");
                                 entity.deep++;
                             }
 
                             @Override
-                            public void afterReturning(
-                                    final ClassLoader loader,
-                                    final Class<?> clazz,
-                                    final GaMethod method,
-                                    final Object target,
-                                    final Object[] args,
-                                    final Object returnObject) throws Throwable {
+                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
                                 if (!isInit
                                         || !isTracingRef.get()) {
                                     return;
                                 }
-                                finishing(newForAfterRetuning(loader, clazz, method, target, args, returnObject));
+                                finishing(advice);
                             }
 
                             @Override
-                            public void afterThrowing(
-                                    final ClassLoader loader,
-                                    final Class<?> clazz,
-                                    final GaMethod method,
-                                    final Object target,
-                                    final Object[] args,
-                                    final Throwable throwable) throws Throwable {
+                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
                                 if (!isInit
                                         || !isTracingRef.get()) {
                                     return;
                                 }
-                                finishing(newForAfterThrowing(loader, clazz, method, target, args, throwable));
+                                finishing(advice);
                             }
 
                             // 是否到达节制阀值
@@ -271,7 +254,7 @@ public class PathTraceCommand implements Command {
 
                                 // 是否有匹配到条件
                                 // 之所以在这里主要是需要照顾到上下文参数对齐
-                                if(!isInCondition(advice)) {
+                                if (!isInCondition(advice)) {
                                     return;
                                 }
 
@@ -285,7 +268,7 @@ public class PathTraceCommand implements Command {
                                 entity.view.end();
 
                                 // 记录下调用过程
-                                if(isTimeTunnel) {
+                                if (isTimeTunnel) {
                                     final TimeFragment timeFragment = timeFragmentManager.append(
                                             entity.processId,
                                             advice,
@@ -299,8 +282,8 @@ public class PathTraceCommand implements Command {
                                 if (entity.deep <= 0) {
 
                                     // 输出打印内容
-                                    if(isTimeTunnel) {
-                                        printer.println(entity.view.draw()+entity.tfView.draw());
+                                    if (isTimeTunnel) {
+                                        printer.println(entity.view.draw() + entity.tfView.draw());
                                     } else {
                                         printer.println(entity.view.draw());
                                     }

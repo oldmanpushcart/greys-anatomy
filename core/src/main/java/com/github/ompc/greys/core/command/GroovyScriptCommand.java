@@ -1,12 +1,14 @@
 package com.github.ompc.greys.core.command;
 
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
+import com.github.ompc.greys.core.advisor.InnerContext;
+import com.github.ompc.greys.core.advisor.ProcessContext;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import groovy.lang.GroovyClassLoader;
@@ -14,7 +16,6 @@ import groovy.lang.GroovyClassLoader;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 
-import static com.github.ompc.greys.core.Advice.*;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
@@ -115,27 +116,18 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
                             }
 
                             @Override
-                            public void before(
-                                    ClassLoader loader, Class<?> clazz, GaMethod method,
-                                    Object target, Object[] args) throws Throwable {
-                                scriptListener.before(output,
-                                        newForBefore(loader, clazz, method, target, args));
+                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                scriptListener.before(output, advice);
                             }
 
                             @Override
-                            public void afterReturning(
-                                    ClassLoader loader, Class<?> clazz, GaMethod method,
-                                    Object target, Object[] args, Object returnObject) throws Throwable {
-                                scriptListener.afterReturning(output,
-                                        newForAfterRetuning(loader, clazz, method, target, args, returnObject));
+                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                scriptListener.afterReturning(output, advice);
                             }
 
                             @Override
-                            public void afterThrowing(
-                                    ClassLoader loader, Class<?> clazz, GaMethod method,
-                                    Object target, Object[] args, Throwable throwable) throws Throwable {
-                                scriptListener.afterThrowing(output,
-                                        newForAfterThrowing(loader, clazz, method, target, args, throwable));
+                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                scriptListener.afterThrowing(output, advice);
                             }
                         };
                     }

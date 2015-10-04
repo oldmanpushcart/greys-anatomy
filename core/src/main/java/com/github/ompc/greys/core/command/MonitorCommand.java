@@ -1,7 +1,10 @@
 package com.github.ompc.greys.core.command;
 
 
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
+import com.github.ompc.greys.core.advisor.InnerContext;
+import com.github.ompc.greys.core.advisor.ProcessContext;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
@@ -261,44 +264,27 @@ public class MonitorCommand implements Command {
                             }
 
                             @Override
-                            public void before(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args) throws Throwable {
+                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
                                 beginTimestampRef.set(currentTimeMillis());
                             }
 
                             @Override
-                            public void afterReturning(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Object returnObject) throws Throwable {
-                                finishing(clazz, method, false);
+                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                finishing(advice);
                             }
 
                             @Override
-                            public void afterThrowing(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Throwable throwable) {
-                                finishing(clazz, method, true);
+                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) {
+                                finishing(advice);
                             }
 
-                            private void finishing(Class<?> clazz, GaMethod method, boolean isThrowing) {
+                            private void finishing(Advice advice) {
                                 final Long startTime = beginTimestampRef.get();
                                 if (null == startTime) {
                                     return;
                                 }
                                 final long cost = currentTimeMillis() - startTime;
-                                final Key key = new Key(clazz, method);
+                                final Key key = new Key(advice.clazz, advice.method);
 
                                 while (true) {
                                     final AtomicReference<Data> value = monitorData.get(key);
@@ -312,7 +298,7 @@ public class MonitorCommand implements Command {
                                         Data oData = value.get();
                                         Data nData = new Data();
                                         nData.cost = oData.cost + cost;
-                                        if (isThrowing) {
+                                        if (advice.isThrow) {
                                             nData.failed = oData.failed + 1;
                                             nData.success = oData.success;
                                         } else {
@@ -322,14 +308,14 @@ public class MonitorCommand implements Command {
                                         nData.total = oData.total + 1;
 
                                         // set max-cost
-                                        if( null == oData.maxCost ) {
+                                        if (null == oData.maxCost) {
                                             nData.maxCost = cost;
                                         } else {
                                             nData.maxCost = Math.max(oData.maxCost, cost);
                                         }
 
                                         // set min-cost
-                                        if( null == oData.minCost ) {
+                                        if (null == oData.minCost) {
                                             nData.minCost = cost;
                                         } else {
                                             nData.minCost = Math.min(oData.minCost, cost);

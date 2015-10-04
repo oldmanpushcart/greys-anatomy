@@ -1,22 +1,21 @@
 package com.github.ompc.greys.core.command;
 
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
+import com.github.ompc.greys.core.advisor.InnerContext;
+import com.github.ompc.greys.core.advisor.ProcessContext;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.Advice;
-import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.Advice.newForAfterRetuning;
-import static com.github.ompc.greys.core.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -106,35 +105,18 @@ public class StackCommand implements Command {
                             private final ThreadLocal<String> stackThreadLocal = new ThreadLocal<String>();
 
                             @Override
-                            public void before(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args) throws Throwable {
+                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
                                 stackThreadLocal.set(getStack(STACK_DEEP));
                             }
 
                             @Override
-                            public void afterThrowing(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Throwable throwable) throws Throwable {
-                                finishing(newForAfterThrowing(loader, clazz, method, target, args, throwable));
+                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                finishing(advice);
                             }
 
                             @Override
-                            public void afterReturning(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Object returnObject) throws Throwable {
-                                finishing(newForAfterRetuning(loader, clazz, method, target, args, returnObject));
+                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                finishing(advice);
                             }
 
                             private boolean isPrintIfNecessary(Advice advice) {

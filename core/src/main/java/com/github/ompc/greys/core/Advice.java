@@ -3,7 +3,7 @@ package com.github.ompc.greys.core;
 import com.github.ompc.greys.core.util.GaMethod;
 
 /**
- * 通知上下文
+ * 通知点
  */
 public final class Advice {
 
@@ -57,7 +57,7 @@ public final class Advice {
     }
 
     /**
-     * 构建Before通知上下文
+     * 构建Before通知点
      */
     public static Advice newForBefore(
             ClassLoader loader,
@@ -78,7 +78,7 @@ public final class Advice {
     }
 
     /**
-     * 构建正常返回通知上下文
+     * 构建正常返回通知点
      */
     public static Advice newForAfterRetuning(
             ClassLoader loader,
@@ -100,7 +100,7 @@ public final class Advice {
     }
 
     /**
-     * 构建抛异常返回通知上下文
+     * 构建抛异常返回通知点
      */
     public static Advice newForAfterThrowing(
             ClassLoader loader,

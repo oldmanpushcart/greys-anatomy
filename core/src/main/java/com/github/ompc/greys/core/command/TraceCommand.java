@@ -1,14 +1,12 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.ReflectAdviceTracingListenerAdapter;
+import com.github.ompc.greys.core.Advice;
+import com.github.ompc.greys.core.advisor.*;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.Advice;
-import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.view.TreeView;
@@ -16,8 +14,6 @@ import com.github.ompc.greys.core.view.TreeView;
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.Advice.newForAfterRetuning;
-import static com.github.ompc.greys.core.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
 import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
@@ -84,9 +80,6 @@ public class TraceCommand implements Command {
             public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
-                    // 访问计数器
-                    private final AtomicInteger timesRef = new AtomicInteger();
-
                     @Override
                     public Matcher getClassNameMatcher() {
                         return classNameMatcher;
@@ -97,36 +90,38 @@ public class TraceCommand implements Command {
                         return methodNameMatcher;
                     }
 
+                    // 访问计数器
+                    private final AtomicInteger timesRef = new AtomicInteger();
+
                     // 跟踪深度
                     private int tracingDeep = 0;
+
+                    private static final String TRACE_ENTITY_KEY = "TRACE_ENTITY_KEY";
+
+                    private Entity getEntityFromInnerContext(InnerContext innerContext) {
+                        return innerContext.get(TRACE_ENTITY_KEY, new InitCallback<Entity>() {
+                            @Override
+                            public Entity init() {
+                                final Entity e = new Entity();
+                                e.view = new TreeView(true, "Tracing for : " + getThreadInfo());
+                                return e;
+                            }
+                        });
+                    }
 
                     @Override
                     public AdviceListener getAdviceListener() {
                         return new ReflectAdviceTracingListenerAdapter() {
 
-                            private final ThreadLocal<Entity> entityRef = new ThreadLocal<Entity>() {
-
-                                @Override
-                                protected Entity initialValue() {
-                                    final Entity e = new Entity();
-                                    e.view = createTreeView();
-                                    e.deep = 0;
-                                    return e;
-                                }
-
-                            };
-
-                            @Override
-                            public void destroy() {
-                                entityRef.remove();
-                            }
-
                             @Override
                             public void invokeBeforeTracing(
                                     String tracingClassName,
                                     String tracingMethodName,
-                                    String tracingMethodDesc) throws Throwable {
-                                entityRef.get().view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                    String tracingMethodDesc,
+                                    ProcessContext processContext,
+                                    InnerContext innerContext) throws Throwable {
+                                final Entity entity = getEntityFromInnerContext(innerContext);
+                                entity.view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
                                 tracingDeep++;
                             }
 
@@ -134,50 +129,36 @@ public class TraceCommand implements Command {
                             public void invokeAfterTracing(
                                     String tracingClassName,
                                     String tracingMethodName,
-                                    String tracingMethodDesc) throws Throwable {
-                                entityRef.get().view.end();
+                                    String tracingMethodDesc,
+                                    ProcessContext processContext,
+                                    InnerContext innerContext) throws Throwable {
+                                final Entity entity = getEntityFromInnerContext(innerContext);
+                                entity.view.end();
                                 tracingDeep--;
                             }
 
                             @Override
-                            public void before(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args) throws Throwable {
-                                entityRef.get().view.begin(clazz.getName() + ":" + method.getName() + "()");
-                                entityRef.get().deep++;
+                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                final Entity entity = getEntityFromInnerContext(innerContext);
+                                entity.view.begin(advice.clazz.getName() + ":" + advice.method.getName() + "()");
                             }
 
                             @Override
-                            public void afterReturning(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Object returnObject) throws Throwable {
-                                entityRef.get().view.end();
-                                finishing(newForAfterRetuning(loader, clazz, method, target, args, returnObject));
+                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                final Entity entity = getEntityFromInnerContext(innerContext);
+                                entity.view.end();
                             }
 
                             @Override
-                            public void afterThrowing(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Throwable throwable) throws Throwable {
-                                entityRef.get().view.begin("throw:" + throwable.getClass().getName() + "()").end();
+                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                final Entity entity = getEntityFromInnerContext(innerContext);
+                                entity.view.begin("throw:" + advice.throwExp.getClass().getName() + "()").end();
 
                                 // 这里将堆栈的end全部补上
                                 while (tracingDeep-- >= 0) {
-                                    entityRef.get().view.end();
+                                    entity.view.end();
                                 }
 
-                                finishing(newForAfterThrowing(loader, clazz, method, target, args, throwable));
                             }
 
                             private boolean isInCondition(Advice advice) {
@@ -194,20 +175,15 @@ public class TraceCommand implements Command {
                                         && currentTimes >= threshold;
                             }
 
-                            private void finishing(Advice advice) {
-                                if (--entityRef.get().deep <= 0) {
-                                    if (isInCondition(advice)) {
-                                        printer.println(entityRef.get().view.draw());
-                                        if( isOverThreshold(timesRef.incrementAndGet()) ) {
-                                            printer.finish();
-                                        }
+                            @Override
+                            public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                if (isInCondition(advice)) {
+                                    final Entity entity = getEntityFromInnerContext(innerContext);
+                                    printer.println(entity.view.draw());
+                                    if (isOverThreshold(timesRef.incrementAndGet())) {
+                                        printer.finish();
                                     }
-                                    entityRef.remove();
                                 }
-                            }
-
-                            private TreeView createTreeView() {
-                                return new TreeView(true, "Tracing for : " + getThreadInfo());
                             }
 
                         };
@@ -220,13 +196,10 @@ public class TraceCommand implements Command {
     }
 
     /**
-     * 用于在ThreadLocal中传递的实体
+     * 方便封装Tracing的对象
      */
     private static class Entity {
-
         TreeView view;
-        int deep;
-
     }
 
 }

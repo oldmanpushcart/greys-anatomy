@@ -10,6 +10,7 @@ import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static com.github.ompc.greys.core.util.GaStringUtils.newString;
 import static java.lang.String.format;
 
 /**
@@ -20,19 +21,29 @@ import static java.lang.String.format;
 public class ObjectView implements View {
 
     private final Object object;
-    private final int deep;
+    private final Integer expend;
 
-    public ObjectView(Object object, int deep) {
+    public ObjectView(Object object, Integer expend) {
         this.object = object;
-        this.deep = deep;
+        this.expend = expend;
+    }
+
+    private boolean isNeedExpend() {
+        return null != expend
+                && expend >= 0;
     }
 
     @Override
     public String draw() {
-        if (GlobalOptions.isUsingJson) {
-            return new Gson().toJson(object);
+        if( isNeedExpend() ) {
+            if (GlobalOptions.isUsingJson) {
+                return new Gson().toJson(object);
+            }
+            return toString(object, 0, expend);
+        } else {
+            return newString(object);
         }
-        return toString(object, 0, deep);
+
     }
 
     private final static String TAB = "    ";

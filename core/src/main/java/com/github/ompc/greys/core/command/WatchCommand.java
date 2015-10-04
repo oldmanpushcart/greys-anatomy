@@ -1,14 +1,15 @@
 package com.github.ompc.greys.core.command;
 
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
+import com.github.ompc.greys.core.advisor.InnerContext;
+import com.github.ompc.greys.core.advisor.ProcessContext;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.Advice;
-import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
@@ -18,10 +19,8 @@ import org.slf4j.Logger;
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.Advice.*;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getCauseMessage;
-import static com.github.ompc.greys.core.util.GaStringUtils.newString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Cmd(name = "watch", sort = 4, summary = "Display the details of specified class and method",
@@ -142,65 +141,18 @@ public class WatchCommand implements Command {
 
                         return new ReflectAdviceListenerAdapter() {
 
-                            private boolean isBefore() {
+                            @Override
+                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
                                 if (isBefore) {
-                                    return true;
-                                }
-
-                                return !isBefore
-                                        && !isFinish
-                                        && !isException
-                                        && !isSuccess;
-                            }
-
-                            @Override
-                            public void before(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args) throws Throwable {
-                                if (isBefore()) {
-                                    watching(newForBefore(loader, clazz, method, target, args));
-                                }
-                            }
-
-                            @Override
-                            public void afterReturning(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Object returnObject) throws Throwable {
-
-                                final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
-                                if (isSuccess) {
                                     watching(advice);
                                 }
-
-                                finishing(advice);
                             }
 
                             @Override
-                            public void afterThrowing(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Throwable throwable) {
-
-                                final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
-                                if (isException) {
-                                    watching(advice);
-                                }
-
-                                finishing(advice);
-                            }
-
-                            private void finishing(Advice advice) {
-                                if (isFinish) {
+                            public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                if( isSuccess
+                                        || isException
+                                        || isFinish) {
                                     watching(advice);
                                 }
                             }
@@ -208,11 +160,6 @@ public class WatchCommand implements Command {
                             private boolean isOverThreshold(int currentTimes) {
                                 return null != threshold
                                         && currentTimes >= threshold;
-                            }
-
-                            private boolean isNeedExpend() {
-                                return null != expend
-                                        && expend >= 0;
                             }
 
                             private boolean isInCondition(Advice advice) {
@@ -228,18 +175,10 @@ public class WatchCommand implements Command {
                                 try {
 
                                     if (isInCondition(advice)) {
-                                        final Object value = newExpress(advice).get(express);
-
-                                        printer.println(
-                                                newString(isNeedExpend()
-                                                        ? new ObjectView(value, expend).draw()
-                                                        : value)
-                                        );
-
+                                        printer.println(new ObjectView(newExpress(advice).get(express), expend).draw());
                                         if (isOverThreshold(timesRef.incrementAndGet())) {
                                             printer.finish();
                                         }
-
                                     }
 
                                 } catch (Exception e) {
