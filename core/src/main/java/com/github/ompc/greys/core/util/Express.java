@@ -53,7 +53,7 @@ public interface Express {
          * @param object 执行对象
          * @return 返回表达式实现
          */
-        public final static Express newExpress(Object object) {
+        public static Express newExpress(Object object) {
             return new GroovyExpress(object);
         }
 

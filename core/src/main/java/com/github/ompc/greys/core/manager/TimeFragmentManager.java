@@ -29,7 +29,7 @@ public interface TimeFragmentManager {
      * @param gmtCreate 记录时间戳
      * @param cost      片段耗时
      * @param stack     片段堆栈
-     * @return
+     * @return 时间片段
      */
     TimeFragment append(int processId, Advice advice, Date gmtCreate, long cost, String stack);
 

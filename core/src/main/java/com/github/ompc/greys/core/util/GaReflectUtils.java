@@ -220,7 +220,7 @@ public class GaReflectUtils {
     /**
      * 获取对象某个成员的值
      *
-     * @param <T>
+     * @param <T> T
      * @param target 目标对象
      * @param field  目标属性
      * @return 目标属性值
@@ -353,9 +353,7 @@ public class GaReflectUtils {
         if (null != declaredMethodArray) {
             final LinkedHashSet<Method> methodSet = new LinkedHashSet<Method>();
             classMethodMap.put(clazz, methodSet);
-            for (Method declaredMethod : declaredMethodArray) {
-                methodSet.add(declaredMethod);
-            }
+            Collections.addAll(methodSet, declaredMethodArray);
         }
 
         //2. 列出父类所有public/protected/default的方法

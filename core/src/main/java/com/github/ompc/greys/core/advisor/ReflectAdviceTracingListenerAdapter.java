@@ -6,7 +6,7 @@ import com.github.ompc.greys.core.util.collection.GaStack;
  * 反射版的方法通知调用通知适配器
  * Created by vlinux on 15/7/24.
  */
-public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessContext, IC extends InnerContext>
+public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessContext<IC>, IC extends InnerContext>
         extends ReflectAdviceListenerAdapter<PC, IC> implements AdviceTracingListener {
 
     @Override
@@ -40,11 +40,11 @@ public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessCont
     /**
      * 默认实现
      */
-    public static class DefaultReflectAdviceTracingListenerAdapter extends ReflectAdviceTracingListenerAdapter<ProcessContext, InnerContext> {
+    public static class DefaultReflectAdviceTracingListenerAdapter extends ReflectAdviceTracingListenerAdapter<ProcessContext<InnerContext>, InnerContext> {
 
         @Override
-        protected ProcessContext newProcessContext() {
-            return new ProcessContext();
+        protected ProcessContext<InnerContext> newProcessContext() {
+            return new ProcessContext<InnerContext>();
         }
 
         @Override
