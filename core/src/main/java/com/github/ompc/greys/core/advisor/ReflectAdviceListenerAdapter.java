@@ -4,7 +4,6 @@ import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaCheckUtils;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.collection.GaStack;
-import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
@@ -142,13 +141,6 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
         }
     };
 
-    protected final ThreadLocal<GaStack<IC>> innerContextStackRef = new ThreadLocal<GaStack<IC>>() {
-        @Override
-        protected GaStack<IC> initialValue() {
-            return new ThreadUnsafeGaStack<IC>();
-        }
-    };
-
     @Override
     final public void before(
             ClassLoader loader, String className, String methodName, String methodDesc,
@@ -157,11 +149,8 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
         final PC processContext = processContextRef.get();
         final IC innerContext = newInnerContext();
 
-        final GaStack<IC> innerContextGaStack = innerContextStackRef.get();
+        final GaStack<IC> innerContextGaStack = processContext.innerContextGaStack;
         innerContextGaStack.push(innerContext);
-
-        // 过程上下文自增
-        processContext.inc();
 
         before(
                 newForBefore(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args),
@@ -177,12 +166,9 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
             Object target, Object[] args, Object returnObject) throws Throwable {
         final Class<?> clazz = toClass(loader, className);
         final PC processContext = processContextRef.get();
-        final GaStack<IC> innerContextGaStack = innerContextStackRef.get();
+        final GaStack<IC> innerContextGaStack = processContext.innerContextGaStack;
         final IC innerContext = innerContextGaStack.pop();
         try {
-
-            // 过程上下文自减少
-            processContext.dec();
 
             // 关闭上下文
             innerContext.close();
@@ -192,11 +178,6 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
             afterFinishing(advice, processContext, innerContext);
 
         } finally {
-
-            // 如果堆栈已经弹空,则直接清除掉上下文
-            if (innerContextGaStack.isEmpty()) {
-                innerContextStackRef.remove();
-            }
 
             // 如果过程上下文已经到了顶层则需要清除掉上下文
             if (processContext.isTop()) {
@@ -213,13 +194,10 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
             Object target, Object[] args, Throwable throwable) throws Throwable {
         final Class<?> clazz = toClass(loader, className);
         final PC processContext = processContextRef.get();
-        final GaStack<IC> innerContextGaStack = innerContextStackRef.get();
+        final GaStack<IC> innerContextGaStack = processContext.innerContextGaStack;
         final IC innerContext = innerContextGaStack.pop();
 
         try {
-
-            // 过程上下文自减少
-            processContext.dec();
 
             // 关闭上下文
             innerContext.close();
@@ -229,11 +207,6 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
             afterFinishing(advice, processContext, innerContext);
 
         } finally {
-
-            // 如果堆栈已经弹空,则直接清除掉上下文
-            if (innerContextGaStack.isEmpty()) {
-                innerContextStackRef.remove();
-            }
 
             // 如果过程上下文已经到了顶层则需要清除掉上下文
             if (processContext.isTop()) {

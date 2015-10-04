@@ -12,7 +12,7 @@ public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessCont
     @Override
     final public void invokeBeforeTracing(String tracingClassName, String tracingMethodName, String tracingMethodDesc) throws Throwable {
         final PC processContext = processContextRef.get();
-        final GaStack<IC> innerContextGaStack = innerContextStackRef.get();
+        final GaStack<IC> innerContextGaStack = processContext.innerContextGaStack;
         final IC innerContext = innerContextGaStack.peek();
         invokeBeforeTracing(tracingClassName, tracingMethodName, tracingMethodDesc, processContext, innerContext);
     }
@@ -20,7 +20,7 @@ public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessCont
     @Override
     final public void invokeAfterTracing(String tracingClassName, String tracingMethodName, String tracingMethodDesc) throws Throwable {
         final PC processContext = processContextRef.get();
-        final GaStack<IC> innerContextGaStack = innerContextStackRef.get();
+        final GaStack<IC> innerContextGaStack = processContext.innerContextGaStack;
         final IC innerContext = innerContextGaStack.peek();
         invokeAfterTracing(tracingClassName, tracingMethodName, tracingMethodDesc, processContext, innerContext);
     }
