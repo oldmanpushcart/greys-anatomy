@@ -142,8 +142,8 @@ public class TraceCommand implements Command {
                             }
 
                             @Override
-                            protected ProcessContext<TraceInnerContext> newProcessContext() {
-                                return new ProcessContext<TraceInnerContext>();
+                            protected ProcessContext newProcessContext() {
+                                return new ProcessContext();
                             }
 
                             @Override

@@ -294,7 +294,7 @@ public class PathTraceCommand implements Command {
 
     }
 
-    private class PathTraceProcessContext extends ProcessContext<InnerContext> {
+    private class PathTraceProcessContext extends ProcessContext {
         boolean isTracing;
         Entity entity;
 
