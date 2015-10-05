@@ -422,7 +422,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 // println msg
                 visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
                 if(StringUtils.isBlank(append.toString()) ) {
-                    visitLdcInsn(msg);
+                    visitLdcInsn(append.append(msg).toString());
                 } else {
                     visitLdcInsn(append.append(" >> ").append(msg).toString());
                 }
