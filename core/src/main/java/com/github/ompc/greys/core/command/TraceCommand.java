@@ -131,8 +131,8 @@ public class TraceCommand implements Command {
                                     }
                                 });
 
-                                entity.view = new TreeView(true, "Tracing for : " + getThreadInfo());
-                                entity.view.begin(advice.clazz.getName() + ":" + advice.method.getName() + "()");
+                                entity.view = new TreeView(true, "Tracing for : " + getThreadInfo())
+                                        .begin(advice.clazz.getName() + ":" + advice.method.getName() + "()");
 
                             }
 

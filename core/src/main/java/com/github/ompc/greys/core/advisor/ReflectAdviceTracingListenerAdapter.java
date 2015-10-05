@@ -9,6 +9,8 @@ import com.github.ompc.greys.core.util.collection.GaStack;
 public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessContext, IC extends InnerContext>
         extends ReflectAdviceListenerAdapter<PC, IC> implements AdviceTracingListener {
 
+
+
     @Override
     final public void invokeBeforeTracing(String tracingClassName, String tracingMethodName, String tracingMethodDesc) throws Throwable {
         final ProcessContextBound bound = processContextBoundRef.get();
