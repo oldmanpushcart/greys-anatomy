@@ -15,7 +15,7 @@ import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
-import com.github.ompc.greys.core.util.PlayProcessIdHolder;
+import com.github.ompc.greys.core.util.PlayIndexIdHolder;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.view.ObjectView;
 import com.github.ompc.greys.core.view.TableView;
@@ -444,8 +444,8 @@ public class TimeTunnelCommand implements Command {
                 final long cost;
                 Advice reAdvice = null;
 
-                // 注入processId
-                PlayProcessIdHolder.getInstance().set(timeFragment.processId);
+                // 注入时间片段id
+                PlayIndexIdHolder.getInstance().set(timeFragment.id);
 
                 try {
                     method.setAccessible(true);
@@ -481,8 +481,8 @@ public class TimeTunnelCommand implements Command {
                     method.setAccessible(accessible);
                     cost = System.currentTimeMillis() - beginTimestamp;
 
-                    // 清除processId
-                    PlayProcessIdHolder.getInstance().remove();
+                    // 清除时间片段id
+                    PlayIndexIdHolder.getInstance().remove();
                 }
 
                 final TimeFragment reTimeFragment = new TimeFragment(
