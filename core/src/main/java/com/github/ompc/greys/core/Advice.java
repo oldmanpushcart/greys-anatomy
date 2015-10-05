@@ -1,6 +1,7 @@
 package com.github.ompc.greys.core;
 
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.PlayProcessIdHolder;
 
 /**
  * 通知点
@@ -22,6 +23,10 @@ public final class Advice {
     public final boolean isBefore;
     public final boolean isThrow;
     public final boolean isReturn;
+
+    // 回放过程processId
+    // use for TimeTunnelCommand.doPlay()
+    public final Integer playProcessId;
 
     /**
      * for finish
@@ -54,6 +59,8 @@ public final class Advice {
         isBefore = (access & ACCESS_BEFORE) == ACCESS_BEFORE;
         isThrow = (access & ACCESS_AFTER_THROWING) == ACCESS_AFTER_THROWING;
         isReturn = (access & ACCESS_AFTER_RETUNING) == ACCESS_AFTER_RETUNING;
+
+        playProcessId = PlayProcessIdHolder.getInstance().get();
     }
 
     /**

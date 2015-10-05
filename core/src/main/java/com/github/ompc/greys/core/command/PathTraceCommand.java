@@ -199,12 +199,6 @@ public class PathTraceCommand implements Command {
                                 final Entity entity = processContext.getEntity();
                                 entity.deep--;
 
-                                // 是否有匹配到条件
-                                // 之所以在这里主要是需要照顾到上下文参数对齐
-                                if (!isInCondition(advice)) {
-                                    return;
-                                }
-
                                 // add throw exception
                                 if (advice.isThrow) {
                                     entity.view
@@ -231,16 +225,20 @@ public class PathTraceCommand implements Command {
 
                                 if (entity.deep <= 0) {
 
-                                    // 输出打印内容
-                                    if (isTimeTunnel) {
-                                        printer.println(entity.view.draw() + entity.tfView.draw());
-                                    } else {
-                                        printer.println(entity.view.draw());
-                                    }
+                                    // 是否有匹配到条件
+                                    // 之所以在这里主要是需要照顾到上下文参数对齐
+                                    if (isInCondition(advice)) {
+                                        // 输出打印内容
+                                        if (isTimeTunnel) {
+                                            printer.println(entity.view.draw() + entity.tfView.draw());
+                                        } else {
+                                            printer.println(entity.view.draw());
+                                        }
 
-                                    // 超过调用限制就关闭掉跟踪
-                                    if (isOverThreshold(timesRef.incrementAndGet())) {
-                                        printer.finish();
+                                        // 超过调用限制就关闭掉跟踪
+                                        if (isOverThreshold(timesRef.incrementAndGet())) {
+                                            printer.finish();
+                                        }
                                     }
 
                                     processContext.isTracing = false;
