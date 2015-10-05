@@ -35,7 +35,7 @@ public class ObjectView implements View {
 
     @Override
     public String draw() {
-        if( isNeedExpend() ) {
+        if (isNeedExpend()) {
             if (GlobalOptions.isUsingJson) {
                 return new Gson().toJson(object);
             }
@@ -517,7 +517,9 @@ public class ObjectView implements View {
                     if (null != fields) {
                         for (Field field : fields) {
 
-                            field.setAccessible(true);
+                            if (!field.isAccessible()) {
+                                field.setAccessible(true);
+                            }
 
                             try {
 

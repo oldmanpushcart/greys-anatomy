@@ -8,7 +8,6 @@
         <artifactId>greys</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
-    <groupId>com.github.ompc.greys</groupId>
     <artifactId>greys-core</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>core</name>
