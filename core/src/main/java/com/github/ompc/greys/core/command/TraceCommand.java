@@ -93,11 +93,6 @@ public class TraceCommand implements Command {
                     // 访问计数器
                     private final AtomicInteger timesRef = new AtomicInteger();
 
-                    // 跟踪深度
-                    private int tracingDeep = 0;
-
-                    private static final String TRACE_ENTITY_KEY = "TRACE_ENTITY_KEY";
-
                     @Override
                     public AdviceListener getAdviceListener() {
                         return new ReflectAdviceTracingListenerAdapter<ProcessContext, TraceInnerContext>() {
@@ -111,7 +106,7 @@ public class TraceCommand implements Command {
                                     TraceInnerContext innerContext) throws Throwable {
                                 final Entity entity = innerContext.getEntity();
                                 entity.view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
-                                tracingDeep++;
+                                entity.tracingDeep++;
                             }
 
                             @Override
@@ -123,7 +118,7 @@ public class TraceCommand implements Command {
                                     TraceInnerContext innerContext) throws Throwable {
                                 final Entity entity = innerContext.getEntity();
                                 entity.view.end();
-                                tracingDeep--;
+                                entity.tracingDeep--;
                             }
 
                             @Override
@@ -163,7 +158,7 @@ public class TraceCommand implements Command {
                                 entity.view.begin("throw:" + advice.throwExp.getClass().getName() + "()").end();
 
                                 // 这里将堆栈的end全部补上
-                                while (tracingDeep-- >= 0) {
+                                while (entity.tracingDeep-- >= 0) {
                                     entity.view.end();
                                 }
 
@@ -204,7 +199,11 @@ public class TraceCommand implements Command {
     }
 
     private class Entity {
+
         TreeView view;
+
+        // 跟踪深度
+        int tracingDeep = 0;
     }
 
     private class TraceInnerContext extends InnerContext {

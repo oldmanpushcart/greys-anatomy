@@ -1,5 +1,5 @@
-import com.github.ompc.greys.command.ScriptSupportCommand
-import com.github.ompc.greys.util.Advice
+import com.github.ompc.greys.core.command.ScriptSupportCommand
+import com.github.ompc.greys.core.Advice
 
 import static java.lang.String.format
 
