@@ -35,6 +35,14 @@ public interface Express {
     boolean is(String express) throws ExpressException;
 
     /**
+     * 绑定对象
+     *
+     * @param object 待绑定对象
+     * @return this
+     */
+    Express bind(Object object);
+
+    /**
      * 绑定变量
      *
      * @param name  变量名
@@ -43,11 +51,25 @@ public interface Express {
      */
     Express bind(String name, Object value);
 
+    /**
+     * 重置整个表达式
+     *
+     * @return this
+     */
+    Express reset();
+
 
     /**
      * 表达式工厂类
      */
     class ExpressFactory {
+
+        private static final ThreadLocal<Express> expressRef = new ThreadLocal<Express>() {
+            @Override
+            protected Express initialValue() {
+                return new GroovyExpress();
+            }
+        };
 
         /**
          * 构造表达式执行类
@@ -56,7 +78,7 @@ public interface Express {
          * @return 返回表达式实现
          */
         public static Express newExpress(Object object) {
-            return new GroovyExpress(object);
+            return expressRef.get().reset().bind(object);
         }
 
     }
@@ -98,7 +120,7 @@ public interface Express {
             }
         }
 
-        Express bind(Advice a) {
+        private Express bind(Advice a) {
             return bind("loader", unsafe.getObject(a, OFFSET_OF_ADVICE_LOADER))
                     .bind("clazz", unsafe.getObject(a, OFFSET_OF_ADVICE_CLAZZ))
                     .bind("method", unsafe.getObject(a, OFFSET_OF_ADVICE_METHOD))
@@ -113,7 +135,8 @@ public interface Express {
                     ;
         }
 
-        Express bind(Object object) {
+        @Override
+        public Express bind(Object object) {
 
             if (object instanceof Advice) {
                 bind((Advice) object);
@@ -140,9 +163,8 @@ public interface Express {
         private final GroovyShell shell;
         private final Binding bind;
 
-        public GroovyExpress(Object object) {
+        public GroovyExpress() {
             bind = new Binding();
-            bind(object);
             shell = new GroovyShell(bind);
         }
 
@@ -170,6 +192,13 @@ public interface Express {
         @Override
         public Express bind(String name, Object value) {
             bind.setVariable(name, value);
+            return this;
+        }
+
+        @Override
+        public Express reset() {
+            bind.getVariables().clear();
+            shell.resetLoadedClasses();
             return this;
         }
 
