@@ -1,9 +1,8 @@
 package com.github.ompc.greys.core.view;
 
-import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.Advice;
-
-import java.text.SimpleDateFormat;
+import com.github.ompc.greys.core.TimeFragment;
+import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
 
 import static com.github.ompc.greys.core.util.GaStringUtils.hashCodeToHexString;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
@@ -93,7 +92,7 @@ public class TimeFragmentTableView implements View {
         tableView.addRow(
                 timeFragment.id,
                 timeFragment.processId,
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(timeFragment.gmtCreate),
+                SimpleDateFormatHolder.getInstance().format(timeFragment.gmtCreate),
                 timeFragment.cost,
                 advice.isReturn,
                 advice.isThrow,

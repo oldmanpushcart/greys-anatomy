@@ -1,13 +1,13 @@
 package com.github.ompc.greys.core.view;
 
 import com.github.ompc.greys.core.GlobalOptions;
+import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
 import com.google.gson.Gson;
 
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.github.ompc.greys.core.util.GaStringUtils.newString;
@@ -501,7 +501,7 @@ public class ObjectView implements View {
 
             // Date输出
             else if (Date.class.isInstance(obj)) {
-                buf.append(format("@%s[%s]", className, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS").format(obj)));
+                buf.append(format("@%s[%s]", className, SimpleDateFormatHolder.getInstance().format((Date) obj)));
             }
 
             // 普通Object输出

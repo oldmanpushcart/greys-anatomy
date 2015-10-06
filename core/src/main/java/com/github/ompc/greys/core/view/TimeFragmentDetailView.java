@@ -1,13 +1,13 @@
 package com.github.ompc.greys.core.view;
 
-import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.Advice;
+import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.util.GaStringUtils;
+import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
 import com.github.ompc.greys.core.view.TableView.ColumnDefine;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.SimpleDateFormat;
 
 import static com.github.ompc.greys.core.view.TableView.Align.LEFT;
 import static com.github.ompc.greys.core.view.TableView.Align.RIGHT;
@@ -40,7 +40,6 @@ public class TimeFragmentDetailView implements View {
         final Advice advice = timeFragment.advice;
         final String className = advice.clazz.getName();
         final String methodName = advice.method.getName();
-        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         final TableView view = new TableView(
                 new ColumnDefine[]{
@@ -51,7 +50,7 @@ public class TimeFragmentDetailView implements View {
                 .padding(1)
                 .addRow("INDEX", timeFragment.id)
                 .addRow("PROCESS-ID", timeFragment.processId)
-                .addRow("GMT-CREATE", sdf.format(timeFragment.gmtCreate))
+                .addRow("GMT-CREATE", SimpleDateFormatHolder.getInstance().format(timeFragment.gmtCreate))
                 .addRow("COST(ms)", timeFragment.cost)
                 .addRow("OBJECT", GaStringUtils.hashCodeToHexString(advice.target))
                 .addRow("CLASS", className)
@@ -64,13 +63,7 @@ public class TimeFragmentDetailView implements View {
 
             int paramIndex = 0;
             for (Object param : advice.params) {
-
-                if (isNeedExpend()) {
-                    view.addRow("PARAMETERS[" + paramIndex++ + "]", new ObjectView(param, expend).draw());
-                } else {
-                    view.addRow("PARAMETERS[" + paramIndex++ + "]", param);
-                }
-
+                view.addRow("PARAMETERS[" + paramIndex++ + "]", new ObjectView(param, expend).draw());
             }
 
         }
@@ -80,9 +73,7 @@ public class TimeFragmentDetailView implements View {
 
             view.addRow(
                     "RETURN-OBJ",
-                    isNeedExpend()
-                            ? new ObjectView(advice.returnObj, expend).draw()
-                            : advice.returnObj
+                    new ObjectView(advice.returnObj, expend).draw()
             );
 
         }

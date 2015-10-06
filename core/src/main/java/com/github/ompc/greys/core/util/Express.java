@@ -1,11 +1,13 @@
 package com.github.ompc.greys.core.util;
 
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.exception.ExpressException;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 
 import java.lang.reflect.Field;
 
+import static com.github.ompc.greys.core.util.UnsafeHolder.unsafe;
 import static org.apache.commons.lang3.reflect.FieldUtils.readDeclaredField;
 
 /**
@@ -60,28 +62,94 @@ public interface Express {
     }
 
 
+    abstract class UnsafeBindSupport implements Express {
+
+        // -- unsafe offset : Advice --
+
+        private static final long OFFSET_OF_ADVICE_LOADER;
+        private static final long OFFSET_OF_ADVICE_CLAZZ;
+        private static final long OFFSET_OF_ADVICE_METHOD;
+        private static final long OFFSET_OF_ADVICE_TARGET;
+        private static final long OFFSET_OF_ADVICE_PARAMS;
+        private static final long OFFSET_OF_ADVICE_RETURN_OBJ;
+        private static final long OFFSET_OF_ADVICE_THROW_EXP;
+        private static final long OFFSET_OF_ADVICE_IS_BEFORE;
+        private static final long OFFSET_OF_ADVICE_IS_THROW;
+        private static final long OFFSET_OF_ADVICE_IS_RETURN;
+        private static final long OFFSET_OF_PLAY_INDEX;
+
+        // init advice offset
+
+        static {
+            try {
+                OFFSET_OF_ADVICE_LOADER = unsafe.objectFieldOffset(Advice.class.getDeclaredField("loader"));
+                OFFSET_OF_ADVICE_CLAZZ = unsafe.objectFieldOffset(Advice.class.getDeclaredField("clazz"));
+                OFFSET_OF_ADVICE_METHOD = unsafe.objectFieldOffset(Advice.class.getDeclaredField("method"));
+                OFFSET_OF_ADVICE_TARGET = unsafe.objectFieldOffset(Advice.class.getDeclaredField("target"));
+                OFFSET_OF_ADVICE_PARAMS = unsafe.objectFieldOffset(Advice.class.getDeclaredField("params"));
+                OFFSET_OF_ADVICE_RETURN_OBJ = unsafe.objectFieldOffset(Advice.class.getDeclaredField("returnObj"));
+                OFFSET_OF_ADVICE_THROW_EXP = unsafe.objectFieldOffset(Advice.class.getDeclaredField("throwExp"));
+                OFFSET_OF_ADVICE_IS_BEFORE = unsafe.objectFieldOffset(Advice.class.getDeclaredField("isBefore"));
+                OFFSET_OF_ADVICE_IS_THROW = unsafe.objectFieldOffset(Advice.class.getDeclaredField("isThrow"));
+                OFFSET_OF_ADVICE_IS_RETURN = unsafe.objectFieldOffset(Advice.class.getDeclaredField("isReturn"));
+                OFFSET_OF_PLAY_INDEX = unsafe.objectFieldOffset(Advice.class.getDeclaredField("playIndex"));
+            } catch (Throwable e) {
+                throw new Error(e);
+            }
+        }
+
+        Express bind(Advice a) {
+            return bind("loader", unsafe.getObject(a, OFFSET_OF_ADVICE_LOADER))
+                    .bind("clazz", unsafe.getObject(a, OFFSET_OF_ADVICE_CLAZZ))
+                    .bind("method", unsafe.getObject(a, OFFSET_OF_ADVICE_METHOD))
+                    .bind("target", unsafe.getObject(a, OFFSET_OF_ADVICE_TARGET))
+                    .bind("params", unsafe.getObject(a, OFFSET_OF_ADVICE_PARAMS))
+                    .bind("returnObj", unsafe.getObject(a, OFFSET_OF_ADVICE_RETURN_OBJ))
+                    .bind("throwExp", unsafe.getObject(a, OFFSET_OF_ADVICE_THROW_EXP))
+                    .bind("isBefore", unsafe.getBoolean(a, OFFSET_OF_ADVICE_IS_BEFORE))
+                    .bind("isThrow", unsafe.getBoolean(a, OFFSET_OF_ADVICE_IS_THROW))
+                    .bind("isReturn", unsafe.getBoolean(a, OFFSET_OF_ADVICE_IS_RETURN))
+                    .bind("playIndex", unsafe.getObject(a, OFFSET_OF_PLAY_INDEX))
+                    ;
+        }
+
+        Express bind(Object object) {
+
+            if (object instanceof Advice) {
+                bind((Advice) object);
+            } else {
+                for (Field field : object.getClass().getDeclaredFields()) {
+                    try {
+                        bind(field.getName(), readDeclaredField(object, field.getName(), true));
+                    } catch (IllegalAccessException e) {
+                        // ignore
+                    }
+                }
+            }
+
+            return this;
+        }
+
+    }
+
     /**
      * Groovy实现的表达式
      */
-    class GroovyExpress implements Express {
+    class GroovyExpress extends UnsafeBindSupport implements Express {
 
+        private final GroovyShell shell;
         private final Binding bind;
 
         public GroovyExpress(Object object) {
             bind = new Binding();
-            for (Field field : object.getClass().getDeclaredFields()) {
-                try {
-                    bind.setVariable(field.getName(), readDeclaredField(object, field.getName(), true));
-                } catch (IllegalAccessException e) {
-                    // ignore
-                }
-            }
+            bind(object);
+            shell = new GroovyShell(bind);
         }
 
         @Override
         public Object get(String express) throws ExpressException {
             try {
-                return new GroovyShell(bind).evaluate(express);
+                return shell.evaluate(express);
             } catch (Exception e) {
                 throw new ExpressException(express, e);
             }

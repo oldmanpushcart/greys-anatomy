@@ -13,11 +13,11 @@ import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
+import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
 import com.github.ompc.greys.core.view.TableView;
 
 import java.lang.instrument.Instrumentation;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.Timer;
@@ -225,7 +225,7 @@ public class MonitorCommand implements Command {
                                                 final DecimalFormat df = new DecimalFormat("0.00");
 
                                                 tableView.addRow(
-                                                        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+                                                        SimpleDateFormatHolder.getInstance().format(new Date()),
                                                         entry.getKey().className,
                                                         entry.getKey().methodName,
                                                         data.total,
