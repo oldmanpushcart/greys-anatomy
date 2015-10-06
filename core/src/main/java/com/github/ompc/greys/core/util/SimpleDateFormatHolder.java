@@ -14,16 +14,13 @@ public class SimpleDateFormatHolder extends ThreadLocal<SimpleDateFormat> {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     }
 
-    private static volatile SimpleDateFormatHolder instance = null;
+    private static final SimpleDateFormatHolder instance = new SimpleDateFormatHolder();
+
+    private SimpleDateFormatHolder() {
+        //
+    }
 
     public static SimpleDateFormatHolder getInstance() {
-        if (null == instance) {
-            synchronized (SimpleDateFormatHolder.class) {
-                if (instance == null) {
-                    instance = new SimpleDateFormatHolder();
-                }
-            }
-        }
         return instance;
     }
 

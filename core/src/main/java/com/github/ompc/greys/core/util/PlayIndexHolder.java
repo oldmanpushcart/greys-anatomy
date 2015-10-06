@@ -6,17 +6,13 @@ package com.github.ompc.greys.core.util;
  */
 public class PlayIndexHolder extends ThreadLocal<Integer> {
 
-    private static volatile PlayIndexHolder instance = null;
+    private static final PlayIndexHolder instance = new PlayIndexHolder();
+
+    private PlayIndexHolder() {
+        //
+    }
 
     public static PlayIndexHolder getInstance() {
-        if (null == instance) {
-            synchronized (PlayIndexHolder.class) {
-                if (instance == null) {
-                    instance = new PlayIndexHolder();
-                }
-            }
-        }
-
         return instance;
     }
 
