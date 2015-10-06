@@ -1,7 +1,7 @@
 package com.github.ompc.greys.core.util;
 
 import java.lang.instrument.Instrumentation;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -17,14 +17,14 @@ public class SearchUtils {
      * @param classNameMatcher 类名匹配
      * @return 匹配的类集合
      */
-    public static Set<Class<?>> searchClass(Instrumentation inst, Matcher classNameMatcher) {
-        final Set<Class<?>> matches = new HashSet<Class<?>>();
+    public static LinkedHashSet<Class<?>> searchClass(Instrumentation inst, Matcher classNameMatcher) {
+        final LinkedHashSet<Class<?>> matchedSet = new LinkedHashSet<Class<?>>();
         for (Class<?> clazz : inst.getAllLoadedClasses()) {
             if (classNameMatcher.matching(clazz.getName())) {
-                matches.add(clazz);
+                matchedSet.add(clazz);
             }
         }
-        return matches;
+        return matchedSet;
     }
 
     /**
@@ -34,17 +34,27 @@ public class SearchUtils {
      * @param classSet 当前类集合
      * @return 匹配的子类集合
      */
-    public static Set<Class<?>> searchSubClass(Instrumentation inst, Set<Class<?>> classSet) {
-        final Set<Class<?>> matches = new HashSet<Class<?>>();
+    private static LinkedHashSet<Class<?>> searchSubClass(Instrumentation inst, Set<Class<?>> classSet) {
+        final LinkedHashSet<Class<?>> matchedSet = new LinkedHashSet<Class<?>>();
         for (Class<?> clazz : inst.getAllLoadedClasses()) {
             for (Class<?> superClass : classSet) {
                 if (superClass.isAssignableFrom(clazz)) {
-                    matches.add(clazz);
+                    matchedSet.add(clazz);
                     break;
                 }
             }
         }
-        return matches;
+        return matchedSet;
+    }
+
+    /**
+     * 根据类名匹配，搜已经被JVM加载的类及其子类
+     * @param inst inst
+     * @param classNameMatcher 类名匹配
+     * @return 匹配的类集合
+     */
+    public static LinkedHashSet<Class<?>> searchClassWithSubClass(Instrumentation inst, Matcher classNameMatcher) {
+        return searchSubClass(inst, searchClass(inst, classNameMatcher));
     }
 
 }

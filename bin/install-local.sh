@@ -27,7 +27,7 @@ if [[ ! -x ${GREYS_LIB_HOME} ]]; then
     cp *.jar ${GREYS_LIB_HOME}/
 
     # make it -x
-    chmod +x ./greys.sh
+    # chmod +x ./greys.sh
 
 fi
 

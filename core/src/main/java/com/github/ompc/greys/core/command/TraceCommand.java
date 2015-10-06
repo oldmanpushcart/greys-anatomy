@@ -1,24 +1,21 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.GlobalOptions;
-import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.ReflectAdviceTracingListenerAdapter;
+import com.github.ompc.greys.core.Advice;
+import com.github.ompc.greys.core.advisor.*;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.view.TreeView;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Advice;
-import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
+import com.github.ompc.greys.core.view.TreeView;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
-import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
+import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
 import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -28,10 +25,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  */
 @Cmd(name = "trace", sort = 6, summary = "Display the detailed thread stack of specified class and method",
         eg = {
-            "trace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
-            "trace org.apache.commons.lang.StringUtils isBlank",
-            "trace *StringUtils isBlank",
-            "trace *StringUtils isBlank params[0].length==1"
+                "trace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
+                "trace org.apache.commons.lang.StringUtils isBlank",
+                "trace *StringUtils isBlank",
+                "trace *StringUtils isBlank params[0].length==1"
         })
 public class TraceCommand implements Command {
 
@@ -65,25 +62,17 @@ public class TraceCommand implements Command {
     )
     private String conditionExpress;
 
-    @NamedArg(name = "S", summary = "Include subclass")
-    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
-
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
-    private Integer numberOfLimit;
-    
+    private Integer threshold;
+
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(classPattern)
-                : new Matcher.WildcardMatcher(classPattern);
-
-        final Matcher methodNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(methodPattern)
-                : new Matcher.WildcardMatcher(methodPattern);
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         return new GetEnhancerAction() {
 
@@ -91,8 +80,6 @@ public class TraceCommand implements Command {
             public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
-                    private final AtomicInteger times = new AtomicInteger();
-                    
                     @Override
                     public Matcher getClassNameMatcher() {
                         return classNameMatcher;
@@ -103,91 +90,81 @@ public class TraceCommand implements Command {
                         return methodNameMatcher;
                     }
 
-                    @Override
-                    public boolean isIncludeSub() {
-                        return isIncludeSub;
-                    }
+                    // 访问计数器
+                    private final AtomicInteger timesRef = new AtomicInteger();
 
                     @Override
                     public AdviceListener getAdviceListener() {
-                        return new ReflectAdviceTracingListenerAdapter() {
-
-                            private final ThreadLocal<Entity> threadBoundEntity = new ThreadLocal<Entity>() {
-
-                                @Override
-                                protected Entity initialValue() {
-                                    final Entity e = new Entity();
-                                    e.view = createTreeView();
-                                    e.deep = 0;
-                                    return e;
-                                }
-
-                            };
-
-                            @Override
-                            public void create() {
-
-                            }
-
-                            @Override
-                            public void destroy() {
-                                threadBoundEntity.remove();
-                            }
+                        return new ReflectAdviceTracingListenerAdapter<ProcessContext, TraceInnerContext>() {
 
                             @Override
                             public void invokeBeforeTracing(
                                     String tracingClassName,
                                     String tracingMethodName,
-                                    String tracingMethodDesc) throws Throwable {
-                                threadBoundEntity.get().view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                    String tracingMethodDesc,
+                                    ProcessContext processContext,
+                                    TraceInnerContext innerContext) throws Throwable {
+                                final Entity entity = innerContext.getEntity();
+                                entity.view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                entity.tracingDeep++;
                             }
 
                             @Override
                             public void invokeAfterTracing(
                                     String tracingClassName,
                                     String tracingMethodName,
-                                    String tracingMethodDesc) throws Throwable {
-                                threadBoundEntity.get().view.end();
+                                    String tracingMethodDesc,
+                                    ProcessContext processContext,
+                                    TraceInnerContext innerContext) throws Throwable {
+                                final Entity entity = innerContext.getEntity();
+                                entity.view.end();
+                                entity.tracingDeep--;
                             }
 
                             @Override
-                            public void before(
-                                    ClassLoader loader, 
-                                    Class<?> clazz, 
-                                    GaMethod method, 
-                                    Object target, 
-                                    Object[] args) throws Throwable {
-                                threadBoundEntity.get().view.begin(clazz.getName() + ":" + method.getName() + "()");
-                                threadBoundEntity.get().deep++;
+                            public void before(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
+
+                                final Entity entity = innerContext.getEntity(new InitCallback<Entity>() {
+                                    @Override
+                                    public Entity init() {
+                                        return new Entity();
+                                    }
+                                });
+
+                                entity.view = new TreeView(true, "Tracing for : " + getThreadInfo())
+                                        .begin(advice.clazz.getName() + ":" + advice.method.getName() + "()");
+
                             }
 
                             @Override
-                            public void afterReturning(
-                                    ClassLoader loader, 
-                                    Class<?> clazz, 
-                                    GaMethod method, 
-                                    Object target, 
-                                    Object[] args, 
-                                    Object returnObject) throws Throwable {
-                                threadBoundEntity.get().view.end();
-                                final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
-                                finishing(advice);
+                            protected ProcessContext newProcessContext() {
+                                return new ProcessContext();
                             }
 
                             @Override
-                            public void afterThrowing(
-                                    ClassLoader loader, 
-                                    Class<?> clazz, 
-                                    GaMethod method, 
-                                    Object target, 
-                                    Object[] args, 
-                                    Throwable throwable) throws Throwable {
-                                threadBoundEntity.get().view.begin("throw:" + throwable.getClass().getName() + "()").end().end();
-                                final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
-                                finishing(advice);
+                            protected TraceInnerContext newInnerContext() {
+                                return new TraceInnerContext();
                             }
 
-                            private boolean isPrintIfNecessary(Advice advice) {
+                            @Override
+                            public void afterReturning(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
+                                final Entity entity = innerContext.getEntity();
+                                entity.view.end();
+                            }
+
+                            @Override
+                            public void afterThrowing(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
+                                final Entity entity = innerContext.getEntity();
+                                entity.view.begin("throw:" + advice.throwExp.getClass().getName() + "()").end();
+
+                                // 这里将堆栈的end全部补上
+                                while (entity.tracingDeep-- >= 0) {
+                                    entity.view.end();
+                                }
+
+                            }
+
+                            private boolean isInCondition(Advice advice) {
                                 try {
                                     return isBlank(conditionExpress)
                                             || newExpress(advice).is(conditionExpress);
@@ -195,25 +172,21 @@ public class TraceCommand implements Command {
                                     return false;
                                 }
                             }
-                            
-                            private boolean isLimited(int currentTimes) {
-                                return null != numberOfLimit
-                                        && currentTimes >= numberOfLimit;
+
+                            private boolean isOverThreshold(int currentTimes) {
+                                return null != threshold
+                                        && currentTimes >= threshold;
                             }
 
-                            private void finishing(Advice advice) {
-                                if (--threadBoundEntity.get().deep == 0) {
-                                    
-                                    if (isPrintIfNecessary(advice)) {
-                                        final boolean isF = isLimited(times.incrementAndGet());
-                                        printer.println(isF, threadBoundEntity.get().view.draw());
+                            @Override
+                            public void afterFinishing(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
+                                if (isInCondition(advice)) {
+                                    final Entity entity = innerContext.getEntity();
+                                    printer.println(entity.view.draw());
+                                    if (isOverThreshold(timesRef.incrementAndGet())) {
+                                        printer.finish();
                                     }
-                                    threadBoundEntity.remove();
                                 }
-                            }
-
-                            private TreeView createTreeView() {
-                                return new TreeView(true, "Tracing...");
                             }
 
                         };
@@ -225,13 +198,29 @@ public class TraceCommand implements Command {
 
     }
 
-    /**
-     * 用于在ThreadLocal中传递的实体
-     */
-    private static class Entity {
+    private class Entity {
 
         TreeView view;
-        int deep;
+
+        // 跟踪深度
+        int tracingDeep = 0;
+    }
+
+    private class TraceInnerContext extends InnerContext {
+
+        Entity entity;
+
+        Entity getEntity(InitCallback<Entity> initCallback) {
+            if (null == entity) {
+                return entity = initCallback.init();
+            } else {
+                return entity;
+            }
+        }
+
+        Entity getEntity() {
+            return entity;
+        }
 
     }
 

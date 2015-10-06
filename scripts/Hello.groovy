@@ -1,4 +1,4 @@
-import com.github.ompc.greys.command.ScriptSupportCommand
+import com.github.ompc.greys.core.command.ScriptSupportCommand
 
 /**
  * 输出一个简单的Hello World!

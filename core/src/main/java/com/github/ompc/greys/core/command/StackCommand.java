@@ -1,22 +1,21 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.GlobalOptions;
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
+import com.github.ompc.greys.core.advisor.InnerContext;
+import com.github.ompc.greys.core.advisor.ProcessContext;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Advice;
-import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.util.Advice.newForAfterRetuning;
-import static com.github.ompc.greys.core.util.Advice.newForAfterThrowing;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -66,25 +65,17 @@ public class StackCommand implements Command {
     )
     private String conditionExpress;
 
-    @NamedArg(name = "S", summary = "Include subclass")
-    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
-
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
-    private Integer numberOfLimit;
+    private Integer threshold;
 
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(classPattern)
-                : new Matcher.WildcardMatcher(classPattern);
-
-        final Matcher methodNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(methodPattern)
-                : new Matcher.WildcardMatcher(methodPattern);
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         return new GetEnhancerAction() {
 
@@ -93,6 +84,9 @@ public class StackCommand implements Command {
                 return new GetEnhancer() {
 
                     private final AtomicInteger times = new AtomicInteger();
+
+                    // 针对stack命令调整
+                    private static final int STACK_DEEP = 9;
 
                     @Override
                     public Matcher getClassNameMatcher() {
@@ -105,51 +99,25 @@ public class StackCommand implements Command {
                     }
 
                     @Override
-                    public boolean isIncludeSub() {
-                        return isIncludeSub;
-                    }
-
-                    @Override
                     public AdviceListener getAdviceListener() {
-                        return new ReflectAdviceListenerAdapter() {
-
-                            private final ThreadLocal<String> stackThreadLocal = new ThreadLocal<String>();
+                        return new ReflectAdviceListenerAdapter<ProcessContext, StackInnerContext>() {
 
                             @Override
-                            public void before(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args) throws Throwable {
-                                stackThreadLocal.set(getStack());
+                            protected ProcessContext newProcessContext() {
+                                return new ProcessContext();
                             }
 
                             @Override
-                            public void afterThrowing(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Throwable throwable) throws Throwable {
-                                final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
-                                finishing(advice);
+                            protected StackInnerContext newInnerContext() {
+                                return new StackInnerContext();
                             }
 
                             @Override
-                            public void afterReturning(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Object returnObject) throws Throwable {
-                                final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
-                                finishing(advice);
+                            public void before(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
+                                innerContext.setStack(getStack(STACK_DEEP));
                             }
 
-                            private boolean isPrintIfNecessary(Advice advice) {
+                            private boolean isInCondition(Advice advice) {
                                 try {
                                     return isBlank(conditionExpress)
                                             || newExpress(advice).is(conditionExpress);
@@ -158,15 +126,18 @@ public class StackCommand implements Command {
                                 }
                             }
 
-                            private boolean isLimited(int currentTimes) {
-                                return null != numberOfLimit
-                                        && currentTimes >= numberOfLimit;
+                            private boolean isOverThreshold(int currentTimes) {
+                                return null != threshold
+                                        && currentTimes >= threshold;
                             }
 
-                            private void finishing(final Advice advice) {
-                                if (isPrintIfNecessary(advice)) {
-                                    final boolean isF = isLimited(times.incrementAndGet());
-                                    printer.println(isF, stackThreadLocal.get());
+                            @Override
+                            public void afterFinishing(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
+                                if (isInCondition(advice)) {
+                                    printer.println(innerContext.getStack());
+                                    if (isOverThreshold(times.incrementAndGet())) {
+                                        printer.finish();
+                                    }
                                 }
                             }
 
@@ -176,6 +147,19 @@ public class StackCommand implements Command {
             }
 
         };
+    }
+
+    private class StackInnerContext extends InnerContext {
+
+        private String stack;
+
+        public String getStack() {
+            return stack;
+        }
+
+        public void setStack(String stack) {
+            this.stack = stack;
+        }
     }
 
 }

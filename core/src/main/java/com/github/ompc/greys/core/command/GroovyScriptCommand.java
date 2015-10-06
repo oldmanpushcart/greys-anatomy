@@ -1,20 +1,21 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.GlobalOptions;
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
+import com.github.ompc.greys.core.advisor.InnerContext;
+import com.github.ompc.greys.core.advisor.ProcessContext;
+import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter.DefaultReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import groovy.lang.GroovyClassLoader;
 
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 
-import static com.github.ompc.greys.core.util.Advice.*;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
@@ -38,14 +39,14 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
     @IndexArg(index = 2, name = "script-filepath", summary = "Filepath of Groovy script")
     private String scriptFilepath;
 
-    @NamedArg(name = "S", summary = "Include subclass")
-    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
-
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
     @Override
     public Action getAction() {
+
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         final File scriptFile = new File(scriptFilepath);
         if (!scriptFile.exists()
@@ -91,27 +92,18 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
                 return new GetEnhancer() {
                     @Override
                     public Matcher getClassNameMatcher() {
-                        return isRegEx
-                                ? new Matcher.RegexMatcher(classPattern)
-                                : new Matcher.WildcardMatcher(classPattern);
+                        return classNameMatcher;
                     }
 
                     @Override
                     public Matcher getMethodNameMatcher() {
-                        return isRegEx
-                                ? new Matcher.RegexMatcher(methodPattern)
-                                : new Matcher.WildcardMatcher(methodPattern);
-                    }
-
-                    @Override
-                    public boolean isIncludeSub() {
-                        return isIncludeSub;
+                        return methodNameMatcher;
                     }
 
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new ReflectAdviceListenerAdapter() {
+                        return new DefaultReflectAdviceListenerAdapter() {
 
                             @Override
                             public void create() {
@@ -124,27 +116,18 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
                             }
 
                             @Override
-                            public void before(
-                                    ClassLoader loader, Class<?> clazz, GaMethod method,
-                                    Object target, Object[] args) throws Throwable {
-                                scriptListener.before(output,
-                                        newForBefore(loader, clazz, method, target, args));
+                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                scriptListener.before(output, advice);
                             }
 
                             @Override
-                            public void afterReturning(
-                                    ClassLoader loader, Class<?> clazz, GaMethod method,
-                                    Object target, Object[] args, Object returnObject) throws Throwable {
-                                scriptListener.afterReturning(output,
-                                        newForAfterRetuning(loader, clazz, method, target, args, returnObject));
+                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                scriptListener.afterReturning(output, advice);
                             }
 
                             @Override
-                            public void afterThrowing(
-                                    ClassLoader loader, Class<?> clazz, GaMethod method,
-                                    Object target, Object[] args, Throwable throwable) throws Throwable {
-                                scriptListener.afterThrowing(output,
-                                        newForAfterThrowing(loader, clazz, method, target, args, throwable));
+                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                scriptListener.afterThrowing(output, advice);
                             }
                         };
                     }

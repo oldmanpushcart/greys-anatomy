@@ -32,6 +32,7 @@ public class TreeView implements View {
         this.isPrintCost = isPrintCost;
     }
 
+
     @Override
     public String draw() {
 
@@ -43,7 +44,7 @@ public class TreeView implements View {
                 treeSB.append(prefix).append(isLast ? STEP_FIRST_CHAR : STEP_NORMAL_CHAR);
                 if (isPrintCost
                         && !node.isRoot()) {
-                    treeSB.append("[").append(node.endTimestamp - root.beginTimestamp).append(",").append(node.endTimestamp - node.beginTimestamp).append("ms]");
+                    treeSB.append("[").append(node.endTimestamp - root.beginTimestamp).append(",").append(node.endTimestamp - node.beginTimestamp).append("ms] ");
                 }
                 treeSB.append(node.data).append("\n");
             }
@@ -81,9 +82,28 @@ public class TreeView implements View {
      * @param data 节点数据
      * @return this
      */
-    public TreeView begin(String data) {
+    public TreeView begin(Object data) {
         current = new Node(current, data);
         current.markBegin();
+        return this;
+    }
+
+    public TreeView begin() {
+        return begin(null);
+    }
+
+    public Object get() {
+        if(current.isRoot()) {
+            throw new IllegalStateException("current node is root.");
+        }
+        return current.data;
+    }
+
+    public TreeView set(Object data) {
+        if(current.isRoot()) {
+            throw new IllegalStateException("current node is root.");
+        }
+        current.data = data;
         return this;
     }
 
@@ -115,7 +135,7 @@ public class TreeView implements View {
         /**
          * 节点数据
          */
-        final String data;
+        Object data;
 
         /**
          * 子节点
@@ -135,7 +155,7 @@ public class TreeView implements View {
         /**
          * 构造树节点(根节点)
          */
-        private Node(String data) {
+        private Node(Object data) {
             this.parent = null;
             this.data = data;
         }
@@ -146,7 +166,7 @@ public class TreeView implements View {
          * @param parent 父节点
          * @param data   节点数据
          */
-        private Node(Node parent, String data) {
+        private Node(Node parent, Object data) {
             this.parent = parent;
             this.data = data;
             parent.children.add(this);

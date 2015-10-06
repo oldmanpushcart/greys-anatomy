@@ -86,18 +86,6 @@ reset_for_env()
 
 }
 
-
-# greys's curl
-# $1 : target
-curl_greys_remote()
-{
-    curl \
-        -sLk \
-        --connect-timeout ${SO_TIMEOUT} \
-        "http://ompc.oss.aliyuncs.com/greys/version"
-}
-
-
 # get latest version from local
 get_local_version()
 {

@@ -1,20 +1,23 @@
 package com.github.ompc.greys.core.command;
 
 
-import com.github.ompc.greys.core.GlobalOptions;
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
+import com.github.ompc.greys.core.advisor.InnerContext;
+import com.github.ompc.greys.core.advisor.ProcessContext;
+import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter.DefaultReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
+import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
 import com.github.ompc.greys.core.view.TableView;
 
 import java.lang.instrument.Instrumentation;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.Timer;
@@ -23,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
-import static java.lang.System.currentTimeMillis;
 
 /**
  * 监控请求命令<br/>
@@ -89,9 +91,6 @@ public class MonitorCommand implements Command {
     @NamedArg(name = "c", hasValue = true, summary = "The cycle of monitor")
     private int cycle = 120;
 
-    @NamedArg(name = "S", summary = "Include subclass")
-    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
-
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
@@ -104,9 +103,9 @@ public class MonitorCommand implements Command {
         private final String className;
         private final String methodName;
 
-        private Key(String className, String behaviorName) {
-            this.className = className;
-            this.methodName = behaviorName;
+        private Key(Class<?> clazz, GaMethod method) {
+            this.className = clazz.getName();
+            this.methodName = method.getName();
         }
 
         @Override
@@ -120,9 +119,9 @@ public class MonitorCommand implements Command {
                     || !(obj instanceof Key)) {
                 return false;
             }
-            Key okey = (Key) obj;
-            return isEquals(okey.className, className)
-                    && isEquals(okey.methodName, methodName);
+            Key oKey = (Key) obj;
+            return isEquals(oKey.className, className)
+                    && isEquals(oKey.methodName, methodName);
         }
 
     }
@@ -137,18 +136,15 @@ public class MonitorCommand implements Command {
         private int success;
         private int failed;
         private long cost;
+        private Long maxCost;
+        private Long minCost;
     }
 
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(classPattern)
-                : new Matcher.WildcardMatcher(classPattern);
-
-        final Matcher methodNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(methodPattern)
-                : new Matcher.WildcardMatcher(methodPattern);
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         return new GetEnhancerAction() {
 
@@ -166,14 +162,9 @@ public class MonitorCommand implements Command {
                     }
 
                     @Override
-                    public boolean isIncludeSub() {
-                        return isIncludeSub;
-                    }
-
-                    @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new ReflectAdviceListenerAdapter() {
+                        return new DefaultReflectAdviceListenerAdapter() {
 
                             /*
                              * 输出定时任务
@@ -183,10 +174,8 @@ public class MonitorCommand implements Command {
                             /*
                              * 监控数据
                              */
-                            private ConcurrentHashMap<Key, AtomicReference<Data>> monitorData
+                            private final ConcurrentHashMap<Key, AtomicReference<Data>> monitorData
                                     = new ConcurrentHashMap<Key, AtomicReference<Data>>();
-
-                            private final ThreadLocal<Long> beginTimestamp = new ThreadLocal<Long>();
 
                             private double div(double a, double b) {
                                 if (b == 0) {
@@ -202,20 +191,22 @@ public class MonitorCommand implements Command {
 
                                     @Override
                                     public void run() {
-                                        if (monitorData.isEmpty()) {
-                                            return;
-                                        }
+//                                        if (monitorData.isEmpty()) {
+//                                            return;
+//                                        }
 
-                                        final TableView tableView = new TableView(8)
+                                        final TableView tableView = new TableView(10)
                                                 .addRow(
-                                                        "timestamp",
-                                                        "class",
-                                                        "method",
-                                                        "total",
-                                                        "success",
-                                                        "fail",
-                                                        "rt",
-                                                        "fail-rate"
+                                                        "TIMESTAMP",
+                                                        "CLASS",
+                                                        "METHOD",
+                                                        "TOTAL",
+                                                        "SUCCESS",
+                                                        "FAIL",
+                                                        "FAIL-RATE",
+                                                        "AVG-RT(ms)",
+                                                        "MIN-RT(ms)",
+                                                        "MAX-RT(ms)"
                                                 );
 
                                         for (Map.Entry<Key, AtomicReference<Data>> entry : monitorData.entrySet()) {
@@ -234,14 +225,16 @@ public class MonitorCommand implements Command {
                                                 final DecimalFormat df = new DecimalFormat("0.00");
 
                                                 tableView.addRow(
-                                                        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+                                                        SimpleDateFormatHolder.getInstance().format(new Date()),
                                                         entry.getKey().className,
                                                         entry.getKey().methodName,
                                                         data.total,
                                                         data.success,
                                                         data.failed,
+                                                        df.format(100.0d * div(data.failed, data.total)) + "%",
                                                         df.format(div(data.cost, data.total)),
-                                                        df.format(100.0d * div(data.failed, data.total)) + "%"
+                                                        data.minCost,
+                                                        data.maxCost
                                                 );
 
                                             }
@@ -264,49 +257,15 @@ public class MonitorCommand implements Command {
                             }
 
                             @Override
-                            public void before(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args) throws Throwable {
-                                beginTimestamp.set(currentTimeMillis());
-                            }
-
-                            @Override
-                            public void afterReturning(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Object returnObject) throws Throwable {
-                                finishing(clazz, method, false);
-                            }
-
-                            @Override
-                            public void afterThrowing(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Throwable throwable) {
-                                finishing(clazz, method, true);
-                            }
-
-                            private void finishing(Class<?> clazz, GaMethod method, boolean isThrowing) {
-                                final Long startTime = beginTimestamp.get();
-                                if (null == startTime) {
-                                    return;
-                                }
-                                final long cost = currentTimeMillis() - startTime;
-                                final Key key = new Key(clazz.getName(), method.getName());
+                            public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                final Key key = new Key(advice.clazz, advice.method);
+                                final long cost = innerContext.getCost();
 
                                 while (true) {
-                                    AtomicReference<Data> value = monitorData.get(key);
+                                    final AtomicReference<Data> value = monitorData.get(key);
                                     if (null == value) {
                                         monitorData.putIfAbsent(key, new AtomicReference<Data>(new Data()));
+                                        // 这里不去判断返回值，用continue去强制获取一次
                                         continue;
                                     }
 
@@ -314,7 +273,7 @@ public class MonitorCommand implements Command {
                                         Data oData = value.get();
                                         Data nData = new Data();
                                         nData.cost = oData.cost + cost;
-                                        if (isThrowing) {
+                                        if (advice.isThrow) {
                                             nData.failed = oData.failed + 1;
                                             nData.success = oData.success;
                                         } else {
@@ -322,6 +281,22 @@ public class MonitorCommand implements Command {
                                             nData.success = oData.success + 1;
                                         }
                                         nData.total = oData.total + 1;
+
+                                        // set max-cost
+                                        if (null == oData.maxCost) {
+                                            nData.maxCost = cost;
+                                        } else {
+                                            nData.maxCost = Math.max(oData.maxCost, cost);
+                                        }
+
+                                        // set min-cost
+                                        if (null == oData.minCost) {
+                                            nData.minCost = cost;
+                                        } else {
+                                            nData.minCost = Math.min(oData.minCost, cost);
+                                        }
+
+
                                         if (value.compareAndSet(oData, nData)) {
                                             break;
                                         }

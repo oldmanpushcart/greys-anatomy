@@ -21,19 +21,16 @@ public class MethodInfoView implements View {
 
     @Override
     public String draw() {
-        return new TableView(new TableView.ColumnDefine[]{
-                new TableView.ColumnDefine(16, false, TableView.Align.RIGHT),
-                new TableView.ColumnDefine(50, false, TableView.Align.LEFT)
-        })
-                .addRow("declaring-class", method.getDeclaringClass().getName())
-                .addRow("method-name", method.getName())
-                .addRow("modifier", tranModifier(method.getModifiers()))
-                .addRow("annotation", drawAnnotation())
-                .addRow("parameters", drawParameters())
-                .addRow("return", drawReturn())
-                .addRow("exceptions", drawExceptions())
-                .padding(1)
-                .hasBorder(true)
+        return new KVView()
+                .add("declaring-class", method.getDeclaringClass())
+                .add("method-name", method.getName())
+                .add("modifier", tranModifier(method.getModifiers()))
+                .add("annotation", drawAnnotation())
+                .add("parameters", drawParameters())
+                .add("return", drawReturn())
+                .add("exceptions", drawExceptions())
+//                .padding(1)
+//                .hasBorder(true)
                 .draw();
     }
 

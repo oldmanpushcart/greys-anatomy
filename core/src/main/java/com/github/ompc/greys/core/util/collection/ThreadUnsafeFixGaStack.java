@@ -37,6 +37,7 @@ public class ThreadUnsafeFixGaStack<E> implements GaStack<E> {
     @Override
     public E pop() {
         checkForPopOrPeek();
+        //noinspection unchecked
         return (E) elementArray[current--];
     }
 
@@ -49,6 +50,7 @@ public class ThreadUnsafeFixGaStack<E> implements GaStack<E> {
     @Override
     public E peek() {
         checkForPopOrPeek();
+        //noinspection unchecked
         return (E) elementArray[current];
     }
 

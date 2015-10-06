@@ -1,15 +1,14 @@
 package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.command.annotation.Cmd;
+import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
 import com.github.ompc.greys.core.view.KVView;
 import com.github.ompc.greys.core.view.TableView;
-import com.github.ompc.greys.core.server.Session;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.management.*;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
 
 import static com.github.ompc.greys.core.view.TableView.Align.LEFT;
 import static com.github.ompc.greys.core.view.TableView.Align.RIGHT;
@@ -107,7 +106,7 @@ public class JvmCommand implements Command {
     private String drawRuntimeTable() {
         final KVView view = createKVView()
                 .add("MACHINE-NAME", runtimeMXBean.getName())
-                .add("JVM-START-TIME", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(runtimeMXBean.getStartTime())))
+                .add("JVM-START-TIME", SimpleDateFormatHolder.getInstance().format(runtimeMXBean.getStartTime()))
                 .add("MANAGEMENT-SPEC-VERSION", runtimeMXBean.getManagementSpecVersion())
                 .add("SPEC-NAME", runtimeMXBean.getSpecName())
                 .add("SPEC-VENDOR", runtimeMXBean.getSpecVendor())

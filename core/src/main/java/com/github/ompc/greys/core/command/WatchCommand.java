@@ -1,24 +1,27 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.GlobalOptions;
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
+import com.github.ompc.greys.core.advisor.InnerContext;
+import com.github.ompc.greys.core.advisor.ProcessContext;
+import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter.DefaultReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
+import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.*;
+import com.github.ompc.greys.core.util.LogUtil;
+import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.view.ObjectView;
 import org.slf4j.Logger;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.core.util.Advice.*;
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getCauseMessage;
-import static com.github.ompc.greys.core.util.GaStringUtils.newString;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Cmd(name = "watch", sort = 4, summary = "Display the details of specified class and method",
         eg = {
@@ -103,25 +106,17 @@ public class WatchCommand implements Command {
     @NamedArg(name = "x", hasValue = true, summary = "Expand level of object (0 by default)")
     private Integer expend;
 
-    @NamedArg(name = "S", summary = "Include subclass")
-    private boolean isIncludeSub = GlobalOptions.isIncludeSubClass;
-
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
-    private Integer numberOfLimit;
+    private Integer threshold;
 
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(classPattern)
-                : new Matcher.WildcardMatcher(classPattern);
-
-        final Matcher methodNameMatcher = isRegEx
-                ? new Matcher.RegexMatcher(methodPattern)
-                : new Matcher.WildcardMatcher(methodPattern);
+        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
+        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         return new GetEnhancerAction() {
 
@@ -129,7 +124,7 @@ public class WatchCommand implements Command {
             public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
 
-                    private final AtomicInteger times = new AtomicInteger();
+                    private final AtomicInteger timesRef = new AtomicInteger();
 
                     @Override
                     public Matcher getClassNameMatcher() {
@@ -142,102 +137,49 @@ public class WatchCommand implements Command {
                     }
 
                     @Override
-                    public boolean isIncludeSub() {
-                        return isIncludeSub;
-                    }
-
-                    @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new ReflectAdviceListenerAdapter() {
+                        return new DefaultReflectAdviceListenerAdapter() {
 
-                            private boolean isBefore() {
+                            @Override
+                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
                                 if (isBefore) {
-                                    return true;
-                                }
-
-                                return !isBefore
-                                        && !isFinish
-                                        && !isException
-                                        && !isSuccess;
-                            }
-
-                            @Override
-                            public void before(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args) throws Throwable {
-                                if (isBefore()) {
-                                    watching(newForBefore(loader, clazz, method, target, args));
-                                }
-                            }
-
-                            @Override
-                            public void afterReturning(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Object returnObject) throws Throwable {
-
-                                final Advice advice = newForAfterRetuning(loader, clazz, method, target, args, returnObject);
-                                if (isSuccess) {
-                                    watching(advice);
-                                }
-
-                                finishing(advice);
-                            }
-
-                            @Override
-                            public void afterThrowing(
-                                    ClassLoader loader,
-                                    Class<?> clazz,
-                                    GaMethod method,
-                                    Object target,
-                                    Object[] args,
-                                    Throwable throwable) {
-
-                                final Advice advice = newForAfterThrowing(loader, clazz, method, target, args, throwable);
-                                if (isException) {
-                                    watching(advice);
-                                }
-
-                                finishing(advice);
-                            }
-
-                            private void finishing(Advice advice) {
-                                if (isFinish) {
                                     watching(advice);
                                 }
                             }
 
-                            private boolean isLimited(int currentTimes) {
-                                return null != numberOfLimit
-                                        && currentTimes >= numberOfLimit;
+                            @Override
+                            public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                if( isSuccess
+                                        || isException
+                                        || isFinish) {
+                                    watching(advice);
+                                }
                             }
 
-                            private boolean isNeedExpend() {
-                                return null != expend
-                                        && expend >= 0;
+                            private boolean isOverThreshold(int currentTimes) {
+                                return null != threshold
+                                        && currentTimes >= threshold;
+                            }
+
+                            private boolean isInCondition(Advice advice) {
+                                try {
+                                    return isBlank(conditionExpress)
+                                            || newExpress(advice).is(conditionExpress);
+                                } catch (ExpressException e) {
+                                    return false;
+                                }
                             }
 
                             private void watching(Advice advice) {
                                 try {
 
-                                    if (isNotBlank(conditionExpress)
-                                            && !newExpress(advice).is(conditionExpress)) {
-                                        return;
+                                    if (isInCondition(advice)) {
+                                        printer.println(new ObjectView(newExpress(advice).get(express), expend).draw());
+                                        if (isOverThreshold(timesRef.incrementAndGet())) {
+                                            printer.finish();
+                                        }
                                     }
-
-                                    final boolean isF = isLimited(times.incrementAndGet());
-                                    final Object value = newExpress(advice).get(express);
-                                    printer.println(
-                                            isF,
-                                            newString(isNeedExpend() ? new ObjectView(value, expend).draw() : value)
-                                    );
 
                                 } catch (Exception e) {
                                     logger.warn("watch failed.", e);

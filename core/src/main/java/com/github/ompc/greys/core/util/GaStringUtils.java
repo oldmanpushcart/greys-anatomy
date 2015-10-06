@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
+import static java.lang.Integer.toHexString;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
@@ -207,17 +208,7 @@ public class GaStringUtils {
      * @return 翻译值
      */
     public static String tranClassName(Class<?> clazz) {
-        if (clazz.isArray()) {
-            StringBuilder sb = new StringBuilder(clazz.getName());
-            sb.delete(0, 2);
-            if (sb.length() > 0 && sb.charAt(sb.length() - 1) == ';') {
-                sb.deleteCharAt(sb.length() - 1);
-            }
-            sb.append("[]");
-            return sb.toString();
-        } else {
-            return clazz.getName();
-        }
+        return clazz.getCanonicalName();
     }
 
 
@@ -284,22 +275,32 @@ public class GaStringUtils {
 
 
     /**
-     * 获取方法执行堆栈信息
+     * 统一获取线程信息
      *
-     * @return 方法堆栈信息
+     * @return 线程摘要信息(一行)
      */
-    public static String getStack() {
-
+    public static String getThreadInfo() {
         final Thread currentThread = Thread.currentThread();
-        final StackTraceElement[] stackTraceElementArray = currentThread.getStackTrace();
-
-        final String title = String.format("thread_name=\"%s\" thread_id=0x%s;is_daemon=%s;priority=%s;",
+        return String.format("thread_name=\"%s\" thread_id=0x%s;is_daemon=%s;priority=%s;",
                 currentThread.getName(),
                 Long.toHexString(currentThread.getId()),
                 currentThread.isDaemon(),
                 currentThread.getPriority());
+    }
 
-        final StackTraceElement locationStackTraceElement = stackTraceElementArray[10];
+    /**
+     * 获取方法执行堆栈信息
+     *
+     * @return 方法堆栈信息
+     */
+    public static String getStack(int skip) {
+
+        final Thread currentThread = Thread.currentThread();
+        final StackTraceElement[] stackTraceElementArray = currentThread.getStackTrace();
+
+        final String title = getThreadInfo();
+
+        final StackTraceElement locationStackTraceElement = stackTraceElementArray[skip];
         final String locationString = String.format("    @%s.%s()",
                 locationStackTraceElement.getClassName(),
                 locationStackTraceElement.getMethodName());
@@ -308,8 +309,7 @@ public class GaStringUtils {
                 .append(title).append("\n")
                 .append(locationString).append("\n");
 
-        final int skip = 11;
-        for (int index = skip; index < stackTraceElementArray.length; index++) {
+        for (int index = skip + 1; index < stackTraceElementArray.length; index++) {
             final StackTraceElement ste = stackTraceElementArray[index];
             stSB
                     .append("        at ")
@@ -334,7 +334,7 @@ public class GaStringUtils {
         int count = 0;
         for (char c : buffer) {
 
-            if (count++ == width) {
+            if (count == width) {
                 count = 0;
                 sb.append('\n');
                 if (c == '\n') {
@@ -346,10 +346,23 @@ public class GaStringUtils {
                 count = 0;
             }
 
+            count++;
             sb.append(c);
 
         }
         return sb.toString();
+    }
+
+    /**
+     * 将对象hashCode转换16进制字符串
+     *
+     * @param object 目标对象
+     * @return 16进制字符串
+     */
+    public static String hashCodeToHexString(Object object) {
+        return object == null
+                ? "NULL"
+                : "0x" + toHexString(object.hashCode());
     }
 
 }

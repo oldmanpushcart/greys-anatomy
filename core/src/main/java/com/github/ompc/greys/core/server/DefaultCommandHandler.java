@@ -225,8 +225,7 @@ public class DefaultCommandHandler implements CommandHandler {
                         lock,
                         listener instanceof InvokeTraceable,
                         getEnhancer.getClassNameMatcher(),
-                        getEnhancer.getMethodNameMatcher(),
-                        getEnhancer.isIncludeSub()
+                        getEnhancer.getMethodNameMatcher()
                 );
 
                 // 这里做个补偿,如果在enhance期间,unLock被调用了,则补偿性放弃

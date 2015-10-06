@@ -8,6 +8,7 @@ import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.collection.GaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeFixGaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
+import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
@@ -412,7 +413,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private final CodeLock codeLockForTracing = new TracingAsmCodeLock(this);
 
 
-            private void _debug(final String msg) {
+            private void _debug(final StringBuilder append, final String msg) {
 
                 if (!isDebugForAsm) {
                     return;
@@ -420,7 +421,12 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 // println msg
                 visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-                visitLdcInsn(msg);
+                if(StringUtils.isBlank(append.toString()) ) {
+                    visitLdcInsn(append.append(msg).toString());
+                } else {
+                    visitLdcInsn(append.append(" >> ").append(msg).toString());
+                }
+
                 visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
             }
 
@@ -556,26 +562,25 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                     @Override
                     public void code() {
 
-                        _debug("debug:onMethodEnter()");
+                        final StringBuilder append = new StringBuilder();
+                        _debug(append, "debug:onMethodEnter()");
 
                         // 加载before方法
                         loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_METHOD);
-
-                        _debug("debug:onMethodEnter() > loadAdviceMethod()");
+                        _debug(append, "loadAdviceMethod()");
 
                         // 推入Method.invoke()的第一个参数
                         pushNull();
 
                         // 方法参数
                         loadArrayForBefore();
-
-                        _debug("debug:onMethodEnter() > loadAdviceMethod() > loadArrayForBefore()");
+                        _debug(append, "loadArrayForBefore()");
 
                         // 调用方法
                         invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
                         pop();
+                        _debug(append, "invokeVirtual()");
 
-                        _debug("debug:onMethodEnter() > loadAdviceMethod() > loadArrayForBefore() > invokeVirtual()");
                     }
                 });
 
@@ -608,28 +613,28 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                         @Override
                         public void code() {
 
-                            _debug("debug:onMethodExit()");
+                            final StringBuilder append = new StringBuilder();
+                            _debug(append, "debug:onMethodExit()");
 
                             // 加载返回对象
                             loadReturn(opcode);
-                            _debug("debug:onMethodExit() > loadReturn()");
-
+                            _debug(append, "loadReturn()");
 
                             // 加载returning方法
                             loadAdviceMethod(KEY_GREYS_ADVICE_RETURN_METHOD);
-                            _debug("debug:onMethodExit() > loadReturn() > loadAdviceMethod()");
+                            _debug(append, "loadAdviceMethod()");
 
                             // 推入Method.invoke()的第一个参数
                             pushNull();
 
                             // 加载return通知参数数组
                             loadReturnArgs();
-                            _debug("debug:onMethodExit() > loadReturn() > loadAdviceMethod() > loadReturnArgs()");
+                            _debug(append, "loadReturnArgs()");
 
                             invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
                             pop();
+                            _debug(append, "invokeVirtual()");
 
-                            _debug("debug:onMethodExit() > loadReturn() > loadAdviceMethod() > loadReturnArgs() > invokeVirtual()");
                         }
                     });
                 }
@@ -663,28 +668,28 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                     @Override
                     public void code() {
 
-                        _debug("debug:catchException()");
+                        final StringBuilder append = new StringBuilder();
+                        _debug(append, "debug:catchException()");
 
                         // 加载异常
                         loadThrow();
-                        _debug("debug:catchException() > loadThrow() > loadAdviceMethod()");
+                        _debug(append, "loadAdviceMethod()");
 
                         // 加载throwing方法
                         loadAdviceMethod(KEY_GREYS_ADVICE_THROWS_METHOD);
-                        _debug("debug:catchException() > loadThrow() > loadAdviceMethod()");
-
+                        _debug(append, "loadAdviceMethod()");
 
                         // 推入Method.invoke()的第一个参数
                         pushNull();
 
                         // 加载throw通知参数数组
                         loadThrowArgs();
-                        _debug("debug:catchException() > loadThrow() > loadAdviceMethod() > loadThrowArgs()");
+                        _debug(append, "loadThrowArgs()");
 
                         // 调用方法
                         invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
                         pop();
-                        _debug("debug:catchException() > loadThrow() > loadAdviceMethod() > loadThrowArgs() > invokeVirtual()");
+                        _debug(append, "invokeVirtual()");
 
                     }
                 });
@@ -815,18 +820,19 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                         @Override
                         public void code() {
 
-                            _debug("debug:beforeInvoking()");
+                            final StringBuilder append = new StringBuilder();
+                            _debug(append, "debug:beforeInvoking()");
 
                             loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD);
-                            _debug("debug:beforeInvoking() > loadAdviceMethod()");
+                            _debug(append, "loadAdviceMethod()");
 
                             pushNull();
                             loadArrayForInvokeTracing(owner, name, desc);
-                            _debug("debug:beforeInvoking() > loadAdviceMethod() > loadArrayForInvokeTracing()");
+                            _debug(append, "loadArrayForInvokeTracing()");
 
                             invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
                             pop();
-                            _debug("debug:beforeInvoking() > loadAdviceMethod() > loadArrayForInvokeTracing() > invokeVirtual()");
+                            _debug(append, "invokeVirtual()");
 
                         }
                     });
@@ -841,18 +847,19 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                         @Override
                         public void code() {
 
-                            _debug("debug:afterInvoking()");
+                            final StringBuilder append = new StringBuilder();
+                            _debug(append, "debug:afterInvoking()");
 
                             loadAdviceMethod(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD);
-                            _debug("debug:afterInvoking() > loadAdviceMethod()");
+                            _debug(append, "loadAdviceMethod()");
 
                             pushNull();
                             loadArrayForInvokeTracing(owner, name, desc);
-                            _debug("debug:afterInvoking() > loadAdviceMethod() > loadArrayForInvokeTracing()");
+                            _debug(append, "loadArrayForInvokeTracing()");
 
                             invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
                             pop();
-                            _debug("debug:afterInvoking() > loadAdviceMethod() > loadArrayForInvokeTracing() > invokeVirtual()");
+                            _debug(append, "invokeVirtual()");
 
                         }
                     });

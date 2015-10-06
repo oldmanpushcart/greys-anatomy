@@ -1,12 +1,16 @@
 package com.github.ompc.greys.core.advisor;
 
+import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaCheckUtils;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.collection.GaStack;
+import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import static com.github.ompc.greys.core.Advice.*;
 import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
 
 /**
@@ -14,7 +18,21 @@ import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
  * 通过反射拿到对应的Class/Method类，而不是原始的ClassName/MethodNam
  * 当然性能开销要比普通监听器高许多
  */
-public class ReflectAdviceListenerAdapter implements AdviceListener {
+public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC extends InnerContext> implements AdviceListener {
+
+    /**
+     * 构造过程上下文
+     *
+     * @return 返回过程上下文
+     */
+    abstract protected PC newProcessContext();
+
+    /**
+     * 构造方法内部上下文
+     *
+     * @return 返回方法内部上下文
+     */
+    abstract protected IC newInnerContext();
 
     @Override
     public void create() {
@@ -117,85 +135,183 @@ public class ReflectAdviceListenerAdapter implements AdviceListener {
     }
 
 
+    /**
+     * ProcessContext的内部封装
+     */
+    class ProcessContextBound {
+
+        final PC processContext;
+        final GaStack<IC> innerContextGaStack = new ThreadUnsafeGaStack<IC>();
+
+        private ProcessContextBound(PC processContext) {
+            this.processContext = processContext;
+        }
+
+        /**
+         * 是否顶层
+         *
+         * @return 是否顶层上下文
+         */
+        private boolean isTop() {
+            return innerContextGaStack.isEmpty();
+        }
+
+    }
+
+    protected final ThreadLocal<ProcessContextBound> processContextBoundRef = new ThreadLocal<ProcessContextBound>() {
+        @Override
+        protected ProcessContextBound initialValue() {
+            return new ProcessContextBound(newProcessContext());
+        }
+    };
+
     @Override
     final public void before(
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args) throws Throwable {
         final Class<?> clazz = toClass(loader, className);
-        before(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args);
+        final ProcessContextBound bound = processContextBoundRef.get();
+        final PC processContext = bound.processContext;
+        final IC innerContext = newInnerContext();
+
+        final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
+        innerContextGaStack.push(innerContext);
+
+        before(
+                newForBefore(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args),
+                processContext,
+                innerContext
+        );
+
     }
 
     @Override
     final public void afterReturning(
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Object returnObject) throws Throwable {
-        final Class<?> clazz = toClass(loader, className);
-        afterReturning(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, returnObject);
+
+        final ProcessContextBound bound = processContextBoundRef.get();
+        final PC processContext = bound.processContext;
+        final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
+        final IC innerContext = innerContextGaStack.pop();
+        try {
+
+            // 关闭上下文
+            innerContext.close();
+
+            final Class<?> clazz = toClass(loader, className);
+            final Advice advice = newForAfterRetuning(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, returnObject);
+            afterReturning(advice, processContext, innerContext);
+            afterFinishing(advice, processContext, innerContext);
+
+        } finally {
+
+            // 如果过程上下文已经到了顶层则需要清除掉上下文
+            if (bound.isTop()) {
+                processContext.close();
+                processContextBoundRef.remove();
+            }
+
+        }
+
     }
 
     @Override
     final public void afterThrowing(
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Throwable throwable) throws Throwable {
-        final Class<?> clazz = toClass(loader, className);
-        afterThrowing(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, throwable);
+
+        final ProcessContextBound bound = processContextBoundRef.get();
+        final PC processContext = bound.processContext;
+        final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
+        final IC innerContext = innerContextGaStack.pop();
+
+        try {
+
+            // 关闭上下文
+            innerContext.close();
+
+            final Class<?> clazz = toClass(loader, className);
+            final Advice advice = newForAfterThrowing(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, throwable);
+            afterThrowing(advice, processContext, innerContext);
+            afterFinishing(advice, processContext, innerContext);
+
+        } finally {
+
+            // 如果过程上下文已经到了顶层则需要清除掉上下文
+            if (bound.isTop()) {
+                processContext.close();
+                processContextBoundRef.remove();
+            }
+
+        }
+
     }
 
 
     /**
      * 前置通知
      *
-     * @param loader 类加载器
-     * @param clazz  类
-     * @param method 方法
-     * @param target 目标类实例
-     *               若目标为静态方法,则为null
-     * @param args   参数列表
+     * @param advice         通知点
+     * @param processContext 处理上下文
+     * @param innerContext   当前方法调用上下文
      * @throws Throwable 通知过程出错
      */
-    public void before(
-            ClassLoader loader, Class<?> clazz, GaMethod method,
-            Object target, Object[] args) throws Throwable {
+    public void before(Advice advice, PC processContext, IC innerContext) throws Throwable {
 
     }
 
     /**
      * 返回通知
      *
-     * @param loader       类加载器
-     * @param clazz        类
-     * @param method       方法
-     * @param target       目标类实例
-     *                     若目标为静态方法,则为null
-     * @param args         参数列表
-     * @param returnObject 返回结果
-     *                     若为无返回值方法(void),则为null
+     * @param advice         通知点
+     * @param processContext 处理上下文
+     * @param innerContext   当前方法调用上下文
      * @throws Throwable 通知过程出错
      */
-    public void afterReturning(
-            ClassLoader loader, Class<?> clazz, GaMethod method,
-            Object target, Object[] args,
-            Object returnObject) throws Throwable {
+    public void afterReturning(Advice advice, PC processContext, IC innerContext) throws Throwable {
 
     }
 
     /**
      * 异常通知
      *
-     * @param loader    类加载器
-     * @param clazz     类
-     * @param method    方法
-     * @param target    目标类实例
-     *                  若目标为静态方法,则为null
-     * @param args      参数列表
-     * @param throwable 目标异常
+     * @param advice         通知点
+     * @param processContext 处理上下文
+     * @param innerContext   当前方法调用上下文
      * @throws Throwable 通知过程出错
      */
-    public void afterThrowing(
-            ClassLoader loader, Class<?> clazz, GaMethod method,
-            Object target, Object[] args,
-            Throwable throwable) throws Throwable {
+    public void afterThrowing(Advice advice, PC processContext, IC innerContext) throws Throwable {
 
+    }
+
+    /**
+     * 结束通知
+     *
+     * @param advice         通知点
+     * @param processContext 处理上下文
+     * @param innerContext   当前方法调用上下文
+     * @throws Throwable 通知过程出错
+     */
+    public void afterFinishing(Advice advice, PC processContext, IC innerContext) throws Throwable {
+
+    }
+
+
+    /**
+     * 默认实现
+     */
+    public static class DefaultReflectAdviceListenerAdapter extends ReflectAdviceListenerAdapter<ProcessContext, InnerContext> {
+
+        @Override
+        protected ProcessContext newProcessContext() {
+            return new ProcessContext();
+        }
+
+        @Override
+        protected InnerContext newInnerContext() {
+            return new InnerContext();
+        }
     }
 
 }
