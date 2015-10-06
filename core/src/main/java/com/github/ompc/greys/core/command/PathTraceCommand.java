@@ -36,6 +36,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Cmd(name = "ptrace", sort = 6, summary = "Display the detailed thread path stack of specified class and method",
         eg = {
                 "ptrace -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank org\\.apache\\.commons\\.lang\\..*",
+                "ptrace -E .*\\.StringUtils isBlank org\\.apache\\.commons\\.(lang|lang3)\\..*",
                 "ptrace org.apache.commons.lang.StringUtils isBlank org.apache.commons.lang.*",
                 "ptrace *StringUtils isBlank org.apache.commons.lang.*",
                 "ptrace *StringUtils isBlank org.apache.commons.lang.* params[0].length==1"
