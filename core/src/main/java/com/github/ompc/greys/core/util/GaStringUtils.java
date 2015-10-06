@@ -334,7 +334,7 @@ public class GaStringUtils {
         int count = 0;
         for (char c : buffer) {
 
-            if (count++ == width) {
+            if (count == width) {
                 count = 0;
                 sb.append('\n');
                 if (c == '\n') {
@@ -346,6 +346,7 @@ public class GaStringUtils {
                 count = 0;
             }
 
+            count++;
             sb.append(c);
 
         }
