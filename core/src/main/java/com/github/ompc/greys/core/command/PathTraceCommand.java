@@ -259,7 +259,7 @@ public class PathTraceCommand implements Command {
 
                                     // 是否有匹配到条件
                                     // 之所以在这里主要是需要照顾到上下文参数对齐
-                                    if (isInCondition(advice)) {
+                                    if (isInCondition(advice, cost)) {
                                         // 输出打印内容
                                         if (isTimeTunnel) {
                                             printer.println(entity.view.draw() + entity.tfView.draw());
@@ -286,10 +286,10 @@ public class PathTraceCommand implements Command {
                             }
 
                             // 匹配过滤规则
-                            private boolean isInCondition(Advice advice) {
+                            private boolean isInCondition(Advice advice, long cost) {
                                 try {
                                     return isBlank(conditionExpress)
-                                            || newExpress(advice).is(conditionExpress);
+                                            || newExpress(advice).bind("cost", cost).is(conditionExpress);
                                 } catch (ExpressException e) {
                                     return false;
                                 }

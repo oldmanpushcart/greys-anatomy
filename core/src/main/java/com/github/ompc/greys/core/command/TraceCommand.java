@@ -164,10 +164,10 @@ public class TraceCommand implements Command {
 
                             }
 
-                            private boolean isInCondition(Advice advice) {
+                            private boolean isInCondition(Advice advice, long cost) {
                                 try {
                                     return isBlank(conditionExpress)
-                                            || newExpress(advice).is(conditionExpress);
+                                            || newExpress(advice).bind("cost", cost).is(conditionExpress);
                                 } catch (ExpressException e) {
                                     return false;
                                 }
@@ -180,7 +180,8 @@ public class TraceCommand implements Command {
 
                             @Override
                             public void afterFinishing(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
-                                if (isInCondition(advice)) {
+                                final long cost = innerContext.getCost();
+                                if (isInCondition(advice, cost)) {
                                     final Entity entity = innerContext.getEntity();
                                     printer.println(entity.view.draw());
                                     if (isOverThreshold(timesRef.incrementAndGet())) {

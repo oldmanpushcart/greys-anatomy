@@ -63,6 +63,11 @@
       --Epath com\.alibaba\.manager\..*
   ```
 
+- `1.7.2.1`中的`trace`、`ptrace`命令支持cost(ms)条件作为过滤条件
+
+  ```shell
+  ptrace com.alibaba.*Test printAddress 'cost>=1L' --path com.alibaba.*
+  ```
 
 ### 版本号说明
 
