@@ -118,6 +118,15 @@ public class WatchCommand implements Command {
         final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
         final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
+        // set default
+        // 如果没有强行指定b/f/e/s中任何一个，则默认为b
+        if(!isBefore
+                && !isFinish
+                && !isException
+                && !isSuccess) {
+            isBefore = true;
+        }
+
         return new GetEnhancerAction() {
 
             @Override

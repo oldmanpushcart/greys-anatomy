@@ -141,10 +141,9 @@ public class Commands {
         for (Field field : clazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg arg = field.getAnnotation(NamedArg.class);
+                final OptionSpecBuilder osb = parser.accepts(arg.name(), arg.summary());
                 if (arg.hasValue()) {
-                    final OptionSpecBuilder osb = parser.accepts(arg.name(), arg.summary());
-                    osb.withOptionalArg()
-                            .ofType(field.getType());
+                    osb.withOptionalArg().ofType(field.getType());
                 }
             }
         }
