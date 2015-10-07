@@ -137,27 +137,13 @@ public class Commands {
 
     private static OptionParser getOptionParser(Class<?> clazz) {
 
-        final StringBuilder sb = new StringBuilder();
-        for (Field field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(NamedArg.class)) {
-                final NamedArg arg = field.getAnnotation(NamedArg.class);
-                if (arg.hasValue()) {
-                    sb.append(arg.name()).append(":");
-                } else {
-                    sb.append(arg.name());
-                }
-            }
-        }
-
-        final OptionParser parser
-                = sb.length() == 0 ? new OptionParser() : new OptionParser(sb.toString());
+        final OptionParser parser = new OptionParser();
         for (Field field : clazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg arg = field.getAnnotation(NamedArg.class);
                 if (arg.hasValue()) {
                     final OptionSpecBuilder osb = parser.accepts(arg.name(), arg.summary());
                     osb.withOptionalArg()
-//                            .withValuesConvertedBy(new FileValueConverter())
                             .ofType(field.getType());
                 }
             }
