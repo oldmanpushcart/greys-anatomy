@@ -30,7 +30,7 @@
 
 ## 最新版本
 
-### **VERSION :** 1.7.1.0
+### **VERSION :** 1.7.2.0
 
 更新内容
 
@@ -51,6 +51,16 @@
 - 重构部分内核，为年后发布`1.8.0.0`版本支持GP协议([GREYS-PROTOCOL](https://github.com/oldmanpushcart/greys-anatomy/wiki/GREYS-PROTOCOL))做准备  
   
 - 优化性能，表达式用`Unsafe`、`ThreadLocal`、`LRUCache`做性能开销优化
+
+- `1.7.2.0`因为 #80 问题而调整了`ptrace`命令参数的用法
+
+  使用`--path`和`--Epath`两个参数来完成原来非常复杂的正则表达式写法
+  
+  ```shell
+  ptrace com.alibaba.*Test printAddress \
+      --path com.alibaba.Address \
+      --Epath com\.alibaba\.manager\..*
+  ```
 
 
 ### 版本号说明
