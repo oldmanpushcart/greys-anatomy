@@ -12,15 +12,14 @@ import com.github.ompc.greys.core.manager.TimeFragmentManager;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.Matcher.CacheMatcher;
-import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
-import com.github.ompc.greys.core.util.Matcher.RelationOrMatcher;
-import com.github.ompc.greys.core.util.Matcher.TrueMatcher;
+import com.github.ompc.greys.core.util.Matcher.*;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeLRUHashMap;
 import com.github.ompc.greys.core.view.TimeFragmentTableView;
 import com.github.ompc.greys.core.view.TreeView;
 
 import java.lang.instrument.Instrumentation;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -56,10 +55,10 @@ public class PathTraceCommand implements Command {
     @IndexArg(index = 1, name = "method-pattern", summary = "Method of Pattern Matching")
     private String methodPattern;
 
-    @IndexArg(index = 2, name = "tracing-path-pattern", summary = "Tracing path of Pattern Matching")
-    private String tracingPathPattern;
+//    @IndexArg(index = 2, name = "tracing-path-pattern", summary = "Tracing path of Pattern Matching")
+//    private String tracingPathPattern;
 
-    @IndexArg(index = 3, name = "condition-express", isRequired = false,
+    @IndexArg(index = 2, name = "condition-express", isRequired = false,
             summary = "Conditional expression by groovy",
             description = "" +
                     "For example\n" +
@@ -83,6 +82,12 @@ public class PathTraceCommand implements Command {
     )
     private String conditionExpress;
 
+    @NamedArg(name = "path", summary = "path-tracing-pattern", hasValue = true)
+    private Collection<String> pathTracingPatterns;
+
+    @NamedArg(name = "Epath", summary = "path-tracing-regex-pattern", hasValue = true)
+    private Collection<String> pathTracingRegexPatterns;
+
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
@@ -91,6 +96,32 @@ public class PathTraceCommand implements Command {
 
     // 针对ptrace命令调整
     private static final int STACK_DEEP = 12;
+
+
+    /*
+     * 构造追踪路径匹配
+     */
+    private Matcher newPathTracingMatcher() {
+
+        final ArrayList<Matcher> matcherList = new ArrayList<Matcher>();
+
+        // fill path
+        if (null != pathTracingPatterns) {
+            for (String pathTracingPattern : pathTracingPatterns) {
+                matcherList.add(new PatternMatcher(isRegEx, pathTracingPattern));
+            }
+        }
+
+        // fill Epath
+        if (null != pathTracingRegexPatterns) {
+            for (String pathTracingRegexPattern : pathTracingRegexPatterns) {
+                matcherList.add(new RegexMatcher(pathTracingRegexPattern));
+            }
+        }
+
+        return new RelationOrMatcher(matcherList.toArray(new Matcher[0]));
+
+    }
 
     @Override
     public Action getAction() {
@@ -105,7 +136,8 @@ public class PathTraceCommand implements Command {
                 new ThreadUnsafeLRUHashMap<String, Boolean>(GlobalOptions.ptraceMethodMatcherLruCapacity)
         );
 
-        final Matcher tracingPathMatcher = new PatternMatcher(isRegEx, tracingPathPattern);
+        final Matcher pathTracingMatcher = newPathTracingMatcher();
+
 
         return new GetEnhancerAction() {
 
@@ -117,7 +149,7 @@ public class PathTraceCommand implements Command {
                     public Matcher getClassNameMatcher() {
                         return new RelationOrMatcher(
                                 classNameMatcher,
-                                tracingPathMatcher
+                                pathTracingMatcher
                         );
                     }
 
@@ -191,7 +223,7 @@ public class PathTraceCommand implements Command {
                             @Override
                             public void afterFinishing(Advice advice, PathTraceProcessContext processContext, InnerContext innerContext) throws Throwable {
                                 if (!isInit
-                                        || !processContext.isTracing){
+                                        || !processContext.isTracing) {
                                     return;
                                 }
 
@@ -208,7 +240,6 @@ public class PathTraceCommand implements Command {
                                 }
 
 
-
                                 // 记录下调用过程
                                 if (isTimeTunnel) {
                                     final TimeFragment timeFragment = timeFragmentManager.append(
@@ -219,7 +250,7 @@ public class PathTraceCommand implements Command {
                                             getStack(STACK_DEEP)
                                     );
                                     entity.tfView.add(timeFragment);
-                                    entity.view.set(entity.view.get()+"; index="+timeFragment.id+";");
+                                    entity.view.set(entity.view.get() + "; index=" + timeFragment.id + ";");
                                 }
 
                                 entity.view.end();
@@ -302,7 +333,7 @@ public class PathTraceCommand implements Command {
         }
 
         Entity getEntity(InitCallback<Entity> initCallback) {
-            if( null == entity ) {
+            if (null == entity) {
                 return entity = initCallback.init();
             } else {
                 return entity;

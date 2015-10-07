@@ -14,6 +14,7 @@ import joptsimple.OptionSpecBuilder;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,20 +75,37 @@ public class Commands {
 
                     if (arg.hasValue()) {
                         if (opt.has(arg.name())) {
-                            Object value = opt.valueOf(arg.name());
 
-                            //如果是枚举类型，则根据枚举信息赋值
-                            if (field.getType().isEnum()) {
-                                final Enum<?>[] enums = (Enum[]) field.getType().getEnumConstants();
-                                if (enums != null) {
-                                    for (Enum<?> e : enums) {
-                                        if (e.name().equals(value)) {
-                                            value = e;
-                                            break;
+                            final boolean isCollection = field.getType().isAssignableFrom(Collection.class);
+                            final Object value;
+
+                            // 处理一参多值的情况
+                            if (isCollection) {
+                                value = opt.valuesOf(arg.name());
+                            }
+
+                            // 处理一参单值的情况
+                            else {
+
+                                // 待定的返回值,稍后可能用枚举值修正
+                                Object valueOfUndetermined = opt.valueOf(arg.name());
+
+                                //如果是枚举类型，则根据枚举信息赋值
+                                if (field.getType().isEnum()) {
+                                    final Enum<?>[] enums = (Enum[]) field.getType().getEnumConstants();
+                                    if (enums != null) {
+                                        for (Enum<?> e : enums) {
+                                            if (e.name().equals(valueOfUndetermined)) {
+                                                valueOfUndetermined = e;
+                                                break;
+                                            }
                                         }
                                     }
                                 }
+
+                                value = valueOfUndetermined;
                             }
+
                             try {
                                 GaReflectUtils.set(field, value, command);
                             } catch (IllegalAccessException e) {
@@ -143,7 +161,13 @@ public class Commands {
                 final NamedArg arg = field.getAnnotation(NamedArg.class);
                 final OptionSpecBuilder osb = parser.accepts(arg.name(), arg.summary());
                 if (arg.hasValue()) {
-                    osb.withOptionalArg().ofType(field.getType());
+                    final boolean isCollection = field.getType().isAssignableFrom(Collection.class);
+
+                    if( isCollection ) {
+                        osb.withOptionalArg();
+                    } else {
+                        osb.withOptionalArg().ofType(field.getType());
+                    }
                 }
             }
         }
