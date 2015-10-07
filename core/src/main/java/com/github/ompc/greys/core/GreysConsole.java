@@ -166,6 +166,8 @@ public class GreysConsole {
     private void activeConsoleReader() {
         final Thread socketThread = new Thread("ga-console-reader-daemon") {
 
+            private StringBuilder lineBuffer = new StringBuilder();
+
             @Override
             public void run() {
                 try {
@@ -174,8 +176,20 @@ public class GreysConsole {
 
                         final String line = console.readLine();
 
+                        // 如果是\结尾，则说明还有下文，需要对换行做特殊处理
+                        if( StringUtils.endsWith(line, "\\") ) {
+                            // 去掉结尾的\
+                            lineBuffer.append(line.substring(0, line.length()-1));
+                            continue;
+                        } else {
+                            lineBuffer.append(line);
+                        }
+
+                        final String lineForWrite = lineBuffer.toString();
+                        lineBuffer = new StringBuilder();
+
                         // replace ! to \!
-                        history.add(StringUtils.replace(line, "!", "\\!"));
+                        history.add(StringUtils.replace(lineForWrite, "!", "\\!"));
 
                         // flush if need
                         if (history instanceof Flushable) {
@@ -183,8 +197,8 @@ public class GreysConsole {
                         }
 
                         console.setPrompt(EMPTY);
-                        if (isNotBlank(line)) {
-                            socketWriter.write(line + "\n");
+                        if (isNotBlank(lineForWrite)) {
+                            socketWriter.write(lineForWrite + "\n");
                         } else {
                             socketWriter.write("\n");
                         }
