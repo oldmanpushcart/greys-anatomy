@@ -59,6 +59,7 @@
   ```shell
   ptrace com.alibaba.*Test printAddress \
       --path com.alibaba.Address \
+      --path com.alibaba.User \
       --Epath com\.alibaba\.manager\..*
   ```
 
