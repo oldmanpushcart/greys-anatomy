@@ -69,7 +69,7 @@ public class TimeFragmentDetailView implements View {
         }
 
         // fill the returnObj
-        if (advice.isThrow) {
+        if (!advice.isThrow) {
 
             view.addRow(
                     "RETURN-OBJ",

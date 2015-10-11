@@ -30,7 +30,7 @@
 
 ## 最新版本
 
-### **VERSION :** 1.7.2.1
+### **VERSION :** 1.7.2.2
 
 更新内容
 
@@ -68,6 +68,8 @@
   ```shell
   ptrace com.alibaba.*Test printAddress 'cost>=1L' --path com.alibaba.*
   ```
+
+- `1.7.2.2`中修复`tt -i`输出时间片段详情时忽略了`returnObj`的BUG
 
 ### 版本号说明
 
