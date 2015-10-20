@@ -1,5 +1,9 @@
 package com.github.ompc.greys.core.view;
 
+import java.util.Scanner;
+
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * KV排版控件
  * Created by vlinux on 15/5/9.
@@ -35,6 +39,22 @@ public class KVView implements View {
 
     @Override
     public String draw() {
-        return tableView.draw();
+        String content = tableView.draw();
+        StringBuilder sb = new StringBuilder();
+        // 清理多余的空格
+        Scanner scanner = new Scanner(content);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            if (line != null) {
+                //清理一行后面多余的空格
+                line = StringUtils.stripEnd(line, " ");
+                if(line.isEmpty()){
+                    line = " ";
+                }
+            }
+            sb.append(line).append('\n');
+        }
+        scanner.close();
+        return sb.toString();
     }
 }
