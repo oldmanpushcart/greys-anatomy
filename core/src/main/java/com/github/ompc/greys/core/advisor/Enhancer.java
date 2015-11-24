@@ -113,7 +113,7 @@ public class Enhancer implements ClassFileTransformer {
         Class<?> spyClassFromTargetClassLoader = null;
         try {
 
-            // 去目标类加载起中找下是否已经存在间谍
+            // 去目标类加载器中找下是否已经存在间谍
             // 如果间谍已经存在就算了
             spyClassFromTargetClassLoader = targetClassLoader.loadClass(spyClassName);
             logger.info("Spy already in targetClassLoader : " + targetClassLoader);
