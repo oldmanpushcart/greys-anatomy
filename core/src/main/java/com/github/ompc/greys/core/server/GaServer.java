@@ -116,7 +116,7 @@ public class GaServer {
 
         @Override
         public void run() {
-            GaServer.this.destroy();
+            GaServer.this._destroy();
         }
     };
 
@@ -395,7 +395,7 @@ public class GaServer {
     }
 
 
-    public void destroy() {
+    private void _destroy() {
         if (isBind()) {
             unbind();
         }
@@ -404,12 +404,14 @@ public class GaServer {
             sessionManager.destroy();
         }
 
-        Runtime.getRuntime().removeShutdownHook(jvmShutdownHooker);
-
         executorService.shutdown();
 
         logger.info("ga-server destroy completed.");
+    }
 
+    public void destroy() {
+        Runtime.getRuntime().removeShutdownHook(jvmShutdownHooker);
+        _destroy();
     }
 
     private static volatile GaServer gaServer;
