@@ -138,7 +138,13 @@ public class AgentLauncher {
             final boolean isBind = (Boolean) classOfGaServer.getMethod("isBind").invoke(objectOfGaServer);
 
             if (!isBind) {
-                classOfGaServer.getMethod("bind", classOfConfigure).invoke(objectOfGaServer, objectOfConfigure);
+                try {
+                    classOfGaServer.getMethod("bind", classOfConfigure).invoke(objectOfGaServer, objectOfConfigure);
+                } catch(Throwable t) {
+                    classOfGaServer.getMethod("destroy").invoke(objectOfGaServer);
+                    throw t;
+                }
+
             }
 
         } catch (Throwable t) {

@@ -18,11 +18,6 @@ public class Spy {
     public static volatile Method AFTER_INVOKING_METHOD;
 
     /**
-     * greys's classloader 引用
-     */
-    public static volatile ClassLoader CLASSLOADER;
-
-    /**
      * 代理重设方法
      */
     public static volatile Method AGENT_RESET_METHOD;
@@ -31,13 +26,13 @@ public class Spy {
      * 用于普通的间谍初始化
      */
     public static void init(
+            @Deprecated
             ClassLoader classLoader,
             Method onBeforeMethod,
             Method onReturnMethod,
             Method onThrowsMethod,
             Method beforeInvokingMethod,
             Method afterInvokingMethod) {
-        CLASSLOADER = classLoader;
         ON_BEFORE_METHOD = onBeforeMethod;
         ON_RETURN_METHOD = onReturnMethod;
         ON_THROWS_METHOD = onThrowsMethod;
@@ -49,6 +44,7 @@ public class Spy {
      * 用于启动线程初始化
      */
     public static void initForAgentLauncher(
+            @Deprecated
             ClassLoader classLoader,
             Method onBeforeMethod,
             Method onReturnMethod,
@@ -56,7 +52,6 @@ public class Spy {
             Method beforeInvokingMethod,
             Method afterInvokingMethod,
             Method agentResetMethod) {
-        CLASSLOADER = classLoader;
         ON_BEFORE_METHOD = onBeforeMethod;
         ON_RETURN_METHOD = onReturnMethod;
         ON_THROWS_METHOD = onThrowsMethod;

@@ -106,11 +106,19 @@ public class GaServer {
     private static final byte CTRL_D = 0x04;
     private static final byte CTRL_X = 0x18;
     private static final byte EOT = 0x04;
+    private static final int EOF = -1;
 
     private final AtomicBoolean isBindRef = new AtomicBoolean(false);
     private final SessionManager sessionManager;
     private final CommandHandler commandHandler;
     private final int javaPid;
+    private final Thread jvmShutdownHooker = new Thread("ga-shutdown-hooker") {
+
+        @Override
+        public void run() {
+            GaServer.this.destroy();
+        }
+    };
 
     private final ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactory() {
         @Override
@@ -126,13 +134,7 @@ public class GaServer {
         this.sessionManager = new DefaultSessionManager();
         this.commandHandler = new DefaultCommandHandler(this, instrumentation);
 
-        Runtime.getRuntime().addShutdownHook(new Thread("ga-shutdown-hooker") {
-
-            @Override
-            public void run() {
-                GaServer.this.destroy();
-            }
-        });
+        Runtime.getRuntime().addShutdownHook(jvmShutdownHooker);
 
     }
 
@@ -280,8 +282,8 @@ public class GaServer {
         final Session session = attachment.getSession();
         try {
 
-            // 若读到-1，则说明SocketChannel已经关闭
-            if (-1 == socketChannel.read(byteBuffer)) {
+            // 若读到EOF，则说明SocketChannel已经关闭
+            if (EOF == socketChannel.read(byteBuffer)) {
                 logger.info("client={}@session[{}] was closed.", socketChannel, session.getSessionId());
                 closeSocketChannel(key, socketChannel);
                 return;
@@ -293,6 +295,7 @@ public class GaServer {
                 switch (attachment.getLineDecodeState()) {
                     case READ_CHAR: {
                         final byte data = byteBuffer.get();
+
                         if ('\n' == data) {
                             attachment.setLineDecodeState(READ_EOL);
                         }
@@ -401,7 +404,10 @@ public class GaServer {
             sessionManager.destroy();
         }
 
+        Runtime.getRuntime().removeShutdownHook(jvmShutdownHooker);
+
         executorService.shutdown();
+
         logger.info("ga-server destroy completed.");
 
     }

@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-    <jmxConfigurator/>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <layout class="ch.qos.logback.classic.PatternLayout">
+        <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </layout>
+        </encoder>
     </appender>
-    <logger name="greys-anatomy">
-        <level value="INFO"/>
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
-    </logger>
+    </root>
 </configuration>

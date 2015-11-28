@@ -42,16 +42,18 @@ public class ShutdownCommand implements Command {
      * 重置agent的greys
      * 让下载重新加载greys的时候能重新初始化ClassLoader
      */
-    private void reset() throws IllegalAccessException, InvocationTargetException {
+    private void reset() throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         // 从GreysClassLoader中加载Spy
         final Class<?> spyClassFromGreysClassLoader = loadSpyClassFromGreysClassLoader(
                 ShutdownCommand.class.getClassLoader(),
                 "com.github.ompc.greys.agent.Spy"
         );
-        if( null != spyClassFromGreysClassLoader ) {
+        if (null != spyClassFromGreysClassLoader) {
+
             // 重置整个greys
-            final Method agentResetMethod = (Method)getField(spyClassFromGreysClassLoader, "AGENT_RESET_METHOD").get(null);
+            final Method agentResetMethod = (Method) getField(spyClassFromGreysClassLoader, "AGENT_RESET_METHOD").get(null);
             agentResetMethod.invoke(null);
+
         }
     }
 
