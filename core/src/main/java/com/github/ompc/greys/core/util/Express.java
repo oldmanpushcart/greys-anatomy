@@ -64,12 +64,12 @@ public interface Express {
      */
     class ExpressFactory {
 
-        private static final ThreadLocal<Express> expressRef = new ThreadLocal<Express>() {
-            @Override
-            protected Express initialValue() {
-                return new GroovyExpress();
-            }
-        };
+//        private static final ThreadLocal<Express> expressRef = new ThreadLocal<Express>() {
+//            @Override
+//            protected Express initialValue() {
+//                return new GroovyExpress();
+//            }
+//        };
 
         /**
          * 构造表达式执行类
@@ -78,7 +78,8 @@ public interface Express {
          * @return 返回表达式实现
          */
         public static Express newExpress(Object object) {
-            return expressRef.get().reset().bind(object);
+            // return expressRef.get().reset().bind(object);
+            return new GroovyExpress().bind(object);
         }
 
     }
@@ -98,7 +99,7 @@ public interface Express {
         private static final long OFFSET_OF_ADVICE_IS_BEFORE;
         private static final long OFFSET_OF_ADVICE_IS_THROW;
         private static final long OFFSET_OF_ADVICE_IS_RETURN;
-        private static final long OFFSET_OF_PLAY_INDEX;
+        //private static final long OFFSET_OF_PLAY_INDEX;
 
         // init advice offset
 
@@ -114,7 +115,7 @@ public interface Express {
                 OFFSET_OF_ADVICE_IS_BEFORE = unsafe.objectFieldOffset(Advice.class.getDeclaredField("isBefore"));
                 OFFSET_OF_ADVICE_IS_THROW = unsafe.objectFieldOffset(Advice.class.getDeclaredField("isThrow"));
                 OFFSET_OF_ADVICE_IS_RETURN = unsafe.objectFieldOffset(Advice.class.getDeclaredField("isReturn"));
-                OFFSET_OF_PLAY_INDEX = unsafe.objectFieldOffset(Advice.class.getDeclaredField("playIndex"));
+                //OFFSET_OF_PLAY_INDEX = unsafe.objectFieldOffset(Advice.class.getDeclaredField("playIndex"));
             } catch (Throwable e) {
                 throw new Error(e);
             }
@@ -131,7 +132,7 @@ public interface Express {
                     .bind("isBefore", unsafe.getBoolean(a, OFFSET_OF_ADVICE_IS_BEFORE))
                     .bind("isThrow", unsafe.getBoolean(a, OFFSET_OF_ADVICE_IS_THROW))
                     .bind("isReturn", unsafe.getBoolean(a, OFFSET_OF_ADVICE_IS_RETURN))
-                    .bind("playIndex", unsafe.getObject(a, OFFSET_OF_PLAY_INDEX))
+                    //.bind("playIndex", unsafe.getObject(a, OFFSET_OF_PLAY_INDEX))
                     ;
         }
 
@@ -154,6 +155,7 @@ public interface Express {
         }
 
     }
+
 
     /**
      * Groovy实现的表达式
@@ -198,6 +200,7 @@ public interface Express {
         @Override
         public Express reset() {
             bind.getVariables().clear();
+            shell.getClassLoader().clearCache();
             shell.resetLoadedClasses();
             return this;
         }

@@ -60,4 +60,14 @@ public class Spy {
         AGENT_RESET_METHOD = agentResetMethod;
     }
 
+
+    public static void clean() {
+        ON_BEFORE_METHOD = null;
+        ON_RETURN_METHOD = null;
+        ON_THROWS_METHOD = null;
+        BEFORE_INVOKING_METHOD = null;
+        AFTER_INVOKING_METHOD = null;
+        AGENT_RESET_METHOD = null;
+    }
+
 }

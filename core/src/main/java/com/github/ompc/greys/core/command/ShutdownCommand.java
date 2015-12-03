@@ -4,6 +4,8 @@ import com.github.ompc.greys.core.advisor.Enhancer;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.LogUtil;
+import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.SearchUtils;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import org.slf4j.Logger;
@@ -57,6 +59,18 @@ public class ShutdownCommand implements Command {
         }
     }
 
+    /*
+     * 重置所有已经加载到JVM的Spy
+     */
+    private void cleanSpy(final Instrumentation inst) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
+        for (Class spyClass : SearchUtils.searchClass(inst, new Matcher.PatternMatcher(false, "com.github.ompc.greys.agent.Spy"))) {
+            final Method cleanMethod = spyClass.getMethod("clean");
+            cleanMethod.invoke(null);
+        }
+
+    }
+
     @Override
     public Action getAction() {
         return new RowAction() {
@@ -69,6 +83,9 @@ public class ShutdownCommand implements Command {
 
                 // reset for agent ClassLoader
                 reset();
+
+                // cleanSpy the spy
+                cleanSpy(inst);
 
                 printer.println("Greys Server is shut down.").finish();
                 return new RowAffect(enhancerAffect.cCnt());
