@@ -21,7 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * 调用跟踪命令<br/>
- * 负责输出一个类中的所有方法调用路径 Created by vlinux on 15/5/27.
+ * 负责输出一个类中的所有方法调用路径 Created by oldmanpushcart@gmail.com on 15/5/27.
  */
 @Cmd(name = "trace", sort = 6, summary = "Display the detailed thread stack of specified class and method",
         eg = {

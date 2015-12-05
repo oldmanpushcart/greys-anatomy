@@ -16,7 +16,7 @@ import static com.github.ompc.greys.core.textui.TTable.Align.RIGHT;
 
 /**
  * 时间碎片详情展示
- * Created by vlinux on 15/10/3.
+ * Created by oldmanpushcart@gmail.com on 15/10/3.
  */
 public class TTimeFragmentDetail implements TComponent {
 

@@ -8,7 +8,7 @@ import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
 
 /**
  * 匹配器
- * Created by vlinux on 15/5/17.
+ * Created by oldmanpushcart@gmail.com on 15/5/17.
  */
 public interface Matcher {
 

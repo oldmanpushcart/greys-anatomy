@@ -18,7 +18,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 /**
  * 展示类信息
  *
- * @author vlinux
+ * @author oldmanpushcart@gmail.com
  */
 @Cmd(name = "sc", sort = 0, summary = "Search all the classes loaded by JVM",
         eg = {

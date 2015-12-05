@@ -13,7 +13,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
  * 字符串工具类
- * Created by vlinux on 15/5/18.
+ * Created by oldmanpushcart@gmail.com on 15/5/18.
  */
 public class GaStringUtils {
 

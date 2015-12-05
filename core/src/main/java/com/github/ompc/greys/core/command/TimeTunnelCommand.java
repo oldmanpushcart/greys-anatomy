@@ -39,7 +39,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 /**
  * 时光隧道命令<br/>
  * 参数w/d依赖于参数i所传递的记录编号<br/>
- * Created by vlinux on 14/11/15.
+ * Created by oldmanpushcart@gmail.com on 14/11/15.
  */
 @Cmd(name = "tt", sort = 5, summary = "Time Tunnel",
         eg = {

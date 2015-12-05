@@ -24,7 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * Jstack命令<br/>
  * 负责输出当前方法执行上下文
  *
- * @author vlinux
+ * @author oldmanpushcart@gmail.com
  */
 @Cmd(name = "stack", sort = 6, summary = "Display the stack trace of specified class and method",
         eg = {

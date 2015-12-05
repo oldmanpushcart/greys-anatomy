@@ -15,7 +15,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 /**
  * 表格组件
- * Created by vlinux on 15/5/7.
+ * Created by oldmanpushcart@gmail.com on 15/5/7.
  */
 public class TTable implements TComponent {
 

@@ -17,7 +17,7 @@ import static java.lang.String.format;
 /**
  * 对象控件<br/>
  * 能展示出一个对象的内部结构
- * Created by vlinux on 15/5/20.
+ * Created by oldmanpushcart@gmail.com on 15/5/20.
  */
 public class TObject implements TComponent {
 

@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 默认会话管理器实现
- * Created by vlinux on 15/5/2.
+ * Created by oldmanpushcart@gmail.com on 15/5/2.
  */
 public class DefaultSessionManager implements SessionManager {
 

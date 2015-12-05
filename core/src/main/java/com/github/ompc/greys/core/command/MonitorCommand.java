@@ -72,7 +72,7 @@ import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
  * </tr>
  * </table>
  *
- * @author vlinux
+ * @author oldmanpushcart@gmail.com
  */
 @Cmd(name = "monitor", sort = 2, summary = "Monitor the execution of specified Class and its method",
         eg = {
@@ -97,7 +97,7 @@ public class MonitorCommand implements Command {
     /**
      * 数据监控用的Key
      *
-     * @author vlinux
+     * @author oldmanpushcart@gmail.com
      */
     private static class Key {
         private final String className;
@@ -129,7 +129,7 @@ public class MonitorCommand implements Command {
     /**
      * 数据监控用的value
      *
-     * @author vlinux
+     * @author oldmanpushcart@gmail.com
      */
     private static class Data {
         private int total;

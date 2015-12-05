@@ -6,7 +6,7 @@ import java.lang.reflect.Field;
 
 /**
  * Sun Jvm Unsafe holder
- * Created by vlinux on 15/10/6.
+ * Created by oldmanpushcart@gmail.com on 15/10/6.
  */
 public class UnsafeHolder {
 

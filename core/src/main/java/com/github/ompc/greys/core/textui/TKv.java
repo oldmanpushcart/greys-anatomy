@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 /**
  * KV排版控件
- * Created by vlinux on 15/5/9.
+ * Created by oldmanpushcart@gmail.com on 15/5/9.
  */
 public class TKv implements TComponent {
 

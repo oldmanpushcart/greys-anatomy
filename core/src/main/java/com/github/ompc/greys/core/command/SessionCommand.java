@@ -15,7 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * 查看会话状态命令
- * Created by vlinux on 15/5/3.
+ * Created by oldmanpushcart@gmail.com on 15/5/3.
  */
 @Cmd(name = "session", sort = 8, summary = "Display current session information",
         eg = {

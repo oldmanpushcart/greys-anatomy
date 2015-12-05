@@ -2,7 +2,7 @@ package com.github.ompc.greys.core.textui;
 
 /**
  * 命令行控件<br/>
- * Created by vlinux on 15/5/7.
+ * Created by oldmanpushcart@gmail.com on 15/5/7.
  */
 public interface TComponent {
 

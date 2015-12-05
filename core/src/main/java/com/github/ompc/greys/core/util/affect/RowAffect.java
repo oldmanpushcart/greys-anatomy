@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 行记录影响反馈
- * Created by vlinux on 15/5/21.
+ * Created by oldmanpushcart@gmail.com on 15/5/21.
  */
 public final class RowAffect extends Affect {
 

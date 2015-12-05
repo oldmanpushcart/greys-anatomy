@@ -15,7 +15,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
  * Java类信息控件
- * Created by vlinux on 15/5/7.
+ * Created by oldmanpushcart@gmail.com on 15/5/7.
  */
 public class TClassInfo implements TComponent {
 

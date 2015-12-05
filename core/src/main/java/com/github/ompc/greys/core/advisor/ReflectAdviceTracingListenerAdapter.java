@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 反射版的方法通知调用通知适配器
- * Created by vlinux on 15/7/24.
+ * Created by oldmanpushcart@gmail.com on 15/7/24.
  */
 public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessContext, IC extends InnerContext>
         extends ReflectAdviceListenerAdapter<PC, IC> implements AdviceTracingListener {

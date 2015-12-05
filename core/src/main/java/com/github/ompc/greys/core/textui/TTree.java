@@ -13,7 +13,7 @@ import static org.apache.commons.lang3.StringUtils.repeat;
 
 /**
  * 树形控件
- * Created by vlinux on 15/5/26.
+ * Created by oldmanpushcart@gmail.com on 15/5/26.
  */
 public class TTree implements TComponent {
 

@@ -12,7 +12,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
  * Java方法信息控件
- * Created by vlinux on 15/5/9.
+ * Created by oldmanpushcart@gmail.com on 15/5/9.
  */
 public class TMethodInfo implements TComponent {
 

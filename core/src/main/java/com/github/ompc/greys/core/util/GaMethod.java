@@ -7,7 +7,7 @@ import java.lang.reflect.Method;
 /**
  * Greys封装的方法<br/>
  * 主要用来封装构造函数cinit/init/method
- * Created by vlinux on 15/5/24.
+ * Created by oldmanpushcart@gmail.com on 15/5/24.
  */
 public class GaMethod {
 

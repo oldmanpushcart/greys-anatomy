@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Greys日志
- * Created by vlinux on 15/3/8.
+ * Created by oldmanpushcart@gmail.com on 15/3/8.
  */
 public class LogUtil {
 

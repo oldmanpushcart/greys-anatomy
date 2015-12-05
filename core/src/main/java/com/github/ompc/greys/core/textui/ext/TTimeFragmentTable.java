@@ -11,7 +11,7 @@ import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 
 /**
  * 时间片段表格
- * Created by vlinux on 15/10/3.
+ * Created by oldmanpushcart@gmail.com on 15/10/3.
  */
 public class TTimeFragmentTable implements TComponent {
 

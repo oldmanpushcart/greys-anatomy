@@ -30,7 +30,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * 调用跟踪命令<br/>
- * 负责输出一个类中的所有方法调用路径 Created by vlinux on 15/10/01.
+ * 负责输出一个类中的所有方法调用路径 Created by oldmanpushcart@gmail.com on 15/10/01.
  */
 @Cmd(name = "ptrace", sort = 6, summary = "Display the detailed thread path stack of specified class and method",
         eg = {

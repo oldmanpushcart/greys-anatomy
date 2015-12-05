@@ -9,14 +9,14 @@ import java.lang.instrument.Instrumentation;
 
 /**
  * 命令
- * Created by vlinux on 15/5/18.
+ * Created by oldmanpushcart@gmail.com on 15/5/18.
  */
 public interface Command {
 
     /**
      * 信息发送者
      *
-     * @author vlinux
+     * @author oldmanpushcart@gmail.com
      */
     interface Printer {
 

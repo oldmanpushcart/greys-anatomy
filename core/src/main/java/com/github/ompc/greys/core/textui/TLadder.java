@@ -7,7 +7,7 @@ import static org.apache.commons.lang3.StringUtils.repeat;
 
 /**
  * 阶梯缩进控件
- * Created by vlinux on 15/5/8.
+ * Created by oldmanpushcart@gmail.com on 15/5/8.
  */
 public class TLadder implements TComponent {
 

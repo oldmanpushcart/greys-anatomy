@@ -48,7 +48,7 @@ class TracingAsmCodeLock extends AsmCodeLock {
  * <h2>线程帧栈与执行帧栈</h2>
  * 编织者在执行通知的时候有两个重要的栈:线程帧栈(threadFrameStack),执行帧栈(frameStack)
  * <p/>
- * Created by vlinux on 15/5/17.
+ * Created by oldmanpushcart@gmail.com on 15/5/17.
  */
 public class AdviceWeaver extends ClassVisitor implements Opcodes {
 

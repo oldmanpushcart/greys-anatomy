@@ -23,7 +23,7 @@ import static com.github.ompc.greys.core.util.SearchUtils.searchClassWithSubClas
 /**
  * 展示方法信息
  *
- * @author vlinux
+ * @author oldmanpushcart@gmail.com
  */
 @Cmd(name = "sm", sort = 1, summary = "Search the method of classes loaded by JVM",
         eg = {

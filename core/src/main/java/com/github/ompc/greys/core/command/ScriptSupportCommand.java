@@ -4,7 +4,7 @@ import com.github.ompc.greys.core.Advice;
 
 /**
  * 脚本支持命令
- * Created by vlinux on 15/6/1.
+ * Created by oldmanpushcart@gmail.com on 15/6/1.
  */
 public interface ScriptSupportCommand {
 

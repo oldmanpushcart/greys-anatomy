@@ -20,7 +20,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * 帮助明令<br/>
  * 这个类的代码丑得一B啊，我都不想看
  * <p/>
- * Created by vlinux on 14/10/26.
+ * Created by oldmanpushcart@gmail.com on 14/10/26.
  */
 @Cmd(name = "help", sort = 12, summary = "Display Greys Help",
         eg = {

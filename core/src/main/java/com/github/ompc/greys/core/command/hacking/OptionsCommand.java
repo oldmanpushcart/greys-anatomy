@@ -27,7 +27,7 @@ import static org.apache.commons.lang3.reflect.FieldUtils.writeStaticField;
 
 /**
  * 选项开关命令
- * Created by vlinux on 15/6/6.
+ * Created by oldmanpushcart@gmail.com on 15/6/6.
  */
 @Cmd(isHacking = true, name = "options", summary = "Greys options",
         eg = {

@@ -10,7 +10,7 @@ import java.lang.instrument.Instrumentation;
 /**
  * 工具介绍<br/>
  * 感谢
- * Created by vlinux on 15/9/1.
+ * Created by oldmanpushcart@gmail.com on 15/9/1.
  */
 @Cmd(isHacking = true, name = "thanks", summary = "Thanks",
         eg = {

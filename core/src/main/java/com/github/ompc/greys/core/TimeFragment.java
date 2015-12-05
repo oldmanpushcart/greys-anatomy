@@ -4,7 +4,7 @@ import java.util.Date;
 
 /**
  * 时间片段
- * Created by vlinux on 15/10/4.
+ * Created by oldmanpushcart@gmail.com on 15/10/4.
  */
 public final class TimeFragment {
 

@@ -2,7 +2,7 @@ package com.github.ompc.greys.core.util;
 
 /**
  * 检查工具类
- * Created by vlinux on 15/5/19.
+ * Created by oldmanpushcart@gmail.com on 15/5/19.
  */
 public class GaCheckUtils {
 
