@@ -2,11 +2,11 @@ package com.github.ompc.greys.core.util;
 
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.exception.ExpressException;
+import ognl.DefaultMemberAccess;
 import ognl.Ognl;
+import ognl.OgnlContext;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.github.ompc.greys.core.util.UnsafeHolder.unsafe;
 import static org.apache.commons.lang3.reflect.FieldUtils.readDeclaredField;
@@ -158,14 +158,16 @@ public interface Express {
     }
 
 
-    class OgnlExpress extends UnsafeBindSupport implements Express {
+    class OgnlExpress implements Express {
 
-        private final Map<String, Object> context = new HashMap<String, Object>();
+        private Object bindObject;
+        private final OgnlContext context = new OgnlContext();
 
         @Override
         public Object get(String express) throws ExpressException {
             try {
-                return Ognl.getValue(express, context);
+                context.setMemberAccess(new DefaultMemberAccess(true));
+                return Ognl.getValue(express, context, bindObject);
             } catch (Exception e) {
                 throw new ExpressException(express, e);
             }
@@ -181,6 +183,12 @@ public interface Express {
             } catch (Throwable t) {
                 return false;
             }
+        }
+
+        @Override
+        public Express bind(Object object) {
+            this.bindObject = object;
+            return this;
         }
 
         @Override

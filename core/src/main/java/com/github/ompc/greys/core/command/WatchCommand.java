@@ -10,10 +10,10 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.textui.ext.TObject;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
-import com.github.ompc.greys.core.textui.ext.TObject;
 import org.slf4j.Logger;
 
 import java.lang.instrument.Instrumentation;
@@ -120,7 +120,7 @@ public class WatchCommand implements Command {
 
         // set default
         // 如果没有强行指定b/f/e/s中任何一个，则默认为b
-        if(!isBefore
+        if (!isBefore
                 && !isFinish
                 && !isException
                 && !isSuccess) {
@@ -158,10 +158,22 @@ public class WatchCommand implements Command {
                             }
 
                             @Override
+                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                if (isSuccess) {
+                                    watching(advice);
+                                }
+                            }
+
+                            @Override
+                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                if (isException) {
+                                    watching(advice);
+                                }
+                            }
+
+                            @Override
                             public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                if( isSuccess
-                                        || isException
-                                        || isFinish) {
+                                if (isFinish) {
                                     watching(advice);
                                 }
                             }
