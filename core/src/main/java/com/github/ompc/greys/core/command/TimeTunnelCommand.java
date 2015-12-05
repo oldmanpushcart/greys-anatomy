@@ -77,7 +77,7 @@ public class TimeTunnelCommand implements Command {
                     "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "THE STRUCTURE\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +
@@ -120,7 +120,7 @@ public class TimeTunnelCommand implements Command {
                     "    clazz\n" +
                     "    method\n" +
                     "\n" +
-                    "THE STRUCTURE\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object\n" +
                     "           clazz : the object's class\n" +
@@ -145,7 +145,7 @@ public class TimeTunnelCommand implements Command {
                     "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "THE STRUCTURE\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +

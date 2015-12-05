@@ -108,7 +108,7 @@ public class HelpCommand implements Command {
         });
 
         tTable.getBorder().remove(TTable.Border.BORDER_OUTER);
-        tTable.padding(0);
+        tTable.padding(1);
 
 //        final TKv tKv = new TKv(new TTable.ColumnDefine(20, false, TTable.Align.RIGHT), new TTable.ColumnDefine(50, false, TTable.Align.LEFT));
         for (Field f : clazz.getDeclaredFields()) {
