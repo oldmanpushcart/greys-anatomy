@@ -67,17 +67,17 @@ public class TimeTunnelCommand implements Command {
     private String methodPattern;
 
     @IndexArg(index = 2, name = "condition-express", isRequired = false,
-            summary = "Conditional expression by groovy",
+            summary = "Conditional expression by OGNL",
             description = "" +
-                    "For example\n" +
+                    "FOR EXAMPLE" +
                     "\n" +
-                    "    TRUE  : 1==1\n" +
-                    "    TRUE  : true\n" +
+                    "     TRUE : 1==1\n" +
+                    "     TRUE : true\n" +
                     "    FALSE : false\n" +
-                    "    TRUE  : params.length>=0\n" +
+                    "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE\n" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +
@@ -108,9 +108,10 @@ public class TimeTunnelCommand implements Command {
     // watch the index TimeTunnel
     @NamedArg(name = "w",
             hasValue = true,
-            summary = "watch-express, watch the time fragment by groovy express, like params[0], returnObj, throwExp and so on.",
+            summary = "watch-express, watch the time fragment by OGNL express, like params[0], returnObj, throwExp and so on.",
             description = ""
-                    + "For example\n" +
+                    + "FOR EXAMPLE" +
+                    "\n" +
                     "    params[0]\n" +
                     "    params[0]+params[1]\n" +
                     "    returnObj\n" +
@@ -119,7 +120,7 @@ public class TimeTunnelCommand implements Command {
                     "    clazz\n" +
                     "    method\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE\n" +
                     "\n" +
                     "          target : the object\n" +
                     "           clazz : the object's class\n" +
@@ -134,17 +135,17 @@ public class TimeTunnelCommand implements Command {
 
     @NamedArg(name = "s",
             hasValue = true,
-            summary = "Search-expression, to search the time fragments by groovy express",
+            summary = "Search-expression, to search the time fragments by OGNL express",
             description = "" +
-                    "For example\n" +
+                    "FOR EXAMPLE" +
                     "\n" +
-                    "    TRUE  : 1==1\n" +
-                    "    TRUE  : true\n" +
+                    "     TRUE : 1==1\n" +
+                    "     TRUE : true\n" +
                     "    FALSE : false\n" +
-                    "    TRUE  : params.length>=0\n" +
+                    "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE\n" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +

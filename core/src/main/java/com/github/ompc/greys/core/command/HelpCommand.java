@@ -5,7 +5,6 @@ import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.textui.TKv;
 import com.github.ompc.greys.core.textui.TTable;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 
@@ -59,19 +58,32 @@ public class HelpCommand implements Command {
 
         final StringBuilder usageSB = new StringBuilder();
         final StringBuilder sbOp = new StringBuilder();
+        final StringBuilder sbLongOp = new StringBuilder();
         for (Field f : clazz.getDeclaredFields()) {
 
             if (f.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg namedArg = f.getAnnotation(NamedArg.class);
-                sbOp.append(namedArg.name());
-                if (namedArg.hasValue()) {
-                    sbOp.append(":");
+                if (namedArg.name().length() == 1) {
+                    sbOp.append(namedArg.name());
+                    if (namedArg.hasValue()) {
+                        sbOp.append(":");
+                    }
+                } else {
+                    sbLongOp.append(namedArg.name());
+                    if (namedArg.hasValue()) {
+                        sbLongOp.append(":");
+                    }
                 }
+
             }
 
         }
         if (sbOp.length() > 0) {
             usageSB.append("-[").append(sbOp).append("]").append(" ");
+        }
+
+        if (sbLongOp.length() > 0) {
+            usageSB.append("--[").append(sbLongOp).append("]").append(" ");
         }
 
         for (Field f : clazz.getDeclaredFields()) {
@@ -90,7 +102,15 @@ public class HelpCommand implements Command {
     }
 
     private String drawOptions(Class<?> clazz) {
-        final TKv tKv = new TKv(new TTable.ColumnDefine(TTable.Align.RIGHT), new TTable.ColumnDefine(80, false, TTable.Align.LEFT));
+        final TTable tTable = new TTable(new TTable.ColumnDefine[]{
+                new TTable.ColumnDefine(15, false, TTable.Align.RIGHT),
+                new TTable.ColumnDefine(60, false, TTable.Align.LEFT)
+        });
+
+        tTable.getBorder().remove(TTable.Border.BORDER_OUTER);
+        tTable.padding(0);
+
+//        final TKv tKv = new TKv(new TTable.ColumnDefine(20, false, TTable.Align.RIGHT), new TTable.ColumnDefine(50, false, TTable.Align.LEFT));
         for (Field f : clazz.getDeclaredFields()) {
             if (f.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg namedArg = f.getAnnotation(NamedArg.class);
@@ -98,9 +118,10 @@ public class HelpCommand implements Command {
 
                 String description = namedArg.summary();
                 if (isNotBlank(namedArg.description())) {
-                    description += "\n" + namedArg.description();
+                    description += "\n\n" + namedArg.description();
                 }
-                tKv.add(named, description);
+                tTable.addRow(named, description);
+                // tKv.add(named, description);
             }
         }
 
@@ -109,13 +130,14 @@ public class HelpCommand implements Command {
                 final IndexArg indexArg = f.getAnnotation(IndexArg.class);
                 String description = indexArg.summary();
                 if (isNotBlank(indexArg.description())) {
-                    description += "\n" + indexArg.description();
+                    description += "\n\n" + indexArg.description();
                 }
-                tKv.add(indexArg.name(), description);
+                tTable.addRow(indexArg.name(), description);
+                // tKv.add(indexArg.name(), description);
             }
         }
 
-        return tKv.rendering();
+        return tTable.rendering();
     }
 
     private String drawEg(Cmd cmd) {
@@ -131,7 +153,7 @@ public class HelpCommand implements Command {
         final Cmd cmd = clazz.getAnnotation(Cmd.class);
         final TTable tTable = new TTable(new TTable.ColumnDefine[]{
                 new TTable.ColumnDefine(TTable.Align.RIGHT),
-                new TTable.ColumnDefine(100, false, TTable.Align.LEFT)
+                new TTable.ColumnDefine(80, false, TTable.Align.LEFT)
         })
                 .addRow("USAGE", drawUsage(clazz, cmd));
 
@@ -163,7 +185,7 @@ public class HelpCommand implements Command {
 
         final TTable tTable = new TTable(new TTable.ColumnDefine[]{
                 new TTable.ColumnDefine(TTable.Align.RIGHT),
-                new TTable.ColumnDefine(TTable.Align.LEFT)
+                new TTable.ColumnDefine(80, false, TTable.Align.LEFT)
         });
 
         final Map<String, Class<?>> commandMap = Commands.getInstance().listCommands();

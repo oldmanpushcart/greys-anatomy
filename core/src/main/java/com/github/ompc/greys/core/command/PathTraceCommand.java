@@ -10,12 +10,12 @@ import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.manager.TimeFragmentManager;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.textui.TTree;
+import com.github.ompc.greys.core.textui.ext.TTimeFragmentTable;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.*;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeLRUHashMap;
-import com.github.ompc.greys.core.textui.ext.TTimeFragmentTable;
-import com.github.ompc.greys.core.textui.TTree;
 
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -59,17 +59,17 @@ public class PathTraceCommand implements Command {
 //    private String tracingPathPattern;
 
     @IndexArg(index = 2, name = "condition-express", isRequired = false,
-            summary = "Conditional expression by groovy",
+            summary = "Conditional expression by OGNL",
             description = "" +
-                    "For example\n" +
+                    "FOR EXAMPLE" +
                     "\n" +
-                    "    TRUE  : 1==1\n" +
-                    "    TRUE  : true\n" +
+                    "     TRUE : 1==1\n" +
+                    "     TRUE : true\n" +
                     "    FALSE : false\n" +
-                    "    TRUE  : params.length>=0\n" +
+                    "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +

@@ -43,9 +43,9 @@ public class WatchCommand implements Command {
     private String methodPattern;
 
     @IndexArg(index = 2, name = "express",
-            summary = "express, write by groovy.",
+            summary = "express, write by OGNL.",
             description = ""
-                    + "For example\n" +
+                    + "FOR EXAMPLE" +
                     "    params[0]\n" +
                     "    params[0]+params[1]\n" +
                     "    returnObj\n" +
@@ -54,7 +54,7 @@ public class WatchCommand implements Command {
                     "    clazz\n" +
                     "    method\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object\n" +
                     "           clazz : the object's class\n" +
@@ -68,17 +68,17 @@ public class WatchCommand implements Command {
     private String express;
 
     @IndexArg(index = 3, name = "condition-express", isRequired = false,
-            summary = "Conditional expression by groovy",
+            summary = "Conditional expression by OGNL",
             description = "" +
-                    "For example\n" +
+                    "FOR EXAMPLE" +
                     "\n" +
-                    "    TRUE  : 1==1\n" +
-                    "    TRUE  : true\n" +
+                    "     TRUE : 1==1\n" +
+                    "     TRUE : true\n" +
                     "    FALSE : false\n" +
-                    "    TRUE  : params.length>=0\n" +
+                    "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +
