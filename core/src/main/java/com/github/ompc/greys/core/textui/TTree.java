@@ -1,15 +1,21 @@
-package com.github.ompc.greys.core.view;
+package com.github.ompc.greys.core.textui;
 
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import static java.lang.System.currentTimeMillis;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.repeat;
 
 /**
  * 树形控件
  * Created by vlinux on 15/5/26.
  */
-public class TreeView implements View {
+public class TTree implements TComponent {
 
     private static final String STEP_FIRST_CHAR = "`---";
     private static final String STEP_NORMAL_CHAR = "+---";
@@ -26,7 +32,7 @@ public class TreeView implements View {
     private Node current;
 
 
-    public TreeView(boolean isPrintCost, String title) {
+    public TTree(boolean isPrintCost, String title) {
         this.root = new Node(title).markBegin().markEnd();
         this.current = root;
         this.isPrintCost = isPrintCost;
@@ -34,19 +40,51 @@ public class TreeView implements View {
 
 
     @Override
-    public String draw() {
+    public String rendering() {
 
         final StringBuilder treeSB = new StringBuilder();
         recursive(0, true, "", root, new Callback() {
 
             @Override
             public void callback(int deep, boolean isLast, String prefix, Node node) {
-                treeSB.append(prefix).append(isLast ? STEP_FIRST_CHAR : STEP_NORMAL_CHAR);
+
+                final boolean hasChild = !node.children.isEmpty();
+                final String stepString = isLast ? STEP_FIRST_CHAR : STEP_NORMAL_CHAR;
+                final int stepStringLength = StringUtils.length(stepString);
+                treeSB.append(prefix).append(stepString);
+
+                int costPrefixLength = 0;
+                if (hasChild) {
+                    treeSB.append("+");
+                }
                 if (isPrintCost
                         && !node.isRoot()) {
-                    treeSB.append("[").append(node.endTimestamp - root.beginTimestamp).append(",").append(node.endTimestamp - node.beginTimestamp).append("ms] ");
+                    final String costPrefix = String.format("[%s,%sms]", (node.endTimestamp - root.beginTimestamp), (node.endTimestamp - node.beginTimestamp));
+                    costPrefixLength = StringUtils.length(costPrefix);
+                    treeSB.append(costPrefix);
                 }
-                treeSB.append(node.data).append("\n");
+
+                final Scanner scanner = new Scanner(new StringReader(node.data.toString()));
+                try {
+                    boolean isFirst = true;
+                    while (scanner.hasNextLine()) {
+                        if (isFirst) {
+                            treeSB.append(scanner.nextLine()).append("\n");
+                            isFirst = false;
+                        } else {
+                            treeSB
+                                    .append(prefix)
+                                    .append(repeat(' ', stepStringLength))
+                                    .append(hasChild ? "|" : EMPTY)
+                                    .append(repeat(' ', costPrefixLength))
+                                    .append(scanner.nextLine())
+                                    .append("\n");
+                        }
+                    }
+                } finally {
+                    scanner.close();
+                }
+
             }
 
         });
@@ -82,25 +120,25 @@ public class TreeView implements View {
      * @param data 节点数据
      * @return this
      */
-    public TreeView begin(Object data) {
+    public TTree begin(Object data) {
         current = new Node(current, data);
         current.markBegin();
         return this;
     }
 
-    public TreeView begin() {
+    public TTree begin() {
         return begin(null);
     }
 
     public Object get() {
-        if(current.isRoot()) {
+        if (current.isRoot()) {
             throw new IllegalStateException("current node is root.");
         }
         return current.data;
     }
 
-    public TreeView set(Object data) {
-        if(current.isRoot()) {
+    public TTree set(Object data) {
+        if (current.isRoot()) {
             throw new IllegalStateException("current node is root.");
         }
         current.data = data;
@@ -112,7 +150,7 @@ public class TreeView implements View {
      *
      * @return this
      */
-    public TreeView end() {
+    public TTree end() {
         if (current.isRoot()) {
             throw new IllegalStateException("current node is root.");
         }

@@ -1,4 +1,9 @@
-package com.github.ompc.greys.core.view;
+package com.github.ompc.greys.core.textui.ext;
+
+import com.github.ompc.greys.core.textui.TLadder;
+import com.github.ompc.greys.core.textui.TComponent;
+import com.github.ompc.greys.core.textui.TKv;
+import com.github.ompc.greys.core.textui.TTable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -12,18 +17,18 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  * Java类信息控件
  * Created by vlinux on 15/5/7.
  */
-public class ClassInfoView implements View {
+public class TClassInfo implements TComponent {
 
     private final Class<?> clazz;
     private final boolean isPrintField;
 
-    public ClassInfoView(Class<?> clazz, boolean isPrintField) {
+    public TClassInfo(Class<?> clazz, boolean isPrintField) {
         this.clazz = clazz;
         this.isPrintField = isPrintField;
     }
 
     @Override
-    public String draw() {
+    public String rendering() {
         return drawClassInfo();
     }
 
@@ -40,9 +45,9 @@ public class ClassInfoView implements View {
     private String drawClassInfo() {
         final CodeSource cs = clazz.getProtectionDomain().getCodeSource();
 
-        final TableView view = new TableView(new TableView.ColumnDefine[]{
-                new TableView.ColumnDefine(TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TableView.Align.LEFT)
+        final TTable tTable = new TTable(new TTable.ColumnDefine[]{
+                new TTable.ColumnDefine(TTable.Align.RIGHT),
+                new TTable.ColumnDefine(TTable.Align.LEFT)
         })
                 .addRow("class-info", tranClassName(clazz))
                 .addRow("code-source", getCodeSource(cs))
@@ -64,10 +69,11 @@ public class ClassInfoView implements View {
                 .addRow("class-loader", drawClassLoader());
 
         if (isPrintField) {
-            view.addRow("fields", drawField());
+            tTable.addRow("fields", drawField());
         }
 
-        return view.hasBorder(true).padding(1).draw();
+
+        return tTable.padding(1).rendering();
     }
 
 
@@ -81,7 +87,7 @@ public class ClassInfoView implements View {
 
             for (Field field : fields) {
 
-                final KVView kvView = new KVView(new TableView.ColumnDefine(TableView.Align.RIGHT), new TableView.ColumnDefine(50, false, TableView.Align.LEFT))
+                final TKv kvView = new TKv(new TTable.ColumnDefine(TTable.Align.RIGHT), new TTable.ColumnDefine(50, false, TTable.Align.LEFT))
                         .add("modifier", tranModifier(field.getModifiers()))
                         .add("type", tranClassName(field.getType()))
                         .add("name", field.getName());
@@ -112,7 +118,7 @@ public class ClassInfoView implements View {
                     }
                 }//if
 
-                fieldSB.append(kvView.draw()).append("\n");
+                fieldSB.append(kvView.rendering()).append("\n");
 
             }//for
 
@@ -156,24 +162,24 @@ public class ClassInfoView implements View {
     }
 
     private String drawSuperClass() {
-        final LadderView ladderView = new LadderView();
+        final TLadder tLadder = new TLadder();
         Class<?> superClass = clazz.getSuperclass();
         if (null != superClass) {
-            ladderView.addItem(tranClassName(superClass));
+            tLadder.addItem(tranClassName(superClass));
             while (true) {
                 superClass = superClass.getSuperclass();
                 if (null == superClass) {
                     break;
                 }
-                ladderView.addItem(tranClassName(superClass));
+                tLadder.addItem(tranClassName(superClass));
             }//while
         }
-        return ladderView.draw();
+        return tLadder.rendering();
     }
 
 
     private String drawClassLoader() {
-        final LadderView ladderView = new LadderView();
+        final TLadder ladderView = new TLadder();
         ClassLoader loader = clazz.getClassLoader();
         if (null != loader) {
             ladderView.addItem(loader.toString());
@@ -185,7 +191,7 @@ public class ClassInfoView implements View {
                 ladderView.addItem(loader.toString());
             }
         }
-        return ladderView.draw();
+        return ladderView.rendering();
     }
 
 }

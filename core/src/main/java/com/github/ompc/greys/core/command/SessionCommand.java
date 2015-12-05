@@ -4,7 +4,7 @@ import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.affect.RowAffect;
-import com.github.ompc.greys.core.view.TableView;
+import com.github.ompc.greys.core.textui.TTable;
 
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.Charset;
@@ -67,9 +67,9 @@ public class SessionCommand implements Command {
      */
     private String sessionToString(Session session) {
 
-        return new TableView(new TableView.ColumnDefine[]{
-                new TableView.ColumnDefine(TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TableView.Align.LEFT)
+        return new TTable(new TTable.ColumnDefine[]{
+                new TTable.ColumnDefine(TTable.Align.RIGHT),
+                new TTable.ColumnDefine(TTable.Align.LEFT)
         })
                 .addRow("JAVA_PID", session.getJavaPid())
                 .addRow("SESSION_ID", session.getSessionId())
@@ -78,9 +78,8 @@ public class SessionCommand implements Command {
                 .addRow("PROMPT", session.getPrompt())
                 .addRow("FROM", session.getSocketChannel().socket().getRemoteSocketAddress())
                 .addRow("TO", session.getSocketChannel().socket().getLocalSocketAddress())
-                .hasBorder(true)
                 .padding(1)
-                .draw();
+                .rendering();
 
     }
 

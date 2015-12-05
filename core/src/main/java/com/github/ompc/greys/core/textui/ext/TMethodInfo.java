@@ -1,4 +1,7 @@
-package com.github.ompc.greys.core.view;
+package com.github.ompc.greys.core.textui.ext;
+
+import com.github.ompc.greys.core.textui.TComponent;
+import com.github.ompc.greys.core.textui.TKv;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -11,17 +14,17 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  * Java方法信息控件
  * Created by vlinux on 15/5/9.
  */
-public class MethodInfoView implements View {
+public class TMethodInfo implements TComponent {
 
     private final Method method;
 
-    public MethodInfoView(Method method) {
+    public TMethodInfo(Method method) {
         this.method = method;
     }
 
     @Override
-    public String draw() {
-        return new KVView()
+    public String rendering() {
+        return new TKv()
                 .add("declaring-class", method.getDeclaringClass())
                 .add("method-name", method.getName())
                 .add("modifier", tranModifier(method.getModifiers()))
@@ -31,7 +34,7 @@ public class MethodInfoView implements View {
                 .add("exceptions", drawExceptions())
 //                .padding(1)
 //                .hasBorder(true)
-                .draw();
+                .rendering();
     }
 
     private String drawAnnotation() {

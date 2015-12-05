@@ -13,7 +13,7 @@ import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
-import com.github.ompc.greys.core.view.ObjectView;
+import com.github.ompc.greys.core.textui.ext.TObject;
 import org.slf4j.Logger;
 
 import java.lang.instrument.Instrumentation;
@@ -184,7 +184,7 @@ public class WatchCommand implements Command {
                                 try {
 
                                     if (isInCondition(advice)) {
-                                        printer.println(new ObjectView(newExpress(advice).get(express), expend).draw());
+                                        printer.println(new TObject(newExpress(advice).get(express), expend).rendering());
                                         if (isOverThreshold(timesRef.incrementAndGet())) {
                                             printer.finish();
                                         }

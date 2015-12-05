@@ -4,10 +4,10 @@ package com.github.ompc.greys.core.command;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.view.KVView;
-import com.github.ompc.greys.core.view.TableView;
-import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.textui.TKv;
+import com.github.ompc.greys.core.textui.TTable;
+import com.github.ompc.greys.core.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
@@ -90,7 +90,7 @@ public class HelpCommand implements Command {
     }
 
     private String drawOptions(Class<?> clazz) {
-        final KVView view = new KVView();
+        final TKv tKv = new TKv(new TTable.ColumnDefine(TTable.Align.RIGHT), new TTable.ColumnDefine(80, false, TTable.Align.LEFT));
         for (Field f : clazz.getDeclaredFields()) {
             if (f.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg namedArg = f.getAnnotation(NamedArg.class);
@@ -100,7 +100,7 @@ public class HelpCommand implements Command {
                 if (isNotBlank(namedArg.description())) {
                     description += "\n" + namedArg.description();
                 }
-                view.add(named, description);
+                tKv.add(named, description);
             }
         }
 
@@ -111,11 +111,11 @@ public class HelpCommand implements Command {
                 if (isNotBlank(indexArg.description())) {
                     description += "\n" + indexArg.description();
                 }
-                view.add(indexArg.name(), description);
+                tKv.add(indexArg.name(), description);
             }
         }
 
-        return view.draw();
+        return tKv.rendering();
     }
 
     private String drawEg(Cmd cmd) {
@@ -129,9 +129,9 @@ public class HelpCommand implements Command {
     private String commandHelp(Class<?> clazz) {
 
         final Cmd cmd = clazz.getAnnotation(Cmd.class);
-        final TableView view = new TableView(new TableView.ColumnDefine[]{
-                new TableView.ColumnDefine(TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TableView.Align.LEFT)
+        final TTable tTable = new TTable(new TTable.ColumnDefine[]{
+                new TTable.ColumnDefine(TTable.Align.RIGHT),
+                new TTable.ColumnDefine(100, false, TTable.Align.LEFT)
         })
                 .addRow("USAGE", drawUsage(clazz, cmd));
 
@@ -145,14 +145,14 @@ public class HelpCommand implements Command {
         }
 
         if (hasOptions) {
-            view.addRow("OPTIONS", drawOptions(clazz));
+            tTable.addRow("OPTIONS", drawOptions(clazz));
         }
 
         if (null != cmd.eg()) {
-            view.addRow("EXAMPLE", drawEg(cmd));
+            tTable.addRow("EXAMPLE", drawEg(cmd));
         }
 
-        return view.hasBorder(true).padding(1).draw();
+        return tTable.padding(1).rendering();
     }
 
 
@@ -161,9 +161,9 @@ public class HelpCommand implements Command {
      */
     private String mainHelp() {
 
-        final TableView view = new TableView(new TableView.ColumnDefine[]{
-                new TableView.ColumnDefine(TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TableView.Align.LEFT)
+        final TTable tTable = new TTable(new TTable.ColumnDefine[]{
+                new TTable.ColumnDefine(TTable.Align.RIGHT),
+                new TTable.ColumnDefine(TTable.Align.LEFT)
         });
 
         final Map<String, Class<?>> commandMap = Commands.getInstance().listCommands();
@@ -183,13 +183,13 @@ public class HelpCommand implements Command {
             if (clazz.isAnnotationPresent(Cmd.class)) {
                 final Cmd cmd = clazz.getAnnotation(Cmd.class);
                 if (!cmd.isHacking()) {
-                    view.addRow(cmd.name(), cmd.summary());
+                    tTable.addRow(cmd.name(), cmd.summary());
                 }
             }
 
         }
 
-        return view.hasBorder(true).padding(1).draw();
+        return tTable.padding(1).rendering();
     }
 
 }

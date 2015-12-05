@@ -1,5 +1,6 @@
 package com.github.ompc.greys.core.server;
 
+import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.advisor.AdviceWeaver;
 import com.github.ompc.greys.core.util.LogUtil;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ public class Session {
     private final AtomicInteger lockTx = new AtomicInteger(LOCK_TX_EMPTY);
 
     // 会话输出阻塞队列
-    private final BlockingQueue<String> writeQueue = new LinkedBlockingQueue<String>();
+    private final BlockingQueue<String> writeQueue = new LinkedBlockingQueue<String>(GlobalOptions.sessionWriteQueueCapacity);
 
     /**
      * 构建Session

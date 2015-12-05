@@ -1,4 +1,4 @@
-package com.github.ompc.greys.core.view;
+package com.github.ompc.greys.core.textui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,7 @@ import static org.apache.commons.lang3.StringUtils.repeat;
  * 阶梯缩进控件
  * Created by vlinux on 15/5/8.
  */
-public class LadderView implements View {
+public class TLadder implements TComponent {
 
     // 分隔符
     private static final String LADDER_CHAR = "`-";
@@ -24,7 +24,7 @@ public class LadderView implements View {
 
 
     @Override
-    public String draw() {
+    public String rendering() {
         final StringBuilder ladderSB = new StringBuilder();
         int deep = 0;
         for (String item : items) {
@@ -57,7 +57,7 @@ public class LadderView implements View {
      * @param item 项目
      * @return this
      */
-    public LadderView addItem(String item) {
+    public TLadder addItem(String item) {
         items.add(item);
         return this;
     }

@@ -4,12 +4,13 @@ import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.textui.TLadder;
+import com.github.ompc.greys.core.textui.TTable;
+import com.github.ompc.greys.core.textui.ext.TMethodInfo;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
-import com.github.ompc.greys.core.view.LadderView;
-import com.github.ompc.greys.core.view.MethodInfoView;
-import com.github.ompc.greys.core.view.TableView;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
@@ -36,7 +37,7 @@ public class SearchMethodCommand implements Command {
     @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
     private String classPattern;
 
-    @IndexArg(index = 1, name = "method-pattern", summary = "Method of Pattern Matching")
+    @IndexArg(index = 1, isRequired = false, name = "method-pattern", summary = "Method of Pattern Matching")
     private String methodPattern;
 
     @NamedArg(name = "d", summary = "Display the details of method")
@@ -49,7 +50,17 @@ public class SearchMethodCommand implements Command {
     public Action getAction() {
 
         final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
-        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
+
+        // 这里修复一个网友的咨询,如果methodPattern不填,是否可以默认为匹配为所有方法
+        // 这个是我的一个疏忽,在老的版本中不填methodPattern确实greys会自动默认进行全方法匹配
+        // 在某一个版本的优化中我随意去掉了这个功能,导致用户行为习惯受阻,非常抱歉
+        final Matcher methodNameMatcher;
+        if (StringUtils.isBlank(methodPattern)) {
+            methodNameMatcher = new Matcher.TrueMatcher();
+        } else {
+            methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
+        }
+
 
         return new RowAction() {
 
@@ -59,18 +70,17 @@ public class SearchMethodCommand implements Command {
                 final RowAffect affect = new RowAffect();
                 final LinkedHashSet<Class<?>> matchingClassSet = searchClassWithSubClass(inst, classNameMatcher);
 
-                final TableView view = new TableView(new TableView.ColumnDefine[]{
-                        new TableView.ColumnDefine(TableView.Align.LEFT),
-                        new TableView.ColumnDefine(TableView.Align.LEFT),
+                final TTable tTable = new TTable(new TTable.ColumnDefine[]{
+                        new TTable.ColumnDefine(TTable.Align.LEFT),
+                        new TTable.ColumnDefine(TTable.Align.LEFT),
                 })
                         .addRow("DECLARED-CLASS", "VISIBLE-METHOD")
-                        .hasBorder(true)
                         .padding(1);
                 for (Class<?> clazz : matchingClassSet) {
-                    drawSummary(view, clazz, methodNameMatcher, affect);
+                    drawSummary(tTable, clazz, methodNameMatcher, affect);
                 }
 
-                printer.print(view.draw()).finish();
+                printer.print(tTable.rendering()).finish();
                 return affect;
             }
 
@@ -81,9 +91,9 @@ public class SearchMethodCommand implements Command {
     /*
      * 绘制类方法摘要信息
      */
-    private void drawSummary(final TableView view, final Class<?> clazz, final Matcher methodNameMatcher, final RowAffect affect) {
+    private void drawSummary(final TTable view, final Class<?> clazz, final Matcher methodNameMatcher, final RowAffect affect) {
 
-        final LadderView classLadderView = new LadderView();
+        final TLadder classLadderView = new TLadder();
         for (Map.Entry<Class<?>, LinkedHashSet<Method>> entry : getVisibleMethods(clazz).entrySet()) {
 
             final Class<?> clazzOfMethod = entry.getKey();
@@ -92,9 +102,9 @@ public class SearchMethodCommand implements Command {
             for (Method method : methodSet) {
                 if (methodNameMatcher.matching(method.getName())) {
                     if (isDetail) {
-                        view.addRow(classLadderView.draw(), new MethodInfoView(method).draw());
+                        view.addRow(classLadderView.rendering(), new TMethodInfo(method).rendering());
                     } else {
-                        view.addRow(classLadderView.draw(), method.getName());
+                        view.addRow(classLadderView.rendering(), method.getName());
                     }
                     affect.rCnt(1);
                 }

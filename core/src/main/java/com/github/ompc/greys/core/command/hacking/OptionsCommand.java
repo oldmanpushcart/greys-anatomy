@@ -5,8 +5,8 @@ import com.github.ompc.greys.core.GlobalOptions.Option;
 import com.github.ompc.greys.core.command.Command;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
-import com.github.ompc.greys.core.view.TableView;
-import com.github.ompc.greys.core.view.TableView.ColumnDefine;
+import com.github.ompc.greys.core.textui.TTable;
+import com.github.ompc.greys.core.textui.TTable.ColumnDefine;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Matcher;
@@ -17,7 +17,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static com.github.ompc.greys.core.view.TableView.Align.LEFT;
+import static com.github.ompc.greys.core.textui.TTable.Align.LEFT;
 import static com.github.ompc.greys.core.util.GaCheckUtils.isIn;
 import static com.github.ompc.greys.core.util.GaStringUtils.newString;
 import static java.lang.String.format;
@@ -125,7 +125,7 @@ public class OptionsCommand implements Command {
 
     private String drawShowTable(Collection<Field> optionFields) throws IllegalAccessException {
 
-        final TableView view = new TableView(new ColumnDefine[]{
+        final TTable tTable = new TTable(new ColumnDefine[]{
                 new ColumnDefine(6, false, LEFT),
                 new ColumnDefine(10, false, LEFT),
                 new ColumnDefine(),
@@ -134,12 +134,11 @@ public class OptionsCommand implements Command {
                 new ColumnDefine(50, false, LEFT)
         })
                 .addRow("LEVEL", "TYPE", "NAME", "VALUE", "SUMMARY", "DESCRIPTION")
-                .padding(1)
-                .hasBorder(true);
+                .padding(1);
 
         for (final Field optionField : optionFields) {
             final Option optionAnnotation = optionField.getAnnotation(Option.class);
-            view.addRow(
+            tTable.addRow(
                     optionAnnotation.level(),
                     optionField.getType().getSimpleName(),
                     optionAnnotation.name(),
@@ -149,7 +148,7 @@ public class OptionsCommand implements Command {
             );
         }
 
-        return view.draw();
+        return tTable.rendering();
     }
 
 
@@ -200,13 +199,12 @@ public class OptionsCommand implements Command {
                     return affect;
                 }
 
-                final TableView view = new TableView(4)
+                final TTable tTable = new TTable(4)
                         .padding(1)
-                        .hasBorder(true)
                         .addRow("NAME", "BEFORE-VALUE", "AFTER-VALUE")
                         .addRow(optionAnnotation.name(), newString(beforeValue), newString(afterValue));
 
-                printer.print(view.draw()).finish();
+                printer.print(tTable.rendering()).finish();
                 return affect;
             }
         };

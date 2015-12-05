@@ -14,7 +14,7 @@ import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
-import com.github.ompc.greys.core.view.TableView;
+import com.github.ompc.greys.core.textui.TTable;
 
 import java.lang.instrument.Instrumentation;
 import java.text.DecimalFormat;
@@ -195,7 +195,7 @@ public class MonitorCommand implements Command {
 //                                            return;
 //                                        }
 
-                                        final TableView tableView = new TableView(10)
+                                        final TTable tTable = new TTable(10)
                                                 .addRow(
                                                         "TIMESTAMP",
                                                         "CLASS",
@@ -224,7 +224,7 @@ public class MonitorCommand implements Command {
 
                                                 final DecimalFormat df = new DecimalFormat("0.00");
 
-                                                tableView.addRow(
+                                                tTable.addRow(
                                                         SimpleDateFormatHolder.getInstance().format(new Date()),
                                                         entry.getKey().className,
                                                         entry.getKey().methodName,
@@ -240,10 +240,9 @@ public class MonitorCommand implements Command {
                                             }
                                         }
 
-                                        tableView.padding(1);
-                                        tableView.hasBorder(true);
+                                        tTable.padding(1);
 
-                                        printer.println(tableView.draw());
+                                        printer.println(tTable.rendering());
                                     }
 
                                 }, 0, cycle * 1000);

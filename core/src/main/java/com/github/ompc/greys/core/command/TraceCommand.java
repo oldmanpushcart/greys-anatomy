@@ -9,7 +9,7 @@ import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
-import com.github.ompc.greys.core.view.TreeView;
+import com.github.ompc.greys.core.textui.TTree;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -105,7 +105,7 @@ public class TraceCommand implements Command {
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
                                 final Entity entity = innerContext.getEntity();
-                                entity.view.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
                                 entity.tracingDeep++;
                             }
 
@@ -117,7 +117,7 @@ public class TraceCommand implements Command {
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
                                 final Entity entity = innerContext.getEntity();
-                                entity.view.end();
+                                entity.tTree.end();
                                 entity.tracingDeep--;
                             }
 
@@ -131,7 +131,7 @@ public class TraceCommand implements Command {
                                     }
                                 });
 
-                                entity.view = new TreeView(true, "Tracing for : " + getThreadInfo())
+                                entity.tTree = new TTree(true, "Tracing for : " + getThreadInfo())
                                         .begin(advice.clazz.getName() + ":" + advice.method.getName() + "()");
 
                             }
@@ -149,17 +149,17 @@ public class TraceCommand implements Command {
                             @Override
                             public void afterReturning(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
                                 final Entity entity = innerContext.getEntity();
-                                entity.view.end();
+                                entity.tTree.end();
                             }
 
                             @Override
                             public void afterThrowing(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
                                 final Entity entity = innerContext.getEntity();
-                                entity.view.begin("throw:" + advice.throwExp.getClass().getName() + "()").end();
+                                entity.tTree.begin("throw:" + advice.throwExp.getClass().getName() + "()").end();
 
                                 // 这里将堆栈的end全部补上
                                 while (entity.tracingDeep-- >= 0) {
-                                    entity.view.end();
+                                    entity.tTree.end();
                                 }
 
                             }
@@ -183,7 +183,7 @@ public class TraceCommand implements Command {
                                 final long cost = innerContext.getCost();
                                 if (isInCondition(advice, cost)) {
                                     final Entity entity = innerContext.getEntity();
-                                    printer.println(entity.view.draw());
+                                    printer.println(entity.tTree.rendering());
                                     if (isOverThreshold(timesRef.incrementAndGet())) {
                                         printer.finish();
                                     }
@@ -201,7 +201,7 @@ public class TraceCommand implements Command {
 
     private class Entity {
 
-        TreeView view;
+        TTree tTree;
 
         // 跟踪深度
         int tracingDeep = 0;
