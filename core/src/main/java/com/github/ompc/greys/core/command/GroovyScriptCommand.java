@@ -1,17 +1,10 @@
 package com.github.ompc.greys.core.command;
 
-import com.github.ompc.greys.core.Advice;
-import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.InnerContext;
-import com.github.ompc.greys.core.advisor.ProcessContext;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter.DefaultReflectAdviceListenerAdapter;
-import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
-import groovy.lang.GroovyClassLoader;
 
 import java.io.File;
 import java.lang.instrument.Instrumentation;
@@ -22,12 +15,13 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  * 脚本增强命令
  * Created by vlinux on 15/5/31.
  */
-@Cmd(name = "groovy", sort = 6, summary = "Enhanced Groovy",
-        eg = {
-                "groovy -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank /tmp/watch.groovy",
-                "groovy org.apache.commons.lang.StringUtils isBlank /tmp/watch.groovy",
-                "groovy *StringUtils isBlank /tmp/watch.groovy"
-        })
+//@Cmd(name = "groovy", sort = 6, summary = "Enhanced Groovy",
+//        eg = {
+//                "groovy -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank /tmp/watch.groovy",
+//                "groovy org.apache.commons.lang.StringUtils isBlank /tmp/watch.groovy",
+//                "groovy *StringUtils isBlank /tmp/watch.groovy"
+//        })
+@Deprecated
 public class GroovyScriptCommand implements ScriptSupportCommand, Command {
 
     @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
@@ -85,53 +79,55 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
                     }
                 };
 
-                final Class<?> scriptClass = new GroovyClassLoader(getClass().getClassLoader()).parseClass(scriptFile);
-                final ScriptListener scriptListener = (ScriptListener) scriptClass.newInstance();
+                return null;
 
-
-                return new GetEnhancer() {
-                    @Override
-                    public Matcher getClassNameMatcher() {
-                        return classNameMatcher;
-                    }
-
-                    @Override
-                    public Matcher getMethodNameMatcher() {
-                        return methodNameMatcher;
-                    }
-
-                    @Override
-                    public AdviceListener getAdviceListener() {
-
-                        return new DefaultReflectAdviceListenerAdapter() {
-
-                            @Override
-                            public void create() {
-                                scriptListener.create(output);
-                            }
-
-                            @Override
-                            public void destroy() {
-                                scriptListener.destroy(output);
-                            }
-
-                            @Override
-                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                scriptListener.before(output, advice);
-                            }
-
-                            @Override
-                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                scriptListener.afterReturning(output, advice);
-                            }
-
-                            @Override
-                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                scriptListener.afterThrowing(output, advice);
-                            }
-                        };
-                    }
-                };
+//                final Class<?> scriptClass = new GroovyClassLoader(getClass().getClassLoader()).parseClass(scriptFile);
+//                final ScriptListener scriptListener = (ScriptListener) scriptClass.newInstance();
+//
+//
+//                return new GetEnhancer() {
+//                    @Override
+//                    public Matcher getClassNameMatcher() {
+//                        return classNameMatcher;
+//                    }
+//
+//                    @Override
+//                    public Matcher getMethodNameMatcher() {
+//                        return methodNameMatcher;
+//                    }
+//
+//                    @Override
+//                    public AdviceListener getAdviceListener() {
+//
+//                        return new DefaultReflectAdviceListenerAdapter() {
+//
+//                            @Override
+//                            public void create() {
+//                                scriptListener.create(output);
+//                            }
+//
+//                            @Override
+//                            public void destroy() {
+//                                scriptListener.destroy(output);
+//                            }
+//
+//                            @Override
+//                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+//                                scriptListener.before(output, advice);
+//                            }
+//
+//                            @Override
+//                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+//                                scriptListener.afterReturning(output, advice);
+//                            }
+//
+//                            @Override
+//                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+//                                scriptListener.afterThrowing(output, advice);
+//                            }
+//                        };
+//                    }
+//                };
             }
         };
     }

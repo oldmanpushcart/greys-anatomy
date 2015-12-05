@@ -82,8 +82,8 @@
             <artifactId>jline</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
+            <groupId>ognl</groupId>
+            <artifactId>ognl</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
