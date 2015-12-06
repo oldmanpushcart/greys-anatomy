@@ -58,7 +58,10 @@ public class GaCheckUtils {
 
 
     public static boolean $(String str) {
-        return isEquals(str, new String(new byte[]{0x6a, 0x75, 0x6c, 0x79}));
+        return isIn(str,
+                new String(new byte[]{0x6a, 0x75, 0x6c, 0x79}),
+                new String(new byte[]{0x64, 0x6f, 0x6e, 0x67, 0x67, 0x75, 0x61})
+        );
     }
 
     public static byte[] $$() {

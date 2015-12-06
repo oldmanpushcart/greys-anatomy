@@ -28,53 +28,16 @@
   curl -sLk http://t.cn/R2QbHFc|sh
   ```
 
-## 求助!
-
-我正在研发`1.7.2.4`版本,这个版本旨在解决存在Perm区泄漏的问题,即一旦使用了groovy表达式之后shutdown,已经加载到Perm区的Groovy表达式对象将无法从Perm区中清除.
-我百思不得其解,希望有经验的朋友能帮我看看.
-
 ## 最新版本
 
-### **VERSION :** 1.7.2.3
+### **VERSION :** 1.7.3.0
 
 更新内容
 
-- 去掉了所有命令的`-S`参数，默认`-S`参数永远生效，这意味着你在watch一个接口或者抽象类时能自动关联到其所有的实现和子类
-
-- 所有命令进行类匹配时，能向上查找到其父类所声明的方法。之前只能匹配到当前类所声明的方法，遇到子类调用父类的情况则匹配不上，容易造成使用者的误解
-
-- 增加`ptrace`命令，该命令为`trace`命令的增强版，但内部实现完全不同。
-
-  1. `trace`的工作原理非常容易让增强后的方法超过JVM方法64K的限制，`ptrace`则绕过这个问题
-  1. `ptrace`的`-t`参数能利用`tt`命令记录下指定需然路径上的方法入参和返回值，并在`tt`命令看到这些调用记录，极大方便跟踪定位问题
-  1. `ptrace`的使用会带来一定的性能开销，如果渲染路径匹配上的类、方法过多，会在渲染过程中大量消耗CPU资源、造成系统长时间停顿。所以建议`--path`、`--Epath`匹配的方法越少越好
-
-- `monitor`命令增加`MIN-RT`、`MAX-RT`两个指标，方便排除`RT`判断的干扰
-  
-- 修复`trace`命令之前在处理方法抛出异常时会导致展示的链路错误、链路耗时为负数的情况
-  
-- 重构部分内核，为年后发布`1.8.0.0`版本支持GP协议([GREYS-PROTOCOL](https://github.com/oldmanpushcart/greys-anatomy/wiki/GREYS-PROTOCOL))做准备  
-  
-- 优化性能，表达式用`Unsafe`、`ThreadLocal`、`LRUCache`做性能开销优化
-
-- `1.7.2.0`因为 [#80](#80) 问题而调整了`ptrace`命令参数的用法
-
-  使用`--path`和`--Epath`两个参数来完成原来非常复杂的正则表达式写法
-  
-  ```shell
-  ptrace com.alibaba.*Test printAddress \
-      --path com.alibaba.Address \
-      --path com.alibaba.User \
-      --Epath com\.alibaba\.manager\..*
-  ```
-
-- `1.7.2.1`中的`trace`、`ptrace`命令支持cost(ms)条件作为过滤条件
-
-  ```shell
-  ptrace com.alibaba.*Test printAddress 'cost>=1L' --path com.alibaba.*
-  ```
-
-- `1.7.2.2`中修复`tt -i`输出时间片段详情时忽略了`returnObj`的BUG
+* 因为我对Groovy了解不足,导致Groovy在使用过程中会存在Perm区泄漏.为了规避这个问题,我用OGNL表达式替换了Groovy
+* Groovy去掉之后,`groovy`命令也随之不再支持,等有人帮我解决了泄漏后续会加上
+* 修复`watch`命令对`-b`/`-s`/`-e`/`-f`识别混乱的bug
+* 重构了textui
 
 ### 版本号说明
 
