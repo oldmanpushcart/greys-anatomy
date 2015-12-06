@@ -2,7 +2,7 @@ package com.github.ompc.greys.core.util;
 
 /**
  * 检查工具类
- * Created by vlinux on 15/5/19.
+ * Created by oldmanpushcart@gmail.com on 15/5/19.
  */
 public class GaCheckUtils {
 
@@ -58,7 +58,10 @@ public class GaCheckUtils {
 
 
     public static boolean $(String str) {
-        return isEquals(str, new String(new byte[]{0x6a, 0x75, 0x6c, 0x79}));
+        return isIn(str,
+                new String(new byte[]{0x6a, 0x75, 0x6c, 0x79}),
+                new String(new byte[]{0x64, 0x6f, 0x6e, 0x67, 0x67, 0x75, 0x61})
+        );
     }
 
     public static byte[] $$() {

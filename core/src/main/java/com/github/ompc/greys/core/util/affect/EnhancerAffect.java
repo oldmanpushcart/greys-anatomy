@@ -11,7 +11,7 @@ import static java.lang.String.format;
 /**
  * 增强影响范围<br/>
  * 统计影响类/方法/耗时
- * Created by vlinux on 15/5/19.
+ * Created by oldmanpushcart@gmail.com on 15/5/19.
  */
 public final class EnhancerAffect extends Affect {
 

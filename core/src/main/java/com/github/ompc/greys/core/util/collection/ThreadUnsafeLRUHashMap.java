@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * 非线程安全的带LRU功能的HashMap<br/>
- * Created by vlinux on 15/10/2.
+ * Created by oldmanpushcart@gmail.com on 15/10/2.
  */
 public class ThreadUnsafeLRUHashMap<K, V> extends LinkedHashMap<K, V> {
 

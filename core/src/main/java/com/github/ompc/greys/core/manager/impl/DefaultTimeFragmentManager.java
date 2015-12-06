@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 默认时间碎片实现
- * Created by vlinux on 15/10/3.
+ * Created by oldmanpushcart@gmail.com on 15/10/3.
  */
 public class DefaultTimeFragmentManager implements TimeFragmentManager {
 

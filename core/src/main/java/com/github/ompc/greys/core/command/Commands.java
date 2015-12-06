@@ -108,6 +108,8 @@ public class Commands {
 
                             try {
                                 GaReflectUtils.set(field, value, command);
+                            } catch (IllegalArgumentException e) {
+                                throw new CommandInitializationException(cmdName, e);
                             } catch (IllegalAccessException e) {
                                 throw new CommandInitializationException(cmdName, e);
                             }
@@ -118,6 +120,8 @@ public class Commands {
                     else {
                         try {
                             GaReflectUtils.set(field, opt.has(arg.name()), command);
+                        } catch (IllegalArgumentException e) {
+                            throw new CommandInitializationException(cmdName, e);
                         } catch (IllegalAccessException e) {
                             throw new CommandInitializationException(cmdName, e);
                         }
@@ -138,6 +142,8 @@ public class Commands {
                     if (opt.nonOptionArguments().size() > index) {
                         try {
                             GaReflectUtils.set(field, opt.nonOptionArguments().get(index), command);
+                        } catch (IllegalArgumentException e) {
+                            throw new CommandInitializationException(cmdName, e);
                         } catch (IllegalAccessException e) {
                             throw new CommandInitializationException(cmdName, e);
                         }
@@ -163,7 +169,7 @@ public class Commands {
                 if (arg.hasValue()) {
                     final boolean isCollection = field.getType().isAssignableFrom(Collection.class);
 
-                    if( isCollection ) {
+                    if (isCollection) {
                         osb.withOptionalArg();
                     } else {
                         osb.withOptionalArg().ofType(field.getType());

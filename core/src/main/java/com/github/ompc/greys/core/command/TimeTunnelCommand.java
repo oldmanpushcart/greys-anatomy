@@ -15,12 +15,11 @@ import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
-import com.github.ompc.greys.core.util.PlayIndexHolder;
 import com.github.ompc.greys.core.util.affect.RowAffect;
-import com.github.ompc.greys.core.view.ObjectView;
-import com.github.ompc.greys.core.view.TableView;
-import com.github.ompc.greys.core.view.TimeFragmentDetailView;
-import com.github.ompc.greys.core.view.TimeFragmentTableView;
+import com.github.ompc.greys.core.textui.ext.TObject;
+import com.github.ompc.greys.core.textui.TTable;
+import com.github.ompc.greys.core.textui.ext.TTimeFragmentDetail;
+import com.github.ompc.greys.core.textui.ext.TTimeFragmentTable;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
@@ -40,7 +39,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 /**
  * 时光隧道命令<br/>
  * 参数w/d依赖于参数i所传递的记录编号<br/>
- * Created by vlinux on 14/11/15.
+ * Created by oldmanpushcart@gmail.com on 14/11/15.
  */
 @Cmd(name = "tt", sort = 5, summary = "Time Tunnel",
         eg = {
@@ -68,17 +67,17 @@ public class TimeTunnelCommand implements Command {
     private String methodPattern;
 
     @IndexArg(index = 2, name = "condition-express", isRequired = false,
-            summary = "Conditional expression by groovy",
+            summary = "Conditional expression by OGNL",
             description = "" +
-                    "For example\n" +
+                    "FOR EXAMPLE" +
                     "\n" +
-                    "    TRUE  : 1==1\n" +
-                    "    TRUE  : true\n" +
+                    "     TRUE : 1==1\n" +
+                    "     TRUE : true\n" +
                     "    FALSE : false\n" +
-                    "    TRUE  : params.length>=0\n" +
+                    "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +
@@ -109,9 +108,10 @@ public class TimeTunnelCommand implements Command {
     // watch the index TimeTunnel
     @NamedArg(name = "w",
             hasValue = true,
-            summary = "watch-express, watch the time fragment by groovy express, like params[0], returnObj, throwExp and so on.",
+            summary = "watch-express, watch the time fragment by OGNL express, like params[0], returnObj, throwExp and so on.",
             description = ""
-                    + "For example\n" +
+                    + "FOR EXAMPLE" +
+                    "\n" +
                     "    params[0]\n" +
                     "    params[0]+params[1]\n" +
                     "    returnObj\n" +
@@ -120,7 +120,7 @@ public class TimeTunnelCommand implements Command {
                     "    clazz\n" +
                     "    method\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object\n" +
                     "           clazz : the object's class\n" +
@@ -135,17 +135,17 @@ public class TimeTunnelCommand implements Command {
 
     @NamedArg(name = "s",
             hasValue = true,
-            summary = "Search-expression, to search the time fragments by groovy express",
+            summary = "Search-expression, to search the time fragments by OGNL express",
             description = "" +
-                    "For example\n" +
+                    "FOR EXAMPLE" +
                     "\n" +
-                    "    TRUE  : 1==1\n" +
-                    "    TRUE  : true\n" +
+                    "     TRUE : 1==1\n" +
+                    "     TRUE : true\n" +
                     "    FALSE : false\n" +
-                    "    TRUE  : params.length>=0\n" +
+                    "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +
@@ -154,9 +154,9 @@ public class TimeTunnelCommand implements Command {
                     "       returnObj : the returned object of method\n" +
                     "        throwExp : the throw exception of method\n" +
                     "        isReturn : the method ended by return\n" +
-                    "         isThrow : the method ended by throwing exception" +
-                    "           index : the index of time-fragment record" +
-                    "       processId : the process ID of time-fragment record" +
+                    "         isThrow : the method ended by throwing exception\n" +
+                    "           index : the index of time-fragment record\n" +
+                    "       processId : the process ID of time-fragment record\n" +
                     "            cost : the cost time of time-fragment record"
     )
     private String searchExpress = EMPTY;
@@ -278,7 +278,7 @@ public class TimeTunnelCommand implements Command {
                                         getStack(STACK_DEEP)
                                 );
 
-                                final TimeFragmentTableView view = new TimeFragmentTableView(isFirst)
+                                final TTimeFragmentTable view = new TTimeFragmentTable(isFirst)
                                         .turnOffBottom()    // 表格控件不输出表格上边框,这样两个表格就能拼凑在一起
                                         .add(timeFragment)  // 填充表格内容
                                         ;
@@ -290,7 +290,7 @@ public class TimeTunnelCommand implements Command {
                                 if (isF) {
                                     view.turnOnBottom();
                                 }
-                                printer.print(isF, view.draw());
+                                printer.print(isF, view.rendering());
                             }
 
                         };
@@ -346,26 +346,25 @@ public class TimeTunnelCommand implements Command {
                 // 执行watchExpress
                 if (hasWatchExpress()) {
 
-                    final TableView view = new TableView(new TableView.ColumnDefine[]{
-                            new TableView.ColumnDefine(TableView.Align.RIGHT),
-                            new TableView.ColumnDefine(TableView.Align.LEFT)
+                    final TTable tTable = new TTable(new TTable.ColumnDefine[]{
+                            new TTable.ColumnDefine(TTable.Align.RIGHT),
+                            new TTable.ColumnDefine(TTable.Align.LEFT)
                     })
-                            .hasBorder(true)
                             .padding(1)
                             .addRow("INDEX", "SEARCH-RESULT");
 
                     for (TimeFragment timeFragment : matchingTimeFragments) {
                         final Object value = newExpress(timeFragment.advice).get(watchExpress);
-                        view.addRow(
+                        tTable.addRow(
                                 timeFragment.id,
                                 isNeedExpend()
-                                        ? new ObjectView(value, expend).draw()
+                                        ? new TObject(value, expend).rendering()
                                         : value
                         );
 
                     }
 
-                    printer.print(view.draw()).finish();
+                    printer.print(tTable.rendering()).finish();
                 } // 单纯的列表格
                 else {
                     printer.print(drawTimeTunnelTable(matchingTimeFragments)).finish();
@@ -411,7 +410,7 @@ public class TimeTunnelCommand implements Command {
                 final Advice advice = timeFragment.advice;
                 final Object value = newExpress(advice).get(watchExpress);
                 if (isNeedExpend()) {
-                    printer.println(new ObjectView(value, expend).draw()).finish();
+                    printer.println(new TObject(value, expend).rendering()).finish();
                 } else {
                     printer.println(newString(value)).finish();
                 }
@@ -445,7 +444,7 @@ public class TimeTunnelCommand implements Command {
                 Advice reAdvice = null;
 
                 // 注入时间片段id
-                PlayIndexHolder.getInstance().set(timeFragment.id);
+                // PlayIndexHolder.getInstance().set(timeFragment.id);
 
                 try {
                     method.setAccessible(true);
@@ -482,7 +481,7 @@ public class TimeTunnelCommand implements Command {
                     cost = System.currentTimeMillis() - beginTimestamp;
 
                     // 清除时间片段id
-                    PlayIndexHolder.getInstance().remove();
+                    // PlayIndexHolder.getInstance().remove();
                 }
 
                 final TimeFragment reTimeFragment = new TimeFragment(
@@ -495,8 +494,8 @@ public class TimeTunnelCommand implements Command {
                 );
 
 
-                final TimeFragmentDetailView view = new TimeFragmentDetailView(reTimeFragment, expend);
-                printer.print(view.draw())
+                final TTimeFragmentDetail view = new TTimeFragmentDetail(reTimeFragment, expend);
+                printer.print(view.rendering())
                         .println(format("Time fragment[%d] successfully replayed.", index))
                         .finish();
                 return new RowAffect(1);
@@ -527,11 +526,11 @@ public class TimeTunnelCommand implements Command {
      * 绘制TimeTunnel表格
      */
     private String drawTimeTunnelTable(final ArrayList<TimeFragment> timeFragments) {
-        final TimeFragmentTableView view = new TimeFragmentTableView(true);
+        final TTimeFragmentTable view = new TTimeFragmentTable(true);
         for (TimeFragment timeFragment : timeFragments) {
             view.add(timeFragment);
         }
-        return view.draw();
+        return view.rendering();
     }
 
 
@@ -550,7 +549,7 @@ public class TimeTunnelCommand implements Command {
                     return new RowAffect();
                 }
 
-                printer.print(new TimeFragmentDetailView(timeFragment, expend).draw()).finish();
+                printer.print(new TTimeFragmentDetail(timeFragment, expend).rendering()).finish();
                 return new RowAffect(1);
 
             }

@@ -24,7 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * Jstack命令<br/>
  * 负责输出当前方法执行上下文
  *
- * @author vlinux
+ * @author oldmanpushcart@gmail.com
  */
 @Cmd(name = "stack", sort = 6, summary = "Display the stack trace of specified class and method",
         eg = {
@@ -42,17 +42,17 @@ public class StackCommand implements Command {
     private String methodPattern;
 
     @IndexArg(index = 2, name = "condition-express", isRequired = false,
-            summary = "Conditional expression by groovy",
+            summary = "Conditional expression by OGNL",
             description = "" +
-                    "For example\n" +
+                    "FOR EXAMPLE" +
                     "\n" +
-                    "    TRUE  : 1==1\n" +
-                    "    TRUE  : true\n" +
+                    "     TRUE : 1==1\n" +
+                    "     TRUE : true\n" +
                     "    FALSE : false\n" +
-                    "    TRUE  : params.length>=0\n" +
+                    "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +

@@ -2,7 +2,7 @@ package com.github.ompc.greys.core.exception;
 
 /**
  * 表达式异常
- * Created by vlinux on 15/5/20.
+ * Created by oldmanpushcart@gmail.com on 15/5/20.
  */
 public class ExpressException extends Exception {
 

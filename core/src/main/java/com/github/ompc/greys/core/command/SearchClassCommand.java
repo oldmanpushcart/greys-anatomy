@@ -7,7 +7,7 @@ import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
-import com.github.ompc.greys.core.view.ClassInfoView;
+import com.github.ompc.greys.core.textui.ext.TClassInfo;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Set;
@@ -18,7 +18,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 /**
  * 展示类信息
  *
- * @author vlinux
+ * @author oldmanpushcart@gmail.com
  */
 @Cmd(name = "sc", sort = 0, summary = "Search all the classes loaded by JVM",
         eg = {
@@ -55,7 +55,7 @@ public class SearchClassCommand implements Command {
                 if (isDetail) {
 
                     for (Class<?> clazz : matchedClassSet) {
-                        printer.println(new ClassInfoView(clazz, isField).draw());
+                        printer.println(new TClassInfo(clazz, isField).rendering());
                     }
 
                 }

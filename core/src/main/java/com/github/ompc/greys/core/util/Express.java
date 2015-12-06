@@ -2,8 +2,9 @@ package com.github.ompc.greys.core.util;
 
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.exception.ExpressException;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
+import ognl.DefaultMemberAccess;
+import ognl.Ognl;
+import ognl.OgnlContext;
 
 import java.lang.reflect.Field;
 
@@ -12,7 +13,7 @@ import static org.apache.commons.lang3.reflect.FieldUtils.readDeclaredField;
 
 /**
  * 表达式
- * Created by vlinux on 15/5/20.
+ * Created by oldmanpushcart@gmail.com on 15/5/20.
  */
 public interface Express {
 
@@ -64,12 +65,12 @@ public interface Express {
      */
     class ExpressFactory {
 
-//        private static final ThreadLocal<Express> expressRef = new ThreadLocal<Express>() {
-//            @Override
-//            protected Express initialValue() {
-//                return new GroovyExpress();
-//            }
-//        };
+        private static final ThreadLocal<Express> expressRef = new ThreadLocal<Express>() {
+            @Override
+            protected Express initialValue() {
+                return new OgnlExpress();
+            }
+        };
 
         /**
          * 构造表达式执行类
@@ -78,8 +79,8 @@ public interface Express {
          * @return 返回表达式实现
          */
         public static Express newExpress(Object object) {
-            // return expressRef.get().reset().bind(object);
-            return new GroovyExpress().bind(object);
+            return expressRef.get().reset().bind(object);
+            // return new OgnlExpress().bind(object);
         }
 
     }
@@ -157,23 +158,16 @@ public interface Express {
     }
 
 
-    /**
-     * Groovy实现的表达式
-     */
-    class GroovyExpress extends UnsafeBindSupport implements Express {
+    class OgnlExpress implements Express {
 
-        private final GroovyShell shell;
-        private final Binding bind;
-
-        public GroovyExpress() {
-            bind = new Binding();
-            shell = new GroovyShell(bind);
-        }
+        private Object bindObject;
+        private final OgnlContext context = new OgnlContext();
 
         @Override
         public Object get(String express) throws ExpressException {
             try {
-                return shell.evaluate(express);
+                context.setMemberAccess(new DefaultMemberAccess(true));
+                return Ognl.getValue(express, context, bindObject);
             } catch (Exception e) {
                 throw new ExpressException(express, e);
             }
@@ -192,19 +186,71 @@ public interface Express {
         }
 
         @Override
+        public Express bind(Object object) {
+            this.bindObject = object;
+            return this;
+        }
+
+        @Override
         public Express bind(String name, Object value) {
-            bind.setVariable(name, value);
+            context.put(name, value);
             return this;
         }
 
         @Override
         public Express reset() {
-            bind.getVariables().clear();
-            shell.getClassLoader().clearCache();
-            shell.resetLoadedClasses();
+            context.clear();
             return this;
         }
-
     }
+
+//    /**
+//     * Groovy实现的表达式
+//     */
+//    class GroovyExpress extends UnsafeBindSupport implements Express {
+//
+//        private final GroovyShell shell;
+//        private final Binding bind;
+//
+//        public GroovyExpress() {
+//            bind = new Binding();
+//            shell = new GroovyShell(new GroovyClassLoader(GroovyExpress.class.getClassLoader()), bind);
+//        }
+//
+//        @Override
+//        public Object get(String express) throws ExpressException {
+//            try {
+//                return shell.evaluate(express);
+//            } catch (Exception e) {
+//                throw new ExpressException(express, e);
+//            }
+//        }
+//
+//        @Override
+//        public boolean is(String express) throws ExpressException {
+//            try {
+//                final Object ret = get(express);
+//                return null != ret
+//                        && ret instanceof Boolean
+//                        && (Boolean) ret;
+//            } catch (Throwable t) {
+//                return false;
+//            }
+//        }
+//
+//        @Override
+//        public Express bind(String name, Object value) {
+//            bind.setVariable(name, value);
+//            return this;
+//        }
+//
+//        @Override
+//        public Express reset() {
+//            bind.getVariables().clear();
+//            shell.resetLoadedClasses();
+//            return this;
+//        }
+//
+//    }
 
 }

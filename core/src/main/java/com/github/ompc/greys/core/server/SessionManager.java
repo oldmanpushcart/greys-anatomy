@@ -5,7 +5,7 @@ import java.nio.charset.Charset;
 
 /**
  * 会话管理
- * Created by vlinux on 15/5/2.
+ * Created by oldmanpushcart@gmail.com on 15/5/2.
  */
 public interface SessionManager {
 

@@ -13,7 +13,7 @@ import static java.lang.reflect.Modifier.isStatic;
 /**
  * 配置类
  *
- * @author vlinux
+ * @author oldmanpushcart@gmail.com
  */
 public class Configure {
 

@@ -5,7 +5,7 @@ import java.util.Date;
 
 /**
  * SimpleDateFormat Holder
- * Created by vlinux on 15/10/6.
+ * Created by oldmanpushcart@gmail.com on 15/10/6.
  */
 public class SimpleDateFormatHolder extends ThreadLocal<SimpleDateFormat> {
 

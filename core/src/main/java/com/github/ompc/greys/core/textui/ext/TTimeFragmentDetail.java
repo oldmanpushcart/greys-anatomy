@@ -1,27 +1,29 @@
-package com.github.ompc.greys.core.view;
+package com.github.ompc.greys.core.textui.ext;
 
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.TimeFragment;
+import com.github.ompc.greys.core.textui.TComponent;
+import com.github.ompc.greys.core.textui.TTable;
+import com.github.ompc.greys.core.textui.TTable.ColumnDefine;
 import com.github.ompc.greys.core.util.GaStringUtils;
 import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
-import com.github.ompc.greys.core.view.TableView.ColumnDefine;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import static com.github.ompc.greys.core.view.TableView.Align.LEFT;
-import static com.github.ompc.greys.core.view.TableView.Align.RIGHT;
+import static com.github.ompc.greys.core.textui.TTable.Align.LEFT;
+import static com.github.ompc.greys.core.textui.TTable.Align.RIGHT;
 
 /**
  * 时间碎片详情展示
- * Created by vlinux on 15/10/3.
+ * Created by oldmanpushcart@gmail.com on 15/10/3.
  */
-public class TimeFragmentDetailView implements View {
+public class TTimeFragmentDetail implements TComponent {
 
     private final TimeFragment timeFragment;
     private final Integer expend;
 
-    public TimeFragmentDetailView(final TimeFragment timeFragment, final Integer expend) {
+    public TTimeFragmentDetail(final TimeFragment timeFragment, final Integer expend) {
         this.timeFragment = timeFragment;
         this.expend = expend;
     }
@@ -35,18 +37,17 @@ public class TimeFragmentDetailView implements View {
     }
 
     @Override
-    public String draw() {
+    public String rendering() {
 
         final Advice advice = timeFragment.advice;
         final String className = advice.clazz.getName();
         final String methodName = advice.method.getName();
 
-        final TableView view = new TableView(
+        final TTable tTable = new TTable(
                 new ColumnDefine[]{
                         new ColumnDefine(15, false, RIGHT),
                         new ColumnDefine(150, false, LEFT)
                 })
-                .hasBorder(true)
                 .padding(1)
                 .addRow("INDEX", timeFragment.id)
                 .addRow("PROCESS-ID", timeFragment.processId)
@@ -63,7 +64,7 @@ public class TimeFragmentDetailView implements View {
 
             int paramIndex = 0;
             for (Object param : advice.params) {
-                view.addRow("PARAMETERS[" + paramIndex++ + "]", new ObjectView(param, expend).draw());
+                tTable.addRow("PARAMETERS[" + paramIndex++ + "]", new TObject(param, expend).rendering());
             }
 
         }
@@ -71,9 +72,9 @@ public class TimeFragmentDetailView implements View {
         // fill the returnObj
         if (!advice.isThrow) {
 
-            view.addRow(
+            tTable.addRow(
                     "RETURN-OBJ",
-                    new ObjectView(advice.returnObj, expend).draw()
+                    new TObject(advice.returnObj, expend).rendering()
             );
 
         }
@@ -85,13 +86,13 @@ public class TimeFragmentDetailView implements View {
             final Throwable throwable = advice.throwExp;
 
             if (isNeedExpend()) {
-                view.addRow("THROW-EXCEPTION", new ObjectView(advice.throwExp, expend).draw());
+                tTable.addRow("THROW-EXCEPTION", new TObject(advice.throwExp, expend).rendering());
             } else {
                 final StringWriter stringWriter = new StringWriter();
                 final PrintWriter printWriter = new PrintWriter(stringWriter);
                 try {
                     throwable.printStackTrace(printWriter);
-                    view.addRow("THROW-EXCEPTION", stringWriter.toString());
+                    tTable.addRow("THROW-EXCEPTION", stringWriter.toString());
                 } finally {
                     printWriter.close();
                 }
@@ -101,8 +102,8 @@ public class TimeFragmentDetailView implements View {
         }
 
         // fill the stack
-        view.addRow("STACK", timeFragment.stack);
+        tTable.addRow("STACK", timeFragment.stack);
 
-        return view.draw();
+        return tTable.rendering();
     }
 }

@@ -26,7 +26,7 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
 
 /**
  * GaServer操作的附件
- * Created by vlinux on 15/5/3.
+ * Created by oldmanpushcart@gmail.com on 15/5/3.
  */
 class GaAttachment {
 
@@ -94,7 +94,7 @@ enum LineDecodeState {
 
 /**
  * Greys 服务端<br/>
- * Created by vlinux on 15/5/2.
+ * Created by oldmanpushcart@gmail.com on 15/5/2.
  */
 public class GaServer {
 

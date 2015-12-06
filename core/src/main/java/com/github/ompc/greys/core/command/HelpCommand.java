@@ -4,10 +4,9 @@ package com.github.ompc.greys.core.command;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
-import com.github.ompc.greys.core.view.KVView;
-import com.github.ompc.greys.core.view.TableView;
-import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.textui.TTable;
+import com.github.ompc.greys.core.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
@@ -21,7 +20,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * 帮助明令<br/>
  * 这个类的代码丑得一B啊，我都不想看
  * <p/>
- * Created by vlinux on 14/10/26.
+ * Created by oldmanpushcart@gmail.com on 14/10/26.
  */
 @Cmd(name = "help", sort = 12, summary = "Display Greys Help",
         eg = {
@@ -59,19 +58,32 @@ public class HelpCommand implements Command {
 
         final StringBuilder usageSB = new StringBuilder();
         final StringBuilder sbOp = new StringBuilder();
+        final StringBuilder sbLongOp = new StringBuilder();
         for (Field f : clazz.getDeclaredFields()) {
 
             if (f.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg namedArg = f.getAnnotation(NamedArg.class);
-                sbOp.append(namedArg.name());
-                if (namedArg.hasValue()) {
-                    sbOp.append(":");
+                if (namedArg.name().length() == 1) {
+                    sbOp.append(namedArg.name());
+                    if (namedArg.hasValue()) {
+                        sbOp.append(":");
+                    }
+                } else {
+                    sbLongOp.append(namedArg.name());
+                    if (namedArg.hasValue()) {
+                        sbLongOp.append(":");
+                    }
                 }
+
             }
 
         }
         if (sbOp.length() > 0) {
             usageSB.append("-[").append(sbOp).append("]").append(" ");
+        }
+
+        if (sbLongOp.length() > 0) {
+            usageSB.append("--[").append(sbLongOp).append("]").append(" ");
         }
 
         for (Field f : clazz.getDeclaredFields()) {
@@ -90,7 +102,15 @@ public class HelpCommand implements Command {
     }
 
     private String drawOptions(Class<?> clazz) {
-        final KVView view = new KVView();
+        final TTable tTable = new TTable(new TTable.ColumnDefine[]{
+                new TTable.ColumnDefine(15, false, TTable.Align.RIGHT),
+                new TTable.ColumnDefine(60, false, TTable.Align.LEFT)
+        });
+
+        tTable.getBorder().remove(TTable.Border.BORDER_OUTER);
+        tTable.padding(1);
+
+//        final TKv tKv = new TKv(new TTable.ColumnDefine(20, false, TTable.Align.RIGHT), new TTable.ColumnDefine(50, false, TTable.Align.LEFT));
         for (Field f : clazz.getDeclaredFields()) {
             if (f.isAnnotationPresent(NamedArg.class)) {
                 final NamedArg namedArg = f.getAnnotation(NamedArg.class);
@@ -98,9 +118,10 @@ public class HelpCommand implements Command {
 
                 String description = namedArg.summary();
                 if (isNotBlank(namedArg.description())) {
-                    description += "\n" + namedArg.description();
+                    description += "\n\n" + namedArg.description();
                 }
-                view.add(named, description);
+                tTable.addRow(named, description);
+                // tKv.add(named, description);
             }
         }
 
@@ -109,13 +130,14 @@ public class HelpCommand implements Command {
                 final IndexArg indexArg = f.getAnnotation(IndexArg.class);
                 String description = indexArg.summary();
                 if (isNotBlank(indexArg.description())) {
-                    description += "\n" + indexArg.description();
+                    description += "\n\n" + indexArg.description();
                 }
-                view.add(indexArg.name(), description);
+                tTable.addRow(indexArg.name(), description);
+                // tKv.add(indexArg.name(), description);
             }
         }
 
-        return view.draw();
+        return tTable.rendering();
     }
 
     private String drawEg(Cmd cmd) {
@@ -129,9 +151,9 @@ public class HelpCommand implements Command {
     private String commandHelp(Class<?> clazz) {
 
         final Cmd cmd = clazz.getAnnotation(Cmd.class);
-        final TableView view = new TableView(new TableView.ColumnDefine[]{
-                new TableView.ColumnDefine(TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TableView.Align.LEFT)
+        final TTable tTable = new TTable(new TTable.ColumnDefine[]{
+                new TTable.ColumnDefine(TTable.Align.RIGHT),
+                new TTable.ColumnDefine(80, false, TTable.Align.LEFT)
         })
                 .addRow("USAGE", drawUsage(clazz, cmd));
 
@@ -145,14 +167,14 @@ public class HelpCommand implements Command {
         }
 
         if (hasOptions) {
-            view.addRow("OPTIONS", drawOptions(clazz));
+            tTable.addRow("OPTIONS", drawOptions(clazz));
         }
 
         if (null != cmd.eg()) {
-            view.addRow("EXAMPLE", drawEg(cmd));
+            tTable.addRow("EXAMPLE", drawEg(cmd));
         }
 
-        return view.hasBorder(true).padding(1).draw();
+        return tTable.padding(1).rendering();
     }
 
 
@@ -161,9 +183,9 @@ public class HelpCommand implements Command {
      */
     private String mainHelp() {
 
-        final TableView view = new TableView(new TableView.ColumnDefine[]{
-                new TableView.ColumnDefine(TableView.Align.RIGHT),
-                new TableView.ColumnDefine(TableView.Align.LEFT)
+        final TTable tTable = new TTable(new TTable.ColumnDefine[]{
+                new TTable.ColumnDefine(TTable.Align.RIGHT),
+                new TTable.ColumnDefine(80, false, TTable.Align.LEFT)
         });
 
         final Map<String, Class<?>> commandMap = Commands.getInstance().listCommands();
@@ -183,13 +205,13 @@ public class HelpCommand implements Command {
             if (clazz.isAnnotationPresent(Cmd.class)) {
                 final Cmd cmd = clazz.getAnnotation(Cmd.class);
                 if (!cmd.isHacking()) {
-                    view.addRow(cmd.name(), cmd.summary());
+                    tTable.addRow(cmd.name(), cmd.summary());
                 }
             }
 
         }
 
-        return view.hasBorder(true).padding(1).draw();
+        return tTable.padding(1).rendering();
     }
 
 }

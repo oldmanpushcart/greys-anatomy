@@ -1,6 +1,6 @@
 package com.github.ompc.greys.core.util;
 
-import com.github.ompc.greys.core.view.TableView;
+import com.github.ompc.greys.core.textui.TTable;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -13,7 +13,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
  * 字符串工具类
- * Created by vlinux on 15/5/18.
+ * Created by oldmanpushcart@gmail.com on 15/5/18.
  */
 public class GaStringUtils {
 
@@ -182,10 +182,19 @@ public class GaStringUtils {
                 objectArray[index + 1] = ".";
             }
         }
-        return new TableView(new TableView.ColumnDefine[]{new TableView.ColumnDefine(TableView.Align.RIGHT)})
-                .addRow(new TableView(1).addRow(logo).draw())
-                .addRow(new TableView(15).addRow(objectArray).hasBorder(true).draw())
-                .draw();
+
+        final TTable logoTable = new TTable(1).addRow(logo);
+        logoTable.getBorder().set(TTable.Border.BORDER_NON);
+
+        final TTable versionTable = new TTable(15).addRow(objectArray);
+//        versionTable.getBorder().set(TTable.Border.BORDER_NON);
+
+        final TTable returnTable = new TTable(new TTable.ColumnDefine[]{new TTable.ColumnDefine(TTable.Align.RIGHT)})
+                .addRow(logoTable.rendering())
+                .addRow(versionTable.rendering());
+        returnTable.getBorder().set(TTable.Border.BORDER_NON);
+
+        return returnTable.rendering();
     }
 
     /**
@@ -344,9 +353,10 @@ public class GaStringUtils {
 
             if (c == '\n') {
                 count = 0;
+            } else {
+                count++;
             }
 
-            count++;
             sb.append(c);
 
         }

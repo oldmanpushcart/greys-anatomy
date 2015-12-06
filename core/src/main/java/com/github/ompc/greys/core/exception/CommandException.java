@@ -2,7 +2,7 @@ package com.github.ompc.greys.core.exception;
 
 /**
  * 命令执行错误
- * Created by vlinux on 15/5/2.
+ * Created by oldmanpushcart@gmail.com on 15/5/2.
  */
 public class CommandException extends Exception {
 

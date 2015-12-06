@@ -12,7 +12,7 @@ import static com.github.ompc.greys.core.util.GaStringUtils.getLogo;
 /**
  * 输出版本
  *
- * @author vlinux
+ * @author oldmanpushcart@gmail.com
  */
 @Cmd(name = "version", sort = 9, summary = "Display Greys version",
         eg = {

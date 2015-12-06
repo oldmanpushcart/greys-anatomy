@@ -15,7 +15,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
- * 反射工具类 Created by vlinux on 15/5/18.
+ * 反射工具类 Created by oldmanpushcart@gmail.com on 15/5/18.
  */
 public class GaReflectUtils {
 

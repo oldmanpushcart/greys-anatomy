@@ -28,7 +28,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * Greys控制台
- * Created by vlinux on 15/5/30.
+ * Created by oldmanpushcart@gmail.com on 15/5/30.
  */
 public class GreysConsole {
 
@@ -64,6 +64,7 @@ public class GreysConsole {
         this.history.moveToEnd();
         this.console.setHistoryEnabled(true);
         this.console.setHistory(history);
+        this.console.setExpandEvents(false);
         this.socket = connect(address);
 
         // 初始化自动补全
@@ -189,7 +190,7 @@ public class GreysConsole {
                         lineBuffer = new StringBuilder();
 
                         // replace ! to \!
-                        history.add(StringUtils.replace(lineForWrite, "!", "\\!"));
+                        // history.add(StringUtils.replace(lineForWrite, "!", "\\!"));
 
                         // flush if need
                         if (history instanceof Flushable) {

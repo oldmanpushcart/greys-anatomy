@@ -3,19 +3,19 @@ package com.github.ompc.greys.core.command;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
-import com.github.ompc.greys.core.view.KVView;
-import com.github.ompc.greys.core.view.TableView;
+import com.github.ompc.greys.core.textui.TKv;
+import com.github.ompc.greys.core.textui.TTable;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.management.*;
 import java.util.Collection;
 
-import static com.github.ompc.greys.core.view.TableView.Align.LEFT;
-import static com.github.ompc.greys.core.view.TableView.Align.RIGHT;
+import static com.github.ompc.greys.core.textui.TTable.Align.LEFT;
+import static com.github.ompc.greys.core.textui.TTable.Align.RIGHT;
 
 /**
  * JVM info command
- * Created by vlinux on 15/6/6.
+ * Created by oldmanpushcart@gmail.com on 15/6/6.
  */
 @Cmd(name = "jvm", sort = 10, summary = "Display the target JVM information",
         eg = {
@@ -40,31 +40,30 @@ public class JvmCommand implements Command {
             @Override
             public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
-                final TableView view = new TableView(new TableView.ColumnDefine[]{
-                        new TableView.ColumnDefine(RIGHT),
-                        new TableView.ColumnDefine(LEFT)
+                final TTable tTable = new TTable(new TTable.ColumnDefine[]{
+                        new TTable.ColumnDefine(RIGHT),
+                        new TTable.ColumnDefine(LEFT)
                 })
                         .addRow("CATEGORY", "INFO")
-                        .padding(1)
-                        .hasBorder(true);
+                        .padding(1);
 
-                view.addRow("RUNTIME", drawRuntimeTable());
-                view.addRow("CLASS-LOADING", drawClassLoadingTable());
-                view.addRow("COMPILATION", drawCompilationTable());
+                tTable.addRow("RUNTIME", drawRuntimeTable());
+                tTable.addRow("CLASS-LOADING", drawClassLoadingTable());
+                tTable.addRow("COMPILATION", drawCompilationTable());
 
                 if (!garbageCollectorMXBeans.isEmpty()) {
-                    view.addRow("GARBAGE-COLLECTORS", drawGarbageCollectorsTable());
+                    tTable.addRow("GARBAGE-COLLECTORS", drawGarbageCollectorsTable());
                 }
 
                 if (!memoryManagerMXBeans.isEmpty()) {
-                    view.addRow("MEMORY-MANAGERS", drawMemoryManagersTable());
+                    tTable.addRow("MEMORY-MANAGERS", drawMemoryManagersTable());
                 }
 
-                view.addRow("MEMORY", drawMemoryTable());
-                view.addRow("OPERATING-SYSTEM", drawOperatingSystemMXBeanTable());
-                view.addRow("THREAD", drawThreadTable());
+                tTable.addRow("MEMORY", drawMemoryTable());
+                tTable.addRow("OPERATING-SYSTEM", drawOperatingSystemMXBeanTable());
+                tTable.addRow("THREAD", drawThreadTable());
 
-                printer.print(view.draw()).finish();
+                printer.print(tTable.rendering()).finish();
 
             }
         };
@@ -96,15 +95,15 @@ public class JvmCommand implements Command {
         return colSB.toString();
     }
 
-    private KVView createKVView() {
-        return new KVView(
-                new TableView.ColumnDefine(25, false, RIGHT),
-                new TableView.ColumnDefine(70, false, LEFT)
+    private TKv createKVView() {
+        return new TKv(
+                new TTable.ColumnDefine(25, false, RIGHT),
+                new TTable.ColumnDefine(70, false, LEFT)
         );
     }
 
     private String drawRuntimeTable() {
-        final KVView view = createKVView()
+        final TKv view = createKVView()
                 .add("MACHINE-NAME", runtimeMXBean.getName())
                 .add("JVM-START-TIME", SimpleDateFormatHolder.getInstance().format(runtimeMXBean.getStartTime()))
                 .add("MANAGEMENT-SPEC-VERSION", runtimeMXBean.getManagementSpecVersion())
@@ -119,41 +118,41 @@ public class JvmCommand implements Command {
                 .add("BOOT-CLASS-PATH", runtimeMXBean.getBootClassPath())
                 .add("LIBRARY-PATH", runtimeMXBean.getLibraryPath());
 
-        return view.draw();
+        return view.rendering();
     }
 
     private String drawClassLoadingTable() {
-        final KVView view = createKVView()
+        final TKv view = createKVView()
                 .add("LOADED-CLASS-COUNT", classLoadingMXBean.getLoadedClassCount())
                 .add("TOTAL-LOADED-CLASS-COUNT", classLoadingMXBean.getTotalLoadedClassCount())
                 .add("UNLOADED-CLASS-COUNT", classLoadingMXBean.getUnloadedClassCount())
                 .add("IS-VERBOSE", classLoadingMXBean.isVerbose());
-        return view.draw();
+        return view.rendering();
     }
 
     private String drawCompilationTable() {
-        final KVView view = createKVView()
+        final TKv view = createKVView()
                 .add("NAME", compilationMXBean.getName());
 
         if (compilationMXBean.isCompilationTimeMonitoringSupported()) {
             view.add("TOTAL-COMPILE-TIME", compilationMXBean.getTotalCompilationTime() + "(ms)");
         }
-        return view.draw();
+        return view.rendering();
     }
 
     private String drawGarbageCollectorsTable() {
-        final KVView view = createKVView();
+        final TKv view = createKVView();
 
         for (GarbageCollectorMXBean garbageCollectorMXBean : garbageCollectorMXBeans) {
             view.add(garbageCollectorMXBean.getName() + "\n[count/time]",
                     garbageCollectorMXBean.getCollectionCount() + "/" + garbageCollectorMXBean.getCollectionTime() + "(ms)");
         }
 
-        return view.draw();
+        return view.rendering();
     }
 
     private String drawMemoryManagersTable() {
-        final KVView view = createKVView();
+        final TKv view = createKVView();
 
         for (final MemoryManagerMXBean memoryManagerMXBean : memoryManagerMXBeans) {
             if (memoryManagerMXBean.isValid()) {
@@ -166,11 +165,11 @@ public class JvmCommand implements Command {
             }
         }
 
-        return view.draw();
+        return view.rendering();
     }
 
     private String drawMemoryTable() {
-        final KVView view = createKVView();
+        final TKv view = createKVView();
 
         view.add("HEAP-MEMORY-USAGE\n[committed/init/max/used]",
                 memoryMXBean.getHeapMemoryUsage().getCommitted()
@@ -187,23 +186,23 @@ public class JvmCommand implements Command {
         );
 
         view.add("PENDING-FINALIZE-COUNT", memoryMXBean.getObjectPendingFinalizationCount());
-        return view.draw();
+        return view.rendering();
     }
 
 
     private String drawOperatingSystemMXBeanTable() {
-        final KVView view = createKVView();
+        final TKv view = createKVView();
         view
                 .add("OS", operatingSystemMXBean.getName())
                 .add("ARCH", operatingSystemMXBean.getArch())
                 .add("PROCESSORS-COUNT", operatingSystemMXBean.getAvailableProcessors())
                 .add("LOAD-AVERAGE", operatingSystemMXBean.getSystemLoadAverage())
                 .add("VERSION", operatingSystemMXBean.getVersion());
-        return view.draw();
+        return view.rendering();
     }
 
     private String drawThreadTable() {
-        final KVView view = createKVView();
+        final TKv view = createKVView();
 
         view
                 .add("COUNT", threadMXBean.getThreadCount())
@@ -211,7 +210,7 @@ public class JvmCommand implements Command {
                 .add("LIVE-COUNT", threadMXBean.getPeakThreadCount())
                 .add("STARTED-COUNT", threadMXBean.getTotalStartedThreadCount())
         ;
-        return view.draw();
+        return view.rendering();
     }
 
 }

@@ -10,12 +10,12 @@ import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.manager.TimeFragmentManager;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.textui.TTree;
+import com.github.ompc.greys.core.textui.ext.TTimeFragmentTable;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.*;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeLRUHashMap;
-import com.github.ompc.greys.core.view.TimeFragmentTableView;
-import com.github.ompc.greys.core.view.TreeView;
 
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * 调用跟踪命令<br/>
- * 负责输出一个类中的所有方法调用路径 Created by vlinux on 15/10/01.
+ * 负责输出一个类中的所有方法调用路径 Created by oldmanpushcart@gmail.com on 15/10/01.
  */
 @Cmd(name = "ptrace", sort = 6, summary = "Display the detailed thread path stack of specified class and method",
         eg = {
@@ -59,17 +59,17 @@ public class PathTraceCommand implements Command {
 //    private String tracingPathPattern;
 
     @IndexArg(index = 2, name = "condition-express", isRequired = false,
-            summary = "Conditional expression by groovy",
+            summary = "Conditional expression by OGNL",
             description = "" +
-                    "For example\n" +
+                    "FOR EXAMPLE" +
                     "\n" +
-                    "    TRUE  : 1==1\n" +
-                    "    TRUE  : true\n" +
+                    "     TRUE : 1==1\n" +
+                    "     TRUE : true\n" +
                     "    FALSE : false\n" +
-                    "    TRUE  : params.length>=0\n" +
+                    "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +
@@ -216,7 +216,7 @@ public class PathTraceCommand implements Command {
                                     }
                                 });
 
-                                entity.view.begin(advice.clazz.getCanonicalName() + ":" + advice.method.getName() + "()");
+                                entity.tTree.begin(advice.clazz.getCanonicalName() + ":" + advice.method.getName() + "()");
                                 entity.deep++;
                             }
 
@@ -234,7 +234,7 @@ public class PathTraceCommand implements Command {
 
                                 // add throw exception
                                 if (advice.isThrow) {
-                                    entity.view
+                                    entity.tTree
                                             .begin("throw:" + advice.throwExp.getClass().getCanonicalName())
                                             .end();
                                 }
@@ -249,11 +249,11 @@ public class PathTraceCommand implements Command {
                                             cost,
                                             getStack(STACK_DEEP)
                                     );
-                                    entity.tfView.add(timeFragment);
-                                    entity.view.set(entity.view.get() + "; index=" + timeFragment.id + ";");
+                                    entity.tfTable.add(timeFragment);
+                                    entity.tTree.set(entity.tTree.get() + "; index=" + timeFragment.id + ";");
                                 }
 
-                                entity.view.end();
+                                entity.tTree.end();
 
                                 if (entity.deep <= 0) {
 
@@ -262,9 +262,9 @@ public class PathTraceCommand implements Command {
                                     if (isInCondition(advice, cost)) {
                                         // 输出打印内容
                                         if (isTimeTunnel) {
-                                            printer.println(entity.view.draw() + entity.tfView.draw());
+                                            printer.println(entity.tTree.rendering() + entity.tfTable.rendering());
                                         } else {
-                                            printer.println(entity.view.draw());
+                                            printer.println(entity.tTree.rendering());
                                         }
 
                                         // 超过调用限制就关闭掉跟踪
@@ -312,13 +312,13 @@ public class PathTraceCommand implements Command {
 
         private Entity(int processId) {
             this.processId = processId;
-            this.tfView = new TimeFragmentTableView(true);
-            this.view = new TreeView(true, "pTracing for : " + getThreadInfo() + "process=" + processId + ";");
+            this.tfTable = new TTimeFragmentTable(true);
+            this.tTree = new TTree(true, "pTracing for : " + getThreadInfo() + "process=" + processId + ";");
             this.deep = 0;
         }
 
-        TimeFragmentTableView tfView;
-        TreeView view;
+        TTimeFragmentTable tfTable;
+        TTree tTree;
         int deep;
         final int processId;
 

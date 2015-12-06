@@ -1,7 +1,9 @@
-package com.github.ompc.greys.core.view;
+package com.github.ompc.greys.core.textui.ext;
 
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.TimeFragment;
+import com.github.ompc.greys.core.textui.TComponent;
+import com.github.ompc.greys.core.textui.TTable;
 import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
 
 import static com.github.ompc.greys.core.util.GaStringUtils.hashCodeToHexString;
@@ -9,9 +11,9 @@ import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 
 /**
  * 时间片段表格
- * Created by vlinux on 15/10/3.
+ * Created by oldmanpushcart@gmail.com on 15/10/3.
  */
-public class TimeFragmentTableView implements View {
+public class TTimeFragmentTable implements TComponent {
 
     /*
      * 各列宽度
@@ -44,22 +46,22 @@ public class TimeFragmentTableView implements View {
 
     };
 
-    private final TableView tableView;
+    private final TTable tTable;
 
-    public TimeFragmentTableView(boolean isPrintTitle) {
-        this.tableView = new TableView(
-                new TableView.ColumnDefine[]{
-                        new TableView.ColumnDefine(TABLE_COL_WIDTH[0], false, TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(TABLE_COL_WIDTH[1], false, TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(TABLE_COL_WIDTH[2], false, TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(TABLE_COL_WIDTH[3], false, TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(TABLE_COL_WIDTH[4], false, TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(TABLE_COL_WIDTH[5], false, TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(TABLE_COL_WIDTH[6], false, TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(TABLE_COL_WIDTH[7], false, TableView.Align.RIGHT),
-                        new TableView.ColumnDefine(TABLE_COL_WIDTH[8], false, TableView.Align.RIGHT)
+    public TTimeFragmentTable(boolean isPrintTitle) {
+        this.tTable = new TTable(
+                new TTable.ColumnDefine[]{
+                        new TTable.ColumnDefine(TABLE_COL_WIDTH[0], false, TTable.Align.RIGHT),
+                        new TTable.ColumnDefine(TABLE_COL_WIDTH[1], false, TTable.Align.RIGHT),
+                        new TTable.ColumnDefine(TABLE_COL_WIDTH[2], false, TTable.Align.RIGHT),
+                        new TTable.ColumnDefine(TABLE_COL_WIDTH[3], false, TTable.Align.RIGHT),
+                        new TTable.ColumnDefine(TABLE_COL_WIDTH[4], false, TTable.Align.RIGHT),
+                        new TTable.ColumnDefine(TABLE_COL_WIDTH[5], false, TTable.Align.RIGHT),
+                        new TTable.ColumnDefine(TABLE_COL_WIDTH[6], false, TTable.Align.RIGHT),
+                        new TTable.ColumnDefine(TABLE_COL_WIDTH[7], false, TTable.Align.RIGHT),
+                        new TTable.ColumnDefine(TABLE_COL_WIDTH[8], false, TTable.Align.RIGHT)
                 }
-        ).hasBorder(true).padding(1);
+        ).padding(1);
 
         if (isPrintTitle) {
             fillTableTitle();
@@ -71,7 +73,7 @@ public class TimeFragmentTableView implements View {
      * 添加标题
      */
     private void fillTableTitle() {
-        this.tableView.addRow(
+        this.tTable.addRow(
                 TABLE_COL_TITLE[0],
                 TABLE_COL_TITLE[1],
                 TABLE_COL_TITLE[2],
@@ -87,9 +89,9 @@ public class TimeFragmentTableView implements View {
     /*
      * 填充表格行
      */
-    public TimeFragmentTableView add(TimeFragment timeFragment) {
+    public TTimeFragmentTable add(TimeFragment timeFragment) {
         final Advice advice = timeFragment.advice;
-        tableView.addRow(
+        tTable.addRow(
                 timeFragment.id,
                 timeFragment.processId,
                 SimpleDateFormatHolder.getInstance().format(timeFragment.gmtCreate),
@@ -106,21 +108,21 @@ public class TimeFragmentTableView implements View {
     /**
      * 关闭下边框
      */
-    public TimeFragmentTableView turnOffBottom() {
-        tableView.borders(tableView.borders() & ~TableView.BORDER_BOTTOM);
+    public TTimeFragmentTable turnOffBottom() {
+        tTable.getBorder().remove(TTable.Border.BORDER_OUTER_BOTTOM);
         return this;
     }
 
     /**
      * 打开下边框
      */
-    public TimeFragmentTableView turnOnBottom() {
-        tableView.borders(tableView.borders() | TableView.BORDER_BOTTOM);
+    public TTimeFragmentTable turnOnBottom() {
+        tTable.getBorder().add(TTable.Border.BORDER_OUTER_BOTTOM);
         return this;
     }
 
     @Override
-    public String draw() {
-        return tableView.draw();
+    public String rendering() {
+        return tTable.rendering();
     }
 }

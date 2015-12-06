@@ -37,7 +37,7 @@ import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
 
 /**
  * 对类进行通知增强
- * Created by vlinux on 15/5/17.
+ * Created by oldmanpushcart@gmail.com on 15/5/17.
  */
 public class Enhancer implements ClassFileTransformer {
 
@@ -326,7 +326,6 @@ public class Enhancer implements ClassFileTransformer {
         return clazz.isArray()
                 || clazz.isInterface()
                 || clazz.isEnum()
-                || clazz.isArray()
                 ;
     }
 

@@ -1,5 +1,6 @@
 package com.github.ompc.greys.core.server;
 
+import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.advisor.AdviceWeaver;
 import com.github.ompc.greys.core.util.LogUtil;
 import org.slf4j.Logger;
@@ -18,7 +19,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * 服务端会话
- * Created by vlinux on 15/5/2.
+ * Created by oldmanpushcart@gmail.com on 15/5/2.
  */
 public class Session {
 
@@ -50,7 +51,7 @@ public class Session {
     private final AtomicInteger lockTx = new AtomicInteger(LOCK_TX_EMPTY);
 
     // 会话输出阻塞队列
-    private final BlockingQueue<String> writeQueue = new LinkedBlockingQueue<String>();
+    private final BlockingQueue<String> writeQueue = new LinkedBlockingQueue<String>(GlobalOptions.sessionWriteQueueCapacity);
 
     /**
      * 构建Session

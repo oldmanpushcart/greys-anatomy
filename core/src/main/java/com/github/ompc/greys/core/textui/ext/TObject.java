@@ -1,6 +1,7 @@
-package com.github.ompc.greys.core.view;
+package com.github.ompc.greys.core.textui.ext;
 
 import com.github.ompc.greys.core.GlobalOptions;
+import com.github.ompc.greys.core.textui.TComponent;
 import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
 import com.google.gson.Gson;
 
@@ -16,14 +17,14 @@ import static java.lang.String.format;
 /**
  * 对象控件<br/>
  * 能展示出一个对象的内部结构
- * Created by vlinux on 15/5/20.
+ * Created by oldmanpushcart@gmail.com on 15/5/20.
  */
-public class ObjectView implements View {
+public class TObject implements TComponent {
 
     private final Object object;
     private final Integer expend;
 
-    public ObjectView(Object object, Integer expend) {
+    public TObject(Object object, Integer expend) {
         this.object = object;
         this.expend = expend;
     }
@@ -34,7 +35,7 @@ public class ObjectView implements View {
     }
 
     @Override
-    public String draw() {
+    public String rendering() {
         if (isNeedExpend()) {
             if (GlobalOptions.isUsingJson) {
                 return new Gson().toJson(object);

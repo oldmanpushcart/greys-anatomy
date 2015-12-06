@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * 全局开关
- * Created by vlinux on 15/6/4.
+ * Created by oldmanpushcart@gmail.com on 15/6/4.
  */
 public class GlobalOptions {
 
@@ -71,21 +71,29 @@ public class GlobalOptions {
     public static volatile boolean isDebugForAsm = false;
 
     @Option(
-            level=1,
-            name="ptrace-class-matcher-lru-capacity",
+            level = 1,
+            name = "ptrace-class-matcher-lru-capacity",
             summary = "...",
             description = "..."
     )
     public static volatile int ptraceClassMatcherLruCapacity = 1024;
 
     @Option(
-            level=1,
-            name="ptrace-method-matcher-lru-capacity",
+            level = 1,
+            name = "ptrace-method-matcher-lru-capacity",
             summary = "...",
             description = "..."
     )
     public static volatile int ptraceMethodMatcherLruCapacity = 2048;
 
+
+    @Option(
+            level = 1,
+            name = "session-write-queue-capacity",
+            summary = "...",
+            description = "..."
+    )
+    public static volatile int sessionWriteQueueCapacity = 2048;
 
     /**
      * 选项

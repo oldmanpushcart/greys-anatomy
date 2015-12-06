@@ -10,10 +10,10 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.textui.ext.TObject;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
-import com.github.ompc.greys.core.view.ObjectView;
 import org.slf4j.Logger;
 
 import java.lang.instrument.Instrumentation;
@@ -43,9 +43,9 @@ public class WatchCommand implements Command {
     private String methodPattern;
 
     @IndexArg(index = 2, name = "express",
-            summary = "express, write by groovy.",
+            summary = "express, write by OGNL.",
             description = ""
-                    + "For example\n" +
+                    + "FOR EXAMPLE" +
                     "    params[0]\n" +
                     "    params[0]+params[1]\n" +
                     "    returnObj\n" +
@@ -54,7 +54,7 @@ public class WatchCommand implements Command {
                     "    clazz\n" +
                     "    method\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object\n" +
                     "           clazz : the object's class\n" +
@@ -68,17 +68,17 @@ public class WatchCommand implements Command {
     private String express;
 
     @IndexArg(index = 3, name = "condition-express", isRequired = false,
-            summary = "Conditional expression by groovy",
+            summary = "Conditional expression by OGNL",
             description = "" +
-                    "For example\n" +
+                    "FOR EXAMPLE" +
                     "\n" +
-                    "    TRUE  : 1==1\n" +
-                    "    TRUE  : true\n" +
+                    "     TRUE : 1==1\n" +
+                    "     TRUE : true\n" +
                     "    FALSE : false\n" +
-                    "    TRUE  : params.length>=0\n" +
+                    "     TRUE : params.length>=0\n" +
                     "    FALSE : 1==2\n" +
                     "\n" +
-                    "The structure\n" +
+                    "THE STRUCTURE" +
                     "\n" +
                     "          target : the object \n" +
                     "           clazz : the object's class\n" +
@@ -120,7 +120,7 @@ public class WatchCommand implements Command {
 
         // set default
         // 如果没有强行指定b/f/e/s中任何一个，则默认为b
-        if(!isBefore
+        if (!isBefore
                 && !isFinish
                 && !isException
                 && !isSuccess) {
@@ -158,10 +158,22 @@ public class WatchCommand implements Command {
                             }
 
                             @Override
+                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                if (isSuccess) {
+                                    watching(advice);
+                                }
+                            }
+
+                            @Override
+                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                                if (isException) {
+                                    watching(advice);
+                                }
+                            }
+
+                            @Override
                             public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                if( isSuccess
-                                        || isException
-                                        || isFinish) {
+                                if (isFinish) {
                                     watching(advice);
                                 }
                             }
@@ -184,7 +196,7 @@ public class WatchCommand implements Command {
                                 try {
 
                                     if (isInCondition(advice)) {
-                                        printer.println(new ObjectView(newExpress(advice).get(express), expend).draw());
+                                        printer.println(new TObject(newExpress(advice).get(express), expend).rendering());
                                         if (isOverThreshold(timesRef.incrementAndGet())) {
                                             printer.finish();
                                         }
