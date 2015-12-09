@@ -94,10 +94,6 @@ public class PathTraceCommand implements Command {
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer threshold;
 
-    // 针对ptrace命令调整
-    private static final int STACK_DEEP = 12;
-
-
     /*
      * 构造追踪路径匹配
      */
@@ -247,7 +243,7 @@ public class PathTraceCommand implements Command {
                                             advice,
                                             new Date(),
                                             cost,
-                                            getStack(STACK_DEEP)
+                                            getStack()
                                     );
                                     entity.tfTable.add(timeFragment);
                                     entity.tTree.set(entity.tTree.get() + "; index=" + timeFragment.id + ";");

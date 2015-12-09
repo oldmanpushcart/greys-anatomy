@@ -175,9 +175,6 @@ public class TimeTunnelCommand implements Command {
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer threshold;
 
-    // 针对tt命令调整
-    private static final int STACK_DEEP = 11;
-
     /**
      * 检查参数是否合法
      */
@@ -275,7 +272,7 @@ public class TimeTunnelCommand implements Command {
                                         advice,
                                         new Date(),
                                         innerContext.getCost(),
-                                        getStack(STACK_DEEP)
+                                        getStack()
                                 );
 
                                 final TTimeFragmentTable view = new TTimeFragmentTable(isFirst)
@@ -490,7 +487,7 @@ public class TimeTunnelCommand implements Command {
                         reAdvice,
                         timeFragment.gmtCreate,
                         cost,
-                        getStack(2)
+                        getStack()
                 );
 
 
