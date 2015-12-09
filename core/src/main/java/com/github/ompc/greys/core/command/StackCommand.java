@@ -85,9 +85,6 @@ public class StackCommand implements Command {
 
                     private final AtomicInteger times = new AtomicInteger();
 
-                    // 针对stack命令调整
-                    private static final int STACK_DEEP = 9;
-
                     @Override
                     public Matcher getClassNameMatcher() {
                         return classNameMatcher;
@@ -114,7 +111,7 @@ public class StackCommand implements Command {
 
                             @Override
                             public void before(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
-                                innerContext.setStack(getStack(STACK_DEEP));
+                                innerContext.setStack(getStack());
                             }
 
                             private boolean isInCondition(Advice advice) {

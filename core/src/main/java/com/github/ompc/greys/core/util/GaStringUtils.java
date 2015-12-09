@@ -1,6 +1,8 @@
 package com.github.ompc.greys.core.util;
 
 import com.github.ompc.greys.core.textui.TTable;
+import com.github.ompc.greys.core.util.collection.GaStack;
+import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -302,24 +304,51 @@ public class GaStringUtils {
      *
      * @return 方法堆栈信息
      */
-    public static String getStack(int skip) {
+    public static String getStack() {
 
         final Thread currentThread = Thread.currentThread();
         final StackTraceElement[] stackTraceElementArray = currentThread.getStackTrace();
 
+        final GaStack<StackTraceElement> elementStack = new ThreadUnsafeGaStack<StackTraceElement>();
+
+        final int length = stackTraceElementArray.length;
+
+        // 1. 找到com.github.ompc.greys的最后一条记录
+        // 2. 从这台记录开始skip掉4条反射调用的element
+        if (length > 0) {
+            for (int index = length - 1; index >= 0; index--) {
+                final StackTraceElement element = stackTraceElementArray[index];
+                if (StringUtils.startsWith(element.getClassName(), "com.github.ompc.greys.")) {
+                    for (int step = 0; step < 4 && !elementStack.isEmpty(); step++) {
+                        final StackTraceElement skipElement = elementStack.pop();
+                        // JVM会对反射调用进行优化,最多4次,但有可能只有3次
+                        // 所以如果提前遇到了java.lang.reflect.Method.invoke,则认为skip可以提前结束
+                        if (StringUtils.startsWith(skipElement.getClassName(), "java.lang.reflect.Method")
+                                && StringUtils.equals(skipElement.getMethodName(), "invoke")) {
+                            break;
+                        }
+                    }
+                    break;
+                }
+                elementStack.push(element);
+            }//for
+        }//if
+
+
         final String title = getThreadInfo();
 
-        final StackTraceElement locationStackTraceElement = stackTraceElementArray[skip];
-        final String locationString = String.format("    @%s.%s()",
-                locationStackTraceElement.getClassName(),
-                locationStackTraceElement.getMethodName());
+
+        final StackTraceElement locationStackTraceElement = elementStack.pop();
+        final StringBuilder locationSB = new StringBuilder("    @")
+                .append(locationStackTraceElement.getClassName()).append(".").append(locationStackTraceElement.getMethodName())
+                .append("(").append(locationStackTraceElement.getFileName()).append(":").append(locationStackTraceElement.getLineNumber()).append(")");
 
         final StringBuilder stSB = new StringBuilder()
                 .append(title).append("\n")
-                .append(locationString).append("\n");
+                .append(locationSB.toString()).append("\n");
 
-        for (int index = skip + 1; index < stackTraceElementArray.length; index++) {
-            final StackTraceElement ste = stackTraceElementArray[index];
+        while (!elementStack.isEmpty()) {
+            final StackTraceElement ste = elementStack.pop();
             stSB
                     .append("        at ")
                     .append(ste.getClassName()).append(".")

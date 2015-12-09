@@ -12,14 +12,15 @@ import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.manager.TimeFragmentManager;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.textui.TTable;
+import com.github.ompc.greys.core.textui.ext.TObject;
+import com.github.ompc.greys.core.textui.ext.TTimeFragmentDetail;
+import com.github.ompc.greys.core.textui.ext.TTimeFragmentTable;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
+import com.github.ompc.greys.core.util.PlayIndexHolder;
 import com.github.ompc.greys.core.util.affect.RowAffect;
-import com.github.ompc.greys.core.textui.ext.TObject;
-import com.github.ompc.greys.core.textui.TTable;
-import com.github.ompc.greys.core.textui.ext.TTimeFragmentDetail;
-import com.github.ompc.greys.core.textui.ext.TTimeFragmentTable;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
@@ -175,9 +176,6 @@ public class TimeTunnelCommand implements Command {
     @NamedArg(name = "n", hasValue = true, summary = "Threshold of execution times")
     private Integer threshold;
 
-    // 针对tt命令调整
-    private static final int STACK_DEEP = 11;
-
     /**
      * 检查参数是否合法
      */
@@ -275,7 +273,7 @@ public class TimeTunnelCommand implements Command {
                                         advice,
                                         new Date(),
                                         innerContext.getCost(),
-                                        getStack(STACK_DEEP)
+                                        getStack()
                                 );
 
                                 final TTimeFragmentTable view = new TTimeFragmentTable(isFirst)
@@ -444,7 +442,7 @@ public class TimeTunnelCommand implements Command {
                 Advice reAdvice = null;
 
                 // 注入时间片段id
-                // PlayIndexHolder.getInstance().set(timeFragment.id);
+                PlayIndexHolder.getInstance().set(timeFragment.id);
 
                 try {
                     method.setAccessible(true);
@@ -490,7 +488,7 @@ public class TimeTunnelCommand implements Command {
                         reAdvice,
                         timeFragment.gmtCreate,
                         cost,
-                        getStack(2)
+                        timeFragment.stack
                 );
 
 
