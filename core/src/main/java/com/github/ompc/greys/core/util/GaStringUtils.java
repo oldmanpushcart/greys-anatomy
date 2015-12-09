@@ -340,7 +340,7 @@ public class GaStringUtils {
 
         final StackTraceElement locationStackTraceElement = elementStack.pop();
         final StringBuilder locationSB = new StringBuilder("    @")
-                .append(locationStackTraceElement.getClassName()).append(locationStackTraceElement.getMethodName())
+                .append(locationStackTraceElement.getClassName()).append(".").append(locationStackTraceElement.getMethodName())
                 .append("(").append(locationStackTraceElement.getFileName()).append(":").append(locationStackTraceElement.getLineNumber()).append(")");
 
         final StringBuilder stSB = new StringBuilder()

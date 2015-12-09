@@ -100,7 +100,7 @@ public interface Express {
         private static final long OFFSET_OF_ADVICE_IS_BEFORE;
         private static final long OFFSET_OF_ADVICE_IS_THROW;
         private static final long OFFSET_OF_ADVICE_IS_RETURN;
-        //private static final long OFFSET_OF_PLAY_INDEX;
+        private static final long OFFSET_OF_PLAY_INDEX;
 
         // init advice offset
 
@@ -116,7 +116,7 @@ public interface Express {
                 OFFSET_OF_ADVICE_IS_BEFORE = unsafe.objectFieldOffset(Advice.class.getDeclaredField("isBefore"));
                 OFFSET_OF_ADVICE_IS_THROW = unsafe.objectFieldOffset(Advice.class.getDeclaredField("isThrow"));
                 OFFSET_OF_ADVICE_IS_RETURN = unsafe.objectFieldOffset(Advice.class.getDeclaredField("isReturn"));
-                //OFFSET_OF_PLAY_INDEX = unsafe.objectFieldOffset(Advice.class.getDeclaredField("playIndex"));
+                OFFSET_OF_PLAY_INDEX = unsafe.objectFieldOffset(Advice.class.getDeclaredField("playIndex"));
             } catch (Throwable e) {
                 throw new Error(e);
             }
@@ -133,7 +133,7 @@ public interface Express {
                     .bind("isBefore", unsafe.getBoolean(a, OFFSET_OF_ADVICE_IS_BEFORE))
                     .bind("isThrow", unsafe.getBoolean(a, OFFSET_OF_ADVICE_IS_THROW))
                     .bind("isReturn", unsafe.getBoolean(a, OFFSET_OF_ADVICE_IS_RETURN))
-                    //.bind("playIndex", unsafe.getObject(a, OFFSET_OF_PLAY_INDEX))
+                    .bind("playIndex", unsafe.getObject(a, OFFSET_OF_PLAY_INDEX))
                     ;
         }
 

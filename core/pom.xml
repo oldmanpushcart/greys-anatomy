@@ -62,12 +62,10 @@
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-commons</artifactId>
-            <!--<exclusions>-->
-            <!--<exclusion>-->
-            <!--<groupId>org.ow2.asm</groupId>-->
-            <!--<artifactId>asm-tree</artifactId>-->
-            <!--</exclusion>-->
-            <!--</exclusions>-->
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-util</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
