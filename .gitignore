@@ -3,6 +3,8 @@
 /core/core.iml
 /agent/agent.iml
 /target
+/core/target
+/agent/target
 /.settings
 /.classpath
 /.project
