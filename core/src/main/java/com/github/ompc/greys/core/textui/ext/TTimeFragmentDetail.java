@@ -1,15 +1,18 @@
 package com.github.ompc.greys.core.textui.ext;
 
 import com.github.ompc.greys.core.Advice;
+import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.textui.TComponent;
 import com.github.ompc.greys.core.textui.TTable;
 import com.github.ompc.greys.core.textui.TTable.ColumnDefine;
 import com.github.ompc.greys.core.util.GaStringUtils;
 import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
+import com.github.ompc.greys.core.util.SizeOf;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.instrument.Instrumentation;
 
 import static com.github.ompc.greys.core.textui.TTable.Align.LEFT;
 import static com.github.ompc.greys.core.textui.TTable.Align.RIGHT;
@@ -20,10 +23,12 @@ import static com.github.ompc.greys.core.textui.TTable.Align.RIGHT;
  */
 public class TTimeFragmentDetail implements TComponent {
 
+    private final Instrumentation inst;
     private final TimeFragment timeFragment;
     private final Integer expend;
 
-    public TTimeFragmentDetail(final TimeFragment timeFragment, final Integer expend) {
+    public TTimeFragmentDetail(final Instrumentation inst, final TimeFragment timeFragment, final Integer expend) {
+        this.inst = inst;
         this.timeFragment = timeFragment;
         this.expend = expend;
     }
@@ -64,7 +69,13 @@ public class TTimeFragmentDetail implements TComponent {
 
             int paramIndex = 0;
             for (Object param : advice.params) {
-                tTable.addRow("PARAMETERS[" + paramIndex++ + "]", new TObject(param, expend).rendering());
+
+                final StringBuilder titleSB = new StringBuilder("PARAMETERS[" + paramIndex++ + "]");
+                if (GlobalOptions.isDisplayObjectSize) {
+                    titleSB.append("\n").append(new SizeOf(inst, param, SizeOf.HeapType.SHALLOW));
+                    titleSB.append("\n").append(new SizeOf(inst, param, SizeOf.HeapType.RETAINED));
+                }
+                tTable.addRow(titleSB.toString(), new TObject(param, expend).rendering());
             }
 
         }
@@ -72,8 +83,13 @@ public class TTimeFragmentDetail implements TComponent {
         // fill the returnObj
         if (!advice.isThrow) {
 
+            final StringBuilder titleSB = new StringBuilder("RETURN-OBJ");
+            if (GlobalOptions.isDisplayObjectSize) {
+                titleSB.append("\n").append(new SizeOf(inst, advice.returnObj, SizeOf.HeapType.SHALLOW));
+                titleSB.append("\n").append(new SizeOf(inst, advice.returnObj, SizeOf.HeapType.RETAINED));
+            }
             tTable.addRow(
-                    "RETURN-OBJ",
+                    titleSB.toString(),
                     new TObject(advice.returnObj, expend).rendering()
             );
 
@@ -85,14 +101,20 @@ public class TTimeFragmentDetail implements TComponent {
             //noinspection ThrowableResultOfMethodCallIgnored
             final Throwable throwable = advice.throwExp;
 
+            final StringBuilder titleSB = new StringBuilder("THROW-EXCEPTION");
+            if (GlobalOptions.isDisplayObjectSize) {
+                titleSB.append("\n").append(new SizeOf(inst, advice.throwExp, SizeOf.HeapType.SHALLOW));
+                titleSB.append("\n").append(new SizeOf(inst, advice.throwExp, SizeOf.HeapType.RETAINED));
+            }
+
             if (isNeedExpend()) {
-                tTable.addRow("THROW-EXCEPTION", new TObject(advice.throwExp, expend).rendering());
+                tTable.addRow(titleSB.toString(), new TObject(advice.throwExp, expend).rendering());
             } else {
                 final StringWriter stringWriter = new StringWriter();
                 final PrintWriter printWriter = new PrintWriter(stringWriter);
                 try {
                     throwable.printStackTrace(printWriter);
-                    tTable.addRow("THROW-EXCEPTION", stringWriter.toString());
+                    tTable.addRow(titleSB.toString(), stringWriter.toString());
                 } finally {
                     printWriter.close();
                 }

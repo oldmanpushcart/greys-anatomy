@@ -200,7 +200,20 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
             innerContext.close();
 
             final Class<?> clazz = toClass(loader, className);
-            final Advice advice = newForAfterRetuning(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, returnObject);
+            final GaMethod method = toMethod(loader, clazz, methodName, methodDesc);
+
+            final Advice advice = newForAfterRetuning(
+                    loader,
+                    clazz,
+                    method,
+                    target,
+                    args,
+
+                    // #98 在return的时候,如果目标函数是<init>,会导致return的内容缺失
+                    // 初步的想法是用target(this)去代替returnObj
+                    method.isInit() ? target : returnObject
+            );
+
             afterReturning(advice, processContext, innerContext);
             afterFinishing(advice, processContext, innerContext);
 

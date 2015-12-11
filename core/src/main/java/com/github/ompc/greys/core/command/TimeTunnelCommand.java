@@ -492,7 +492,7 @@ public class TimeTunnelCommand implements Command {
                 );
 
 
-                final TTimeFragmentDetail view = new TTimeFragmentDetail(reTimeFragment, expend);
+                final TTimeFragmentDetail view = new TTimeFragmentDetail(inst, reTimeFragment, expend);
                 printer.print(view.rendering())
                         .println(format("Time fragment[%d] successfully replayed.", index))
                         .finish();
@@ -547,7 +547,7 @@ public class TimeTunnelCommand implements Command {
                     return new RowAffect();
                 }
 
-                printer.print(new TTimeFragmentDetail(timeFragment, expend).rendering()).finish();
+                printer.print(new TTimeFragmentDetail(inst, timeFragment, expend).rendering()).finish();
                 return new RowAffect(1);
 
             }

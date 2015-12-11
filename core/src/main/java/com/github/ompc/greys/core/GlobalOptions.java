@@ -95,6 +95,14 @@ public class GlobalOptions {
     )
     public static volatile int sessionWriteQueueCapacity = 2048;
 
+    @Option(
+            level = 3,
+            name = "is-display-object-size",
+            summary = "...",
+            description = "..."
+    )
+    public static volatile boolean isDisplayObjectSize = false;
+
     /**
      * 选项
      */
