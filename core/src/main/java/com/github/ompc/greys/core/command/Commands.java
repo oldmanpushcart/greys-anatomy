@@ -6,6 +6,7 @@ import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.CommandException;
 import com.github.ompc.greys.core.exception.CommandInitializationException;
 import com.github.ompc.greys.core.exception.CommandNotFoundException;
+import com.github.ompc.greys.core.util.GaClassUtils;
 import com.github.ompc.greys.core.util.GaReflectUtils;
 import com.github.ompc.greys.core.util.GaStringUtils;
 import joptsimple.OptionParser;
@@ -24,8 +25,7 @@ public class Commands {
 
     private Commands() {
 
-        for (Class<?> clazz : GaReflectUtils.getClasses(Commands.class.getClassLoader(), "com.github.ompc.greys.core.command")) {
-
+        for (final Class<?> clazz : GaClassUtils.scanPackage(Commands.class.getClassLoader(), "com.github.ompc.greys.core.command")) {
             if (!Command.class.isAssignableFrom(clazz)
                     || Modifier.isAbstract(clazz.getModifiers())) {
                 continue;
@@ -35,7 +35,6 @@ public class Commands {
                 final Cmd cmd = clazz.getAnnotation(Cmd.class);
                 commands.put(cmd.name(), clazz);
             }
-
         }
 
     }
@@ -107,7 +106,7 @@ public class Commands {
                             }
 
                             try {
-                                GaReflectUtils.set(field, value, command);
+                                GaReflectUtils.setValue(field, value, command);
                             } catch (IllegalArgumentException e) {
                                 throw new CommandInitializationException(cmdName, e);
                             } catch (IllegalAccessException e) {
@@ -119,7 +118,7 @@ public class Commands {
                     // 设置boolean类型,一般只有boolean类型hasValue才为false
                     else {
                         try {
-                            GaReflectUtils.set(field, opt.has(arg.name()), command);
+                            GaReflectUtils.setValue(field, opt.has(arg.name()), command);
                         } catch (IllegalArgumentException e) {
                             throw new CommandInitializationException(cmdName, e);
                         } catch (IllegalAccessException e) {
@@ -141,7 +140,7 @@ public class Commands {
 
                     if (opt.nonOptionArguments().size() > index) {
                         try {
-                            GaReflectUtils.set(field, opt.nonOptionArguments().get(index), command);
+                            GaReflectUtils.setValue(field, opt.nonOptionArguments().get(index), command);
                         } catch (IllegalArgumentException e) {
                             throw new CommandInitializationException(cmdName, e);
                         } catch (IllegalAccessException e) {

@@ -119,9 +119,9 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
 
         // to method or constructor
         if (GaCheckUtils.isEquals(methodName, "<init>")) {
-            return GaMethod.newInit(toConstructor(clazz, argsClasses));
+            return new GaMethod.ConstructorImpl(toConstructor(clazz, argsClasses));
         } else {
-            return GaMethod.newMethod(toMethod(clazz, methodName, argsClasses));
+            return new GaMethod.MethodImpl(toMethod(clazz, methodName, argsClasses));
         }
     }
 
@@ -211,7 +211,7 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
 
                     // #98 在return的时候,如果目标函数是<init>,会导致return的内容缺失
                     // 初步的想法是用target(this)去代替returnObj
-                    method.isInit() ? target : returnObject
+                    method instanceof GaMethod.ConstructorImpl ? target : returnObject
             );
 
             afterReturning(advice, processContext, innerContext);

@@ -189,7 +189,7 @@ public class GaStringUtils {
         logoTable.getBorder().set(TTable.Border.BORDER_NON);
 
         final TTable versionTable = new TTable(15).addRow(objectArray);
-//        versionTable.getBorder().set(TTable.Border.BORDER_NON);
+//        versionTable.getBorder().setValue(TTable.Border.BORDER_NON);
 
         final TTable returnTable = new TTable(new TTable.ColumnDefine[]{new TTable.ColumnDefine(TTable.Align.RIGHT)})
                 .addRow(logoTable.rendering())

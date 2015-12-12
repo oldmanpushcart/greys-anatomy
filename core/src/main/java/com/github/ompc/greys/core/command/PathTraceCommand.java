@@ -13,9 +13,9 @@ import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.textui.TTree;
 import com.github.ompc.greys.core.textui.ext.TTimeFragmentTable;
 import com.github.ompc.greys.core.util.GaMethod;
-import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.Matcher.*;
+import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeLRUHashMap;
+import com.github.ompc.greys.core.util.matcher.*;
 
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -97,9 +97,9 @@ public class PathTraceCommand implements Command {
     /*
      * 构造追踪路径匹配
      */
-    private Matcher newPathTracingMatcher() {
+    private Matcher<String> newPathTracingMatcher() {
 
-        final ArrayList<Matcher> matcherList = new ArrayList<Matcher>();
+        final ArrayList<Matcher<String>> matcherList = new ArrayList<Matcher<String>>();
 
         // fill path
         if (null != pathTracingPatterns) {
@@ -111,23 +111,23 @@ public class PathTraceCommand implements Command {
         // fill Epath
         if (null != pathTracingRegexPatterns) {
             for (String pathTracingRegexPattern : pathTracingRegexPatterns) {
-                matcherList.add(new RegexMatcher(pathTracingRegexPattern));
+                matcherList.add(new PatternMatcher(PatternMatcher.Strategy.REGEX, pathTracingRegexPattern));
             }
         }
 
-        return new RelationOrMatcher(matcherList.toArray(new Matcher[0]));
+        return new GroupMatcher.Or<String>(matcherList);
 
     }
 
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = new CacheMatcher(
+        final Matcher<String> classNameMatcher = new CachedMatcher<String>(
                 new PatternMatcher(isRegEx, classPattern),
                 new ThreadUnsafeLRUHashMap<String, Boolean>(GlobalOptions.ptraceClassMatcherLruCapacity)
         );
 
-        final Matcher methodNameMatcher = new CacheMatcher(
+        final Matcher<String> methodNameMatcher = new CachedMatcher<String>(
                 new PatternMatcher(isRegEx, methodPattern),
                 new ThreadUnsafeLRUHashMap<String, Boolean>(GlobalOptions.ptraceMethodMatcherLruCapacity)
         );
@@ -142,16 +142,11 @@ public class PathTraceCommand implements Command {
                 return new GetEnhancer() {
 
                     @Override
-                    public Matcher getClassNameMatcher() {
-                        return new RelationOrMatcher(
-                                classNameMatcher,
-                                pathTracingMatcher
+                    public PointCut getPointCut() {
+                        return new PointCut(
+                                new ClassMatcher(new GroupMatcher.Or<String>(classNameMatcher, pathTracingMatcher)),
+                                new GaMethodMatcher(new TrueMatcher<String>())
                         );
-                    }
-
-                    @Override
-                    public Matcher getMethodNameMatcher() {
-                        return new TrueMatcher();
                     }
 
                     @Override

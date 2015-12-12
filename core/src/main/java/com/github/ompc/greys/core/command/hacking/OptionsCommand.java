@@ -5,11 +5,13 @@ import com.github.ompc.greys.core.GlobalOptions.Option;
 import com.github.ompc.greys.core.command.Command;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
+import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.textui.TTable;
 import com.github.ompc.greys.core.textui.TTable.ColumnDefine;
 import com.github.ompc.greys.core.util.affect.RowAffect;
-import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.matcher.EqualsMatcher;
+import com.github.ompc.greys.core.util.matcher.Matcher;
+import com.github.ompc.greys.core.util.matcher.TrueMatcher;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.instrument.Instrumentation;
@@ -85,7 +87,7 @@ public class OptionsCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                 final RowAffect affect = new RowAffect();
-                final Collection<Field> fields = findOptions(new Matcher.RegexMatcher(".*"));
+                final Collection<Field> fields = findOptions(new TrueMatcher<String>());
                 printer.print(drawShowTable(fields)).finish();
                 affect.rCnt(fields.size());
                 return affect;
@@ -98,7 +100,7 @@ public class OptionsCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                 final RowAffect affect = new RowAffect();
-                final Collection<Field> fields = findOptions(new Matcher.EqualsMatcher(optionName));
+                final Collection<Field> fields = findOptions(new EqualsMatcher<String>(optionName));
                 printer.print(drawShowTable(fields)).finish();
                 affect.rCnt(fields.size());
                 return affect;
@@ -158,7 +160,7 @@ public class OptionsCommand implements Command {
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
                 final RowAffect affect = new RowAffect();
-                final Collection<Field> fields = findOptions(new Matcher.EqualsMatcher(optionName));
+                final Collection<Field> fields = findOptions(new EqualsMatcher<String>(optionName));
 
                 // name not exists
                 if (fields.isEmpty()) {

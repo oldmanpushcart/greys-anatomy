@@ -1,11 +1,14 @@
 package com.github.ompc.greys.core.advisor;
 
 import com.github.ompc.greys.core.GlobalOptions;
+import com.github.ompc.greys.core.manager.ReflectManager;
+import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.GaStringUtils;
 import com.github.ompc.greys.core.util.LogUtil;
-import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.SearchUtils;
+import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
+import com.github.ompc.greys.core.util.matcher.GroupMatcher;
+import com.github.ompc.greys.core.util.matcher.Matcher;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -18,13 +21,13 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
 import static com.github.ompc.greys.core.util.GaReflectUtils.defineClass;
-import static com.github.ompc.greys.core.util.GaReflectUtils.getVisibleMethods;
 import static java.lang.System.arraycopy;
 import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
 import static org.apache.commons.io.IOUtils.toByteArray;
@@ -45,30 +48,28 @@ public class Enhancer implements ClassFileTransformer {
 
     private final int adviceId;
     private final boolean isTracing;
-    private final Set<Class<?>> matchingClasses;
-    private final Matcher methodNameMatcher;
+    private final Map<Class<?>, Matcher<AsmMethod>> enhanceMap;
     private final EnhancerAffect affect;
+
+    private static final ReflectManager reflectManager = ReflectManager.Factory.getInstance();
 
     // 类-字节码缓存
     private final static Map<Class<?>/*Class*/, byte[]/*bytes of Class*/> classBytesCache
             = new WeakHashMap<Class<?>, byte[]>();
 
     /**
-     * @param adviceId          通知编号
-     * @param isTracing         可跟踪方法调用
-     * @param matchingClasses   匹配中的类
-     * @param methodNameMatcher 方法名匹配
-     * @param affect            影响统计
+     * @param adviceId   通知编号
+     * @param isTracing  可跟踪方法调用
+     * @param enhanceMap 增强点集合
+     * @param affect     影响统计
      */
     private Enhancer(int adviceId,
                      boolean isTracing,
-                     Set<Class<?>> matchingClasses,
-                     Matcher methodNameMatcher,
+                     Map<Class<?>, Matcher<AsmMethod>> enhanceMap,
                      EnhancerAffect affect) {
         this.adviceId = adviceId;
         this.isTracing = isTracing;
-        this.matchingClasses = matchingClasses;
-        this.methodNameMatcher = methodNameMatcher;
+        this.enhanceMap = enhanceMap;
         this.affect = affect;
     }
 
@@ -86,7 +87,7 @@ public class Enhancer implements ClassFileTransformer {
     }
 
     /*
-     * 派遣间谍混入对方的classloader中
+     * 派遣间谍混入对方的classLoader中
      */
     private void spy(final ClassLoader targetClassLoader)
             throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -159,15 +160,13 @@ public class Enhancer implements ClassFileTransformer {
     @Override
     public byte[] transform(
             final ClassLoader inClassLoader,
-            String className,
-            Class<?> classBeingRedefined,
-            ProtectionDomain protectionDomain,
-            byte[] classfileBuffer) throws IllegalClassFormatException {
+            final String className,
+            final Class<?> classBeingRedefined,
+            final ProtectionDomain protectionDomain,
+            final byte[] classfileBuffer) throws IllegalClassFormatException {
 
-
-        // 这里要再次过滤一次，为啥？因为在transform的过程中，有可能还会再诞生新的类
-        // 所以需要将之前需要转换的类集合传递下来，再次进行判断
-        if (!matchingClasses.contains(classBeingRedefined)) {
+        // 过滤掉不在增强集合范围内的类
+        if (!enhanceMap.containsKey(classBeingRedefined)) {
             return null;
         }
 
@@ -184,6 +183,9 @@ public class Enhancer implements ClassFileTransformer {
         else {
             cr = new ClassReader(classfileBuffer);
         }
+
+        // 获取这个类所对应的asm方法匹配
+        final Matcher<AsmMethod> asmMethodMatcher = enhanceMap.get(classBeingRedefined);
 
         // 字节码增强
         final ClassWriter cw = new ClassWriter(cr, COMPUTE_FRAMES | COMPUTE_MAXS) {
@@ -227,7 +229,7 @@ public class Enhancer implements ClassFileTransformer {
         try {
 
             // 生成增强字节码
-            cr.accept(new AdviceWeaver(adviceId, isTracing, cr.getClassName(), methodNameMatcher, affect, cw), EXPAND_FRAMES);
+            cr.accept(new AdviceWeaver(adviceId, isTracing, cr.getClassName(), asmMethodMatcher, affect, cw), EXPAND_FRAMES);
             final byte[] enhanceClassByteArray = cw.toByteArray();
 
             // 生成成功,推入缓存
@@ -284,22 +286,17 @@ public class Enhancer implements ClassFileTransformer {
 
 
     /**
-     * 是否需要过滤的类
+     * 是否需要过滤掉制定类
      *
-     * @param classes 类集合
+     * @param clazz 制定类
+     * @return true:需要过滤;false:允许强化
      */
-    private static void filter(Set<Class<?>> classes) {
-        final Iterator<Class<?>> it = classes.iterator();
-        while (it.hasNext()) {
-            final Class<?> clazz = it.next();
-            if (null == clazz
-                    || isSelf(clazz)
-                    || isUnsafeClass(clazz)
-                    || isUnsupportedClass(clazz)
-                    || isGreysClass(clazz)) {
-                it.remove();
-            }
-        }
+    private static boolean isIgnore(Class<?> clazz) {
+        return null == clazz
+                || isSelf(clazz)
+                || isUnsafeClass(clazz)
+                || isUnsupportedClass(clazz)
+                || isGreysClass(clazz);
     }
 
     /*
@@ -338,32 +335,46 @@ public class Enhancer implements ClassFileTransformer {
         return StringUtils.startsWith(clazz.getCanonicalName(), "com.github.ompc.greys.");
     }
 
-    private static Set<Class<?>> searchEnhanceClasses(final Instrumentation inst, final Matcher classNameMatcher) {
+    private static Map<Class<?>, Matcher<AsmMethod>> toEnhanceMap(final PointCut pointCut) {
 
-        final Set<Class<?>> returnClassSet = new LinkedHashSet<Class<?>>();
+        final Map<Class<?>, Matcher<AsmMethod>> enhanceMap = new LinkedHashMap<Class<?>, Matcher<AsmMethod>>();
+        for (final Class<?> clazz : reflectManager.searchClassWithSubClass(pointCut.getClassMatcher())) {
 
-        // 1. 添加匹配的一级类
-        final Set<Class<?>> matchedClassSet = SearchUtils.searchClassWithSubClass(inst, classNameMatcher);
-        returnClassSet.addAll(matchedClassSet);
+            for (final GaMethod gaMethod : reflectManager.searchClassGaMethods(clazz, pointCut.getGaMethodMatcher())) {
 
-        // 2. 添加一级类的可见方法所对应的类
-        for (Class<?> matchedClass : matchedClassSet) {
-            for (Map.Entry<Class<?>, LinkedHashSet<Method>> entry : getVisibleMethods(matchedClass).entrySet()) {
-                returnClassSet.add(entry.getKey());
+                // 如果当前方法所归属的类不支持增强,则华丽的忽略之
+                // 这里不用能上一层循环的clazz,主要的原因在于会找到从父类继承过来的可见方法(照顾到用户习惯)
+                final Class<?> targetClass = gaMethod.getDeclaringClass();
+                if (isIgnore(targetClass)) {
+                    continue;
+                }
+
+                final Matcher<AsmMethod> groupMatcher;
+                if (enhanceMap.containsKey(targetClass)) {
+                    groupMatcher = enhanceMap.get(targetClass);
+                } else {
+                    groupMatcher = new GroupMatcher.Or<AsmMethod>();
+                    enhanceMap.put(targetClass, groupMatcher);
+                }
+
+                if (groupMatcher instanceof GroupMatcher) {
+                    ((GroupMatcher<AsmMethod>) groupMatcher).add(new AsmMethodMatcher(gaMethod));
+                }
+
             }
+
         }
 
-        return returnClassSet;
+        return enhanceMap;
     }
 
     /**
      * 对象增强
      *
-     * @param inst              inst
-     * @param adviceId          通知ID
-     * @param isTracing         可跟踪方法调用
-     * @param classNameMatcher  类名匹配
-     * @param methodNameMatcher 方法名匹配
+     * @param inst      inst
+     * @param adviceId  通知ID
+     * @param isTracing 可跟踪方法调用
+     * @param pointCut  增强点
      * @return 增强影响范围
      * @throws UnmodifiableClassException 增强失败
      */
@@ -371,27 +382,23 @@ public class Enhancer implements ClassFileTransformer {
             final Instrumentation inst,
             final int adviceId,
             final boolean isTracing,
-            final Matcher classNameMatcher,
-            final Matcher methodNameMatcher) throws UnmodifiableClassException {
+            final PointCut pointCut) throws UnmodifiableClassException {
 
         final EnhancerAffect affect = new EnhancerAffect();
 
-        // 获取需要增强的类集合
-        final Set<Class<?>> enhanceClassSet = searchEnhanceClasses(inst, classNameMatcher);
 
-        // 过滤掉无法被增强的类
-        filter(enhanceClassSet);
+        final Map<Class<?>, Matcher<AsmMethod>> enhanceMap = toEnhanceMap(pointCut);
 
         // 构建增强器
-        final Enhancer enhancer = new Enhancer(adviceId, isTracing, enhanceClassSet, methodNameMatcher, affect);
+        final Enhancer enhancer = new Enhancer(adviceId, isTracing, enhanceMap, affect);
         try {
             inst.addTransformer(enhancer, true);
 
             // 批量增强
             if (GlobalOptions.isBatchReTransform) {
-                final int size = enhanceClassSet.size();
+                final int size = enhanceMap.size();
                 final Class<?>[] classArray = new Class<?>[size];
-                arraycopy(enhanceClassSet.toArray(), 0, classArray, 0, size);
+                arraycopy(enhanceMap.keySet().toArray(), 0, classArray, 0, size);
                 if (classArray.length > 0) {
                     inst.retransformClasses(classArray);
                 }
@@ -400,7 +407,7 @@ public class Enhancer implements ClassFileTransformer {
 
             // for each 增强
             else {
-                for (Class<?> clazz : enhanceClassSet) {
+                for (Class<?> clazz : enhanceMap.keySet()) {
                     try {
                         inst.retransformClasses(clazz);
                     } catch (Throwable t) {

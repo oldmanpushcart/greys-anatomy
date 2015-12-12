@@ -2,12 +2,13 @@ package com.github.ompc.greys.core.advisor;
 
 import com.github.ompc.greys.core.util.AsmCodeLock;
 import com.github.ompc.greys.core.util.CodeLock;
+import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.LogUtil;
-import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.collection.GaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeFixGaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
+import com.github.ompc.greys.core.util.matcher.Matcher;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
@@ -40,6 +41,41 @@ class TracingAsmCodeLock extends AsmCodeLock {
                 }
         );
     }
+}
+
+class AsmMethod {
+
+    private final String name;
+    private final String desc;
+
+    AsmMethod(String name, String desc) {
+        this.name = name;
+        this.desc = desc;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+}
+
+class AsmMethodMatcher implements Matcher<AsmMethod> {
+
+    private final GaMethod gaMethod;
+
+    AsmMethodMatcher(GaMethod gaMethod) {
+        this.gaMethod = gaMethod;
+    }
+
+    @Override
+    public boolean matching(AsmMethod target) {
+        return StringUtils.equals(gaMethod.getName(), target.getName())
+                && StringUtils.equals(gaMethod.getDesc(), target.getDesc());
+    }
+
 }
 
 /**
@@ -323,27 +359,33 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     private final int adviceId;
     private final boolean isTracing;
     private final String className;
-    private final Matcher matcher;
+    private final Matcher<AsmMethod> asmMethodMatcher;
     private final EnhancerAffect affect;
 
 
     /**
      * 构建通知编织器
      *
-     * @param adviceId  通知ID
-     * @param isTracing 可跟踪方法调用
-     * @param className 类名称
-     * @param matcher   方法匹配
-     *                  只有匹配上的方法才会被织入通知器
-     * @param affect    影响计数
-     * @param cv        ClassVisitor for ASM
+     * @param adviceId         通知ID
+     * @param isTracing        可跟踪方法调用
+     * @param className        类名称(透传)
+     * @param asmMethodMatcher asm方法匹配
+     *                         只有匹配上的方法才会被织入通知器
+     * @param affect           影响计数
+     * @param cv               ClassVisitor for ASM
      */
-    public AdviceWeaver(int adviceId, boolean isTracing, String className, Matcher matcher, EnhancerAffect affect, ClassVisitor cv) {
+    public AdviceWeaver(
+            final int adviceId,
+            final boolean isTracing,
+            final String className,
+            final Matcher<AsmMethod> asmMethodMatcher,
+            final EnhancerAffect affect,
+            final ClassVisitor cv) {
         super(ASM5, cv);
         this.adviceId = adviceId;
         this.isTracing = isTracing;
         this.className = className;
-        this.matcher = matcher;
+        this.asmMethodMatcher = asmMethodMatcher;
         this.affect = affect;
     }
 
@@ -358,11 +400,11 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     /**
      * 是否需要忽略
      */
-    private boolean isIgnore(MethodVisitor mv, int access, String methodName) {
+    private boolean isIgnore(MethodVisitor mv, int access, String name, String desc) {
         return null == mv
                 || isAbstract(access)
-                || !matcher.matching(methodName)
-                || isEquals(methodName, "<clinit>");
+                || !asmMethodMatcher.matching(new AsmMethod(name, desc))
+                || isEquals(name, "<clinit>");
     }
 
     @Override
@@ -375,7 +417,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         final MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 
-        if (isIgnore(mv, access, name)) {
+        if (isIgnore(mv, access, name, desc)) {
             return mv;
         }
 
@@ -421,7 +463,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 // println msg
                 visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-                if(StringUtils.isBlank(append.toString()) ) {
+                if (StringUtils.isBlank(append.toString())) {
                     visitLdcInsn(append.append(msg).toString());
                 } else {
                     visitLdcInsn(append.append(" >> ").append(msg).toString());
