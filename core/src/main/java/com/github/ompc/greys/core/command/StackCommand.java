@@ -111,7 +111,7 @@ public class StackCommand implements Command {
 
                             @Override
                             public void before(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
-                                innerContext.setStack(getStack());
+                                innerContext.stack = getStack();
                             }
 
                             private boolean isInCondition(Advice advice) {
@@ -131,7 +131,7 @@ public class StackCommand implements Command {
                             @Override
                             public void afterFinishing(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
                                 if (isInCondition(advice)) {
-                                    printer.println(innerContext.getStack());
+                                    printer.println(innerContext.stack);
                                     if (isOverThreshold(times.incrementAndGet())) {
                                         printer.finish();
                                     }
@@ -147,16 +147,7 @@ public class StackCommand implements Command {
     }
 
     private class StackInnerContext extends InnerContext {
-
         private String stack;
-
-        public String getStack() {
-            return stack;
-        }
-
-        public void setStack(String stack) {
-            this.stack = stack;
-        }
     }
 
 }
