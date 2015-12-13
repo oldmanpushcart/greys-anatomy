@@ -150,7 +150,8 @@ public class Enhancer implements ClassFileTransformer {
                         getField(spyClassFromGreysClassLoader, "ON_RETURN_METHOD").get(null),
                         getField(spyClassFromGreysClassLoader, "ON_THROWS_METHOD").get(null),
                         getField(spyClassFromGreysClassLoader, "BEFORE_INVOKING_METHOD").get(null),
-                        getField(spyClassFromGreysClassLoader, "AFTER_INVOKING_METHOD").get(null)
+                        getField(spyClassFromGreysClassLoader, "AFTER_INVOKING_METHOD").get(null),
+                        getField(spyClassFromGreysClassLoader, "THROW_INVOKING_METHOD").get(null)
                 );
             }
 

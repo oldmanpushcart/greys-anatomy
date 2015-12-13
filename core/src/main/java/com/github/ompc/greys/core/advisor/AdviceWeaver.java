@@ -262,6 +262,25 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         }
     }
 
+    /**
+     * 方法内部调用结束(异常返回)
+     *
+     * @param adviceId 通知ID
+     * @param owner    调用类名
+     * @param name     调用方法名
+     * @param desc     调用方法描述
+     */
+    public static void methodOnInvokeThrowTracing(int adviceId, String owner, String name, String desc) {
+        final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
+        if (null != listener) {
+            try {
+                listener.invokeThrowTracing(owner, name, desc);
+            } catch (Throwable t) {
+                logger.warn("advice throw tracing failed.", t);
+            }
+        }
+    }
+
 
     /*
      * 线程帧栈压栈<br/>
@@ -436,6 +455,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private final int KEY_GREYS_ADVICE_THROWS_METHOD = 2;
             private final int KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD = 3;
             private final int KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD = 4;
+            private final int KEY_GREYS_ADVICE_THROW_INVOKING_METHOD = 5;
 
 
             // -- KEY of ASM_TYPE or ASM_METHOD --
@@ -521,6 +541,11 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                     case KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD: {
                         getStatic(ASM_TYPE_SPY, "AFTER_INVOKING_METHOD", ASM_TYPE_METHOD);
+                        break;
+                    }
+
+                    case KEY_GREYS_ADVICE_THROW_INVOKING_METHOD: {
+                        getStatic(ASM_TYPE_SPY, "THROW_INVOKING_METHOD", ASM_TYPE_METHOD);
                         break;
                     }
 
@@ -853,59 +878,95 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 codeLockForTracing.code(opcode);
             }
 
+
+            /*
+             * 跟踪代码
+             */
+            private void tracing(final int tracingType, final String owner, final String name, final String desc) {
+
+                final String label;
+                switch (tracingType) {
+                    case KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD: {
+                        label = "beforeInvoking";
+                        break;
+                    }
+                    case KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD: {
+                        label = "afterInvoking";
+                        break;
+                    }
+                    case KEY_GREYS_ADVICE_THROW_INVOKING_METHOD: {
+                        label = "throwInvoking";
+                        break;
+                    }
+                    default: {
+                        throw new IllegalStateException("illegal tracing type: " + tracingType);
+                    }
+                }
+
+                codeLockForTracing.lock(new CodeLock.Block() {
+                    @Override
+                    public void code() {
+
+                        final StringBuilder append = new StringBuilder();
+                        _debug(append, "debug:"+label+"()");
+
+                        loadAdviceMethod(tracingType);
+                        _debug(append, "loadAdviceMethod()");
+
+                        pushNull();
+                        loadArrayForInvokeTracing(owner, name, desc);
+                        _debug(append, "loadArrayForInvokeTracing()");
+
+                        invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                        pop();
+                        _debug(append, "invokeVirtual()");
+
+                    }
+                });
+
+            }
+
             @Override
-            public void visitMethodInsn(int opcode, final String owner, final String name, final String desc, boolean itf) {
+            public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc, final boolean itf) {
+
+                if (!isTracing || codeLockForTracing.isLock()) {
+                    super.visitMethodInsn(opcode, owner, name, desc, itf);
+                    return;
+                }
 
                 // 方法调用前通知
-                if (isTracing && !codeLockForTracing.isLock()) {
-                    codeLockForTracing.lock(new CodeLock.Block() {
-                        @Override
-                        public void code() {
+                tracing(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD, owner, name, desc);
 
-                            final StringBuilder append = new StringBuilder();
-                            _debug(append, "debug:beforeInvoking()");
+                final Label beginLabel = new Label();
+                final Label endLabel = new Label();
+                final Label finallyLabel = new Label();
 
-                            loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD);
-                            _debug(append, "loadAdviceMethod()");
+                // try
+                // {
 
-                            pushNull();
-                            loadArrayForInvokeTracing(owner, name, desc);
-                            _debug(append, "loadArrayForInvokeTracing()");
-
-                            invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                            pop();
-                            _debug(append, "invokeVirtual()");
-
-                        }
-                    });
-                }
-
-                // 方法执行
+                mark(beginLabel);
                 super.visitMethodInsn(opcode, owner, name, desc, itf);
+                mark(endLabel);
 
                 // 方法调用后通知
-                if (isTracing && !codeLockForTracing.isLock()) {
-                    codeLockForTracing.lock(new CodeLock.Block() {
-                        @Override
-                        public void code() {
+                tracing(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD, owner, name, desc);
+                goTo(finallyLabel);
 
-                            final StringBuilder append = new StringBuilder();
-                            _debug(append, "debug:afterInvoking()");
+                // }
+                // catch
+                // {
 
-                            loadAdviceMethod(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD);
-                            _debug(append, "loadAdviceMethod()");
+                catchException(beginLabel, endLabel, ASM_TYPE_THROWABLE);
+                tracing(KEY_GREYS_ADVICE_THROW_INVOKING_METHOD, owner, name, desc);
 
-                            pushNull();
-                            loadArrayForInvokeTracing(owner, name, desc);
-                            _debug(append, "loadArrayForInvokeTracing()");
+                throwException();
 
-                            invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                            pop();
-                            _debug(append, "invokeVirtual()");
+                // }
+                // finally
+                // {
+                mark(finallyLabel);
+                // }
 
-                        }
-                    });
-                }
 
             }
 

@@ -108,7 +108,6 @@ public class TraceCommand implements Command {
                                     TraceInnerContext innerContext) throws Throwable {
                                 final Entity entity = innerContext.entity;
                                 entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
-                                entity.tracingDeep++;
                             }
 
                             @Override
@@ -118,9 +117,22 @@ public class TraceCommand implements Command {
                                     String tracingMethodDesc,
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
+                                finishTracing(innerContext);
+                            }
+
+                            @Override
+                            public void invokeThrowTracing(
+                                    String tracingClassName,
+                                    String tracingMethodName,
+                                    String tracingMethodDesc,
+                                    ProcessContext processContext,
+                                    TraceInnerContext innerContext) throws Throwable {
+                                finishTracing(innerContext);
+                            }
+
+                            private void finishTracing(TraceInnerContext innerContext) {
                                 final Entity entity = innerContext.entity;
                                 entity.tTree.end();
-                                entity.tracingDeep--;
                             }
 
                             @Override
@@ -157,12 +169,12 @@ public class TraceCommand implements Command {
                             @Override
                             public void afterThrowing(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
                                 final Entity entity = innerContext.entity;
-                                entity.tTree.begin("throw:" + advice.throwExp.getClass().getName() + "()").end();
+                                entity.tTree.begin("throw:" + advice.throwExp.getClass().getName() + "()").end().end();
 
                                 // 这里将堆栈的end全部补上
-                                while (entity.tracingDeep-- >= 0) {
-                                    entity.tTree.end();
-                                }
+                                //while (entity.tracingDeep-- >= 0) {
+                                //    entity.tTree.end();
+                                //}
 
                             }
 
@@ -202,11 +214,7 @@ public class TraceCommand implements Command {
     }
 
     private class Entity {
-
         TTree tTree;
-
-        // 跟踪深度
-        int tracingDeep = 0;
     }
 
     private class TraceInnerContext extends InnerContext {
