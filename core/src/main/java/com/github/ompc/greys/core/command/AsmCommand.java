@@ -187,7 +187,7 @@ public class AsmCommand implements Command {
                     }
 
                     final ClassLoader classLoader = clazz.getClassLoader();
-                    final String title = String.format("asm bytecode for \"%s\" @ClassLoader:%s",
+                    final String title = String.format("// ASM BYTECODE FOR \"%s\" @ClassLoader:%s",
                             clazz.getName(),
                             classLoader
                     );
