@@ -177,7 +177,7 @@ public class AsmCommand implements Command {
                     methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
                 }
 
-                final Collection<Class<?>> matchedClassSet = reflectManager.searchClassWithSubClass(new ClassMatcher(classNameMatcher));
+                final Collection<Class<?>> matchedClassSet = reflectManager.searchClass(new ClassMatcher(classNameMatcher));
 
                 for (Class<?> clazz : matchedClassSet) {
 

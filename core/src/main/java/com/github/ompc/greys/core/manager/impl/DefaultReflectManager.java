@@ -1,6 +1,7 @@
 package com.github.ompc.greys.core.manager.impl;
 
 import com.github.ompc.greys.core.ClassDataSource;
+import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.manager.ReflectManager;
 import com.github.ompc.greys.core.util.GaCheckUtils;
 import com.github.ompc.greys.core.util.GaMethod;
@@ -62,8 +63,10 @@ public class DefaultReflectManager implements ReflectManager {
             // 首先添加自己
             matchedClassSet.add(matchedClass);
 
-            // 继续搜索子类
-            matchedClassSet.addAll(searchSubClass(matchedClass));
+            if (!GlobalOptions.isDisableSubClass) {
+                // 继续搜索子类
+                matchedClassSet.addAll(searchSubClass(matchedClass));
+            }
 
         }
         return matchedClassSet;
@@ -153,7 +156,7 @@ public class DefaultReflectManager implements ReflectManager {
         }
 
         // 因为构造函数不能继承,所以这里就不用像方法这么复杂的做可视化处理了
-        for(final Constructor<?> constructor : targetClass.getDeclaredConstructors()) {
+        for (final Constructor<?> constructor : targetClass.getDeclaredConstructors()) {
             final GaMethod gaMethod = new GaMethod.ConstructorImpl(constructor);
             if (gaMethodMatcher.matching(gaMethod)) {
                 gaMethodSet.add(gaMethod);

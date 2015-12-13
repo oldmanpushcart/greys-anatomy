@@ -84,7 +84,11 @@ public class TraceCommand implements Command {
                     public PointCut getPointCut() {
                         return new PointCut(
                                 new ClassMatcher(new PatternMatcher(isRegEx, classPattern)),
-                                new GaMethodMatcher(new PatternMatcher(isRegEx, methodPattern))
+                                new GaMethodMatcher(new PatternMatcher(isRegEx, methodPattern)),
+
+                                // don't include the sub class when tracing...
+                                // fixed for #94
+                                false
                         );
                     }
 

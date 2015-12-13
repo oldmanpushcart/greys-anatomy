@@ -14,15 +14,30 @@ public class PointCut {
     // 方法匹配
     private final Matcher<GaMethod> gaMethodMatcher;
 
+    // 匹配是否包含子类
+    private final boolean isIncludeSubClass;
+
     /**
      * 构造切入点
      *
-     * @param classMatcher  类匹配
-     * @param gaMethodMatcher 方法匹配
+     * @param classMatcher      类匹配
+     * @param gaMethodMatcher   方法匹配
      */
     public PointCut(Matcher<Class<?>> classMatcher, Matcher<GaMethod> gaMethodMatcher) {
+        this(classMatcher, gaMethodMatcher, true);
+    }
+
+    /**
+     * 构造切入点
+     *
+     * @param classMatcher      类匹配
+     * @param gaMethodMatcher   方法匹配
+     * @param isIncludeSubClass 类匹配是否包含子类
+     */
+    public PointCut(Matcher<Class<?>> classMatcher, Matcher<GaMethod> gaMethodMatcher, boolean isIncludeSubClass) {
         this.classMatcher = classMatcher;
         this.gaMethodMatcher = gaMethodMatcher;
+        this.isIncludeSubClass = isIncludeSubClass;
     }
 
     public Matcher<Class<?>> getClassMatcher() {
@@ -31,5 +46,9 @@ public class PointCut {
 
     public Matcher<GaMethod> getGaMethodMatcher() {
         return gaMethodMatcher;
+    }
+
+    public boolean isIncludeSubClass() {
+        return isIncludeSubClass;
     }
 }

@@ -23,6 +23,7 @@ public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessCont
 
     @Override
     final public void invokeBeforeTracing(String tracingClassName, String tracingMethodName, String tracingMethodDesc) throws Throwable {
+
         final ProcessContextBound bound = processContextBoundRef.get();
         final PC processContext = bound.processContext;
         final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;

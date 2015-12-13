@@ -34,10 +34,10 @@ class TracingAsmCodeLock extends AsmCodeLock {
         super(
                 aa,
                 new int[]{
-                        ACONST_NULL, ICONST_0, ICONST_1, SWAP, SWAP, POP2, POP
+                        ICONST_0, POP
                 },
                 new int[]{
-                        ICONST_1, ACONST_NULL, ICONST_0, SWAP, SWAP, POP, POP2
+                        ICONST_1, POP
                 }
         );
     }

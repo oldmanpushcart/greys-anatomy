@@ -22,6 +22,7 @@ import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.ProtectionDomain;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -338,7 +339,12 @@ public class Enhancer implements ClassFileTransformer {
     private static Map<Class<?>, Matcher<AsmMethod>> toEnhanceMap(final PointCut pointCut) {
 
         final Map<Class<?>, Matcher<AsmMethod>> enhanceMap = new LinkedHashMap<Class<?>, Matcher<AsmMethod>>();
-        for (final Class<?> clazz : reflectManager.searchClassWithSubClass(pointCut.getClassMatcher())) {
+        final Collection<Class<?>> classes = pointCut.isIncludeSubClass()
+                ? reflectManager.searchClassWithSubClass(pointCut.getClassMatcher())
+                : reflectManager.searchClass(pointCut.getClassMatcher());
+
+
+        for (final Class<?> clazz : classes) {
 
             for (final GaMethod gaMethod : reflectManager.searchClassGaMethods(clazz, pointCut.getGaMethodMatcher())) {
 
