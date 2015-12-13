@@ -1,98 +1,249 @@
 package com.github.ompc.greys.core.util;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
+import static com.github.ompc.greys.core.util.GaReflectUtils.computeModifier;
 
 /**
  * Greys封装的方法<br/>
  * 主要用来封装构造函数cinit/init/method
  * Created by oldmanpushcart@gmail.com on 15/5/24.
  */
-public class GaMethod {
-
-    private final int type;
-    private final Constructor<?> constructor;
-    private final Method method;
-
-    /*
-     * 构造方法
-     */
-    private static final int TYPE_INIT = 1 << 1;
-
-    /*
-     * 普通方法
-     */
-    private static final int TYPE_METHOD = 1 << 2;
+public interface GaMethod {
 
     /**
-     * 是否构造方法
-     *
-     * @return true/false
+     * {@link Method#invoke(Object, Object...)}
      */
-    public boolean isInit() {
-        return (TYPE_INIT & type) == TYPE_INIT;
-    }
+    Object invoke(Object obj, Object... args)
+            throws IllegalAccessException, InvocationTargetException, InstantiationException;
 
     /**
-     * 是否普通方法
-     *
-     * @return true/false
+     * {@link Method#isAccessible()}
      */
-    public boolean isMethod() {
-        return (TYPE_METHOD & type) == TYPE_METHOD;
-    }
+    boolean isAccessible();
 
     /**
-     * 获取方法名称
-     *
-     * @return 返回方法名称
+     * {@link Method#setAccessible(boolean)}
      */
-    public String getName() {
-        return isInit()
-                ? "<init>"
-                : method.getName();
-    }
+    void setAccessible(boolean accessFlag);
 
-    @Override
-    public String toString() {
-        return isInit()
-                ? constructor.toString()
-                : method.toString();
-    }
+    /**
+     * {@link Method#getName()}
+     */
+    String getName();
 
-    public boolean isAccessible() {
-        return isInit()
-                ? constructor.isAccessible()
-                : method.isAccessible();
-    }
+    /**
+     * {@link Method#getParameterTypes()}
+     */
+    Class<?>[] getParameterTypes();
 
-    public void setAccessible(boolean accessFlag) {
-        if (isInit()) {
-            constructor.setAccessible(accessFlag);
-        } else {
-            method.setAccessible(accessFlag);
+    /**
+     * {@link Method#getAnnotations()}
+     */
+    Annotation[] getAnnotations();
+
+    /**
+     * {@link Method#getModifiers()}
+     */
+    int getModifiers();
+
+    /**
+     * {@link Method#getDeclaringClass()}
+     */
+    Class<?> getDeclaringClass();
+
+    /**
+     * {@link Method#getReturnType()}
+     */
+    Class<?> getReturnType();
+
+    /**
+     * {@link Method#getExceptionTypes()}
+     */
+    Class<?>[] getExceptionTypes();
+
+    /**
+     * {@link Method#getDeclaredAnnotations()}
+     */
+    Annotation[] getDeclaredAnnotations();
+
+    /**
+     * 获取方法描述
+     *
+     * @return 方法描述
+     */
+    String getDesc();
+
+    /**
+     * 类实现
+     */
+    class MethodImpl implements GaMethod {
+
+        private final Method target;
+
+        public MethodImpl(Method target) {
+            this.target = target;
+        }
+
+        @Override
+        public Object invoke(Object obj, Object... args)
+                throws IllegalAccessException, InvocationTargetException, InstantiationException {
+            return target.invoke(obj, args);
+        }
+
+        @Override
+        public boolean isAccessible() {
+            return target.isAccessible();
+        }
+
+        @Override
+        public void setAccessible(boolean accessFlag) {
+            target.setAccessible(accessFlag);
+        }
+
+        @Override
+        public String getName() {
+            return target.getName();
+        }
+
+        @Override
+        public Class<?>[] getParameterTypes() {
+            return target.getParameterTypes();
+        }
+
+        @Override
+        public Annotation[] getAnnotations() {
+            return target.getAnnotations();
+        }
+
+        @Override
+        public int getModifiers() {
+            return target.getModifiers();
+        }
+
+        @Override
+        public Class<?> getDeclaringClass() {
+            return target.getDeclaringClass();
+        }
+
+        @Override
+        public Class<?> getReturnType() {
+            return target.getReturnType();
+        }
+
+        @Override
+        public Class<?>[] getExceptionTypes() {
+            return target.getExceptionTypes();
+        }
+
+        @Override
+        public Annotation[] getDeclaredAnnotations() {
+            return target.getDeclaredAnnotations();
+        }
+
+        @Override
+        public String getDesc() {
+            return org.objectweb.asm.Type.getType(target).toString();
+        }
+
+        @Override
+        public int hashCode() {
+            return target.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return target.equals(obj);
         }
     }
 
-    public Object invoke(Object target, Object... args) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        return isInit()
-                ? constructor.newInstance(args)
-                : method.invoke(target, args);
+    /**
+     * 构造函数实现
+     */
+    class ConstructorImpl implements GaMethod {
+
+        private final Constructor<?> target;
+
+        public ConstructorImpl(Constructor<?> target) {
+            this.target = target;
+        }
+
+
+        @Override
+        public Object invoke(Object obj, Object... args)
+                throws IllegalAccessException, InvocationTargetException, InstantiationException {
+            return target.newInstance(args);
+        }
+
+        @Override
+        public boolean isAccessible() {
+            return target.isAccessible();
+        }
+
+        @Override
+        public void setAccessible(boolean accessFlag) {
+            target.setAccessible(accessFlag);
+        }
+
+        @Override
+        public String getName() {
+            return "<init>";
+        }
+
+        @Override
+        public Class<?>[] getParameterTypes() {
+            return target.getParameterTypes();
+        }
+
+        @Override
+        public Annotation[] getAnnotations() {
+            return target.getAnnotations();
+        }
+
+        @Override
+        public int getModifiers() {
+            return computeModifier(target);
+        }
+
+        @Override
+        public Class<?> getDeclaringClass() {
+            return target.getDeclaringClass();
+        }
+
+        @Override
+        public Class<?> getReturnType() {
+            return target.getDeclaringClass();
+        }
+
+        @Override
+        public Class<?>[] getExceptionTypes() {
+            return target.getExceptionTypes();
+        }
+
+        @Override
+        public Annotation[] getDeclaredAnnotations() {
+            return target.getDeclaredAnnotations();
+        }
+
+        @Override
+        public int hashCode() {
+            return target.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return target.equals(obj);
+        }
+
+        @Override
+        public String getDesc() {
+            return org.objectweb.asm.Type.getType(target).toString();
+        }
+
     }
 
-    private GaMethod(int type, Constructor<?> constructor, Method method) {
-        this.type = type;
-        this.constructor = constructor;
-        this.method = method;
-    }
-
-    public static GaMethod newInit(Constructor<?> constructor) {
-        return new GaMethod(TYPE_INIT, constructor, null);
-    }
-
-    public static GaMethod newMethod(Method method) {
-        return new GaMethod(TYPE_METHOD, null, method);
-    }
 
 }

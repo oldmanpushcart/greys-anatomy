@@ -2,12 +2,13 @@ package com.github.ompc.greys.core.advisor;
 
 import com.github.ompc.greys.core.util.AsmCodeLock;
 import com.github.ompc.greys.core.util.CodeLock;
+import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.LogUtil;
-import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.collection.GaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeFixGaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
+import com.github.ompc.greys.core.util.matcher.Matcher;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
@@ -33,13 +34,48 @@ class TracingAsmCodeLock extends AsmCodeLock {
         super(
                 aa,
                 new int[]{
-                        ACONST_NULL, ICONST_0, ICONST_1, SWAP, SWAP, POP2, POP
+                        ICONST_0, POP
                 },
                 new int[]{
-                        ICONST_1, ACONST_NULL, ICONST_0, SWAP, SWAP, POP, POP2
+                        ICONST_1, POP
                 }
         );
     }
+}
+
+class AsmMethod {
+
+    private final String name;
+    private final String desc;
+
+    AsmMethod(String name, String desc) {
+        this.name = name;
+        this.desc = desc;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+}
+
+class AsmMethodMatcher implements Matcher<AsmMethod> {
+
+    private final GaMethod gaMethod;
+
+    AsmMethodMatcher(GaMethod gaMethod) {
+        this.gaMethod = gaMethod;
+    }
+
+    @Override
+    public boolean matching(AsmMethod target) {
+        return StringUtils.equals(gaMethod.getName(), target.getName())
+                && StringUtils.equals(gaMethod.getDesc(), target.getDesc());
+    }
+
 }
 
 /**
@@ -226,6 +262,25 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         }
     }
 
+    /**
+     * 方法内部调用结束(异常返回)
+     *
+     * @param adviceId 通知ID
+     * @param owner    调用类名
+     * @param name     调用方法名
+     * @param desc     调用方法描述
+     */
+    public static void methodOnInvokeThrowTracing(int adviceId, String owner, String name, String desc) {
+        final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
+        if (null != listener) {
+            try {
+                listener.invokeThrowTracing(owner, name, desc);
+            } catch (Throwable t) {
+                logger.warn("advice throw tracing failed.", t);
+            }
+        }
+    }
+
 
     /*
      * 线程帧栈压栈<br/>
@@ -323,27 +378,33 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     private final int adviceId;
     private final boolean isTracing;
     private final String className;
-    private final Matcher matcher;
+    private final Matcher<AsmMethod> asmMethodMatcher;
     private final EnhancerAffect affect;
 
 
     /**
      * 构建通知编织器
      *
-     * @param adviceId  通知ID
-     * @param isTracing 可跟踪方法调用
-     * @param className 类名称
-     * @param matcher   方法匹配
-     *                  只有匹配上的方法才会被织入通知器
-     * @param affect    影响计数
-     * @param cv        ClassVisitor for ASM
+     * @param adviceId         通知ID
+     * @param isTracing        可跟踪方法调用
+     * @param className        类名称(透传)
+     * @param asmMethodMatcher asm方法匹配
+     *                         只有匹配上的方法才会被织入通知器
+     * @param affect           影响计数
+     * @param cv               ClassVisitor for ASM
      */
-    public AdviceWeaver(int adviceId, boolean isTracing, String className, Matcher matcher, EnhancerAffect affect, ClassVisitor cv) {
+    public AdviceWeaver(
+            final int adviceId,
+            final boolean isTracing,
+            final String className,
+            final Matcher<AsmMethod> asmMethodMatcher,
+            final EnhancerAffect affect,
+            final ClassVisitor cv) {
         super(ASM5, cv);
         this.adviceId = adviceId;
         this.isTracing = isTracing;
         this.className = className;
-        this.matcher = matcher;
+        this.asmMethodMatcher = asmMethodMatcher;
         this.affect = affect;
     }
 
@@ -358,11 +419,11 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     /**
      * 是否需要忽略
      */
-    private boolean isIgnore(MethodVisitor mv, int access, String methodName) {
+    private boolean isIgnore(MethodVisitor mv, int access, String name, String desc) {
         return null == mv
                 || isAbstract(access)
-                || !matcher.matching(methodName)
-                || isEquals(methodName, "<clinit>");
+                || !asmMethodMatcher.matching(new AsmMethod(name, desc))
+                || isEquals(name, "<clinit>");
     }
 
     @Override
@@ -375,7 +436,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         final MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 
-        if (isIgnore(mv, access, name)) {
+        if (isIgnore(mv, access, name, desc)) {
             return mv;
         }
 
@@ -394,6 +455,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private final int KEY_GREYS_ADVICE_THROWS_METHOD = 2;
             private final int KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD = 3;
             private final int KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD = 4;
+            private final int KEY_GREYS_ADVICE_THROW_INVOKING_METHOD = 5;
 
 
             // -- KEY of ASM_TYPE or ASM_METHOD --
@@ -421,7 +483,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 // println msg
                 visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-                if(StringUtils.isBlank(append.toString()) ) {
+                if (StringUtils.isBlank(append.toString())) {
                     visitLdcInsn(append.append(msg).toString());
                 } else {
                     visitLdcInsn(append.append(" >> ").append(msg).toString());
@@ -479,6 +541,11 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                     case KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD: {
                         getStatic(ASM_TYPE_SPY, "AFTER_INVOKING_METHOD", ASM_TYPE_METHOD);
+                        break;
+                    }
+
+                    case KEY_GREYS_ADVICE_THROW_INVOKING_METHOD: {
+                        getStatic(ASM_TYPE_SPY, "THROW_INVOKING_METHOD", ASM_TYPE_METHOD);
                         break;
                     }
 
@@ -811,59 +878,95 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 codeLockForTracing.code(opcode);
             }
 
+
+            /*
+             * 跟踪代码
+             */
+            private void tracing(final int tracingType, final String owner, final String name, final String desc) {
+
+                final String label;
+                switch (tracingType) {
+                    case KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD: {
+                        label = "beforeInvoking";
+                        break;
+                    }
+                    case KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD: {
+                        label = "afterInvoking";
+                        break;
+                    }
+                    case KEY_GREYS_ADVICE_THROW_INVOKING_METHOD: {
+                        label = "throwInvoking";
+                        break;
+                    }
+                    default: {
+                        throw new IllegalStateException("illegal tracing type: " + tracingType);
+                    }
+                }
+
+                codeLockForTracing.lock(new CodeLock.Block() {
+                    @Override
+                    public void code() {
+
+                        final StringBuilder append = new StringBuilder();
+                        _debug(append, "debug:"+label+"()");
+
+                        loadAdviceMethod(tracingType);
+                        _debug(append, "loadAdviceMethod()");
+
+                        pushNull();
+                        loadArrayForInvokeTracing(owner, name, desc);
+                        _debug(append, "loadArrayForInvokeTracing()");
+
+                        invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
+                        pop();
+                        _debug(append, "invokeVirtual()");
+
+                    }
+                });
+
+            }
+
             @Override
-            public void visitMethodInsn(int opcode, final String owner, final String name, final String desc, boolean itf) {
+            public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc, final boolean itf) {
+
+                if (!isTracing || codeLockForTracing.isLock()) {
+                    super.visitMethodInsn(opcode, owner, name, desc, itf);
+                    return;
+                }
 
                 // 方法调用前通知
-                if (isTracing && !codeLockForTracing.isLock()) {
-                    codeLockForTracing.lock(new CodeLock.Block() {
-                        @Override
-                        public void code() {
+                tracing(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD, owner, name, desc);
 
-                            final StringBuilder append = new StringBuilder();
-                            _debug(append, "debug:beforeInvoking()");
+                final Label beginLabel = new Label();
+                final Label endLabel = new Label();
+                final Label finallyLabel = new Label();
 
-                            loadAdviceMethod(KEY_GREYS_ADVICE_BEFORE_INVOKING_METHOD);
-                            _debug(append, "loadAdviceMethod()");
+                // try
+                // {
 
-                            pushNull();
-                            loadArrayForInvokeTracing(owner, name, desc);
-                            _debug(append, "loadArrayForInvokeTracing()");
-
-                            invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                            pop();
-                            _debug(append, "invokeVirtual()");
-
-                        }
-                    });
-                }
-
-                // 方法执行
+                mark(beginLabel);
                 super.visitMethodInsn(opcode, owner, name, desc, itf);
+                mark(endLabel);
 
                 // 方法调用后通知
-                if (isTracing && !codeLockForTracing.isLock()) {
-                    codeLockForTracing.lock(new CodeLock.Block() {
-                        @Override
-                        public void code() {
+                tracing(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD, owner, name, desc);
+                goTo(finallyLabel);
 
-                            final StringBuilder append = new StringBuilder();
-                            _debug(append, "debug:afterInvoking()");
+                // }
+                // catch
+                // {
 
-                            loadAdviceMethod(KEY_GREYS_ADVICE_AFTER_INVOKING_METHOD);
-                            _debug(append, "loadAdviceMethod()");
+                catchException(beginLabel, endLabel, ASM_TYPE_THROWABLE);
+                tracing(KEY_GREYS_ADVICE_THROW_INVOKING_METHOD, owner, name, desc);
 
-                            pushNull();
-                            loadArrayForInvokeTracing(owner, name, desc);
-                            _debug(append, "loadArrayForInvokeTracing()");
+                throwException();
 
-                            invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
-                            pop();
-                            _debug(append, "invokeVirtual()");
+                // }
+                // finally
+                // {
+                mark(finallyLabel);
+                // }
 
-                        }
-                    });
-                }
 
             }
 

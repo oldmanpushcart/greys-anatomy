@@ -3,9 +3,13 @@ package com.github.ompc.greys.core.command;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
+import com.github.ompc.greys.core.manager.ReflectManager;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Matcher;
 import com.github.ompc.greys.core.util.affect.RowAffect;
+import com.github.ompc.greys.core.util.matcher.ClassMatcher;
+import com.github.ompc.greys.core.util.matcher.Matcher;
+import com.github.ompc.greys.core.util.matcher.PatternMatcher;
+import com.github.ompc.greys.core.util.matcher.TrueMatcher;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.*;
@@ -15,9 +19,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.instrument.Instrumentation;
-import java.util.Set;
-
-import static com.github.ompc.greys.core.util.SearchUtils.searchClassWithSubClass;
+import java.util.Collection;
 
 /**
  * clone from {@link TraceClassVisitor}
@@ -153,6 +155,7 @@ public class AsmCommand implements Command {
     @NamedArg(name = "f", summary = "Display all the member variables")
     private boolean isField = false;
 
+    private final ReflectManager reflectManager = ReflectManager.Factory.getInstance();
 
     @Override
     public Action getAction() {
@@ -165,16 +168,16 @@ public class AsmCommand implements Command {
                 final StringBuilder outputSB = new StringBuilder();
 
                 // 找到所有匹配的类
-                final Matcher classNameMatcher = new Matcher.PatternMatcher(isRegEx, classPattern);
+                final Matcher<String> classNameMatcher = new PatternMatcher(isRegEx, classPattern);
 
                 final Matcher methodNameMatcher;
                 if (StringUtils.isBlank(methodPattern)) {
-                    methodNameMatcher = new Matcher.TrueMatcher();
+                    methodNameMatcher = new TrueMatcher<String>();
                 } else {
-                    methodNameMatcher = new Matcher.PatternMatcher(isRegEx, methodPattern);
+                    methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
                 }
 
-                final Set<Class<?>> matchedClassSet = searchClassWithSubClass(inst, classNameMatcher);
+                final Collection<Class<?>> matchedClassSet = reflectManager.searchClass(new ClassMatcher(classNameMatcher));
 
                 for (Class<?> clazz : matchedClassSet) {
 
@@ -184,7 +187,7 @@ public class AsmCommand implements Command {
                     }
 
                     final ClassLoader classLoader = clazz.getClassLoader();
-                    final String title = String.format("asm bytecode for \"%s\" @ClassLoader:%s",
+                    final String title = String.format("// ASM BYTECODE FOR \"%s\" @ClassLoader:%s",
                             clazz.getName(),
                             classLoader
                     );

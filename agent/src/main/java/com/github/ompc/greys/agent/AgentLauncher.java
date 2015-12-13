@@ -92,6 +92,11 @@ public class AgentLauncher {
                             String.class,
                             String.class,
                             String.class),
+                    adviceWeaverClass.getMethod("methodOnInvokeThrowTracing",
+                            int.class,
+                            String.class,
+                            String.class,
+                            String.class),
                     AgentLauncher.class.getMethod("resetGreysClassLoader")
             );
         }

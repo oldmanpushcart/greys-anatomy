@@ -2,18 +2,20 @@ package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.advisor.Enhancer;
 import com.github.ompc.greys.core.command.annotation.Cmd;
+import com.github.ompc.greys.core.manager.ReflectManager;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.LogUtil;
-import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.SearchUtils;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.affect.RowAffect;
+import com.github.ompc.greys.core.util.matcher.ClassMatcher;
+import com.github.ompc.greys.core.util.matcher.PatternMatcher;
 import org.slf4j.Logger;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import static com.github.ompc.greys.core.util.matcher.PatternMatcher.Strategy.WILDCARD;
 import static org.apache.commons.lang3.reflect.FieldUtils.getField;
 
 /**
@@ -27,6 +29,7 @@ import static org.apache.commons.lang3.reflect.FieldUtils.getField;
 public class ShutdownCommand implements Command {
 
     private final Logger logger = LogUtil.getLogger();
+    private final ReflectManager reflectManager = ReflectManager.Factory.getInstance();
 
     /*
      * 从GreysClassLoader中加载Spy
@@ -62,13 +65,11 @@ public class ShutdownCommand implements Command {
     /*
      * 重置所有已经加载到JVM的Spy
      */
-    private void cleanSpy(final Instrumentation inst) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-
-        for (Class spyClass : SearchUtils.searchClass(inst, new Matcher.PatternMatcher(false, "com.github.ompc.greys.agent.Spy"))) {
+    private void cleanSpy() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        for (final Class<?> spyClass : reflectManager.searchClass(new ClassMatcher(new PatternMatcher(WILDCARD, "com.github.ompc.greys.agent.Spy")))) {
             final Method cleanMethod = spyClass.getMethod("clean");
             cleanMethod.invoke(null);
         }
-
     }
 
     @Override
@@ -85,7 +86,7 @@ public class ShutdownCommand implements Command {
                 reset();
 
                 // cleanSpy the spy
-                cleanSpy(inst);
+                cleanSpy();
 
                 printer.println("Greys Server is shut down.").finish();
                 return new RowAffect(enhancerAffect.cCnt());

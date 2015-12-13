@@ -1,6 +1,9 @@
 package com.github.ompc.greys.core.server;
 
+import com.github.ompc.greys.core.ClassDataSource;
 import com.github.ompc.greys.core.Configure;
+import com.github.ompc.greys.core.manager.ReflectManager;
+import com.github.ompc.greys.core.manager.TimeFragmentManager;
 import com.github.ompc.greys.core.util.GaCheckUtils;
 import com.github.ompc.greys.core.util.LogUtil;
 import org.slf4j.Logger;
@@ -11,6 +14,9 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -129,13 +135,31 @@ public class GaServer {
         }
     });
 
-    private GaServer(int javaPid, Instrumentation instrumentation) {
+    private GaServer(int javaPid, Instrumentation inst) {
         this.javaPid = javaPid;
         this.sessionManager = new DefaultSessionManager();
-        this.commandHandler = new DefaultCommandHandler(this, instrumentation);
+        this.commandHandler = new DefaultCommandHandler(this, inst);
+
+        initForManager(inst);
 
         Runtime.getRuntime().addShutdownHook(jvmShutdownHooker);
 
+    }
+
+    /*
+     * 初始化各种manager
+     */
+    private void initForManager(final Instrumentation inst) {
+        TimeFragmentManager.Factory.getInstance();
+        ReflectManager.Factory.initInstance(new ClassDataSource() {
+            @Override
+            public Collection<Class<?>> allLoadedClasses() {
+                final Class<?>[] classArray = inst.getAllLoadedClasses();
+                return null == classArray
+                        ? new ArrayList<Class<?>>()
+                        : Arrays.asList(classArray);
+            }
+        });
     }
 
     /**

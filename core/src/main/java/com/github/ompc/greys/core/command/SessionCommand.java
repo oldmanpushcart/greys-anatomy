@@ -25,7 +25,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
         })
 public class SessionCommand implements Command {
 
-    @NamedArg(name = "c", hasValue = true, summary = "Modify the character set of session")
+    @NamedArg(name = "c", hasValue = true, summary = "Modify the character setValue of session")
     private String charsetString;
 
     @Override
@@ -43,13 +43,13 @@ public class SessionCommand implements Command {
                         final Charset beforeCharset = session.getCharset();
                         session.setCharset(newCharset);
 
-                        printer.println(format("Character set is modified. [%s] -> [%s]",
+                        printer.println(format("Character setValue is modified. [%s] -> [%s]",
                                 beforeCharset,
                                 newCharset))
                                 .finish();
 
                     } catch (UnsupportedCharsetException e) {
-                        printer.println(format("Desupported character set : \"%s\"", charsetString)).finish();
+                        printer.println(format("Desupported character setValue : \"%s\"", charsetString)).finish();
                     }
 
                 } else {

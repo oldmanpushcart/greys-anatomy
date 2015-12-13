@@ -17,10 +17,12 @@ import com.github.ompc.greys.core.textui.ext.TObject;
 import com.github.ompc.greys.core.textui.ext.TTimeFragmentDetail;
 import com.github.ompc.greys.core.textui.ext.TTimeFragmentTable;
 import com.github.ompc.greys.core.util.GaMethod;
-import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.util.PlayIndexHolder;
+import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.affect.RowAffect;
+import com.github.ompc.greys.core.util.matcher.ClassMatcher;
+import com.github.ompc.greys.core.util.matcher.GaMethodMatcher;
+import com.github.ompc.greys.core.util.matcher.PatternMatcher;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
@@ -217,9 +219,6 @@ public class TimeTunnelCommand implements Command {
      */
     private GetEnhancerAction doTimeTunnel() {
 
-        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
-        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
-
         return new GetEnhancerAction() {
             @Override
             public GetEnhancer action(Session session, Instrumentation inst, final Printer printer) throws Throwable {
@@ -228,13 +227,11 @@ public class TimeTunnelCommand implements Command {
                     private final AtomicInteger timesRef = new AtomicInteger();
 
                     @Override
-                    public Matcher getClassNameMatcher() {
-                        return classNameMatcher;
-                    }
-
-                    @Override
-                    public Matcher getMethodNameMatcher() {
-                        return methodNameMatcher;
+                    public PointCut getPointCut() {
+                        return new PointCut(
+                                new ClassMatcher(new PatternMatcher(isRegEx, classPattern)),
+                                new GaMethodMatcher(new PatternMatcher(isRegEx, methodPattern))
+                        );
                     }
 
                     @Override
@@ -492,7 +489,7 @@ public class TimeTunnelCommand implements Command {
                 );
 
 
-                final TTimeFragmentDetail view = new TTimeFragmentDetail(reTimeFragment, expend);
+                final TTimeFragmentDetail view = new TTimeFragmentDetail(inst, reTimeFragment, expend);
                 printer.print(view.rendering())
                         .println(format("Time fragment[%d] successfully replayed.", index))
                         .finish();
@@ -547,7 +544,7 @@ public class TimeTunnelCommand implements Command {
                     return new RowAffect();
                 }
 
-                printer.print(new TTimeFragmentDetail(timeFragment, expend).rendering()).finish();
+                printer.print(new TTimeFragmentDetail(inst, timeFragment, expend).rendering()).finish();
                 return new RowAffect(1);
 
             }

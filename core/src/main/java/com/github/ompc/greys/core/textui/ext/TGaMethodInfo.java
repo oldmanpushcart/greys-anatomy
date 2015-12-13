@@ -2,9 +2,9 @@ package com.github.ompc.greys.core.textui.ext;
 
 import com.github.ompc.greys.core.textui.TComponent;
 import com.github.ompc.greys.core.textui.TKv;
+import com.github.ompc.greys.core.util.GaMethod;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
 import static com.github.ompc.greys.core.util.GaStringUtils.tranModifier;
@@ -14,20 +14,20 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  * Java方法信息控件
  * Created by oldmanpushcart@gmail.com on 15/5/9.
  */
-public class TMethodInfo implements TComponent {
+public class TGaMethodInfo implements TComponent {
 
-    private final Method method;
+    private final GaMethod gaMethod;
 
-    public TMethodInfo(Method method) {
-        this.method = method;
+    public TGaMethodInfo(GaMethod gaMethod) {
+        this.gaMethod = gaMethod;
     }
 
     @Override
     public String rendering() {
         return new TKv()
-                .add("declaring-class", method.getDeclaringClass())
-                .add("method-name", method.getName())
-                .add("modifier", tranModifier(method.getModifiers()))
+                .add("declaring-class", gaMethod.getDeclaringClass())
+                .add("gaMethod-name", gaMethod.getName())
+                .add("modifier", tranModifier(gaMethod.getModifiers()))
                 .add("annotation", drawAnnotation())
                 .add("parameters", drawParameters())
                 .add("return", drawReturn())
@@ -40,7 +40,7 @@ public class TMethodInfo implements TComponent {
     private String drawAnnotation() {
 
         final StringBuilder annotationSB = new StringBuilder();
-        final Annotation[] annotationArray = method.getDeclaredAnnotations();
+        final Annotation[] annotationArray = gaMethod.getDeclaredAnnotations();
 
         if (null != annotationArray && annotationArray.length > 0) {
             for (Annotation annotation : annotationArray) {
@@ -58,7 +58,7 @@ public class TMethodInfo implements TComponent {
 
     private String drawParameters() {
         final StringBuilder paramsSB = new StringBuilder();
-        final Class<?>[] paramTypes = method.getParameterTypes();
+        final Class<?>[] paramTypes = gaMethod.getParameterTypes();
         if (null != paramTypes && paramTypes.length > 0) {
             for (Class<?> clazz : paramTypes) {
                 paramsSB.append(tranClassName(clazz)).append("\n");
@@ -69,14 +69,14 @@ public class TMethodInfo implements TComponent {
 
     private String drawReturn() {
         final StringBuilder returnSB = new StringBuilder();
-        final Class<?> returnTypeClass = method.getReturnType();
+        final Class<?> returnTypeClass = gaMethod.getReturnType();
         returnSB.append(tranClassName(returnTypeClass)).append("\n");
         return returnSB.toString();
     }
 
     private String drawExceptions() {
         final StringBuilder exceptionSB = new StringBuilder();
-        final Class<?>[] exceptionTypes = method.getExceptionTypes();
+        final Class<?>[] exceptionTypes = gaMethod.getExceptionTypes();
         if (null != exceptionTypes && exceptionTypes.length > 0) {
             for (Class<?> clazz : exceptionTypes) {
                 exceptionSB.append(tranClassName(clazz)).append("\n");

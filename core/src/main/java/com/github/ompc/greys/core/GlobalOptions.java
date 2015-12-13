@@ -95,6 +95,22 @@ public class GlobalOptions {
     )
     public static volatile int sessionWriteQueueCapacity = 2048;
 
+    @Option(
+            level = 3,
+            name = "is-display-object-size",
+            summary = "...",
+            description = "..."
+    )
+    public static volatile boolean isDisplayObjectSize = false;
+
+    @Option(
+            level = 1,
+            name = "is-disable-sub-class",
+            summary = "Option to control include sub class when class matching",
+            description = "This option disable to include sub class when matching class."
+    )
+    public static volatile boolean isDisableSubClass = false;
+
     /**
      * 选项
      */

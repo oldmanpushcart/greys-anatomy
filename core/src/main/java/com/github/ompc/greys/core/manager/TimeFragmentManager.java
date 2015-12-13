@@ -86,7 +86,6 @@ public interface TimeFragmentManager {
                     }
                 }
             }
-
             return instance;
         }
 

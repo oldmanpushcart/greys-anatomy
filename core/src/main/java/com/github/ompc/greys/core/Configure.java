@@ -93,7 +93,7 @@ public class Configure {
 
             // 非静态的才需要纳入非序列化过程
             try {
-                map.put(field.getName(), newString(getFieldValueByField(this, field)));
+                map.put(field.getName(), newString(getValue(this, field)));
             } catch (Throwable t) {
                 //
             }
@@ -118,7 +118,7 @@ public class Configure {
                 final Field field = getField(Configure.class, entry.getKey());
                 if (null != field
                         && !isStatic(field.getModifiers())) {
-                    set(field, valueOf(field.getType(), entry.getValue()), configure);
+                    setValue(field, valueOf(field.getType(), entry.getValue()), configure);
                 }
             } catch (Throwable t) {
                 //

@@ -1,18 +1,7 @@
 package com.github.ompc.greys.core.util;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.JarURLConnection;
-import java.net.URL;
-import java.net.URLDecoder;
+import java.lang.reflect.*;
 import java.util.*;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 /**
  * 反射工具类 Created by oldmanpushcart@gmail.com on 15/5/18.
@@ -20,149 +9,23 @@ import java.util.jar.JarFile;
 public class GaReflectUtils {
 
     /**
-     * 从包package中获取所有的Class
+     * 获取对象某个成员的值
      *
-     * @param packname 包名称
-     * @return 包路径下所有类集合
-     * <p>
-     * 代码摘抄自 http://www.oschina.net/code/snippet_129830_8767</p>
+     * @param <T>    T
+     * @param target 目标对象
+     * @param field  目标属性
+     * @return 目标属性值
+     * @throws IllegalArgumentException 非法参数
+     * @throws IllegalAccessException   非法进入
      */
-    public static Set<Class<?>> getClasses(final ClassLoader loader, final String packname) {
-
-        // 第一个class类的集合
-        Set<Class<?>> classes = new LinkedHashSet<Class<?>>();
-        // 是否循环迭代
-        // 获取包的名字 并进行替换
-        String packageName = packname;
-        String packageDirName = packageName.replace('.', '/');
-        // 定义一个枚举的集合 并进行循环来处理这个目录下的things
-        Enumeration<URL> dirs;
+    public static <T> T getValue(Object target, Field field) throws IllegalArgumentException, IllegalAccessException {
+        final boolean isAccessible = field.isAccessible();
         try {
-//            dirs = Thread.currentThread().getContextClassLoader().getResources(packageDirName);
-            dirs = loader.getResources(packageDirName);
-            // 循环迭代下去
-            while (dirs.hasMoreElements()) {
-                // 获取下一个元素
-                URL url = dirs.nextElement();
-                // 得到协议的名称
-                String protocol = url.getProtocol();
-                // 如果是以文件的形式保存在服务器上
-                if ("file".equals(protocol)) {
-//					System.err.println("file类型的扫描");
-                    // 获取包的物理路径
-                    String filePath = URLDecoder.decode(url.getFile(), "UTF-8");
-                    // 以文件的方式扫描整个包下的文件 并添加到集合中
-                    findAndAddClassesInPackageByFile(packageName, filePath,
-                            true, classes);
-                } else if ("jar".equals(protocol)) {
-                    // 如果是jar包文件
-                    // 定义一个JarFile
-//					System.err.println("jar类型的扫描");
-                    JarFile jar;
-                    try {
-                        // 获取jar
-                        jar = ((JarURLConnection) url.openConnection())
-                                .getJarFile();
-                        // 从此jar包 得到一个枚举类
-                        Enumeration<JarEntry> entries = jar.entries();
-                        // 同样的进行循环迭代
-                        while (entries.hasMoreElements()) {
-                            // 获取jar里的一个实体 可以是目录 和一些jar包里的其他文件 如META-INF等文件
-                            JarEntry entry = entries.nextElement();
-                            String name = entry.getName();
-                            // 如果是以/开头的
-                            if (name.charAt(0) == '/') {
-                                // 获取后面的字符串
-                                name = name.substring(1);
-                            }
-                            // 如果前半部分和定义的包名相同
-                            if (name.startsWith(packageDirName)) {
-                                int idx = name.lastIndexOf('/');
-                                // 如果以"/"结尾 是一个包
-                                if (idx != -1) {
-                                    // 获取包名 把"/"替换成"."
-                                    packageName = name.substring(0, idx)
-                                            .replace('/', '.');
-                                }
-                                // 如果是一个.class文件 而且不是目录
-                                if (name.endsWith(".class") && !entry.isDirectory()) {
-                                    // 去掉后面的".class" 获取真正的类名
-                                    String className = name.substring(
-                                            packageName.length() + 1,
-                                            name.length() - 6);
-                                    try {
-                                        // 添加到classes
-                                        classes.add(Class
-                                                .forName(packageName + '.'
-                                                        + className));
-                                    } catch (ClassNotFoundException e) {
-                                        // log
-                                        // .error("添加用户自定义视图类错误 找不到此类的.class文件");
-//											e.printStackTrace();
-                                    }
-                                }
-                            }
-                        }
-                    } catch (IOException e) {
-                        // log.error("在扫描用户定义视图时从jar包获取文件出错");
-//						e.printStackTrace();
-                    }
-                }
-            }
-        } catch (IOException e) {
-//			e.printStackTrace();
-        }
-
-        return classes;
-    }
-
-    /**
-     * 以文件的形式来获取包下的所有Class
-     * <p/>
-     * <p>
-     * 代码摘抄自 http://www.oschina.net/code/snippet_129830_8767</p>
-     */
-    private static void findAndAddClassesInPackageByFile(String packageName,
-                                                         String packagePath, final boolean recursive, Set<Class<?>> classes) {
-        // 获取此包的目录 建立一个File
-        File dir = new File(packagePath);
-        // 如果不存在或者 也不是目录就直接返回
-        if (!dir.exists() || !dir.isDirectory()) {
-            // log.warn("用户定义包名 " + packageName + " 下没有任何文件");
-            return;
-        }
-        // 如果存在 就获取包下的所有文件 包括目录
-        File[] dirfiles = dir.listFiles(new FileFilter() {
-            // 自定义过滤规则 如果可以循环(包含子目录) 或则是以.class结尾的文件(编译好的java类文件)
-            @Override
-            public boolean accept(File file) {
-                return (recursive && file.isDirectory())
-                        || (file.getName().endsWith(".class"));
-            }
-        });
-        // 循环所有文件
-        for (File file : dirfiles) {
-            // 如果是目录 则继续扫描
-            if (file.isDirectory()) {
-                findAndAddClassesInPackageByFile(
-                        packageName + "." + file.getName(),
-                        file.getAbsolutePath(), recursive, classes);
-            } else {
-                // 如果是java类文件 去掉后面的.class 只留下类名
-                String className = file.getName().substring(0,
-                        file.getName().length() - 6);
-                try {
-                    // 添加到集合中去
-                    // classes.add(Class.forName(packageName + '.' +
-                    // className));
-                    // 经过回复同学的提醒，这里用forName有一些不好，会触发static方法，没有使用classLoader的load干净
-                    classes.add(Thread.currentThread().getContextClassLoader()
-                            .loadClass(packageName + '.' + className));
-                } catch (ClassNotFoundException e) {
-                    // log.error("添加用户自定义视图类错误 找不到此类的.class文件");
-//                    e.printStackTrace();
-                }
-            }
+            field.setAccessible(true);
+            //noinspection unchecked
+            return (T) field.get(target);
+        } finally {
+            field.setAccessible(isAccessible);
         }
     }
 
@@ -175,7 +38,7 @@ public class GaReflectUtils {
      * @throws IllegalArgumentException 非法参数
      * @throws IllegalAccessException   非法进入
      */
-    public static void set(Field field, Object value, Object target) throws IllegalArgumentException, IllegalAccessException {
+    public static void setValue(Field field, Object value, Object target) throws IllegalArgumentException, IllegalAccessException {
         final boolean isAccessible = field.isAccessible();
         try {
             field.setAccessible(true);
@@ -217,26 +80,6 @@ public class GaReflectUtils {
         return null;
     }
 
-    /**
-     * 获取对象某个成员的值
-     *
-     * @param <T> T
-     * @param target 目标对象
-     * @param field  目标属性
-     * @return 目标属性值
-     * @throws IllegalArgumentException 非法参数
-     * @throws IllegalAccessException   非法进入
-     */
-    public static <T> T getFieldValueByField(Object target, Field field) throws IllegalArgumentException, IllegalAccessException {
-        final boolean isAccessible = field.isAccessible();
-        try {
-            field.setAccessible(true);
-            //noinspection unchecked
-            return (T) field.get(target);
-        } finally {
-            field.setAccessible(isAccessible);
-        }
-    }
 
     /**
      * 将字符串转换为指定类型，目前只支持9种类型：8种基本类型（包括其包装类）以及字符串
@@ -274,7 +117,7 @@ public class GaReflectUtils {
     /**
      * 定义类
      *
-     * @param targetClassLoader 目标classloader
+     * @param targetClassLoader 目标classLoader
      * @param className         类名称
      * @param classByteArray    类字节码数组
      * @return 定义的类
@@ -314,16 +157,41 @@ public class GaReflectUtils {
     }
 
 
+
+//    /**
+//     * 获取目标类的ClassLoader<br/>
+//     * 因为JVM的ClassLoader采用双亲委派，所以按层次排序
+//     *
+//     * @param targetClass 目标类
+//     * @return ClassLoader层次列表(按层次排序，从近到远)
+//     */
+//    public static ArrayList<ClassLoader> recGetClassLoader(final Class<?> targetClass) {
+//        final ArrayList<ClassLoader> classLoaderList = new ArrayList<ClassLoader>();
+//        ClassLoader loader = targetClass.getClassLoader();
+//        if (null != loader) {
+//            classLoaderList.add(loader);
+//            while (true) {
+//                loader = loader.getParent();
+//                if (null == loader) {
+//                    break;
+//                }
+//                classLoaderList.add(loader);
+//            }
+//        }
+//        return classLoaderList;
+//    }
+
     /**
      * 获取目标类的父类
+     * 因为Java的类继承关系是单父类的，所以按照层次排序
      *
-     * @param clazz 目标类
+     * @param targetClass 目标类
      * @return 目标类的父类列表(顺序按照类继承顺序倒序)
      */
-    public static ArrayList<Class<?>> getSuperClass(Class<?> clazz) {
+    public static ArrayList<Class<?>> recGetSuperClass(Class<?> targetClass) {
 
         final ArrayList<Class<?>> superClassList = new ArrayList<Class<?>>();
-        Class<?> currentClass = clazz;
+        Class<?> currentClass = targetClass;
         do {
             final Class<?> superClass = currentClass.getSuperclass();
             if (null == superClass) {
@@ -336,74 +204,98 @@ public class GaReflectUtils {
     }
 
 
-    /**
-     * 获取类内部可用的方法<br/>
-     * 可使用的方法并不一定是当前类所声明的方法，也有可能是来自于父类的protected/public/default的方法
-     *
-     * @param clazz 目标类
-     * @return 可用方法集合(严格有序)
-     */
-    public static LinkedHashMap<Class<?>, LinkedHashSet<Method>> getVisibleMethods(Class<?> clazz) {
-
-        final LinkedHashMap<Class<?>, LinkedHashSet<Method>> classMethodMap = new LinkedHashMap<Class<?>, LinkedHashSet<Method>>();
-
-        //1. 列出当前类内自己声明的方法
-        final Method[] declaredMethodArray = clazz.getDeclaredMethods();
-        if (null != declaredMethodArray) {
-            final LinkedHashSet<Method> methodSet = new LinkedHashSet<Method>();
-            classMethodMap.put(clazz, methodSet);
-            Collections.addAll(methodSet, declaredMethodArray);
-        }
-
-        //2. 列出父类所有public/protected/default的方法
-        for (Class<?> superClass : getSuperClass(clazz)) {
-            final Method[] methodOfSuperClassArray = superClass.getDeclaredMethods();
-            if (null != methodOfSuperClassArray) {
-                final LinkedHashSet<Method> methodSet = new LinkedHashSet<Method>();
-                classMethodMap.put(superClass, methodSet);
-                for (Method methodOfSuperClass : methodOfSuperClassArray) {
-                    final int m = methodOfSuperClass.getModifiers();
-                    /*
-                     * 抽象方法
-                     * 接口方法
-                     * 私有方法
-                     */
-                    if (Modifier.isAbstract(m)
-                            || Modifier.isInterface(m)
-                            || Modifier.isPrivate(m)) {
-                        continue;
-                    }
-                    methodSet.add(methodOfSuperClass);
-                }
-            }
-        }
-
-        return removeObjectMethods(classMethodMap);
-    }
 
     /**
-     * 移除来自{@link java.lang.Object}的方法
+     * 计算ClassType
      *
-     * @param map 方法集合
-     * @return 方法集合
+     * @param targetClass 目标类
+     * @return 计算出的ClassType
      */
-    private static LinkedHashMap<Class<?>, LinkedHashSet<Method>> removeObjectMethods(LinkedHashMap<Class<?>, LinkedHashSet<Method>> map) {
-        if (null == map
-                || map.isEmpty()) {
-            return map;
-        }
-
-        final Iterator<Class<?>> classIt = map.keySet().iterator();
-        while (classIt.hasNext()) {
-
-            final Class<?> clazz = classIt.next();
-            if (GaCheckUtils.isEquals(clazz, Object.class)) {
-                classIt.remove();
-            }
-
-        }
-
-        return map;
+    public static int computeClassType(Class<?> targetClass) {
+        int type = 0;
+        if (targetClass.isAnnotation())
+            type |= TYPE_ANNOTATION;
+        if (targetClass.isAnonymousClass())
+            type |= TYPE_ANONYMOUS;
+        if (targetClass.isArray())
+            type |= TYPE_ARRAY;
+        if (targetClass.isEnum())
+            type |= TYPE_ENUM;
+        if (targetClass.isInterface())
+            type |= TYPE_INTERFACE;
+        if (targetClass.isLocalClass())
+            type |= TYPE_LOCAL;
+        if (targetClass.isMemberClass())
+            type |= TYPE_MEMBER;
+        if (targetClass.isPrimitive())
+            type |= TYPE_PRIMITIVE;
+        if (targetClass.isSynthetic())
+            type |= TYPE_SYNTHETIC;
+        return type;
     }
+
+
+    public static final int TYPE_ANNOTATION = 1 << 0;
+    public static final int TYPE_ANONYMOUS = 1 << 1;
+    public static final int TYPE_ARRAY = 1 << 2;
+    public static final int TYPE_ENUM = 1 << 3;
+    public static final int TYPE_INTERFACE = 1 << 4;
+    public static final int TYPE_LOCAL = 1 << 5;
+    public static final int TYPE_MEMBER = 1 << 6;
+    public static final int TYPE_PRIMITIVE = 1 << 7;
+    public static final int TYPE_SYNTHETIC = 1 << 8;
+
+    /**
+     * 默认类型(全匹配)
+     */
+    public static final int DEFAULT_TYPE =
+            TYPE_ANNOTATION
+                    | TYPE_ANONYMOUS | TYPE_ARRAY | TYPE_ENUM
+                    | TYPE_INTERFACE | TYPE_LOCAL | TYPE_MEMBER
+                    | TYPE_PRIMITIVE | TYPE_SYNTHETIC;
+
+
+    /**
+     * 计算类修饰符
+     *
+     * @param targetClass 目标类
+     * @return 类修饰符
+     */
+    public static int computeModifier(final Class<?> targetClass) {
+        return targetClass.getModifiers();
+    }
+
+    public static int computeModifier(final Method targetMethod) {
+        return targetMethod.getModifiers();
+    }
+
+    public static int computeModifier(final Constructor<?> targetConstructor) {
+        return targetConstructor.getModifiers();
+    }
+
+    public static int computeModifier(final Field targetField) {
+        return targetField.getModifiers();
+    }
+
+    public static final int MOD_PUBLIC = Modifier.PUBLIC;
+    public static final int MOD_PRIVATE = Modifier.PRIVATE;
+    public static final int MOD_PROTECTED = Modifier.PROTECTED;
+    public static final int MOD_STATIC = Modifier.STATIC;
+    public static final int MOD_FINAL = Modifier.FINAL;
+    public static final int MOD_SYNCHRONIZED = Modifier.SYNCHRONIZED;
+    public static final int MOD_VOLATILE = Modifier.VOLATILE;
+    public static final int MOD_TRANSIENT = Modifier.TRANSIENT;
+    public static final int MOD_NATIVE = Modifier.NATIVE;
+    public static final int MOD_ABSTRACT = Modifier.ABSTRACT;
+    public static final int MOD_STRICT = Modifier.STRICT;
+
+    /**
+     * 默认匹配修饰符(全匹配)
+     */
+    public static final int DEFAULT_MOD =
+            MOD_FINAL
+                    | MOD_PROTECTED | MOD_VOLATILE | MOD_STATIC | MOD_PUBLIC | MOD_SYNCHRONIZED
+                    | MOD_TRANSIENT | MOD_ABSTRACT | MOD_NATIVE | MOD_STRICT | MOD_PRIVATE;
+
 
 }

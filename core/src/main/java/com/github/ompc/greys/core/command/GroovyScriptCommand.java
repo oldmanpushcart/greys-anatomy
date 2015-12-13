@@ -3,8 +3,6 @@ package com.github.ompc.greys.core.command;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 
 import java.io.File;
 import java.lang.instrument.Instrumentation;
@@ -38,9 +36,6 @@ public class GroovyScriptCommand implements ScriptSupportCommand, Command {
 
     @Override
     public Action getAction() {
-
-        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
-        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
 
         final File scriptFile = new File(scriptFilepath);
         if (!scriptFile.exists()

@@ -12,8 +12,10 @@ import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.textui.ext.TObject;
 import com.github.ompc.greys.core.util.LogUtil;
-import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
+import com.github.ompc.greys.core.util.PointCut;
+import com.github.ompc.greys.core.util.matcher.ClassMatcher;
+import com.github.ompc.greys.core.util.matcher.GaMethodMatcher;
+import com.github.ompc.greys.core.util.matcher.PatternMatcher;
 import org.slf4j.Logger;
 
 import java.lang.instrument.Instrumentation;
@@ -115,10 +117,7 @@ public class WatchCommand implements Command {
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
-        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
-
-        // set default
+        // setValue default
         // 如果没有强行指定b/f/e/s中任何一个，则默认为b
         if (!isBefore
                 && !isFinish
@@ -136,13 +135,11 @@ public class WatchCommand implements Command {
                     private final AtomicInteger timesRef = new AtomicInteger();
 
                     @Override
-                    public Matcher getClassNameMatcher() {
-                        return classNameMatcher;
-                    }
-
-                    @Override
-                    public Matcher getMethodNameMatcher() {
-                        return methodNameMatcher;
+                    public PointCut getPointCut() {
+                        return new PointCut(
+                                new ClassMatcher(new PatternMatcher(isRegEx, classPattern)),
+                                new GaMethodMatcher(new PatternMatcher(isRegEx, methodPattern))
+                        );
                     }
 
                     @Override

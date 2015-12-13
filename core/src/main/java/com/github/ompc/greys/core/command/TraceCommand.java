@@ -7,9 +7,11 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
 import com.github.ompc.greys.core.textui.TTree;
+import com.github.ompc.greys.core.util.PointCut;
+import com.github.ompc.greys.core.util.matcher.ClassMatcher;
+import com.github.ompc.greys.core.util.matcher.GaMethodMatcher;
+import com.github.ompc.greys.core.util.matcher.PatternMatcher;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -72,9 +74,6 @@ public class TraceCommand implements Command {
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
-        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
-
         return new GetEnhancerAction() {
 
             @Override
@@ -82,13 +81,15 @@ public class TraceCommand implements Command {
                 return new GetEnhancer() {
 
                     @Override
-                    public Matcher getClassNameMatcher() {
-                        return classNameMatcher;
-                    }
+                    public PointCut getPointCut() {
+                        return new PointCut(
+                                new ClassMatcher(new PatternMatcher(isRegEx, classPattern)),
+                                new GaMethodMatcher(new PatternMatcher(isRegEx, methodPattern)),
 
-                    @Override
-                    public Matcher getMethodNameMatcher() {
-                        return methodNameMatcher;
+                                // don't include the sub class when tracing...
+                                // fixed for #94
+                                false
+                        );
                     }
 
                     // 访问计数器
@@ -105,9 +106,8 @@ public class TraceCommand implements Command {
                                     String tracingMethodDesc,
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
-                                final Entity entity = innerContext.getEntity();
+                                final Entity entity = innerContext.entity;
                                 entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
-                                entity.tracingDeep++;
                             }
 
                             @Override
@@ -117,9 +117,22 @@ public class TraceCommand implements Command {
                                     String tracingMethodDesc,
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
-                                final Entity entity = innerContext.getEntity();
+                                finishTracing(innerContext);
+                            }
+
+                            @Override
+                            public void invokeThrowTracing(
+                                    String tracingClassName,
+                                    String tracingMethodName,
+                                    String tracingMethodDesc,
+                                    ProcessContext processContext,
+                                    TraceInnerContext innerContext) throws Throwable {
+                                finishTracing(innerContext);
+                            }
+
+                            private void finishTracing(TraceInnerContext innerContext) {
+                                final Entity entity = innerContext.entity;
                                 entity.tTree.end();
-                                entity.tracingDeep--;
                             }
 
                             @Override
@@ -149,19 +162,19 @@ public class TraceCommand implements Command {
 
                             @Override
                             public void afterReturning(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
-                                final Entity entity = innerContext.getEntity();
+                                final Entity entity = innerContext.entity;
                                 entity.tTree.end();
                             }
 
                             @Override
                             public void afterThrowing(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
-                                final Entity entity = innerContext.getEntity();
-                                entity.tTree.begin("throw:" + advice.throwExp.getClass().getName() + "()").end();
+                                final Entity entity = innerContext.entity;
+                                entity.tTree.begin("throw:" + advice.throwExp.getClass().getName() + "()").end().end();
 
                                 // 这里将堆栈的end全部补上
-                                while (entity.tracingDeep-- >= 0) {
-                                    entity.tTree.end();
-                                }
+                                //while (entity.tracingDeep-- >= 0) {
+                                //    entity.tTree.end();
+                                //}
 
                             }
 
@@ -183,7 +196,7 @@ public class TraceCommand implements Command {
                             public void afterFinishing(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
                                 final long cost = innerContext.getCost();
                                 if (isInCondition(advice, cost)) {
-                                    final Entity entity = innerContext.getEntity();
+                                    final Entity entity = innerContext.entity;
                                     printer.println(entity.tTree.rendering());
                                     if (isOverThreshold(timesRef.incrementAndGet())) {
                                         printer.finish();
@@ -201,11 +214,7 @@ public class TraceCommand implements Command {
     }
 
     private class Entity {
-
         TTree tTree;
-
-        // 跟踪深度
-        int tracingDeep = 0;
     }
 
     private class TraceInnerContext extends InnerContext {
@@ -218,10 +227,6 @@ public class TraceCommand implements Command {
             } else {
                 return entity;
             }
-        }
-
-        Entity getEntity() {
-            return entity;
         }
 
     }

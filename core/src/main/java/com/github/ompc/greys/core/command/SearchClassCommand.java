@@ -3,16 +3,16 @@ package com.github.ompc.greys.core.command;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
+import com.github.ompc.greys.core.manager.ReflectManager;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
-import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.textui.ext.TClassInfo;
+import com.github.ompc.greys.core.util.affect.RowAffect;
+import com.github.ompc.greys.core.util.matcher.ClassMatcher;
+import com.github.ompc.greys.core.util.matcher.PatternMatcher;
 
 import java.lang.instrument.Instrumentation;
-import java.util.Set;
+import java.util.Collection;
 
-import static com.github.ompc.greys.core.util.SearchUtils.searchClassWithSubClass;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
@@ -40,6 +40,8 @@ public class SearchClassCommand implements Command {
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
+    private final ReflectManager reflectManager = ReflectManager.Factory.getInstance();
+
     @Override
     public Action getAction() {
         return new RowAction() {
@@ -47,9 +49,8 @@ public class SearchClassCommand implements Command {
             @Override
             public RowAffect action(Session session, Instrumentation inst, Printer printer) throws Throwable {
 
-                final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
-
-                final Set<Class<?>> matchedClassSet = searchClassWithSubClass(inst, classNameMatcher);
+                final ClassMatcher classMatcher = new ClassMatcher(new PatternMatcher(isRegEx, classPattern));
+                final Collection<Class<?>> matchedClassSet = reflectManager.searchClassWithSubClass(classMatcher);
 
                 // 展示类详情
                 if (isDetail) {

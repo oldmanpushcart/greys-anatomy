@@ -10,11 +10,13 @@ import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.GaMethod;
-import com.github.ompc.greys.core.util.Matcher;
-import com.github.ompc.greys.core.util.Matcher.PatternMatcher;
-import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
 import com.github.ompc.greys.core.textui.TTable;
+import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.PointCut;
+import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
+import com.github.ompc.greys.core.util.matcher.ClassMatcher;
+import com.github.ompc.greys.core.util.matcher.GaMethodMatcher;
+import com.github.ompc.greys.core.util.matcher.PatternMatcher;
 
 import java.lang.instrument.Instrumentation;
 import java.text.DecimalFormat;
@@ -143,22 +145,18 @@ public class MonitorCommand implements Command {
     @Override
     public Action getAction() {
 
-        final Matcher classNameMatcher = new PatternMatcher(isRegEx, classPattern);
-        final Matcher methodNameMatcher = new PatternMatcher(isRegEx, methodPattern);
-
         return new GetEnhancerAction() {
 
             @Override
             public GetEnhancer action(final Session session, Instrumentation inst, final Printer printer) throws Throwable {
                 return new GetEnhancer() {
-                    @Override
-                    public Matcher getClassNameMatcher() {
-                        return classNameMatcher;
-                    }
 
                     @Override
-                    public Matcher getMethodNameMatcher() {
-                        return methodNameMatcher;
+                    public PointCut getPointCut() {
+                        return new PointCut(
+                                new ClassMatcher(new PatternMatcher(isRegEx, classPattern)),
+                                new GaMethodMatcher(new PatternMatcher(isRegEx, methodPattern))
+                        );
                     }
 
                     @Override
@@ -281,14 +279,14 @@ public class MonitorCommand implements Command {
                                         }
                                         nData.total = oData.total + 1;
 
-                                        // set max-cost
+                                        // setValue max-cost
                                         if (null == oData.maxCost) {
                                             nData.maxCost = cost;
                                         } else {
                                             nData.maxCost = Math.max(oData.maxCost, cost);
                                         }
 
-                                        // set min-cost
+                                        // setValue min-cost
                                         if (null == oData.minCost) {
                                             nData.minCost = cost;
                                         } else {

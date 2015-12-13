@@ -2,7 +2,7 @@ package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.advisor.AdviceListener;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.Matcher;
+import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
@@ -63,18 +63,10 @@ public interface Command {
     interface GetEnhancer {
 
         /**
-         * 类名匹配
-         *
-         * @return 获取类名匹配
+         * 获取增强功能点
+         * @return
          */
-        Matcher getClassNameMatcher();
-
-        /**
-         * 方法名匹配
-         *
-         * @return 获取方法名匹配
-         */
-        Matcher getMethodNameMatcher();
+        PointCut getPointCut();
 
         /**
          * 获取监听器
