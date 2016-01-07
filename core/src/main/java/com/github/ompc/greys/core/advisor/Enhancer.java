@@ -6,6 +6,7 @@ import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.GaStringUtils;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.PointCut;
+import com.github.ompc.greys.core.util.affect.AsmAffect;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.matcher.GroupMatcher;
 import com.github.ompc.greys.core.util.matcher.Matcher;
@@ -480,6 +481,66 @@ public class Enhancer implements ClassFileTransformer {
         }
 
         return affect;
+    }
+
+
+    /**
+     * 获取匹配的类字节码信息
+     *
+     * @param classes 类集合
+     * @param inst    inst
+     * @return 增强影响范围
+     * @throws UnmodifiableClassException
+     */
+    public static synchronized AsmAffect getClassByteArray(final Collection<Class<?>> classes, final Instrumentation inst) throws UnmodifiableClassException {
+
+        final AsmAffect affect = new AsmAffect();
+
+        if (null == classes
+                || classes.isEmpty()) {
+            return affect;
+        }
+
+        final ClassFileTransformer getClassByteArrayFileTransformer = new ClassFileTransformer() {
+            @Override
+            public byte[] transform(
+                    ClassLoader loader,
+                    String className,
+                    Class<?> classBeingRedefined,
+                    ProtectionDomain protectionDomain,
+                    byte[] classfileBuffer) throws IllegalClassFormatException {
+
+                if (classes.contains(classBeingRedefined)) {
+                    affect.getClassInfos().add(new AsmAffect.ClassInfo(
+                            classBeingRedefined,
+                            loader,
+                            classfileBuffer,
+                            protectionDomain
+                    ));
+                    affect.rCnt(1);
+                }
+
+                if (classBytesCache.containsKey(classBeingRedefined)) {
+                    return classBytesCache.get(classBeingRedefined);
+                } else {
+                    return null;
+                }
+
+            }
+        };
+
+        try {
+            inst.addTransformer(getClassByteArrayFileTransformer, true);
+            final int size = classes.size();
+            final Class<?>[] classArray = new Class<?>[size];
+            arraycopy(classes.toArray(), 0, classArray, 0, size);
+            inst.retransformClasses(classArray);
+        } finally {
+            inst.removeTransformer(getClassByteArrayFileTransformer);
+        }
+
+        return affect;
+
     }
 
 }

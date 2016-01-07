@@ -1,10 +1,12 @@
 package com.github.ompc.greys.core.command;
 
+import com.github.ompc.greys.core.advisor.Enhancer;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.manager.ReflectManager;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.util.affect.AsmAffect;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.util.matcher.ClassMatcher;
 import com.github.ompc.greys.core.util.matcher.Matcher;
@@ -15,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -178,53 +181,51 @@ public class AsmCommand implements Command {
                 }
 
                 final Collection<Class<?>> matchedClassSet = reflectManager.searchClass(new ClassMatcher(classNameMatcher));
+                final AsmAffect asmAffect = Enhancer.getClassByteArray(matchedClassSet, inst);
 
-                for (Class<?> clazz : matchedClassSet) {
+                for( AsmAffect.ClassInfo classInfo : asmAffect.getClassInfos() ) {
+
+                    final Class<?> clazz = classInfo.getClazz();
+                    final ClassLoader loader = classInfo.getLoader();
 
                     // 不是所有类都能看字节码的
                     if (clazz.isArray()) {
                         continue;
                     }
 
-                    final ClassLoader classLoader = clazz.getClassLoader();
                     final String title = String.format("// ASM BYTECODE FOR \"%s\" @ClassLoader:%s",
                             clazz.getName(),
-                            classLoader
+                            loader
                     );
 
-                    final String resourceName = "/" + StringUtils.replace(clazz.getName(), ".", "/") + ".class";
-
-                    InputStream is = null;
+                    final InputStream is = new ByteArrayInputStream(classInfo.getByteArray());
                     final StringWriter writer = new StringWriter();
                     try {
-                        is = clazz.getResourceAsStream(resourceName);
-                        if (null != is) {
-                            final ClassReader cr = new ClassReader(is);
-                            final GaTraceClassVisitor trace = new GaTraceClassVisitor(new PrintWriter(writer, true)) {
+                        final ClassReader cr = new ClassReader(is);
+                        final GaTraceClassVisitor trace = new GaTraceClassVisitor(new PrintWriter(writer, true)) {
 
-                                @Override
-                                public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-                                    if (isField) {
-                                        return super.visitField(access, name, desc, signature, value);
-                                    } else {
-                                        return null;
-                                    }
+                            @Override
+                            public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
+                                if (isField) {
+                                    return super.visitField(access, name, desc, signature, value);
+                                } else {
+                                    return null;
                                 }
+                            }
 
-                                @Override
-                                public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-                                    if (methodNameMatcher.matching(name)) {
-                                        return super.visitMethod(access, name, desc, signature, exceptions);
-                                    } else {
-                                        return null;
-                                    }
+                            @Override
+                            public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                                if (methodNameMatcher.matching(name)) {
+                                    return super.visitMethod(access, name, desc, signature, exceptions);
+                                } else {
+                                    return null;
                                 }
+                            }
 
-                            };
-                            cr.accept(trace, ClassReader.SKIP_DEBUG);
-                            outputSB.append(title).append("\n").append(writer.toString()).append("\n");
-                            affect.rCnt(1);
-                        }
+                        };
+                        cr.accept(trace, ClassReader.SKIP_DEBUG);
+                        outputSB.append(title).append("\n").append(writer.toString()).append("\n");
+                        affect.rCnt(1);
                     } finally {
                         IOUtils.closeQuietly(writer);
                         IOUtils.closeQuietly(is);
