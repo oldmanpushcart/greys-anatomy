@@ -36,15 +36,18 @@ public class TObject implements TComponent {
 
     @Override
     public String rendering() {
-        if (isNeedExpend()) {
-            if (GlobalOptions.isUsingJson) {
-                return new Gson().toJson(object);
+        try {
+            if (isNeedExpend()) {
+                if (GlobalOptions.isUsingJson) {
+                    return new Gson().toJson(object);
+                }
+                return toString(object, 0, expend);
+            } else {
+                return newString(object);
             }
-            return toString(object, 0, expend);
-        } else {
-            return newString(object);
+        } catch(Throwable t) {
+            return "ERROR DATA!!!";
         }
-
     }
 
     private final static String TAB = "    ";
