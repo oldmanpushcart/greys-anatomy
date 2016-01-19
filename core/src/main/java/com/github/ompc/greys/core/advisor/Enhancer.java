@@ -126,12 +126,21 @@ public class Enhancer implements ClassFileTransformer {
         // 看来间谍不存在啊
         catch (ClassNotFoundException cnfe) {
 
-            // 在目标类加载起中混入间谍
-            spyClassFromTargetClassLoader = defineClass(
-                    targetClassLoader,
-                    spyClassName,
-                    toByteArray(Enhancer.class.getResourceAsStream("/" + spyClassName.replace('.', '/') + ".class"))
-            );
+            try {// 在目标类加载起中混入间谍
+                spyClassFromTargetClassLoader = defineClass(
+                        targetClassLoader,
+                        spyClassName,
+                        toByteArray(Enhancer.class.getResourceAsStream("/" + spyClassName.replace('.', '/') + ".class"))
+                );
+            } catch (InvocationTargetException ite) {
+                if (ite.getCause() instanceof java.lang.LinkageError) {
+                    // CloudEngine 由于 loadClass 不到,会导致 java.lang.LinkageError: loader (instance of  com/alipay/cloudengine/extensions/equinox/KernelAceClassLoader): attempted  duplicate class definition for name: "com/taobao/arthas/core/advisor/Spy"
+                    // 这里尝试忽略
+                    logger.debug("resolve #112 issues", ite);
+                } else {
+                    throw ite;
+                }
+            }
 
         }
 
