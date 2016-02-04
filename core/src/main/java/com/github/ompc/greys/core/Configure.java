@@ -23,6 +23,7 @@ public class Configure {
     private int connectTimeout = 6000;      // 连接超时时间(ms)
     private String greysCore;
     private String greysAgent;
+    private boolean silent;                 // 是否安静模式
 
     public String getTargetIp() {
         return targetIp;
@@ -70,6 +71,14 @@ public class Configure {
 
     public void setGreysCore(String greysCore) {
         this.greysCore = greysCore;
+    }
+
+    public boolean isSilent() {
+        return silent;
+    }
+
+    public void setSilent(boolean silent) {
+        this.silent = silent;
     }
 
     // 对象的编码解码器

@@ -1,5 +1,6 @@
 package com.github.ompc.greys.core.server;
 
+import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.advisor.AdviceListener;
 import com.github.ompc.greys.core.advisor.AdviceWeaver;
 import com.github.ompc.greys.core.advisor.Enhancer;
@@ -231,7 +232,10 @@ public class DefaultCommandHandler implements CommandHandler {
                 if (session.getLock() == lock) {
                     // 注册通知监听器
                     AdviceWeaver.reg(lock, listener);
-                    printer.println(ABORT_MSG);
+
+                    if(!GlobalOptions.isSilent) {
+                        printer.println(ABORT_MSG);
+                    }
 
                     ((EnhancerAffect) affect).cCnt(enhancerAffect.cCnt());
                     ((EnhancerAffect) affect).mCnt(enhancerAffect.mCnt());
@@ -245,8 +249,11 @@ public class DefaultCommandHandler implements CommandHandler {
                 affect = new Affect();
             }
 
-            // 记录下命令执行的执行信息
-            printer.print(false, affect.toString() + "\n");
+            if(!GlobalOptions.isSilent) {
+                // 记录下命令执行的执行信息
+                printer.print(false, affect.toString() + "\n");
+            }
+
         }
 
         // 命令执行错误必须纪录
@@ -312,7 +319,9 @@ public class DefaultCommandHandler implements CommandHandler {
      * 绘制提示符
      */
     private void reDrawPrompt(SocketChannel socketChannel, Charset charset, String prompt) throws IOException {
-        write(socketChannel, prompt, charset);
+        if(!GlobalOptions.isSilent) {
+            write(socketChannel, prompt, charset);
+        }
     }
 
     /*

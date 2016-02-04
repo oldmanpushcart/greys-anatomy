@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# program : greys
+# program : greysctl
 #  author : oldmanpushcart@gmail.com
 #    date : 2015-05-04
 #    desc : write for july
-# version : 1.7.0.1
+# version : 1.7.4.0
 
 # define greys's home
 GREYS_HOME=${HOME}/.greys
@@ -31,8 +31,20 @@ DEFAULT_TARGET_PORT="3658"
 JVM_OPS="";
 
 
-# define update if necessary
-UPDATE_IF_NECESSARY=1
+# the option to control greys.sh check the permission
+OPTION_CHECK_PERMISSION=1
+
+# the option to control greys.sh update version if necessary
+OPTION_UPDATE_IF_NECESSARY=1
+
+# the option to control greys.sh attach target jvm
+OPTION_ATTACH_JVM=1
+
+# the option to control greys.sh active greys-console
+OPTION_ACTIVE_CONSOLE=1
+
+# the option to control greys.sh silent for target jvm
+OPTION_SILENT=0
 
 
 # exit shell with err_code
@@ -212,15 +224,23 @@ attach_jvm()
 {
     local greys_lib_dir=${GREYS_LIB_DIR}/${1}/greys
 
+    local GREYS_ARGS="";
+    GREYS_ARGS="${GREYS_ARGS} -jar ${greys_lib_dir}/greys-core.jar"
+    GREYS_ARGS="${GREYS_ARGS} -pid ${TARGET_PID}"
+    GREYS_ARGS="${GREYS_ARGS} -target ${TARGET_IP}":"${TARGET_PORT}"
+
+    if [[ ${OPTION_SILENT} -eq 1 ]]; then
+        GREYS_ARGS="${GREYS_ARGS} -silent"
+    fi
+
+    GREYS_ARGS="${GREYS_ARGS} -core ${greys_lib_dir}/greys-core.jar"
+    GREYS_ARGS="${GREYS_ARGS} -agent ${greys_lib_dir}/greys-agent.jar"
+
     if [ ${TARGET_IP} = ${DEFAULT_TARGET_IP} ]; then
         ${JAVA_HOME}/bin/java \
-            ${BOOT_CLASSPATH} ${JVM_OPTS} \
-            -jar ${greys_lib_dir}/greys-core.jar \
-                -pid ${TARGET_PID} \
-                -target ${TARGET_IP}":"${TARGET_PORT} \
-                -core "${greys_lib_dir}/greys-core.jar" \
-                -agent "${greys_lib_dir}/greys-agent.jar"
+            ${BOOT_CLASSPATH} ${JVM_OPTS} ${GREYS_ARGS}
     fi
+
 }
 
 # active console
@@ -257,18 +277,33 @@ active_console()
     fi
 }
 
-
 # the main
 main()
 {
 
-    check_permission
+    while getopts "PUJCs" ARG
+    do
+        case ${ARG} in
+            P) OPTION_CHECK_PERMISSION=0;;
+            U) OPTION_UPDATE_IF_NECESSARY=0;;
+            J) OPTION_ATTACH_JVM=0;;
+            C) OPTION_ACTIVE_CONSOLE=0;;
+            s) OPTION_SILENT=1;;
+            ?) usage;exit 1;;
+        esac
+    done
+    shift $((OPTIND-1));
+
+    if [[ ${OPTION_CHECK_PERMISSION} -eq 1 ]]; then
+        check_permission
+    fi
+
     reset_for_env
 
     parse_arguments "${@}" \
         || exit_on_err 1 "$(usage)"
 
-    if [ ${UPDATE_IF_NECESSARY} -eq 1 ]; then
+    if [[ ${OPTION_UPDATE_IF_NECESSARY} -eq 1 ]]; then
         update_if_necessary \
             || echo "update fail, ignore this update." 1>&2
     fi
@@ -279,12 +314,16 @@ main()
         exit_on_err 1 "greys not found, please check your network."
     fi
 
-    attach_jvm ${greys_local_version}\
-        || exit_on_err 1 "attach to target jvm(${TARGET_PID}) failed."
+    if [[ ${OPTION_ATTACH_JVM} -eq 1 ]]; then
+        attach_jvm ${greys_local_version}\
+            || exit_on_err 1 "attach to target jvm(${TARGET_PID}) failed."
+    fi
 
-    active_console ${greys_local_version}
+    if [[ ${OPTION_ACTIVE_CONSOLE} -eq 1 ]]; then
+        active_console ${greys_local_version}\
+            || exit_on_err 1 "active console failed."
+    fi
+
 }
-
-
 
 main "${@}"
