@@ -111,14 +111,6 @@ public class GlobalOptions {
     )
     public static volatile boolean isDisableSubClass = false;
 
-    @Option(
-            level = 1,
-            name = "is-silent",
-            summary = "Option to control display prompt & logo",
-            description = "This option disable to display prompt & logo"
-    )
-    public static volatile boolean isSilent = false;
-
     /**
      * 选项
      */

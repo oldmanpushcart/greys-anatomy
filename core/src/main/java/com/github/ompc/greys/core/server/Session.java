@@ -38,6 +38,9 @@ public class Session {
     private final SocketChannel socketChannel;
     private Charset charset;
 
+    // 是否会话静默,静默的会话不输出提示符,LOGO,同时也会影响一些命令的输出
+    private boolean silent = true;
+
     // 提示符
     private String prompt = DEFAULT_PROMPT;
 
@@ -215,5 +218,13 @@ public class Session {
 
     public int getJavaPid() {
         return javaPid;
+    }
+
+    public boolean isSilent() {
+        return silent;
+    }
+
+    public void setSilent(boolean silent) {
+        this.silent = silent;
     }
 }

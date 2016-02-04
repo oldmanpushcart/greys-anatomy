@@ -2,7 +2,6 @@ package com.github.ompc.greys.core.server;
 
 import com.github.ompc.greys.core.ClassDataSource;
 import com.github.ompc.greys.core.Configure;
-import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.manager.ReflectManager;
 import com.github.ompc.greys.core.manager.TimeFragmentManager;
 import com.github.ompc.greys.core.util.GaCheckUtils;
@@ -187,9 +186,6 @@ public class GaServer {
             throw new IllegalStateException("already bind");
         }
 
-        // config global options
-        GlobalOptions.isSilent = configure.isSilent();
-
         try {
 
             serverSocketChannel = ServerSocketChannel.open();
@@ -292,7 +288,7 @@ public class GaServer {
         socketChannel.register(selector, OP_READ, new GaAttachment(BUFFER_SIZE, session));
         logger.info("accept new connection, client={}@session[{}]", socketChannel, session.getSessionId());
 
-        if(!GlobalOptions.isSilent) {
+        if(!session.isSilent()) {
             // 这里输出Logo
             writeToSocketChannel(socketChannel, session.getCharset(), getLogo());
 

@@ -43,10 +43,6 @@ OPTION_ATTACH_JVM=1
 # the option to control greys.sh active greys-console
 OPTION_ACTIVE_CONSOLE=1
 
-# the option to control greys.sh silent for target jvm
-OPTION_SILENT=0
-
-
 # exit shell with err_code
 # $1 : err_code
 # $2 : err_msg
@@ -224,23 +220,15 @@ attach_jvm()
 {
     local greys_lib_dir=${GREYS_LIB_DIR}/${1}/greys
 
-    local GREYS_ARGS="";
-    GREYS_ARGS="${GREYS_ARGS} -jar ${greys_lib_dir}/greys-core.jar"
-    GREYS_ARGS="${GREYS_ARGS} -pid ${TARGET_PID}"
-    GREYS_ARGS="${GREYS_ARGS} -target ${TARGET_IP}":"${TARGET_PORT}"
-
-    if [[ ${OPTION_SILENT} -eq 1 ]]; then
-        GREYS_ARGS="${GREYS_ARGS} -silent"
-    fi
-
-    GREYS_ARGS="${GREYS_ARGS} -core ${greys_lib_dir}/greys-core.jar"
-    GREYS_ARGS="${GREYS_ARGS} -agent ${greys_lib_dir}/greys-agent.jar"
-
     if [ ${TARGET_IP} = ${DEFAULT_TARGET_IP} ]; then
         ${JAVA_HOME}/bin/java \
-            ${BOOT_CLASSPATH} ${JVM_OPTS} ${GREYS_ARGS}
+            ${BOOT_CLASSPATH} ${JVM_OPTS} \
+            -jar ${greys_lib_dir}/greys-core.jar \
+                -pid ${TARGET_PID} \
+                -target ${TARGET_IP}":"${TARGET_PORT} \
+                -core "${greys_lib_dir}/greys-core.jar" \
+                -agent "${greys_lib_dir}/greys-agent.jar"
     fi
-
 }
 
 # active console
@@ -281,17 +269,17 @@ active_console()
 main()
 {
 
-    while getopts "PUJCs" ARG
+    while getopts "PUJC" ARG
     do
         case ${ARG} in
             P) OPTION_CHECK_PERMISSION=0;;
             U) OPTION_UPDATE_IF_NECESSARY=0;;
             J) OPTION_ATTACH_JVM=0;;
             C) OPTION_ACTIVE_CONSOLE=0;;
-            s) OPTION_SILENT=1;;
             ?) usage;exit 1;;
         esac
     done
+
     shift $((OPTIND-1));
 
     if [[ ${OPTION_CHECK_PERMISSION} -eq 1 ]]; then
@@ -325,5 +313,6 @@ main()
     fi
 
 }
+
 
 main "${@}"

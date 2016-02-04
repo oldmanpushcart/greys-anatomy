@@ -47,7 +47,6 @@ public class GreysLauncher {
         parser.accepts("multi").withOptionalArg().ofType(int.class);
         parser.accepts("core").withOptionalArg().ofType(String.class);
         parser.accepts("agent").withOptionalArg().ofType(String.class);
-        parser.accepts("silent").withOptionalArg().ofType(boolean.class);
 
         final OptionSet os = parser.parse(args);
         final Configure configure = new Configure();
@@ -61,7 +60,6 @@ public class GreysLauncher {
         configure.setJavaPid((Integer) os.valueOf("pid"));
         configure.setGreysAgent((String) os.valueOf("agent"));
         configure.setGreysCore((String) os.valueOf("core"));
-        configure.setSilent(os.has("silent"));
 
         return configure;
     }
