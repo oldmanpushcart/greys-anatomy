@@ -31,6 +31,9 @@ DEFAULT_TARGET_PORT="3658"
 JVM_OPS="";
 
 
+# define update if necessary
+UPDATE_IF_NECESSARY=1
+
 
 # exit shell with err_code
 # $1 : err_code
@@ -75,7 +78,7 @@ reset_for_env()
     [ -z ${JAVA_HOME} ] && JAVA_HOME=/opt/taobao/java
 
     # check the jvm version, we need 1.6+
-    local JAVA_VERSION=$(${JAVA_HOME}/bin/java -version 2>&1|awk -F '"' '/java version/&&$2>"1.5"{print $2}')
+    local JAVA_VERSION=$(${JAVA_HOME}/bin/java -version 2>&1|awk -F '"' '/version/&&$2>"1.5"{print $2}')
     [[ ! -x ${JAVA_HOME} || -z ${JAVA_VERSION} ]] && exit_on_err 1 "illegal ENV, please set \$JAVA_HOME to JDK6+"
 
     # reset BOOT_CLASSPATH
@@ -255,8 +258,6 @@ active_console()
 }
 
 
-
-
 # the main
 main()
 {
@@ -267,8 +268,10 @@ main()
     parse_arguments "${@}" \
         || exit_on_err 1 "$(usage)"
 
-    update_if_necessary \
-        || echo "update fail, ignore this update." 1>&2
+    if [ ${UPDATE_IF_NECESSARY} -eq 1 ]; then
+        update_if_necessary \
+            || echo "update fail, ignore this update." 1>&2
+    fi
 
     local greys_local_version=$(default $(get_local_version) ${DEFAULT_VERSION})
 
