@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# program : greysctl
+# program : greys
 #  author : oldmanpushcart@gmail.com
 #    date : 2015-05-04
 #    desc : write for july
