@@ -94,7 +94,7 @@ greys_nc()
         echo ${line} \
             | ${JAVA_HOME}/bin/java \
                 -cp ${greys_lib_dir}/greys-core.jar \
-                com.github.ompc.greys.core.util.NetCat \
+                com.github.ompc.greys.core.util.GaNetCat \
                     ${TARGET_IP} \
                     ${TARGET_PORT}
     done

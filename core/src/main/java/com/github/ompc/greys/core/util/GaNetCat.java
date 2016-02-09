@@ -9,11 +9,11 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 /**
- * NetCat封装<br/>
+ * GaNetCat封装<br/>
  * 这个代码不要看,不要看,不要看...不是我写的...
  * Created by vlinux on 16/2/4.
  */
-public class NetCat {
+public class GaNetCat {
 
     public static void main(String... args) throws IOException {
 
