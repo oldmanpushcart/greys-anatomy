@@ -100,8 +100,31 @@ greys_nc()
     done
 }
 
+# the usage
+usage()
+{
+    echo "
+greys shell usage:
+    the format was [@IP:PORT]
+      [IP] : the target's IP, default ${DEFAULT_TARGET_IP}
+    [PORT] : the target's PORT, default ${DEFAULT_TARGET_PORT}
+
+example:
+    echo help|./gs.sh [IP]
+    echo help|./gs.sh [IP:PORT]
+"
+}
+
 main()
 {
+
+    while getopts "h" ARG
+    do
+        case ${ARG} in
+            h) usage;exit 0;;
+            *) usage;exit 1;;
+        esac
+    done
 
     reset_for_env
 

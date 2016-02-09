@@ -35,6 +35,7 @@ public class NetCat {
                     break;
                 }
                 nos.write(dataArray, 0, length);
+                nos.flush();
             } while (length > 0);
 
             // do read

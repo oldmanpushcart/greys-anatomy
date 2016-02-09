@@ -20,7 +20,7 @@ exit_on_err()
 }
 
 # maven package the greys
-mvn clean package -Dmaven.test.skip=true -f ../pom.xml \
+mvn package -Dmaven.test.skip=true -f ../pom.xml \
 || exit_on_err 1 "package greys failed."
 
 # reset the target dir
