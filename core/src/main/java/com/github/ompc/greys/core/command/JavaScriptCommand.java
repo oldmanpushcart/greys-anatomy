@@ -77,9 +77,8 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
         }
 
         if (StringUtils.startsWithIgnoreCase(scriptPath, "http://")
-                || StringUtils.startsWithIgnoreCase(scriptPath, "https://")) {
-            return URI.create(scriptPath);
-        } else if (StringUtils.startsWithIgnoreCase(scriptPath, "file://")) {
+                || StringUtils.startsWithIgnoreCase(scriptPath, "https://")
+                || StringUtils.startsWithIgnoreCase(scriptPath, "file://")) {
             return URI.create(scriptPath);
         } else {
             return URI.create("file://" + scriptPath);
