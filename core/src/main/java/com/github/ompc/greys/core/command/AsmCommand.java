@@ -173,7 +173,7 @@ public class AsmCommand implements Command {
                 // 找到所有匹配的类
                 final Matcher<String> classNameMatcher = new PatternMatcher(isRegEx, classPattern);
 
-                final Matcher methodNameMatcher;
+                final Matcher<String> methodNameMatcher;
                 if (StringUtils.isBlank(methodPattern)) {
                     methodNameMatcher = new TrueMatcher<String>();
                 } else {

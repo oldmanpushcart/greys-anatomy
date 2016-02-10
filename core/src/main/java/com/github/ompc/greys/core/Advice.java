@@ -16,9 +16,9 @@ public final class Advice {
     public final Object returnObj;
     public final Throwable throwExp;
 
-    public final static int ACCESS_BEFORE = 1;
-    public final static int ACCESS_AFTER_RETUNING = 1 << 1;
-    public final static int ACCESS_AFTER_THROWING = 1 << 2;
+    private final static int ACCESS_BEFORE = 1;
+    private final static int ACCESS_AFTER_RETUNING = 1 << 1;
+    private final static int ACCESS_AFTER_THROWING = 1 << 2;
 
     public final boolean isBefore;
     public final boolean isThrow;

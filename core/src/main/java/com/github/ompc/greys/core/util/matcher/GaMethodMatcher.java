@@ -32,10 +32,7 @@ public class GaMethodMatcher extends ReflectMatcher<GaMethod> {
 
     @Override
     boolean reflectMatching(GaMethod targetMethod) {
-        if (!matchingParameters(targetMethod)) {
-            return false;
-        }
-        return true;
+        return matchingParameters(targetMethod);
     }
 
     private boolean matchingParameters(final GaMethod targetMethod) {

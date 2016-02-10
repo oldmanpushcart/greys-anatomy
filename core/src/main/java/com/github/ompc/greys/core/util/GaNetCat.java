@@ -27,7 +27,7 @@ public class GaNetCat {
             final OutputStream nos = socket.getOutputStream();
 
             final byte[] dataArray = new byte[1024];
-            int length = 0;
+            int length;
             // do write
             do {
                 length = is.read(dataArray);
