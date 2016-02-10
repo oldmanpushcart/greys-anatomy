@@ -15,13 +15,16 @@ import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.matcher.ClassMatcher;
 import com.github.ompc.greys.core.util.matcher.GaMethodMatcher;
 import com.github.ompc.greys.core.util.matcher.PatternMatcher;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import javax.script.*;
-import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,24 +48,78 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
     @IndexArg(index = 1, name = "method-pattern", summary = "Method of Pattern Matching")
     private String methodPattern;
 
-    @IndexArg(index = 2, name = "script-filepath", summary = "Filepath of Groovy script")
-    private String scriptFilepath;
+    @IndexArg(index = 2, name = "script-path", summary = "Path of javascript, support file:// or http://")
+    private String scriptPath;
+
+    @NamedArg(name = "c", hasValue = true, summary = "The character of script-path")
+    private String charsetString;
 
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
 
+    /*
+     * 获取指定字符集
+     */
+    private Charset fetchCharset() throws UnsupportedCharsetException {
+        if (StringUtils.isBlank(charsetString)) {
+            return Charset.defaultCharset();
+        } else {
+            return Charset.forName(charsetString);
+        }
+    }
+
+    /*
+     * 构造script-path所对应的URI
+     */
+    private URI createScriptPathURI() {
+        if (StringUtils.isBlank(scriptPath)) {
+            throw new IllegalArgumentException("script-path is required.");
+        }
+
+        if (StringUtils.startsWithIgnoreCase(scriptPath, "http://")) {
+            return URI.create(scriptPath);
+        } else if (StringUtils.startsWithIgnoreCase(scriptPath, "file://")) {
+            return URI.create(scriptPath);
+        } else {
+            return URI.create("file://" + scriptPath);
+        }
+    }
+
+    /*
+     * 加载JavaScript脚本支撑
+     */
+    private void loadJavaScriptSupport(Compilable compilable, Invocable invocable, String scriptContent) throws IOException, ScriptException, NoSuchMethodException {
+        // 加载support
+        compilable.compile(
+                IOUtils.toString(
+                        GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/javascript-support.js"),
+                        Charset.forName("UTF-8")
+                )
+        ).eval();
+        // 初始化greys
+        invocable.invokeFunction("__global_greys_init", scriptContent);
+    }
+
     @Override
     public Action getAction() {
 
+
         final String scriptContent;
         try {
-            scriptContent = FileUtils.readFileToString(new File(scriptFilepath));
-        } catch (IOException e) {
-            logger.warn("javascript file not found. script={};", scriptFilepath, e);
+            scriptContent = IOUtils.toString(createScriptPathURI(), fetchCharset());
+        } catch (UnsupportedCharsetException e) {
             return new SilentAction() {
                 @Override
                 public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
-                    printer.println("js script file not found").finish();
+                    printer.println(String.format("Desupported character[%s].", charsetString)).finish();
+                }
+            };
+        } catch (IOException e) {
+            logger.warn("script-path not found. path={};", scriptPath, e);
+            return new SilentAction() {
+                @Override
+                public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
+                    printer.println(String.format("script-path[%s] not found.", scriptPath)).finish();
                 }
             };
         }
@@ -70,30 +127,45 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
         final ScriptEngineManager mgr = new ScriptEngineManager(getClass().getClassLoader());
         final ScriptEngine jsEngine = mgr.getEngineByMimeType("application/javascript");
         final Compilable compilable = (Compilable) jsEngine;
+        final Invocable invocable = (Invocable) jsEngine;
 
+        final boolean isDefineCreate;
+        final boolean isDefineDestroy;
         final boolean isDefineBefore;
         final boolean isDefineReturning;
         final boolean isDefineThrowing;
-        final boolean isDefineDestroy;
-        final boolean isDefineCreate;
         try {
-            compilable.compile(scriptContent).eval();
-            isDefineBefore = (Boolean) compilable.compile("this.hasOwnProperty('before')").eval();
-            isDefineReturning = (Boolean) compilable.compile("this.hasOwnProperty('returning')").eval();
-            isDefineThrowing = (Boolean) compilable.compile("this.hasOwnProperty('throwing')").eval();
-            isDefineDestroy = (Boolean) compilable.compile("this.hasOwnProperty('destroy')").eval();
-            isDefineCreate = (Boolean) compilable.compile("this.hasOwnProperty('create')").eval();
+            loadJavaScriptSupport(compilable, invocable, scriptContent);
+            isDefineCreate = (Boolean) invocable.invokeFunction("__global_greys_is_define_create");
+            isDefineDestroy = (Boolean) invocable.invokeFunction("__global_greys_is_define_destroy");
+            isDefineBefore = (Boolean) invocable.invokeFunction("__global_greys_is_define_before");
+            isDefineReturning = (Boolean) invocable.invokeFunction("__global_greys_is_define_returning");
+            isDefineThrowing = (Boolean) invocable.invokeFunction("__global_greys_is_define_throwing");
         } catch (ScriptException e) {
-            logger.warn("javascript compile failed. script={};", scriptFilepath, e);
+            logger.warn("javascript compile failed. script={};", scriptPath, e);
             return new SilentAction() {
                 @Override
                 public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
                     printer.println("javascript compile failed.").finish();
                 }
             };
+        } catch (NoSuchMethodException e) {
+            logger.warn("invoke function __global_greys_init failed.", e);
+            return new SilentAction() {
+                @Override
+                public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
+                    printer.println("invoke function __global_greys_init failed.").finish();
+                }
+            };
+        } catch (IOException e) {
+            logger.warn("load javascript-support.js failed.", e);
+            return new SilentAction() {
+                @Override
+                public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
+                    printer.println("load javascript-support.js failed.").finish();
+                }
+            };
         }
-
-        final Invocable invocable = (Invocable) jsEngine;
 
         return new GetEnhancerAction() {
             @Override
@@ -149,7 +221,7 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             public void create() {
                                 if (isDefineCreate) {
                                     try {
-                                        invocable.invokeFunction("create", output);
+                                        invocable.invokeFunction("__global_greys_create", output);
                                     } catch (ScriptException e) {
                                         output.println("invoke function 'create' failed. because : " + GaStringUtils.getCauseMessage(e));
                                         logger.warn("invoke function 'create' failed.", e);
@@ -163,7 +235,7 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             public void destroy() {
                                 if (isDefineDestroy) {
                                     try {
-                                        invocable.invokeFunction("destroy", output);
+                                        invocable.invokeFunction("__global_greys_destroy", output);
                                     } catch (ScriptException e) {
                                         output.println("invoke function 'destroy' failed. because : " + GaStringUtils.getCauseMessage(e));
                                         logger.warn("invoke function 'destroy' failed.", e);
@@ -177,7 +249,7 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             public void before(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
                                 if (isDefineBefore) {
                                     try {
-                                        invocable.invokeFunction("before", output, advice, innerContext);
+                                        invocable.invokeFunction("__global_greys_before", output, advice, innerContext);
                                     } catch (ScriptException e) {
                                         output.println("invoke function 'before' failed. because : " + GaStringUtils.getCauseMessage(e));
                                         logger.warn("invoke function 'before' failed.", e);
@@ -191,7 +263,7 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             public void afterReturning(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
                                 if (isDefineReturning) {
                                     try {
-                                        invocable.invokeFunction("returning", output, advice, innerContext);
+                                        invocable.invokeFunction("__global_greys_returning", output, advice, innerContext);
                                     } catch (ScriptException e) {
                                         output.println("invoke function 'returning' failed. because : " + GaStringUtils.getCauseMessage(e));
                                         logger.warn("invoke function 'returning' failed.", e);
@@ -205,7 +277,7 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             public void afterThrowing(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
                                 if (isDefineThrowing) {
                                     try {
-                                        invocable.invokeFunction("throwing", output, advice, innerContext);
+                                        invocable.invokeFunction("__global_greys_throwing", output, advice, innerContext);
                                     } catch (ScriptException e) {
                                         output.println("invoke function 'throwing' failed. because : " + GaStringUtils.getCauseMessage(e));
                                         logger.warn("invoke function 'throwing' failed.", e);
