@@ -76,7 +76,8 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
             throw new IllegalArgumentException("script-path is required.");
         }
 
-        if (StringUtils.startsWithIgnoreCase(scriptPath, "http://")) {
+        if (StringUtils.startsWithIgnoreCase(scriptPath, "http://")
+                || StringUtils.startsWithIgnoreCase(scriptPath, "https://")) {
             return URI.create(scriptPath);
         } else if (StringUtils.startsWithIgnoreCase(scriptPath, "file://")) {
             return URI.create(scriptPath);
