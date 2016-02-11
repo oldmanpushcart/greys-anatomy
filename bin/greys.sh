@@ -4,7 +4,7 @@
 #  author : oldmanpushcart@gmail.com
 #    date : 2015-05-04
 #    desc : write for july
-# version : 1.7.0.1
+# version : 1.7.4.0
 
 # define greys's home
 GREYS_HOME=${HOME}/.greys
@@ -31,6 +31,17 @@ DEFAULT_TARGET_PORT="3658"
 JVM_OPS="";
 
 
+# the option to control greys.sh check the permission
+OPTION_CHECK_PERMISSION=1
+
+# the option to control greys.sh update version if necessary
+OPTION_UPDATE_IF_NECESSARY=1
+
+# the option to control greys.sh attach target jvm
+OPTION_ATTACH_JVM=1
+
+# the option to control greys.sh active greys-console
+OPTION_ACTIVE_CONSOLE=1
 
 # exit shell with err_code
 # $1 : err_code
@@ -75,7 +86,7 @@ reset_for_env()
     [ -z ${JAVA_HOME} ] && JAVA_HOME=/opt/taobao/java
 
     # check the jvm version, we need 1.6+
-    local JAVA_VERSION=$(${JAVA_HOME}/bin/java -version 2>&1|awk -F '"' '/java version/&&$2>"1.5"{print $2}')
+    local JAVA_VERSION=$(${JAVA_HOME}/bin/java -version 2>&1|awk -F '"' '/version/&&$2>"1.5"{print $2}')
     [[ ! -x ${JAVA_HOME} || -z ${JAVA_VERSION} ]] && exit_on_err 1 "illegal ENV, please set \$JAVA_HOME to JDK6+"
 
     # reset BOOT_CLASSPATH
@@ -254,21 +265,36 @@ active_console()
     fi
 }
 
-
-
-
 # the main
 main()
 {
 
-    check_permission
+    while getopts "PUJC" ARG
+    do
+        case ${ARG} in
+            P) OPTION_CHECK_PERMISSION=0;;
+            U) OPTION_UPDATE_IF_NECESSARY=0;;
+            J) OPTION_ATTACH_JVM=0;;
+            C) OPTION_ACTIVE_CONSOLE=0;;
+            ?) usage;exit 1;;
+        esac
+    done
+
+    shift $((OPTIND-1));
+
+    if [[ ${OPTION_CHECK_PERMISSION} -eq 1 ]]; then
+        check_permission
+    fi
+
     reset_for_env
 
     parse_arguments "${@}" \
         || exit_on_err 1 "$(usage)"
 
-    update_if_necessary \
-        || echo "update fail, ignore this update." 1>&2
+    if [[ ${OPTION_UPDATE_IF_NECESSARY} -eq 1 ]]; then
+        update_if_necessary \
+            || echo "update fail, ignore this update." 1>&2
+    fi
 
     local greys_local_version=$(default $(get_local_version) ${DEFAULT_VERSION})
 
@@ -276,12 +302,17 @@ main()
         exit_on_err 1 "greys not found, please check your network."
     fi
 
-    attach_jvm ${greys_local_version}\
-        || exit_on_err 1 "attach to target jvm(${TARGET_PID}) failed."
+    if [[ ${OPTION_ATTACH_JVM} -eq 1 ]]; then
+        attach_jvm ${greys_local_version}\
+            || exit_on_err 1 "attach to target jvm(${TARGET_PID}) failed."
+    fi
 
-    active_console ${greys_local_version}
+    if [[ ${OPTION_ACTIVE_CONSOLE} -eq 1 ]]; then
+        active_console ${greys_local_version}\
+            || exit_on_err 1 "active console failed."
+    fi
+
 }
-
 
 
 main "${@}"

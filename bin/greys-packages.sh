@@ -32,8 +32,11 @@ cp ../agent/target/greys-agent-jar-with-dependencies.jar ${GREYS_TARGET_DIR}/gre
 
 # copy shell to TARGET_DIR
 cat install-local.sh|sed "s/GREYS_VERSION=0.0.0.0/GREYS_VERSION=${GREYS_VERSION}/g" > ${GREYS_TARGET_DIR}/install-local.sh
-chmod +x ${GREYS_TARGET_DIR}/install-local.sh
+#chmod +x ${GREYS_TARGET_DIR}/install-local.sh
 cp greys.sh ${GREYS_TARGET_DIR}/greys.sh
+cp ga.sh ${GREYS_TARGET_DIR}/ga.sh
+cp gs.sh ${GREYS_TARGET_DIR}/gs.sh
+chmod +x ${GREYS_TARGET_DIR}/*.sh
 
 # zip the greys
 cd ../target/

@@ -3,8 +3,8 @@ package com.github.ompc.greys.core.command;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
-import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.textui.TTable;
+import com.github.ompc.greys.core.util.affect.RowAffect;
 
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.Charset;
@@ -21,12 +21,16 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
         eg = {
                 "session",
                 "session -c GBK",
-                "session -c UTF-8"
+                "session -c UTF-8",
+                "session -s true"
         })
 public class SessionCommand implements Command {
 
-    @NamedArg(name = "c", hasValue = true, summary = "Modify the character setValue of session")
+    @NamedArg(name = "c", hasValue = true, summary = "Modify the character of session")
     private String charsetString;
+
+    @NamedArg(name = "s", hasValue = true, summary = "Modify the silent of session")
+    private Boolean silent;
 
     @Override
     public Action getAction() {
@@ -56,6 +60,16 @@ public class SessionCommand implements Command {
                     printer.print(sessionToString(session)).finish();
                 }
 
+                // 设置会话静默
+                if (null != silent) {
+                    final boolean beforeSilent = session.isSilent();
+                    session.setSilent(silent);
+                    printer.println(format("Silent setValue is modified. [%s] -> [%s]",
+                            beforeSilent,
+                            session.isSilent()))
+                            .finish();
+                }
+
                 return new RowAffect(1);
             }
 
@@ -74,6 +88,7 @@ public class SessionCommand implements Command {
                 .addRow("JAVA_PID", session.getJavaPid())
                 .addRow("SESSION_ID", session.getSessionId())
                 .addRow("DURATION", session.getSessionDuration())
+                .addRow("SILENT", session.isSilent())
                 .addRow("CHARSET", session.getCharset())
                 .addRow("PROMPT", session.getPrompt())
                 .addRow("FROM", session.getSocketChannel().socket().getRemoteSocketAddress())

@@ -48,11 +48,8 @@ public class ClassMatcher extends ReflectMatcher<Class<?>> {
     public boolean reflectMatching(Class<?> target) {
 
         // 匹配type
-        if (!matchingType(target)) {
-            return false;
-        }
+        return matchingType(target);
 
-        return true;
     }
 
     @Override

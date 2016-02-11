@@ -288,14 +288,16 @@ public class GaServer {
         socketChannel.register(selector, OP_READ, new GaAttachment(BUFFER_SIZE, session));
         logger.info("accept new connection, client={}@session[{}]", socketChannel, session.getSessionId());
 
-        // 这里输出Logo
-        writeToSocketChannel(socketChannel, session.getCharset(), getLogo());
+        if(!session.isSilent()) {
+            // 这里输出Logo
+            writeToSocketChannel(socketChannel, session.getCharset(), getLogo());
 
-        // 绘制提示符
-        writeToSocketChannel(socketChannel, session.getCharset(), session.prompt());
+            // 绘制提示符
+            writeToSocketChannel(socketChannel, session.getCharset(), session.prompt());
 
-        // Logo结束之后输出传输中止符
-        writeToSocketChannel(socketChannel, ByteBuffer.wrap(new byte[]{EOT}));
+            // Logo结束之后输出传输中止符
+            writeToSocketChannel(socketChannel, ByteBuffer.wrap(new byte[]{EOT}));
+        }
 
         return socketChannel;
     }

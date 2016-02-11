@@ -108,7 +108,7 @@ public class OptionsCommand implements Command {
         };
     }
 
-    private Collection<Field> findOptions(Matcher optionNameMatcher) {
+    private Collection<Field> findOptions(Matcher<String> optionNameMatcher) {
         final Collection<Field> matchFields = new ArrayList<Field>();
         for (final Field optionField : FieldUtils.getAllFields(GlobalOptions.class)) {
             if (!optionField.isAnnotationPresent(Option.class)) {

@@ -67,11 +67,19 @@ public class GreysConsole {
         this.console.setExpandEvents(false);
         this.socket = connect(address);
 
+        // 关闭会话静默
+        disableSilentOfSession();
+
         // 初始化自动补全
         initCompleter();
 
         this.isRunning = true;
         activeConsoleReader();
+
+
+        socketWriter.write("version\n");
+        socketWriter.flush();
+
         loopForWriter();
 
     }
@@ -123,6 +131,22 @@ public class GreysConsole {
             return new FileHistory(historyFile);
         }
         return new MemoryHistory();
+    }
+
+
+    private void disableSilentOfSession() throws IOException {
+
+        socketWriter.write("session -s false\n");
+        socketWriter.flush();
+        waitingForEOT();
+
+    }
+
+    private void waitingForEOT() throws IOException {
+        int ch;
+        do {
+            ch = socketReader.read();
+        } while (ch != EOT && ch != EOF);
     }
 
     private ConsoleReader initConsoleReader() throws IOException {
@@ -178,9 +202,9 @@ public class GreysConsole {
                         final String line = console.readLine();
 
                         // 如果是\结尾，则说明还有下文，需要对换行做特殊处理
-                        if( StringUtils.endsWith(line, "\\") ) {
+                        if (StringUtils.endsWith(line, "\\")) {
                             // 去掉结尾的\
-                            lineBuffer.append(line.substring(0, line.length()-1));
+                            lineBuffer.append(line.substring(0, line.length() - 1));
                             continue;
                         } else {
                             lineBuffer.append(line);

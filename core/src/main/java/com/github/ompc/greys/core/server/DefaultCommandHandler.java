@@ -71,14 +71,14 @@ public class DefaultCommandHandler implements CommandHandler {
             // 这里做了一次取巧，虽然依旧是重绘了两次提示符，但在提示符之间增加了\r
             // 这样两次重绘都是在同一个位置，这样就没有人能发现，其实他们是被绘制了两次
             logger.debug("reDrawPrompt for blank line.");
-            reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
+            reDrawPrompt(session, socketChannel, session.getCharset(), session.prompt());
             return;
         }
 
         // don't ask why
         if ($(line)) {
             write(socketChannel, wrap($$()));
-            reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
+            reDrawPrompt(session, socketChannel, session.getCharset(), session.prompt());
             return;
         }
 
@@ -99,7 +99,7 @@ public class DefaultCommandHandler implements CommandHandler {
             // 其他命令需要重新绘制提示符
             else {
                 logger.debug("reDrawPrompt for command execute finished.");
-                reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
+                reDrawPrompt(session, socketChannel, session.getCharset(), session.prompt());
             }
 
         }
@@ -117,7 +117,7 @@ public class DefaultCommandHandler implements CommandHandler {
             }
 
             write(socketChannel, message + "\n", session.getCharset());
-            reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
+            reDrawPrompt(session, socketChannel, session.getCharset(), session.prompt());
 
             logger.info(message, t);
 
@@ -134,7 +134,7 @@ public class DefaultCommandHandler implements CommandHandler {
                 write(socketChannel, "Command execution failed.\n", session.getCharset());
             }
 
-            reDrawPrompt(socketChannel, session.getCharset(), session.prompt());
+            reDrawPrompt(session, socketChannel, session.getCharset(), session.prompt());
         }
 
     }
@@ -231,7 +231,10 @@ public class DefaultCommandHandler implements CommandHandler {
                 if (session.getLock() == lock) {
                     // 注册通知监听器
                     AdviceWeaver.reg(lock, listener);
-                    printer.println(ABORT_MSG);
+
+                    if (!session.isSilent()) {
+                        printer.println(ABORT_MSG);
+                    }
 
                     ((EnhancerAffect) affect).cCnt(enhancerAffect.cCnt());
                     ((EnhancerAffect) affect).mCnt(enhancerAffect.mCnt());
@@ -245,8 +248,11 @@ public class DefaultCommandHandler implements CommandHandler {
                 affect = new Affect();
             }
 
-            // 记录下命令执行的执行信息
-            printer.print(false, affect.toString() + "\n");
+            if (!session.isSilent()) {
+                // 记录下命令执行的执行信息
+                printer.print(false, affect.toString() + "\n");
+            }
+
         }
 
         // 命令执行错误必须纪录
@@ -311,8 +317,10 @@ public class DefaultCommandHandler implements CommandHandler {
     /*
      * 绘制提示符
      */
-    private void reDrawPrompt(SocketChannel socketChannel, Charset charset, String prompt) throws IOException {
-        write(socketChannel, prompt, charset);
+    private void reDrawPrompt(Session session, SocketChannel socketChannel, Charset charset, String prompt) throws IOException {
+        if (!session.isSilent()) {
+            write(socketChannel, prompt, charset);
+        }
     }
 
     /*
