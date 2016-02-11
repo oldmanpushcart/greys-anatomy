@@ -36,7 +36,8 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  */
 @Cmd(name = "js", sort = 6, summary = "Enhanced JavaScript",
         eg = {
-                "js *StringUtils isBlank /tmp/watch.js"
+                "js *StringUtils isBlank /tmp/watch.js",
+                "js -c UTF-8 *StringUtils isBlank /tmp/watch.js"
         })
 public class JavaScriptCommand implements ScriptSupportCommand, Command {
 
