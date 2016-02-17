@@ -1,3 +1,41 @@
+/**
+ * 这里声明和定义了greys对JavaScript的支持函数
+ * @author vlinux
+ */
+
+///**
+// * 因为Nashorn在支持require-js的时候存在BUG,缺少了readFully函数
+// * 所以在这里进行定义
+// *
+// * 完整的URL的文本内容
+// * @param URL
+// * @return 文本内容
+// * @type {readFully|Function}
+// */
+//readFully = this.readFully || (function (URL) {
+//
+//        var content = "";
+//        var reader = new BufferedReader(new InputStreamReader(new BufferedInputStream(inStream(URL))));
+//        try {
+//            var line;
+//            do {
+//                line = reader.readLine();
+//                content += line + "\n";
+//            } while (line != null);
+//        } finally {
+//            reader.close();
+//        }
+//
+//        return content;
+//    });
+
+
+
+
+/**
+ * GREYS全局函数
+ * @type {Function}
+ */
 __define_golbal_greys = this.__define_golbal_greys || (function (__GREYS_JS_TARGET) {
 
         var before, create, destroy, returning, throwing;
@@ -37,7 +75,13 @@ __define_golbal_greys = this.__define_golbal_greys || (function (__GREYS_JS_TARG
 
     });
 
+// GREYS全局变量
 var __global_greys;
+
+/**
+ * GREYS全局变量初始化
+ * @param target 目标启动JavaScript脚本内容(也就需要加载执行的脚本内容)
+ */
 function __global_greys_init(target) {
     __global_greys = new __define_golbal_greys(target);
 }

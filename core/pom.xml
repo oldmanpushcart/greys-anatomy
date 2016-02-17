@@ -52,6 +52,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>net.sf.jopt-simple</groupId>
             <artifactId>jopt-simple</artifactId>
         </dependency>
@@ -106,6 +111,15 @@
         <!--<dependency>-->
             <!--<groupId>org.codehaus.groovy</groupId>-->
             <!--<artifactId>groovy-all</artifactId>-->
+        <!--</dependency>-->
+
+        <!--<dependency>-->
+            <!--<groupId>org.mozilla</groupId>-->
+            <!--<artifactId>rhino</artifactId>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>de.christophkraemer</groupId>-->
+            <!--<artifactId>rhino-script-engine</artifactId>-->
         <!--</dependency>-->
     </dependencies>
 

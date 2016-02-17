@@ -331,7 +331,8 @@ public class DefaultCommandHandler implements CommandHandler {
     }
 
     private void write(SocketChannel socketChannel, ByteBuffer buffer) throws IOException {
-        while (buffer.hasRemaining()) {
+        while (buffer.hasRemaining()
+                && socketChannel.isConnected()) {
             if (-1 == socketChannel.write(buffer)) {
                 // socket broken
                 throw new IOException("write EOF");

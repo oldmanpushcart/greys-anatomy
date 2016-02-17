@@ -238,7 +238,8 @@ public class GaServer {
 
                     try {
 
-                        while (selector.select() > 0) {
+                        while (selector.isOpen()
+                                && selector.select() > 0) {
                             final Iterator<SelectionKey> it = selector.selectedKeys().iterator();
                             while (it.hasNext()) {
                                 final SelectionKey key = it.next();
@@ -288,7 +289,7 @@ public class GaServer {
         socketChannel.register(selector, OP_READ, new GaAttachment(BUFFER_SIZE, session));
         logger.info("accept new connection, client={}@session[{}]", socketChannel, session.getSessionId());
 
-        if(!session.isSilent()) {
+        if (!session.isSilent()) {
             // 这里输出Logo
             writeToSocketChannel(socketChannel, session.getCharset(), getLogo());
 

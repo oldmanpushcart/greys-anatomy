@@ -87,16 +87,18 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
     }
 
     /*
-     * 加载JavaScript脚本支撑
+     * 加载支撑脚本
      */
-    private void loadJavaScriptSupport(Compilable compilable, Invocable invocable, String scriptContent) throws IOException, ScriptException, NoSuchMethodException {
-        // 加载support
+    private void loadSupport(Compilable compilable, Invocable invocable, String scriptContent) throws IOException, ScriptException, NoSuchMethodException {
+
+        // 加载javascript-support.js
         compilable.compile(
                 IOUtils.toString(
                         GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/javascript-support.js"),
                         Charset.forName("UTF-8")
                 )
         ).eval();
+
         // 初始化greys
         invocable.invokeFunction("__global_greys_init", scriptContent);
     }
@@ -125,8 +127,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
             };
         }
 
-        final ScriptEngineManager mgr = new ScriptEngineManager(getClass().getClassLoader());
+        final ScriptEngineManager mgr = new ScriptEngineManager();
         final ScriptEngine jsEngine = mgr.getEngineByMimeType("application/javascript");
+
         final Compilable compilable = (Compilable) jsEngine;
         final Invocable invocable = (Invocable) jsEngine;
 
@@ -136,12 +139,14 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
         final boolean isDefineReturning;
         final boolean isDefineThrowing;
         try {
-            loadJavaScriptSupport(compilable, invocable, scriptContent);
+            loadSupport(compilable, invocable, scriptContent);
             isDefineCreate = (Boolean) invocable.invokeFunction("__global_greys_is_define_create");
             isDefineDestroy = (Boolean) invocable.invokeFunction("__global_greys_is_define_destroy");
             isDefineBefore = (Boolean) invocable.invokeFunction("__global_greys_is_define_before");
             isDefineReturning = (Boolean) invocable.invokeFunction("__global_greys_is_define_returning");
             isDefineThrowing = (Boolean) invocable.invokeFunction("__global_greys_is_define_throwing");
+            logger.debug("javascript compile success. create={};destroy={};before={};returning={};throwing={};",
+                    isDefineCreate, isDefineDestroy, isDefineBefore, isDefineReturning, isDefineThrowing);
         } catch (ScriptException e) {
             logger.warn("javascript compile failed. script={};", scriptPath, e);
             return new SilentAction() {
@@ -207,6 +212,7 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                     public AdviceListener getAdviceListener() {
 
                         return new ReflectAdviceListenerAdapter<ProcessContext, MapInnerContext>() {
+
 
                             @Override
                             protected ProcessContext newProcessContext() {

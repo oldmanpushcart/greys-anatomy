@@ -58,6 +58,12 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.9</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>net.sf.jopt-simple</groupId>
                 <artifactId>jopt-simple</artifactId>
                 <version>4.3</version>
@@ -124,14 +130,25 @@
                 <version>2.3.1</version>
             </dependency>
             <!--<dependency>-->
-                <!--<groupId>org.springframework</groupId>-->
-                <!--<artifactId>spring-context</artifactId>-->
-                <!--<version>4.0.2.RELEASE</version>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-context</artifactId>-->
+            <!--<version>4.0.2.RELEASE</version>-->
             <!--</dependency>-->
             <!--<dependency>-->
-                <!--<groupId>org.codehaus.groovy</groupId>-->
-                <!--<artifactId>groovy-all</artifactId>-->
-                <!--<version>2.4.3</version>-->
+            <!--<groupId>org.codehaus.groovy</groupId>-->
+            <!--<artifactId>groovy-all</artifactId>-->
+            <!--<version>2.4.3</version>-->
+            <!--</dependency>-->
+
+            <!--<dependency>-->
+                <!--<groupId>org.mozilla</groupId>-->
+                <!--<artifactId>rhino</artifactId>-->
+                <!--<version>1.7.7.1</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>de.christophkraemer</groupId>-->
+                <!--<artifactId>rhino-script-engine</artifactId>-->
+                <!--<version>1.1.0</version>-->
             <!--</dependency>-->
         </dependencies>
     </dependencyManagement>
