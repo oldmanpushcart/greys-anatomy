@@ -22,12 +22,12 @@ import org.slf4j.Logger;
 import javax.script.*;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.github.ompc.greys.core.util.GaStringUtils.getCauseMessage;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
@@ -70,28 +70,11 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
     }
 
     /*
-     * 构造script-path所对应的URI
+     * 加载支撑脚本(javascript-support.js)
      */
-    private URI createScriptPathURI() {
-        if (StringUtils.isBlank(scriptPath)) {
-            throw new IllegalArgumentException("script-path is required.");
-        }
+    private void loadJavaScriptSupport(Compilable compilable) throws IOException, ScriptException {
 
-        if (StringUtils.startsWithIgnoreCase(scriptPath, "http://")
-                || StringUtils.startsWithIgnoreCase(scriptPath, "https://")
-                || StringUtils.startsWithIgnoreCase(scriptPath, "file://")) {
-            return URI.create(scriptPath);
-        } else {
-            return URI.create("file://" + scriptPath);
-        }
-    }
-
-    /*
-     * 加载支撑脚本
-     */
-    private void loadSupport(Compilable compilable, Invocable invocable, String scriptContent) throws IOException, ScriptException, NoSuchMethodException {
-
-        // 加载javascript-support.js
+        // 加载
         compilable.compile(
                 IOUtils.toString(
                         GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/javascript-support.js"),
@@ -99,33 +82,31 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                 )
         ).eval();
 
-        // 初始化greys
-        invocable.invokeFunction("__global_greys_init", scriptContent);
+    }
+
+    /*
+     * 加载greys模块脚本(greys-module.js)
+     */
+    private void loadGreysModule(Compilable compilable) throws IOException, ScriptException {
+        // 加载greys-module.js
+        compilable.compile(
+                IOUtils.toString(
+                        GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/greys-module.js"),
+                        Charset.forName("UTF-8")
+                )
+        ).eval();
+    }
+
+    /*
+     * 加载自定义模块地址
+     */
+    private void loadCustomModule(Invocable invocable, String path, Charset charset) throws ScriptException, NoSuchMethodException {
+        invocable.invokeFunction("__greys_load", path, charset.name());
     }
 
     @Override
     public Action getAction() {
 
-
-        final String scriptContent;
-        try {
-            scriptContent = IOUtils.toString(createScriptPathURI(), fetchCharset());
-        } catch (UnsupportedCharsetException e) {
-            return new SilentAction() {
-                @Override
-                public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
-                    printer.println(String.format("Desupported character[%s].", charsetString)).finish();
-                }
-            };
-        } catch (IOException e) {
-            logger.warn("script-path not found. path={};", scriptPath, e);
-            return new SilentAction() {
-                @Override
-                public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
-                    printer.println(String.format("script-path[%s] not found.", scriptPath)).finish();
-                }
-            };
-        }
 
         final ScriptEngineManager mgr = new ScriptEngineManager();
         final ScriptEngine jsEngine = mgr.getEngineByMimeType("application/javascript");
@@ -133,42 +114,32 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
         final Compilable compilable = (Compilable) jsEngine;
         final Invocable invocable = (Invocable) jsEngine;
 
-        final boolean isDefineCreate;
-        final boolean isDefineDestroy;
-        final boolean isDefineBefore;
-        final boolean isDefineReturning;
-        final boolean isDefineThrowing;
         try {
-            loadSupport(compilable, invocable, scriptContent);
-            isDefineCreate = (Boolean) invocable.invokeFunction("__global_greys_is_define_create");
-            isDefineDestroy = (Boolean) invocable.invokeFunction("__global_greys_is_define_destroy");
-            isDefineBefore = (Boolean) invocable.invokeFunction("__global_greys_is_define_before");
-            isDefineReturning = (Boolean) invocable.invokeFunction("__global_greys_is_define_returning");
-            isDefineThrowing = (Boolean) invocable.invokeFunction("__global_greys_is_define_throwing");
-            logger.debug("javascript compile success. create={};destroy={};before={};returning={};throwing={};",
-                    isDefineCreate, isDefineDestroy, isDefineBefore, isDefineReturning, isDefineThrowing);
-        } catch (ScriptException e) {
+            loadJavaScriptSupport(compilable);
+            loadGreysModule(compilable);
+            loadCustomModule(invocable, scriptPath, fetchCharset());
+        } catch (final ScriptException e) {
             logger.warn("javascript compile failed. script={};", scriptPath, e);
             return new SilentAction() {
                 @Override
                 public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
-                    printer.println("javascript compile failed.").finish();
+                    printer.println("javascript compile failed. because " + getCauseMessage(e)).finish();
                 }
             };
-        } catch (NoSuchMethodException e) {
-            logger.warn("invoke function __global_greys_init failed.", e);
+        } catch (final NoSuchMethodException e) {
+            logger.warn("javascript function not defined.", e);
             return new SilentAction() {
                 @Override
                 public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
-                    printer.println("invoke function __global_greys_init failed.").finish();
+                    printer.println("javascript function not defined. because " + getCauseMessage(e)).finish();
                 }
             };
-        } catch (IOException e) {
-            logger.warn("load javascript-support.js failed.", e);
+        } catch (final IOException e) {
+            logger.warn("load javascript failed.", e);
             return new SilentAction() {
                 @Override
                 public void action(Session session, Instrumentation inst, Printer printer) throws Throwable {
-                    printer.println("load javascript-support.js failed.").finish();
+                    printer.println("load javascript failed. because " + getCauseMessage(e)).finish();
                 }
             };
         }
@@ -213,7 +184,6 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
 
                         return new ReflectAdviceListenerAdapter<ProcessContext, MapInnerContext>() {
 
-
                             @Override
                             protected ProcessContext newProcessContext() {
                                 return new ProcessContext();
@@ -226,71 +196,61 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
 
                             @Override
                             public void create() {
-                                if (isDefineCreate) {
-                                    try {
-                                        invocable.invokeFunction("__global_greys_create", output);
-                                    } catch (ScriptException e) {
-                                        output.println("invoke function 'create' failed. because : " + GaStringUtils.getCauseMessage(e));
-                                        logger.warn("invoke function 'create' failed.", e);
-                                    } catch (NoSuchMethodException e) {
-                                        //
-                                    }
+                                try {
+                                    invocable.invokeFunction("__greys_module_create", output);
+                                } catch (ScriptException e) {
+                                    output.println("invoke function 'create' failed. because : " + getCauseMessage(e));
+                                    logger.warn("invoke function 'create' failed.", e);
+                                } catch (NoSuchMethodException e) {
+                                    //
                                 }
                             }
 
                             @Override
                             public void destroy() {
-                                if (isDefineDestroy) {
-                                    try {
-                                        invocable.invokeFunction("__global_greys_destroy", output);
-                                    } catch (ScriptException e) {
-                                        output.println("invoke function 'destroy' failed. because : " + GaStringUtils.getCauseMessage(e));
-                                        logger.warn("invoke function 'destroy' failed.", e);
-                                    } catch (NoSuchMethodException e) {
-                                        //
-                                    }
+                                try {
+                                    invocable.invokeFunction("__greys_module_destroy", output);
+                                } catch (ScriptException e) {
+                                    output.println("invoke function 'destroy' failed. because : " + getCauseMessage(e));
+                                    logger.warn("invoke function 'destroy' failed.", e);
+                                } catch (NoSuchMethodException e) {
+                                    //
                                 }
                             }
 
                             @Override
                             public void before(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
-                                if (isDefineBefore) {
-                                    try {
-                                        invocable.invokeFunction("__global_greys_before", output, advice, innerContext);
-                                    } catch (ScriptException e) {
-                                        output.println("invoke function 'before' failed. because : " + GaStringUtils.getCauseMessage(e));
-                                        logger.warn("invoke function 'before' failed.", e);
-                                    } catch (NoSuchMethodException e) {
-                                        //
-                                    }
+                                try {
+                                    invocable.invokeFunction("__greys_module_before", output, advice, innerContext);
+                                } catch (ScriptException e) {
+                                    output.println("invoke function 'before' failed. because : " + getCauseMessage(e));
+                                    logger.warn("invoke function 'before' failed.", e);
+                                } catch (NoSuchMethodException e) {
+                                    //
                                 }
                             }
 
                             @Override
                             public void afterReturning(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
-                                if (isDefineReturning) {
-                                    try {
-                                        invocable.invokeFunction("__global_greys_returning", output, advice, innerContext);
-                                    } catch (ScriptException e) {
-                                        output.println("invoke function 'returning' failed. because : " + GaStringUtils.getCauseMessage(e));
-                                        logger.warn("invoke function 'returning' failed.", e);
-                                    } catch (NoSuchMethodException e) {
-                                        //
-                                    }
+                                try {
+                                    invocable.invokeFunction("__greys_module_returning", output, advice, innerContext);
+                                } catch (ScriptException e) {
+                                    output.println("invoke function 'returning' failed. because : " + getCauseMessage(e));
+                                    logger.warn("invoke function 'returning' failed.", e);
+                                } catch (NoSuchMethodException e) {
+                                    //
                                 }
                             }
 
                             @Override
                             public void afterThrowing(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
-                                if (isDefineThrowing) {
-                                    try {
-                                        invocable.invokeFunction("__global_greys_throwing", output, advice, innerContext);
-                                    } catch (ScriptException e) {
-                                        output.println("invoke function 'throwing' failed. because : " + GaStringUtils.getCauseMessage(e));
-                                        logger.warn("invoke function 'throwing' failed.", e);
-                                    } catch (NoSuchMethodException e) {
-                                        //
-                                    }
+                                try {
+                                    invocable.invokeFunction("__greys_module_throwing", output, advice, innerContext);
+                                } catch (ScriptException e) {
+                                    output.println("invoke function 'throwing' failed. because : " + getCauseMessage(e));
+                                    logger.warn("invoke function 'throwing' failed.", e);
+                                } catch (NoSuchMethodException e) {
+                                    //
                                 }
                             }
 
