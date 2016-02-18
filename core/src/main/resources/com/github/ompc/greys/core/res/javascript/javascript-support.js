@@ -8,11 +8,13 @@ __greys_requirejs = this.__greys_requirejs || {
         util: function () {
 
             // 导入相关包
-            importPackage(java.io);
-            importPackage(java.nio.charset);
-            importPackage(java.net);
-            importPackage(java.lang);
-            importPackage(java.util);
+            var File = java.io.File;
+            var FileInputStream = java.io.FileInputStream;
+            var InputStream = java.io.InputStream;
+            var OutputStream = java.io.OutputStream;
+            var URL = java.net.URL;
+            var Charset = java.nio.charset.Charset;
+            var Scanner = java.util.Scanner;
 
             /**
              * 打开输入流
@@ -23,10 +25,9 @@ __greys_requirejs = this.__greys_requirejs || {
 
                 // 路径是字符串
                 if (typeof(path) == "string") {
-                    var regex = new RegExp("(?!)^https{0,1}://.*");
 
                     // HTTP/HTTPS
-                    if (regex.test(path)) {
+                    if (/^(https{0,1}):\/\/.*/.test(path.toLowerCase())) {
                         return new URL(path).openStream();
                     }
 
@@ -152,8 +153,10 @@ __greys_require = this.__greys_require || function () {
             if (!module) {
                 var path = __greys_requirejs.path_mapping[id];
                 if (path) {
-                    module = new Function("var _m=" + __greys_requirejs.util.readTextFully(path) + ";return _m;")();
-                    __greys_requirejs.module_mapping[id] = module;
+                    // 这里不需要判断Function的返回值,我们期望模块的注册交给define函数完成
+                    new Function(__greys_requirejs.util.readTextFully(path))();
+                    // 因为define函数中应该完成了模块的注册,所以这里直接取一次
+                    module = __greys_requirejs.module_mapping[id];
                 }
             }
             return module;
@@ -173,10 +176,18 @@ __greys_require = this.__greys_require || function () {
 
         }
 
+        // require(config)
+        else if (arguments.length == 1
+            && typeof(arguments[0]) == 'object') {
+            var config = arguments[0];
+            __greys_requirejs.config(config);
+            return this;
+        }
+
         // require(dependencies, func)
         else if (arguments.length == 2
-            && typeof(arguments[0]) == 'object'
-            && typeof(arguments[1]) == 'function') {
+            && arguments[0] instanceof Array
+            && arguments[1] instanceof Function) {
             var dependencies = arguments[0];
             var func = arguments[1];
 
@@ -194,8 +205,10 @@ __greys_require = this.__greys_require || function () {
                 func.apply(this, funcArguments);
             }
 
+            return this;
         }
 
+        return this;
     }
 
 /**
@@ -208,30 +221,33 @@ __greys_require = this.__greys_require || function () {
  */
 __greys_define = this.__greys_define || function () {
 
+        var default_dependencies = [];
+
         // define(factory)
         if (arguments.length == 1
-            && typeof(arguments[0]) == 'function') {
-            return this.__greys_define("", [], arguments[0]);
+            && arguments[0] instanceof Function) {
+            return this.__greys_define("", default_dependencies, arguments[0]);
         }
 
         // define(dependencies,factory)
         else if (arguments.length == 2
-            && typeof(arguments[0]) == 'object'
-            && typeof(arguments[1]) == 'function') {
+            && arguments[0] instanceof Array
+            && arguments[1] instanceof Function) {
             return this.__greys_define("", arguments[0], arguments[1]);
         }
 
         // define(id,factory)
         else if (arguments.length == 2
             && typeof(arguments[0]) == 'string'
-            && typeof(arguments[1]) == 'function') {
-            return this.__greys_define(arguments[0], [], arguments[1]);
+            && arguments[1] instanceof Function) {
+            return this.__greys_define(arguments[0], default_dependencies, arguments[1]);
         }
 
+        // define(id,dependencies,factory)
         else if (arguments.length == 3
             && typeof(arguments[0]) == 'string'
-            && typeof(arguments[1]) == 'object'
-            && typeof(arguments[2]) == 'function') {
+            && arguments[1] instanceof Array
+            && arguments[2] instanceof Function) {
 
             var id = arguments[0];
             var dependencies = arguments[1];
@@ -240,7 +256,9 @@ __greys_define = this.__greys_define || function () {
             var module = null;
             __greys_require(dependencies, function () {
 
+                // 构造模块
                 module = factory.apply(this, arguments);
+
                 // 模块定义声明了id,需要主动注册到模块集合中
                 if (id.length != 0) {
                     __greys_requirejs.module_mapping[id] = module;
@@ -290,32 +308,9 @@ __greys_load = this.__greys_load || function () {
 load = this.load || this.__greys_load;
 
 
-// 初始化requirejs
-if (!this.hasOwnProperty('requirejs')
-    && !this.hasOwnProperty('require')
+// 初始化require
+if (!this.hasOwnProperty('require')
     && !this.hasOwnProperty('define')) {
-    this.requirejs = __greys_requirejs;
     this.require = __greys_require;
     this.define = __greys_define;
-}
-
-
-function __greys_module_create(output) {
-    __greys_require('greys').create(output);
-}
-
-function __greys_module_destroy(output) {
-    __greys_require('greys').destroy(output);
-}
-
-function __greys_module_before(output, advice, context) {
-    __greys_require('greys').before(output, advice, context);
-}
-
-function __greys_module_returning(output, advice, context) {
-    __greys_require('greys').returning(output, advice, context);
-}
-
-function __greys_module_throwing(output, advice, context) {
-    __greys_require('greys').throwing(output, advice, context);
 }

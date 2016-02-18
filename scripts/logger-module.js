@@ -4,7 +4,7 @@
  * @author : oldmanpushcart@gmail.com
  */
 
-__greys_define(['greys'], function (greys) {
+define(['greys'], function (greys) {
 
     if (!Date.hasOwnProperty.format) {
         /**

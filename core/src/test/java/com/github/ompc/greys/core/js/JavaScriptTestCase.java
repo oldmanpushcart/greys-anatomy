@@ -40,8 +40,13 @@ public class JavaScriptTestCase {
                 Charset.forName("UTF-8")
         )).eval();
 
+//        compilable.compile(IOUtils.toString(
+//                GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/greys-module.js"),
+//                Charset.forName("UTF-8")
+//        )).eval();
+
         compilable.compile(IOUtils.toString(
-                GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/greys-module.js"),
+                GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/test.js"),
                 Charset.forName("UTF-8")
         )).eval();
     }
@@ -56,8 +61,7 @@ public class JavaScriptTestCase {
     @Test
     public void test_compile_javascript_support_success() throws IOException, ScriptException, NoSuchMethodException {
 
-        invocable.invokeFunction("__greys_load", "/tmp/logger.js", "UTF-8");
-        invocable.invokeFunction("__greys_module_returning", null,null,null);
+        System.out.println("test");
 
     }
 
