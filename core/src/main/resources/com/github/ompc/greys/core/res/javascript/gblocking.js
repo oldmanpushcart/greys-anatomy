@@ -1,3 +1,34 @@
+/*
+ * GREYS-BLOCKING.js
+ *
+ * Copyright (c) 2011-2015 oldmanpushcart@gmail.com
+ * License: GNU General Public License 3 (GPLv3)
+ * Read more at http://shjs.sourceforge.net/doc/gplv3.html
+ *
+ * @author : oldmanpushcart@gmail.com
+ * @date   : 2016-02-18
+ *
+ *
+ * gblocking.js的名字含义是"greys-blocking",这是一个小型\精简的CommonJS规范的实现者
+ * 该框架定义了两个核心方法: require/define
+ *
+ * require:
+ *      require(config)
+ *      require(id)
+ *      require(factory)
+ *      require(id,factory)
+ *      require(id,dependencies,factory)
+ *
+ * define:
+ *      define(factory)
+ *      define(id,factory)
+ *      define(dependencies,factory)
+ *      define(id,dependencies,factory)
+ *
+ *
+ * 叫blocking做名字主要是区分于AMD规范中的异步加载,在CommonJS规范中,其实并没有要求一定要异步加载,同步也是能满足要求.
+ */
+
 /**
  * 全局配置对象
  * @type {{factory_mapping: {}, path_mapping: {}, config: __greys_requirejs.config}}
@@ -5,6 +36,7 @@
  */
 __greys_requirejs = this.__greys_requirejs || {
 
+        // 工具函数集合
         util: function () {
 
             // 导入相关包
@@ -221,7 +253,7 @@ __greys_require = this.__greys_require || function () {
  */
 __greys_define = this.__greys_define || function () {
 
-        var default_dependencies = [];
+        var default_dependencies = ['require', 'exports', 'module'];
 
         // define(factory)
         if (arguments.length == 1
@@ -256,8 +288,34 @@ __greys_define = this.__greys_define || function () {
             var module = null;
             __greys_require(dependencies, function () {
 
+                // 构造魔法模块export,module
+                var exportsModule, moduleModule;
+                for (var index in dependencies) {
+                    if (dependencies[index] == 'exports') {
+                        exportsModule = arguments[index] = arguments[index].make();
+                    } else if (dependencies[index] == 'module') {
+                        moduleModule = arguments[index] = arguments[index].make();
+                    }//if
+                }//for
+                if (exportsModule && moduleModule) {
+                    moduleModule.exports = exportsModule;
+                }
+
                 // 构造模块
                 module = factory.apply(this, arguments);
+
+                // 应用魔法模块
+                if (exportsModule) {
+                    module = exportsModule;
+                }
+                if (moduleModule) {
+                    if (moduleModule.exports != exportsModule) {
+                        module = moduleModule.exports;
+                    }
+                    if (moduleModule.id) {
+                        id = moduleModule.id;
+                    }
+                }
 
                 // 模块定义声明了id,需要主动注册到模块集合中
                 if (id.length != 0) {
@@ -314,3 +372,38 @@ if (!this.hasOwnProperty('require')
     this.require = __greys_require;
     this.define = __greys_define;
 }
+
+// ------------------------- MAGIC MODULE 定义 -------------------------
+// 一共定义了四个MAGIC MODULE
+// require/exports/module 这三个模块主要是兼容CommonJS开发规范
+// global模块主要是用于获取全局this对象,一些函数可能需要挂在全局this
+
+__greys_define('require', [], function () {
+    return __greys_require;
+})
+
+__greys_define('exports', [], function () {
+    return {
+        make: function () {
+            return {}
+        }
+    }
+})
+
+__greys_define('module', [], function () {
+    return {
+        make: function () {
+            return {}
+        }
+    }
+})
+
+/**
+ * 定义全局对象模块
+ * global == window
+ */
+__greys_define('global', function () {
+    return (function () {
+        return this;
+    })()
+})

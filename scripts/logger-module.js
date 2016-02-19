@@ -4,7 +4,7 @@
  * @author : oldmanpushcart@gmail.com
  */
 
-define(['greys'], function (greys) {
+require(['greys'], function (greys) {
 
     if (!Date.hasOwnProperty.format) {
         /**

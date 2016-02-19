@@ -1,7 +1,7 @@
 /**
  * 模版
  */
-define(['greys'], function (greys) {
+require(['greys'], function (greys) {
     greys.watching({
 
         create: function (output) {

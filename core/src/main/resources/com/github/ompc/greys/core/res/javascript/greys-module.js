@@ -1,15 +1,4 @@
 /**
- * 定义全局对象模块
- * global == window
- */
-define('global', function () {
-    return (function () {
-        return this;
-    })()
-})
-
-
-/**
  * GREYS模块
  * function watching(listener)
  */

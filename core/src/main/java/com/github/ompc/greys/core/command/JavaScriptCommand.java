@@ -70,14 +70,14 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
     }
 
     /*
-     * 加载支撑脚本(javascript-support.js)
+     * 加载支撑脚本(gblocking.js)
      */
     private void loadJavaScriptSupport(Compilable compilable) throws IOException, ScriptException {
 
         // 加载
         compilable.compile(
                 IOUtils.toString(
-                        GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/javascript-support.js"),
+                        GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/gblocking.js"),
                         Charset.forName("UTF-8")
                 )
         ).eval();

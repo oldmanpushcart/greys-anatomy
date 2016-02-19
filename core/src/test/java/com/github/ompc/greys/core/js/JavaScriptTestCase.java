@@ -36,7 +36,7 @@ public class JavaScriptTestCase {
      */
     private void loadJavaScriptSupport() throws IOException, ScriptException {
         compilable.compile(IOUtils.toString(
-                GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/javascript-support.js"),
+                GaStringUtils.class.getResourceAsStream("/com/github/ompc/greys/core/res/javascript/gblocking.js"),
                 Charset.forName("UTF-8")
         )).eval();
 
