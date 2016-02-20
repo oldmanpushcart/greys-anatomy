@@ -31,7 +31,7 @@
 
 /**
  * 全局配置对象
- * @type {{factory_mapping: {}, path_mapping: {}, config: __greys_requirejs.config}}
+ * @type {{util: {readTextFully}, module_mapping: {}, path_mapping: {}, config: __greys_requirejs.config}}
  * @private
  */
 __greys_requirejs = this.__greys_requirejs || {
@@ -185,8 +185,11 @@ __greys_require = this.__greys_require || function () {
             if (!module) {
                 var path = __greys_requirejs.path_mapping[id];
                 if (path) {
+                    require(['__greys_require_remote_module_loader'], function (loader) {
+                        loader(id, path);
+                    })
                     // 这里不需要判断Function的返回值,我们期望模块的注册交给define函数完成
-                    new Function(__greys_requirejs.util.readTextFully(path))();
+                    // new Function(__greys_requirejs.util.readTextFully(path))();
                     // 因为define函数中应该完成了模块的注册,所以这里直接取一次
                     module = __greys_requirejs.module_mapping[id];
                 }
@@ -254,6 +257,7 @@ __greys_require = this.__greys_require || function () {
 __greys_define = this.__greys_define || function () {
 
         var default_dependencies = ['require', 'exports', 'module'];
+        var empty_dependencies = [];
 
         // define(factory)
         if (arguments.length == 1
@@ -272,7 +276,7 @@ __greys_define = this.__greys_define || function () {
         else if (arguments.length == 2
             && typeof(arguments[0]) == 'string'
             && arguments[1] instanceof Function) {
-            return this.__greys_define(arguments[0], default_dependencies, arguments[1]);
+            return this.__greys_define(arguments[0], empty_dependencies, arguments[1]);
         }
 
         // define(id,dependencies,factory)
@@ -374,9 +378,10 @@ if (!this.hasOwnProperty('require')
 }
 
 // ------------------------- MAGIC MODULE 定义 -------------------------
-// 一共定义了四个MAGIC MODULE
+// 一共定义了五个MAGIC MODULE
 // require/exports/module 这三个模块主要是兼容CommonJS开发规范
 // global模块主要是用于获取全局this对象,一些函数可能需要挂在全局this
+// __greys_require_remote_module_loader模块主要用于内部实现加载远程模块
 
 __greys_define('require', [], function () {
     return __greys_require;
@@ -407,3 +412,20 @@ __greys_define('global', function () {
         return this;
     })()
 })
+
+/**
+ * 远程模块加载模块
+ */
+__greys_define('__greys_require_remote_module_loader', function () {
+    return function (id, path) {
+        __greys_require(['require', 'exports', 'module'], function (require, exports, module) {
+            eval(__greys_requirejs.util.readTextFully(path));
+            var moduleModule = module.exports != exports ? module.exports : exports;
+            if (module.id) {
+                __greys_requirejs.module_mapping[module.id] = moduleModule;
+            }
+            __greys_requirejs.module_mapping[id] = moduleModule;
+        })
+    }
+})
+

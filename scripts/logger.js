@@ -4,7 +4,7 @@
  * @author : oldmanpushcart@gmail.com
  */
 
-require(['greys'], function (greys) {
+__greys_require(['greys'], function (greys) {
 
     if (!Date.hasOwnProperty.format) {
         /**

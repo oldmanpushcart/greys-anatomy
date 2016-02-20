@@ -1,59 +1,48 @@
 require({
     paths: {
-        adder: '/tmp/temp.js',
         stringjs: 'https://raw.githubusercontent.com/jprichardson/string.js/master/dist/string.min.js',
-        //moment: 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js'
-        moment: '/tmp/moment.js'
+        moment: 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js',
+        // moment: '/tmp/moment.js',
+        'text-formatting': '/Users/vlinux/IdeaProjects/github/greys-project/greys-anatomy/scripts/text-formatting-module.js',
     }
 })
 
-//define('global', function () {
-//    return (function () {
-//        return this;
-//    })()
-//})
-//
-//require(['global'], function (global) {
-//    global.echo = function (str) {
-//        return "echo:" + str;
-//    }
-//})
-//
-//require(['adder', 'global', 'xxx'], function (adder, global, xxx) {
-//    java.lang.System.out.println(adder.addx(1, 2, 3));
-//    java.lang.System.out.println(global.echo('hello'));
-//    java.lang.System.out.println("" + xxx);
-//})
-//
-//define(function (require, exports, module) {
-//    java.lang.System.out.println(""+exports);
-//})
 
-//require(['stringjs'],function(stringjs){
-//    java.lang.System.out.println(""+stringjs);
-//})
+require(['text-formatting'], function (text) {
+    var table = new text.table();
+    table.config({
+        borders: ['top', 'bottom', 'left', 'right', 'vertical', 'horizontal'],
+        padding: 1,
+        columns: [
+            {
+                width: 10,
+                vertical: 'middle',
+                horizontal: 'left'
+            },
+            {
+                width: 20,
+                vertical: 'top',
+                horizontal: 'left'
+            },
+            {
+                width: 17,
+                vertical: 'middle',
+                horizontal: 'left'
+            }
+        ]
+    });
 
-//var regex = new RegExp("(?!)^https://.*");
-//java.lang.System.out.println("regex="+/^(https{0,1}|ftp):\/\/.*/.test('httpss://cdn.rawgit.com/jprichardson/string.js/master/lib/string.min.js'));
+    table.row('abcdefghijklmnopqrstabcdefghijklmnox', '12345678901234567890', '!@#$%^&*()_++_)(*&^%$#@!!@#$%^&*()_++_)(*&^%$#@!');
+    table.row('abcdefghijklmnopqrst', '12345678901234567890', '!@#$%^&*()_++_)(*&^%$#@!!@#$%^&*()_++_)(*&^%$#@!');
+    table.row('abcdefghijklmnopqrstabcdefghijklmnox', '12345678901234567890', '!@#$%^&*()_++_)(*&^%$#@!!@#$%^&*()_++_)(*&^%$#@!');
+    table.row('abcdefghijklmnopqrst', '12345678901234567890', '!@#$%^&*()_++_)(*&^%$#@!!@#$%^&*()_++_)(*&^%$#@!');
+    table.row('abcdefghijklmnopqrstabcdefghijklmnox', '12345678901234567890', '!@#$%^&*()_++_)(*&^%$#@!!@#$%^&*()_++_)(*&^%$#@!');
+    table.row('abcdefghijklmnopqrst', '12345678901234567890', '!@#$%^&*()_++_)(*&^%$#@!!@#$%^&*()_++_)(*&^%$#@!');
+    table.row('abcdefghijklmnopqrstabcdefghijklmnox', '12345678901234567890', '!@#$%^&*()_++_)(*&^%$#@!!@#$%^&*()_++_)(*&^%$#@!');
+    table.row('abcdefghijklmnopqrst', '12345678901234567890', '!@#$%^&*()_++_)(*&^%$#@!!@#$%^&*()_++_)(*&^%$#@!');
 
-define(function (require, exports, module) {
-    exports.do = function (a, b, c) {
-        return a + b + c;
-    }
-    module.id = 'adder';
+
+    java.lang.System.out.println(table.rendering());
+
 })
 
-define(function (require, exports, module) {
-    module.exports = {
-        do: function (a, b, c) {
-            return a - b - c;
-        }
-    }
-    module.id = 'suber';
-})
-
-var adder = require('adder');
-var suber = require('suber');
-
-java.lang.System.out.println(adder.do(1,2,3));
-java.lang.System.out.println(suber.do(1,2,3));
