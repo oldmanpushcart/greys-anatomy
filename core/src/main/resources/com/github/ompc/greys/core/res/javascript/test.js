@@ -7,6 +7,14 @@ require({
     }
 })
 
+require(['text-formatting'], function (text) {
+    var box = text.box('abcdefg');
+    box.config({
+        borders: ['top','bottom','left','right'],
+        padding : 1,
+    });
+    java.lang.System.out.println(box.rendering());
+})
 
 require(['text-formatting'], function (text) {
     var table = new text.table();

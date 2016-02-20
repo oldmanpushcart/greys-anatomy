@@ -7,6 +7,17 @@ define('greys', function () {
     // 监听器集合
     var listeners = [];
 
+    /**
+     * 数组forEach遍历
+     * @param arr  数组
+     * @param func 回调函数
+     */
+    function arrayForEach(arr, func) {
+        for (var index = 0; index < arr.length; index++) {
+            func(index, arr[index]);
+        }
+    }
+
     return {
 
         watching: function (listener) {
@@ -14,48 +25,43 @@ define('greys', function () {
         },
 
         create: function (output) {
-            for (var index in listeners) {
-                var listener = listeners[index];
-                if (listener.hasOwnProperty('create')) {
+            arrayForEach(listeners, function(index, listener){
+                if(listener.create) {
                     listener.create(output);
                 }
-            }
+            });
         },
 
         destroy: function (output) {
-            for (var index in listeners) {
-                var listener = listeners[index];
-                if (listener.hasOwnProperty('destroy')) {
+            arrayForEach(listeners, function(index, listener){
+                if(listener.destroy) {
                     listener.destroy(output);
                 }
-            }
+            });
         },
 
         before: function (output, advice, context) {
-            for (var index in listeners) {
-                var listener = listeners[index];
-                if (listener.hasOwnProperty('before')) {
+            arrayForEach(listeners, function(index, listener){
+                if(listener.before) {
                     listener.before(output, advice, context);
                 }
-            }
+            });
         },
 
         returning: function (output, advice, context) {
-            for (var index in listeners) {
-                var listener = listeners[index];
-                if (listener.hasOwnProperty('returning')) {
+            arrayForEach(listeners, function(index, listener){
+                if(listener.returning) {
                     listener.returning(output, advice, context);
                 }
-            }
+            });
         },
 
         throwing: function (output, advice, context) {
-            for (var index in listeners) {
-                var listener = listeners[index];
-                if (listener.hasOwnProperty('throwing')) {
+            arrayForEach(listeners, function(index, listener){
+                if(listener.throwing) {
                     listener.throwing(output, advice, context);
                 }
-            }
+            });
         },
 
     }

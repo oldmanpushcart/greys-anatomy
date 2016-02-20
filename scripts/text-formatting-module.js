@@ -14,6 +14,18 @@ function arrayContain(array, target) {
 }
 
 /**
+ * 字符串遍历
+ * @param string 字符串
+ * @param fun    回调函数
+ */
+function stringForEach(string, fun) {
+    for (var index = 0; index < string.length; index++) {
+        var c = string[index];
+        fun(index, c);
+    }
+}
+
+/**
  * 字符串空白右填充
  * @param length 填充长度
  * @returns {string}
@@ -21,12 +33,11 @@ function arrayContain(array, target) {
 function stringRightPadding(string, length) {
     var empty = stringBlank(Math.max(string.length, length));
     var padding = "";
-    for (var index in empty) {
-        padding += index < string.length ? string[index] : empty[index];
-    }
+    stringForEach(empty, function (index, c) {
+        padding += index < string.length ? string[index] : c;
+    });
     return padding;
 }
-
 
 /**
  * 文本矩阵宽度
@@ -36,15 +47,16 @@ function stringRightPadding(string, length) {
 function textWidth(text) {
     var contentWidth = 0;
     var count = 0;
-    for (var index in text) {
-        var c = text[index];
+
+    stringForEach(text, function (index, c) {
         if (c == '\n') {
             contentWidth = count > contentWidth ? count : contentWidth;
             count = 0;
         } else {
             count++;
         }
-    }
+    });
+
     // 如果字符串没有一个换行符,则取当前字符串长度即可
     return contentWidth == 0 ? text.length : contentWidth;
 }
@@ -60,15 +72,14 @@ function textHeight(text) {
     var contentHeight = 0;
 
     // 遍历内容
-    for (var index in text) {
-
+    stringForEach(text, function (index, c) {
         // 因为内容可能没有主动换行符,所以只要第一次字符出现则高度即为1
         // 随后每次出现一个换行符,则都判定为高度+1
         if (contentHeight == 0
-            || text[index] == '\n') {
+            || c == '\n') {
             contentHeight++;
         }
-    }
+    });
     return contentHeight;
 }
 
@@ -90,13 +101,12 @@ function stringBlank(length) {
  */
 function textRightShift(text, shift) {
     var content = stringBlank(shift);
-    for (var index in text) {
-        var c = text[index];
-        content += text[index];
+    stringForEach(text, function (index, c) {
+        content += c;
         if (c == '\n') {
             content += stringBlank(shift);
         }
-    }
+    });
     return content;
 }
 
@@ -122,13 +132,12 @@ function textBottomShift(text, shift) {
  */
 function stringLeftInsert(text, insert) {
     var content = insert;
-    for (var index in text) {
-        var c = text[index];
-        content += text[index];
+    stringForEach(text, function (index, c) {
+        content += c;
         if (c == '\n') {
             content += insert;
         }
-    }
+    });
     return content;
 }
 
@@ -143,8 +152,7 @@ function textRightInsert(text, insert, width) {
     width = Math.max(width, textWidth(text));
     var content = "";
     var count = 0;
-    for (var index in text) {
-        var c = text[index];
+    stringForEach(text, function (index, c) {
         count++;
         if (c == '\n') {
             content += (stringBlank(width - count) + insert);
@@ -157,7 +165,8 @@ function textRightInsert(text, insert, width) {
         if (index == text.length - 1) {
             count++;
         }
-    }
+    });
+
     return content + (stringBlank(width - count) + insert);
 }
 
@@ -170,13 +179,12 @@ function textRightInsert(text, insert, width) {
 function stringWrap(string, width) {
     var wrapString = "";
     var count = 0;
-    for (var index in string) {
-        var c = string[index];
+    stringForEach(string, function (index, c) {
         if (count == width) {
             count = 0;
             wrapString += '\n';
             if (c == '\n') {
-                continue;
+                return;
             }
         }
         if (c == '\n') {
@@ -185,7 +193,7 @@ function stringWrap(string, width) {
             count++;
         }
         wrapString += c;
-    }
+    });
     return wrapString;
 }
 
@@ -216,9 +224,9 @@ function arrayRemove(array, target) {
             tempArray.push(e);
         }
     }
-    tempArray.forEach(function (e) {
-        array.push(e);
-    })
+    for (var index in tempArray) {
+        array.push(tempArray[index]);
+    }
 }
 
 /**
@@ -270,7 +278,7 @@ __greys_define('text-box-formatting', function () {
          * 配置
          * @param config
          */
-        function config(config) {
+        function config() {
 
             // config()
             if (arguments.length == 0) {
@@ -280,9 +288,11 @@ __greys_define('text-box-formatting', function () {
 
             // config(config)
             else if (arguments.length == 1) {
+                var config = arguments[0];
                 parse_config(config);
                 _isReRenderNecessary = true;
             }
+
         }
 
         /**
@@ -670,7 +680,11 @@ __greys_define('text-table-formatting', ['text-box-formatting'], function (box) 
         }
 
         // 记录下一行的数据
-        _rows.push(arguments);
+        var cells = [];
+        for (var index = 0; index < arguments.length; index++) {
+            cells.push(arguments[index]);
+        }
+        _rows.push(cells);
 
     }
 
@@ -744,11 +758,12 @@ __greys_define('text-table-formatting', ['text-box-formatting'], function (box) 
 
             }
 
-            cells.forEach(function (e) {
-                e.config({
+            for (var index in cells) {
+                var cell = cells[index];
+                cell.config({
                     height: maxCellHeightInRow
                 });
-            })
+            }
 
             matrix.push(cells);
         }
