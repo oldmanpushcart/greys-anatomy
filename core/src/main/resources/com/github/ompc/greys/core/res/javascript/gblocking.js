@@ -188,12 +188,16 @@ __greys_require = this.__greys_require || function () {
                     require(['__greys_require_remote_module_loader'], function (loader) {
                         loader(id, path);
                     })
-                    // 这里不需要判断Function的返回值,我们期望模块的注册交给define函数完成
-                    // new Function(__greys_requirejs.util.readTextFully(path))();
-                    // 因为define函数中应该完成了模块的注册,所以这里直接取一次
+                    // 因为loader模块中应该完成了模块的注册,所以这里直接取一次
                     module = __greys_requirejs.module_mapping[id];
                 }
             }
+
+            // exports和module这两个模块要特殊处理
+            if (/^(exports|module)$/.test(id)) {
+                module = module.make();
+            }
+
             return module;
         }
 
@@ -296,9 +300,9 @@ __greys_define = this.__greys_define || function () {
                 var exportsModule, moduleModule;
                 for (var index in dependencies) {
                     if (dependencies[index] == 'exports') {
-                        exportsModule = arguments[index] = arguments[index].make();
+                        exportsModule = arguments[index];
                     } else if (dependencies[index] == 'module') {
-                        moduleModule = arguments[index] = arguments[index].make();
+                        moduleModule = arguments[index];
                     }//if
                 }//for
                 if (exportsModule && moduleModule) {
@@ -308,16 +312,19 @@ __greys_define = this.__greys_define || function () {
                 // 构造模块
                 module = factory.apply(this, arguments);
 
-                // 应用魔法模块
-                if (exportsModule) {
-                    module = exportsModule;
-                }
-                if (moduleModule) {
-                    if (moduleModule.exports != exportsModule) {
-                        module = moduleModule.exports;
+                // 只有factory函数没有主动返回时才需要动用魔法模块
+                if (!module) {
+                    // 应用魔法模块
+                    if (exportsModule) {
+                        module = exportsModule;
                     }
-                    if (moduleModule.id) {
-                        id = moduleModule.id;
+                    if (moduleModule) {
+                        if (moduleModule.exports != exportsModule) {
+                            module = moduleModule.exports;
+                        }
+                        if (moduleModule.id) {
+                            id = moduleModule.id;
+                        }
                     }
                 }
 
@@ -418,9 +425,9 @@ __greys_define('global', function () {
  */
 __greys_define('__greys_require_remote_module_loader', function () {
     return function (id, path) {
-        __greys_require(['require', 'exports', 'module'], function (require, exports, module) {
+        __greys_define(function (require, exports, module) {
             eval(__greys_requirejs.util.readTextFully(path));
-            var moduleModule = module.exports != exports ? module.exports : exports;
+            var moduleModule = (module.exports && module.exports != exports) ? module.exports : exports;
             if (module.id) {
                 __greys_requirejs.module_mapping[module.id] = moduleModule;
             }
