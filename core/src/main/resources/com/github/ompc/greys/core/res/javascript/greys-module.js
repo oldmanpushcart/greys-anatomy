@@ -5,7 +5,7 @@
 define('greys', function () {
 
     // 监听器集合
-    var listeners = [];
+    var _listeners = [];
 
     /**
      * 数组forEach遍历
@@ -21,11 +21,11 @@ define('greys', function () {
     return {
 
         watching: function (listener) {
-            listeners[listeners.length] = listener;
+            _listeners.push(listener);
         },
 
         create: function (output) {
-            arrayForEach(listeners, function(index, listener){
+            arrayForEach(_listeners, function(index, listener){
                 if(listener.create) {
                     listener.create(output);
                 }
@@ -33,7 +33,7 @@ define('greys', function () {
         },
 
         destroy: function (output) {
-            arrayForEach(listeners, function(index, listener){
+            arrayForEach(_listeners, function(index, listener){
                 if(listener.destroy) {
                     listener.destroy(output);
                 }
@@ -41,7 +41,7 @@ define('greys', function () {
         },
 
         before: function (output, advice, context) {
-            arrayForEach(listeners, function(index, listener){
+            arrayForEach(_listeners, function(index, listener){
                 if(listener.before) {
                     listener.before(output, advice, context);
                 }
@@ -49,7 +49,7 @@ define('greys', function () {
         },
 
         returning: function (output, advice, context) {
-            arrayForEach(listeners, function(index, listener){
+            arrayForEach(_listeners, function(index, listener){
                 if(listener.returning) {
                     listener.returning(output, advice, context);
                 }
@@ -57,7 +57,7 @@ define('greys', function () {
         },
 
         throwing: function (output, advice, context) {
-            arrayForEach(listeners, function(index, listener){
+            arrayForEach(_listeners, function(index, listener){
                 if(listener.throwing) {
                     listener.throwing(output, advice, context);
                 }

@@ -108,6 +108,26 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
     public Action getAction() {
 
 
+        /**
+         * ScriptEngine放在这里是有讲究的,毕竟ScriptEngine将会被多线程并发执行,JavaScript却是单线程的实现
+         * 所以一个ScriptEngine的厂商实现是否支持并发,非常关键,还好默认的Rhino和Nashorn都是"MULTITHREADED"级别的实现
+         * 在ScriptEngineFactory中有一个getParameter方法，通过传入”THREADING”字符串作为参数，可以获知引擎是否是线程安全的
+         *
+         * 线程安全级别说明
+         * 1. "null"
+         *    引擎实现不是线程安全的，并且无法用来在多个线程上并发执行脚本。
+         *
+         * 2. "MULTITHREADED"
+         *    引擎实现是内部线程安全的，并且脚本可以并发执行，尽管在某个线程上执行脚本的效果对于另一个线程上的脚本是可见的。
+         *
+         * 3. "THREAD-ISOLATED"
+         *    该实现满足 "MULTITHREADED" 的要求，并且引擎为不同线程上执行的脚本中的符号维护独立的值。
+         *
+         * 4. "STATELESS"
+         *    该实现满足 "THREAD-ISOLATED" 的要求。此外，脚本执行不改变 Bindings 中的映射关系，该 Bindings 是 ScriptEngine 的引擎范围。
+         *    具体来说，Bindings 及其关联值中的键在执行脚本之前和之后是相同的。
+         *
+         */
         final ScriptEngineManager mgr = new ScriptEngineManager();
         final ScriptEngine jsEngine = mgr.getEngineByMimeType("application/javascript");
 
