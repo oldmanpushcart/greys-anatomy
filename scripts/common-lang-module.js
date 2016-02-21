@@ -58,19 +58,16 @@ define('__common_lang_array', function () {
         iterator: function (array) {
 
             var _array = array;
-            var _pos = 0;
+            var _pos = -1;
 
             return {
 
                 hasNext: function () {
-                    return _pos + 1 < arrayLength(_array);
+                    return ++_pos < arrayLength(_array);
                 },
 
                 next: function () {
-                    if (!this.hasNext()) {
-                        throw 'no more elements!';
-                    }
-                    return _array[++_pos];
+                    return _array[_pos];
                 },
 
                 remove: function () {
@@ -91,7 +88,8 @@ define('__common_lang_array', function () {
         contains: function (array, target) {
             var it = new this.iterator(array);
             while (it.hasNext()) {
-                if (it.next() == target) {
+                var data = it.next();
+                if (data == target) {
                     return true;
                 }
             }
