@@ -20,45 +20,50 @@ define('greys', function () {
 
     return {
 
+        /**
+         * 添加监听器,凡是被js命令所拦截到的方法都会流入到注册的监听器中
+         * watching(listener)
+         * @param listener 监听器
+         */
         watching: function (listener) {
             _listeners.push(listener);
         },
 
         create: function (output) {
-            arrayForEach(_listeners, function(index, listener){
-                if(listener.create) {
+            arrayForEach(_listeners, function (index, listener) {
+                if (listener.create) {
                     listener.create(output);
                 }
             });
         },
 
         destroy: function (output) {
-            arrayForEach(_listeners, function(index, listener){
-                if(listener.destroy) {
+            arrayForEach(_listeners, function (index, listener) {
+                if (listener.destroy) {
                     listener.destroy(output);
                 }
             });
         },
 
         before: function (output, advice, context) {
-            arrayForEach(_listeners, function(index, listener){
-                if(listener.before) {
+            arrayForEach(_listeners, function (index, listener) {
+                if (listener.before) {
                     listener.before(output, advice, context);
                 }
             });
         },
 
         returning: function (output, advice, context) {
-            arrayForEach(_listeners, function(index, listener){
-                if(listener.returning) {
+            arrayForEach(_listeners, function (index, listener) {
+                if (listener.returning) {
                     listener.returning(output, advice, context);
                 }
             });
         },
 
         throwing: function (output, advice, context) {
-            arrayForEach(_listeners, function(index, listener){
-                if(listener.throwing) {
+            arrayForEach(_listeners, function (index, listener) {
+                if (listener.throwing) {
                     listener.throwing(output, advice, context);
                 }
             });
