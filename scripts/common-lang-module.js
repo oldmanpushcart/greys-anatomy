@@ -7,6 +7,7 @@
  * 数组操作通用模块
  */
 define('__common_lang_array', function () {
+
     function arrayLength(array) {
         return array ? array.length : 0;
     }
@@ -80,6 +81,22 @@ define('__common_lang_array', function () {
 
             }
         },
+
+        /**
+         * 判断数组中是否包含指定元素
+         * @param array  数组
+         * @param target 指定元素
+         * @returns {boolean}
+         */
+        contains: function (array, target) {
+            var it = new this.iterator(array);
+            while (it.hasNext()) {
+                if (it.next() == target) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
     }
 })
