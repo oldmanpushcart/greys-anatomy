@@ -96,6 +96,20 @@ define('__common_lang_array', function () {
                 }
             }
             return false;
+        },
+
+        /**
+         * 删除数据中指定元素
+         * @param array  数组
+         * @param target 指定元素
+         */
+        remove : function(array, target) {
+            var it = new this.iterator(array);
+            while (it.hasNext()) {
+                if (it.next() == target) {
+                    it.remove();
+                }
+            }
         }
 
     }
