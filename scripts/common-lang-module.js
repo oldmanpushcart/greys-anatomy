@@ -41,7 +41,7 @@ define('__common_lang_array', function () {
          * @returns {boolean}
          */
         isEmpty: function (array) {
-            return length(array) <= 0;
+            return arrayLength(array) <= 0;
         },
 
         isIn: function (array, element) {
