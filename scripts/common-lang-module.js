@@ -372,7 +372,7 @@ define('__common_lang_java', ['__common_lang_string', '__common_lang_array'], fu
     function reflectGetFieldValue(javaClass, javaObject, fieldName) {
         var field = javaClass.getDeclaredField(fieldName);
 
-        java.lang.System.out.println("field=" + field+";class="+javaClass+";object="+javaObject);
+        java.lang.System.out.println("field=" + field + ";class=" + javaClass + ";object=" + javaObject);
 
         var isAccessible = field.isAccessible();
         try {
