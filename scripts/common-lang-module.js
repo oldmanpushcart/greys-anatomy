@@ -101,7 +101,7 @@ define('__common_lang_array', function () {
          * @param array  数组
          * @param target 指定元素
          */
-        remove : function(array, target) {
+        remove: function (array, target) {
             var it = new this.iterator(array);
             while (it.hasNext()) {
                 if (it.next() == target) {
@@ -364,12 +364,13 @@ define('__common_lang_java', ['__common_lang_string', '__common_lang_array'], fu
 
     /**
      * 反射获取Java对象属性值
+     * @param javaClass  Java类
      * @param javaObject Java对象
      * @param fieldName  属性名称
      * @returns {*}
      */
-    function reflectGetFieldValue(javaObject, fieldName) {
-        var field = javaObject.getClass().getDeclaredField(fieldName);
+    function reflectGetFieldValue(javaClass, javaObject, fieldName) {
+        var field = javaClass.getDeclaredField(fieldName);
         var isAccessible = field.isAccessible();
         try {
             field.setAccessible(true);
@@ -381,12 +382,13 @@ define('__common_lang_java', ['__common_lang_string', '__common_lang_array'], fu
 
     /**
      * 反射判断Java对象是否拥有指定属性
+     * @param javaClass  Java类
      * @param javaObject Java对象
      * @param fieldName  属性名称
      * @returns {boolean}
      */
-    function reflectHasField(javaObject, fieldName) {
-        var it = array.iterator(javaObject.getClass().getDeclaredFields());
+    function reflectHasField(javaClass, javaObject, fieldName) {
+        var it = array.iterator(javaClass.getDeclaredFields());
         while (it.hasNext()) {
             var field = it.next();
             if (string.equals(field.getName(), fieldName)) {
