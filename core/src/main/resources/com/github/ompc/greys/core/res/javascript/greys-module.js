@@ -113,11 +113,8 @@ define('greys', function () {
                 }
             });
             arrayForEach(_regex_listeners, function (index, _regex_listener) {
-                if (_regex_listener.testClass.test(advice.clazz.name)
-                    && _regex_listener.testMethod.test(advice.method.name)) {
-                    if (_regex_listener.listener.before) {
-                        _regex_listener.listener.before(output, advice, context);
-                    }
+                if (_regex_listener.listener.before) {
+                    _regex_listener.listener.before(output, advice, context);
                 }
             });
         },
@@ -129,11 +126,8 @@ define('greys', function () {
                 }
             });
             arrayForEach(_regex_listeners, function (index, _regex_listener) {
-                if (_regex_listener.testClass.test(advice.clazz.name)
-                    && _regex_listener.testMethod.test(advice.method.name)) {
-                    if (_regex_listener.listener.returning) {
-                        _regex_listener.listener.returning(output, advice, context);
-                    }
+                if (_regex_listener.listener.returning) {
+                    _regex_listener.listener.returning(output, advice, context);
                 }
             });
         },
@@ -145,11 +139,8 @@ define('greys', function () {
                 }
             });
             arrayForEach(_regex_listeners, function (index, _regex_listener) {
-                if (_regex_listener.testClass.test(advice.clazz.name)
-                    && _regex_listener.testMethod.test(advice.method.name)) {
-                    if (_regex_listener.listener.throwing) {
-                        _regex_listener.listener.throwing(output, advice, context);
-                    }
+                if (_regex_listener.listener.throwing) {
+                    _regex_listener.listener.throwing(output, advice, context);
                 }
             });
         },
