@@ -36,13 +36,15 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 @Cmd(name = "js", sort = 6, summary = "Enhanced JavaScript",
         eg = {
                 "js *StringUtils isBlank /tmp/watch.js",
-                "js -c UTF-8 *StringUtils isBlank /tmp/watch.js"
+                "js -c UTF-8 *StringUtils isBlank /tmp/watch.js",
+                "js *Test print* https://raw.githubusercontent.com/oldmanpushcart/greys-javascript-lib/master/script/simple-logger.js",
+                "js https://raw.githubusercontent.com/oldmanpushcart/greys-javascript-lib/master/script/sql-monitor.js",
         })
 public class JavaScriptCommand implements ScriptSupportCommand, Command {
 
     private final Logger logger = LogUtil.getLogger();
 
-    @IndexArg(index = 0, name = "class-pattern/script-path", isRequired = false, summary = "Path and classname of Pattern Matching \n\tOR\nPath of javascript, support http/https")
+    @IndexArg(index = 0, name = "class-pattern\n\tOR\nscript-path", isRequired = false, summary = "Path and classname of Pattern Matching \n\tOR\nPath of javascript, support http/https")
     private String argument1;
 
     @IndexArg(index = 1, name = "method-pattern", isRequired = false, summary = "Method of Pattern Matching if class-pattern enable.")
@@ -128,8 +130,10 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
             scriptPath = argument3;
         }
 
-        // 没有命中组合方式
-        throw new IllegalArgumentException("class-pattern/method-pattern/script-path or script-path is require.");
+        else {
+            // 没有命中组合方式
+            throw new IllegalArgumentException("class-pattern/method-pattern/script-path or script-path is require.");
+        }
 
     }
 
