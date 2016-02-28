@@ -37,8 +37,8 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
         eg = {
                 "js *StringUtils isBlank /tmp/watch.js",
                 "js -c UTF-8 *StringUtils isBlank /tmp/watch.js",
-                "js *Test print* https://raw.githubusercontent.com/oldmanpushcart/greys-javascript-lib/master/script/simple-logger.js",
-                "js https://raw.githubusercontent.com/oldmanpushcart/greys-javascript-lib/master/script/sql-monitor.js",
+                "js *Test print* http://t.cn/RG03oNA",
+                "js http://t.cn/RG03oNw",
         })
 public class JavaScriptCommand implements ScriptSupportCommand, Command {
 
