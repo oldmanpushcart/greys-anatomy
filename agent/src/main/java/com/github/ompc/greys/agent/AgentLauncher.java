@@ -42,27 +42,7 @@ public class AgentLauncher {
 
         // 如果未启动则重新加载
         else {
-            classLoader = new URLClassLoader(new URL[]{new URL("file:" + agentJar)}) {
-
-                @Override
-                protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-                    final Class<?> loadedClass = findLoadedClass(name);
-                    if (loadedClass != null) {
-                        return loadedClass;
-                    }
-
-                    try {
-                        Class<?> aClass = findClass(name);
-                        if (resolve) {
-                            resolveClass(aClass);
-                        }
-                        return aClass;
-                    } catch (Exception e) {
-                        return super.loadClass(name, resolve);
-                    }
-                }
-
-            };
+            classLoader = new URLClassLoader(new URL[]{new URL("file:" + agentJar)}, ClassLoader.getSystemClassLoader().getParent());
 
             // 获取各种Hook
             final Class<?> adviceWeaverClass = classLoader.loadClass("com.github.ompc.greys.core.advisor.AdviceWeaver");
