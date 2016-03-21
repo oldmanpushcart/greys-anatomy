@@ -9,12 +9,11 @@ import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.GaStringUtils;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.PointCut;
-import com.github.ompc.greys.core.util.matcher.ClassMatcher;
-import com.github.ompc.greys.core.util.matcher.GaMethodMatcher;
-import com.github.ompc.greys.core.util.matcher.PatternMatcher;
+import com.github.ompc.greys.core.util.matcher.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -37,19 +36,25 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 @Cmd(name = "js", sort = 6, summary = "Enhanced JavaScript",
         eg = {
                 "js *StringUtils isBlank /tmp/watch.js",
-                "js -c UTF-8 *StringUtils isBlank /tmp/watch.js"
+                "js -c UTF-8 *StringUtils isBlank /tmp/watch.js",
+                "js *Test print* http://t.cn/RG03oNA",
+                "js http://t.cn/RG03oNw",
         })
 public class JavaScriptCommand implements ScriptSupportCommand, Command {
 
     private final Logger logger = LogUtil.getLogger();
 
-    @IndexArg(index = 0, name = "class-pattern", summary = "Path and classname of Pattern Matching")
+    @IndexArg(index = 0, name = "class-pattern\n\tOR\nscript-path", isRequired = false, summary = "Path and classname of Pattern Matching \n\tOR\nPath of javascript, support http/https")
+    private String argument1;
+
+    @IndexArg(index = 1, name = "method-pattern", isRequired = false, summary = "Method of Pattern Matching if class-pattern enable.")
+    private String argument2;
+
+    @IndexArg(index = 2, name = "script-path", isRequired = false, summary = "Path of javascript, support http/https if class-pattern enable.")
+    private String argument3;
+
     private String classPattern;
-
-    @IndexArg(index = 1, name = "method-pattern", summary = "Method of Pattern Matching")
     private String methodPattern;
-
-    @IndexArg(index = 2, name = "script-path", summary = "Path of javascript, support file:// or http://")
     private String scriptPath;
 
     @NamedArg(name = "c", hasValue = true, summary = "The character of script-path")
@@ -104,9 +109,38 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
         invocable.invokeFunction("__greys_load", path, charset.name());
     }
 
+    /**
+     * 修正参数
+     */
+    private void fixArguments() {
+
+        // js script-path
+        if (StringUtils.isNotBlank(argument1)
+                && StringUtils.isBlank(argument2)
+                && StringUtils.isBlank(argument3)) {
+            scriptPath = argument1;
+        }
+
+        // js class-pattern method-pattern script-path
+        else if (StringUtils.isNotBlank(argument1)
+                && StringUtils.isNotBlank(argument2)
+                && StringUtils.isNotBlank(argument3)) {
+            classPattern = argument1;
+            methodPattern = argument2;
+            scriptPath = argument3;
+        }
+
+        else {
+            // 没有命中组合方式
+            throw new IllegalArgumentException("class-pattern/method-pattern/script-path or script-path is require.");
+        }
+
+    }
+
     @Override
     public Action getAction() {
 
+        fixArguments();
 
         /**
          * ScriptEngine放在这里是有讲究的,毕竟ScriptEngine将会被多线程并发执行,JavaScript却是单线程的实现
@@ -193,10 +227,45 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
 
                     @Override
                     public PointCut getPointCut() {
-                        return new PointCut(
-                                new ClassMatcher(new PatternMatcher(isRegEx, classPattern)),
-                                new GaMethodMatcher(new PatternMatcher(isRegEx, methodPattern))
-                        );
+
+                        final GroupMatcher<Class<?>> orClassMatcher = new GroupMatcher.Or<Class<?>>();
+                        final GroupMatcher<GaMethod> orMethodMatcher = new GroupMatcher.Or<GaMethod>();
+
+                        if (StringUtils.isNotBlank(classPattern)) {
+                            orClassMatcher.add(new ClassMatcher(new PatternMatcher(isRegEx, classPattern)));
+                        }
+
+                        if (StringUtils.isNotBlank(methodPattern)) {
+                            orMethodMatcher.add(new GaMethodMatcher(new PatternMatcher(isRegEx, methodPattern)));
+                        }
+
+                        orClassMatcher.add(new Matcher<Class<?>>() {
+
+                            @Override
+                            public boolean matching(Class<?> target) {
+                                try {
+                                    return (Boolean) invocable.invokeFunction("__greys_module_test_java_class_name", target.getName());
+                                } catch (Throwable t) {
+                                    logger.warn("invoke function 'test_java_class_name' failed.", t);
+                                    return false;
+                                }
+                            }
+
+                        });
+
+                        orMethodMatcher.add(new Matcher<GaMethod>() {
+                            @Override
+                            public boolean matching(GaMethod target) {
+                                try {
+                                    return (Boolean) invocable.invokeFunction("__greys_module_test_java_method_name", target.getName());
+                                } catch (Throwable t) {
+                                    logger.warn("invoke function 'test_java_method_name' failed.", t);
+                                    return false;
+                                }
+                            }
+                        });
+
+                        return new PointCut(orClassMatcher, orMethodMatcher);
                     }
 
                     @Override
@@ -218,11 +287,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             public void create() {
                                 try {
                                     invocable.invokeFunction("__greys_module_create", output);
-                                } catch (ScriptException e) {
+                                } catch (Throwable e) {
                                     output.println("invoke function 'create' failed. because : " + getCauseMessage(e));
                                     logger.warn("invoke function 'create' failed.", e);
-                                } catch (NoSuchMethodException e) {
-                                    //
                                 }
                             }
 
@@ -230,11 +297,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             public void destroy() {
                                 try {
                                     invocable.invokeFunction("__greys_module_destroy", output);
-                                } catch (ScriptException e) {
+                                } catch (Throwable e) {
                                     output.println("invoke function 'destroy' failed. because : " + getCauseMessage(e));
                                     logger.warn("invoke function 'destroy' failed.", e);
-                                } catch (NoSuchMethodException e) {
-                                    //
                                 }
                             }
 
@@ -242,11 +307,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             public void before(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
                                 try {
                                     invocable.invokeFunction("__greys_module_before", output, advice, innerContext);
-                                } catch (ScriptException e) {
+                                } catch (Throwable e) {
                                     output.println("invoke function 'before' failed. because : " + getCauseMessage(e));
                                     logger.warn("invoke function 'before' failed.", e);
-                                } catch (NoSuchMethodException e) {
-                                    //
                                 }
                             }
 
@@ -254,11 +317,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             public void afterReturning(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
                                 try {
                                     invocable.invokeFunction("__greys_module_returning", output, advice, innerContext);
-                                } catch (ScriptException e) {
+                                } catch (Throwable e) {
                                     output.println("invoke function 'returning' failed. because : " + getCauseMessage(e));
                                     logger.warn("invoke function 'returning' failed.", e);
-                                } catch (NoSuchMethodException e) {
-                                    //
                                 }
                             }
 
@@ -266,11 +327,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             public void afterThrowing(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
                                 try {
                                     invocable.invokeFunction("__greys_module_throwing", output, advice, innerContext);
-                                } catch (ScriptException e) {
+                                } catch (Throwable e) {
                                     output.println("invoke function 'throwing' failed. because : " + getCauseMessage(e));
                                     logger.warn("invoke function 'throwing' failed.", e);
-                                } catch (NoSuchMethodException e) {
-                                    //
                                 }
                             }
 

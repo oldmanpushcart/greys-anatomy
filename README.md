@@ -30,7 +30,7 @@
 
 ## 最新版本
 
-### **VERSION :** 1.7.5.0
+### **VERSION :** 1.7.5.2
 
 - 增加`gs.sh`和`ga.sh`两个脚本
 - 增加`js`命令,[支持javascript脚本](https://github.com/oldmanpushcart/greys-anatomy/wiki/JavaScriptSupport)
