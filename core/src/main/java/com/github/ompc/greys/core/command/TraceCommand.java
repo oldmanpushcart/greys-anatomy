@@ -117,7 +117,7 @@ public class TraceCommand implements Command {
                                     String tracingMethodDesc,
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
-                                finishTracing(innerContext);
+                                finishTracing(innerContext, false);
                             }
 
                             @Override
@@ -127,11 +127,14 @@ public class TraceCommand implements Command {
                                     String tracingMethodDesc,
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
-                                finishTracing(innerContext);
+                                finishTracing(innerContext, true);
                             }
 
-                            private void finishTracing(TraceInnerContext innerContext) {
+                            private void finishTracing(TraceInnerContext innerContext, boolean isThrow) {
                                 final Entity entity = innerContext.entity;
+                                if(isThrow) {
+                                    entity.tTree.set(entity.tTree.get()+"[throw exception]");
+                                }
                                 entity.tTree.end();
                             }
 

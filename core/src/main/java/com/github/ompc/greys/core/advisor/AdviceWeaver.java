@@ -16,6 +16,8 @@ import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.commons.Method;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -75,6 +77,61 @@ class AsmMethodMatcher implements Matcher<AsmMethod> {
         return StringUtils.equals(gaMethod.getName(), target.getName())
                 && StringUtils.equals(gaMethod.getDesc(), target.getDesc());
     }
+
+}
+
+
+/**
+ * TryCatch块,用于ExceptionsTable重排序
+ */
+class AsmTryCatchBlock /*implements Comparable<AsmTryCatchBlock>*/ {
+
+    protected final Label start;
+    protected final Label end;
+    protected final Label handler;
+    protected final String type;
+
+    AsmTryCatchBlock(Label start, Label end, Label handler, String type) {
+        this.start = start;
+        this.end = end;
+        this.handler = handler;
+        this.type = type;
+    }
+
+//    /**
+//     * 判断指定的tcb是否在当前tcb的处理范围内<br/>
+//     * 即:当前tcb作用域要比指定tcb作用域小
+//     *
+//     * @param tryCatchBlock 指定tcb
+//     * @return true:在范围内;false:其他情况
+//     */
+//    private boolean isIn(AsmTryCatchBlock tryCatchBlock) {
+//        return tryCatchBlock.start.getOffset() <= start.getOffset()
+//                && tryCatchBlock.end.getOffset() >= end.getOffset();
+//    }
+//
+//    /**
+//     * 判断指定的tcb是否包含了当前tcb的处理范围<br/>
+//     * 即:当前tcb作用域要比指定tcb作用域大
+//     *
+//     * @param tryCatchBlock 指定tcb
+//     * @return true:包含;false:其他情况
+//     */
+//    private boolean isContain(AsmTryCatchBlock tryCatchBlock) {
+//        return tryCatchBlock.start.getOffset() >= start.getOffset()
+//                && tryCatchBlock.end.getOffset() <= end.getOffset();
+//    }
+//
+//    //@Override
+//    public int compareTo(AsmTryCatchBlock tryCatchBlock) {
+//        if (isIn(tryCatchBlock)) {
+//            return -1;
+//        } else if (isContain(tryCatchBlock)) {
+//            return 1;
+//        } else {
+//            return 0;
+//        }
+//    }
 
 }
 
@@ -729,7 +786,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             public void visitMaxs(int maxStack, int maxLocals) {
 
                 mark(endLabel);
-                catchException(beginLabel, endLabel, ASM_TYPE_THROWABLE);
+                visitTryCatchBlock(beginLabel, endLabel,mark(), ASM_TYPE_THROWABLE.getInternalName());
+                // catchException(beginLabel, endLabel, ASM_TYPE_THROWABLE);
 
                 codeLockForTracing.lock(new CodeLock.Block() {
                     @Override
@@ -908,7 +966,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                     public void code() {
 
                         final StringBuilder append = new StringBuilder();
-                        _debug(append, "debug:"+label+"()");
+                        _debug(append, "debug:" + label + "()");
 
                         loadAdviceMethod(tracingType);
                         _debug(append, "loadAdviceMethod()");
@@ -970,6 +1028,20 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
             }
 
+            private final Collection<AsmTryCatchBlock> asmTryCatchBlocks = new ArrayList<AsmTryCatchBlock>();
+
+            @Override
+            public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
+                asmTryCatchBlocks.add(new AsmTryCatchBlock(start, end, handler, type));
+            }
+
+            @Override
+            public void visitEnd() {
+                for (AsmTryCatchBlock tcb : asmTryCatchBlocks) {
+                    super.visitTryCatchBlock(tcb.start, tcb.end, tcb.handler, tcb.type);
+                }
+                super.visitEnd();
+            }
         };
 
     }
