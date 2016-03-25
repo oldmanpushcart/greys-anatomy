@@ -26,12 +26,14 @@ public interface InvokeTraceable {
      * @param tracingClassName  调用类名
      * @param tracingMethodName 调用方法名
      * @param tracingMethodDesc 调用方法描述
+     * @param throwException    抛出异常信息
      * @throws Throwable 通知过程出错
      */
     void invokeThrowTracing(
             String tracingClassName,
             String tracingMethodName,
-            String tracingMethodDesc) throws Throwable;
+            String tracingMethodDesc,
+            String throwException) throws Throwable;
 
     /**
      * 调用之后跟踪

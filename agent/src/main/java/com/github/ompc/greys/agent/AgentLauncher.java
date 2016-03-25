@@ -96,6 +96,7 @@ public class AgentLauncher {
                             int.class,
                             String.class,
                             String.class,
+                            String.class,
                             String.class),
                     AgentLauncher.class.getMethod("resetGreysClassLoader")
             );

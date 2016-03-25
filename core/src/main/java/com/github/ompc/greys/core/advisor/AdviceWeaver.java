@@ -45,25 +45,23 @@ class TracingAsmCodeLock extends AsmCodeLock {
     }
 }
 
+/**
+ * Method在Asm内部的封装,用于封装Asm方法
+ */
 class AsmMethod {
 
-    private final String name;
-    private final String desc;
+    protected final String name;
+    protected final String desc;
 
     AsmMethod(String name, String desc) {
         this.name = name;
         this.desc = desc;
     }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDesc() {
-        return desc;
-    }
 }
 
+/**
+ * Method匹配器,用于封装Asm方法的匹配
+ */
 class AsmMethodMatcher implements Matcher<AsmMethod> {
 
     private final GaMethod gaMethod;
@@ -74,8 +72,8 @@ class AsmMethodMatcher implements Matcher<AsmMethod> {
 
     @Override
     public boolean matching(AsmMethod target) {
-        return StringUtils.equals(gaMethod.getName(), target.getName())
-                && StringUtils.equals(gaMethod.getDesc(), target.getDesc());
+        return StringUtils.equals(gaMethod.getName(), target.name)
+                && StringUtils.equals(gaMethod.getDesc(), target.desc);
     }
 
 }
@@ -84,7 +82,7 @@ class AsmMethodMatcher implements Matcher<AsmMethod> {
 /**
  * TryCatch块,用于ExceptionsTable重排序
  */
-class AsmTryCatchBlock /*implements Comparable<AsmTryCatchBlock>*/ {
+class AsmTryCatchBlock {
 
     protected final Label start;
     protected final Label end;
@@ -97,41 +95,6 @@ class AsmTryCatchBlock /*implements Comparable<AsmTryCatchBlock>*/ {
         this.handler = handler;
         this.type = type;
     }
-
-//    /**
-//     * 判断指定的tcb是否在当前tcb的处理范围内<br/>
-//     * 即:当前tcb作用域要比指定tcb作用域小
-//     *
-//     * @param tryCatchBlock 指定tcb
-//     * @return true:在范围内;false:其他情况
-//     */
-//    private boolean isIn(AsmTryCatchBlock tryCatchBlock) {
-//        return tryCatchBlock.start.getOffset() <= start.getOffset()
-//                && tryCatchBlock.end.getOffset() >= end.getOffset();
-//    }
-//
-//    /**
-//     * 判断指定的tcb是否包含了当前tcb的处理范围<br/>
-//     * 即:当前tcb作用域要比指定tcb作用域大
-//     *
-//     * @param tryCatchBlock 指定tcb
-//     * @return true:包含;false:其他情况
-//     */
-//    private boolean isContain(AsmTryCatchBlock tryCatchBlock) {
-//        return tryCatchBlock.start.getOffset() >= start.getOffset()
-//                && tryCatchBlock.end.getOffset() <= end.getOffset();
-//    }
-//
-//    //@Override
-//    public int compareTo(AsmTryCatchBlock tryCatchBlock) {
-//        if (isIn(tryCatchBlock)) {
-//            return -1;
-//        } else if (isContain(tryCatchBlock)) {
-//            return 1;
-//        } else {
-//            return 0;
-//        }
-//    }
 
 }
 
@@ -322,16 +285,17 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     /**
      * 方法内部调用结束(异常返回)
      *
-     * @param adviceId 通知ID
-     * @param owner    调用类名
-     * @param name     调用方法名
-     * @param desc     调用方法描述
+     * @param adviceId       通知ID
+     * @param owner          调用类名
+     * @param name           调用方法名
+     * @param desc           调用方法描述
+     * @param throwException 抛出的异常
      */
-    public static void methodOnInvokeThrowTracing(int adviceId, String owner, String name, String desc) {
+    public static void methodOnInvokeThrowTracing(int adviceId, String owner, String name, String desc, String throwException) {
         final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
-                listener.invokeThrowTracing(owner, name, desc);
+                listener.invokeThrowTracing(owner, name, desc, throwException);
             } catch (Throwable t) {
                 logger.warn("advice throw tracing failed.", t);
             }
@@ -786,7 +750,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             public void visitMaxs(int maxStack, int maxLocals) {
 
                 mark(endLabel);
-                visitTryCatchBlock(beginLabel, endLabel,mark(), ASM_TYPE_THROWABLE.getInternalName());
+                visitTryCatchBlock(beginLabel, endLabel, mark(), ASM_TYPE_THROWABLE.getInternalName());
                 // catchException(beginLabel, endLabel, ASM_TYPE_THROWABLE);
 
                 codeLockForTracing.lock(new CodeLock.Block() {
@@ -901,7 +865,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
 
             /**
-             * 加载方法调用跟踪通知所需参数数组
+             * 加载方法调用跟踪通知所需参数数组(for before/after)
              */
             private void loadArrayForInvokeTracing(String owner, String name, String desc) {
                 push(4);
@@ -928,6 +892,49 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 push(desc);
                 arrayStore(ASM_TYPE_STRING);
             }
+
+            /**
+             * 加载方法调用跟踪通知所需参数数组(for throw)
+             */
+            private void loadArrayForInvokeThrowTracing(String owner, String name, String desc) {
+                push(5);
+                newArray(ASM_TYPE_OBJECT);
+
+                dup();
+                push(0);
+                push(adviceId);
+                box(ASM_TYPE_INT);
+                arrayStore(ASM_TYPE_INTEGER);
+
+                dup();
+                push(1);
+                push(owner);
+                arrayStore(ASM_TYPE_STRING);
+
+                dup();
+                push(2);
+                push(name);
+                arrayStore(ASM_TYPE_STRING);
+
+                dup();
+                push(3);
+                push(desc);
+                arrayStore(ASM_TYPE_STRING);
+
+                dup2(); // e,a,e,a
+                swap(); // e,a,a,e
+                invokeVirtual(ASM_TYPE_OBJECT, Method.getMethod("Class getClass()"));
+                invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("String getName()"));
+
+                // e,a,a,s
+                push(4); // e,a,a,s,4
+                swap();  // e,a,a,4,s
+                arrayStore(ASM_TYPE_STRING);
+
+                // e,a
+            }
+
+
 
 
             @Override
@@ -968,12 +975,20 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                         final StringBuilder append = new StringBuilder();
                         _debug(append, "debug:" + label + "()");
 
+                        if(tracingType == KEY_GREYS_ADVICE_THROW_INVOKING_METHOD) {
+                            loadArrayForInvokeThrowTracing(owner, name, desc);
+                        } else {
+                            loadArrayForInvokeTracing(owner, name, desc);
+                        }
+                        _debug(append, "loadArrayForInvokeTracing()");
+
                         loadAdviceMethod(tracingType);
+                        swap();
                         _debug(append, "loadAdviceMethod()");
 
                         pushNull();
-                        loadArrayForInvokeTracing(owner, name, desc);
-                        _debug(append, "loadArrayForInvokeTracing()");
+                        swap();
+
 
                         invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
                         pop();
@@ -1028,6 +1043,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
             }
 
+            // 用于try-catch的冲排序,目的是让tracing的try...catch能在exceptions tables排在前边
             private final Collection<AsmTryCatchBlock> asmTryCatchBlocks = new ArrayList<AsmTryCatchBlock>();
 
             @Override
