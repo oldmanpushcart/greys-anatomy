@@ -10,12 +10,14 @@ public interface InvokeTraceable {
     /**
      * 调用之前跟踪
      *
+     * @param tracingLineNumber 跟踪行号
      * @param tracingClassName  调用类名
      * @param tracingMethodName 调用方法名
      * @param tracingMethodDesc 调用方法描述
      * @throws Throwable 通知过程出错
      */
     void invokeBeforeTracing(
+            Integer tracingLineNumber,
             String tracingClassName,
             String tracingMethodName,
             String tracingMethodDesc) throws Throwable;
@@ -23,6 +25,7 @@ public interface InvokeTraceable {
     /**
      * 抛异常后跟踪
      *
+     * @param tracingLineNumber 跟踪行号
      * @param tracingClassName  调用类名
      * @param tracingMethodName 调用方法名
      * @param tracingMethodDesc 调用方法描述
@@ -30,6 +33,7 @@ public interface InvokeTraceable {
      * @throws Throwable 通知过程出错
      */
     void invokeThrowTracing(
+            Integer tracingLineNumber,
             String tracingClassName,
             String tracingMethodName,
             String tracingMethodDesc,
@@ -38,12 +42,14 @@ public interface InvokeTraceable {
     /**
      * 调用之后跟踪
      *
+     * @param tracingLineNumber 跟踪行号
      * @param tracingClassName  调用类名
      * @param tracingMethodName 调用方法名
      * @param tracingMethodDesc 调用方法描述
      * @throws Throwable 通知过程出错
      */
     void invokeAfterTracing(
+            Integer tracingLineNumber,
             String tracingClassName,
             String tracingMethodName,
             String tracingMethodDesc) throws Throwable;

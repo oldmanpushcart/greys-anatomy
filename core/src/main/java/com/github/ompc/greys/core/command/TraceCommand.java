@@ -101,17 +101,24 @@ public class TraceCommand implements Command {
 
                             @Override
                             public void invokeBeforeTracing(
+                                    Integer tracingLineNumber,
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc,
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
                                 final Entity entity = innerContext.entity;
-                                entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                if (null == tracingLineNumber) {
+                                    entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                } else {
+                                    entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "(@" + tracingLineNumber + ")");
+                                }
+
                             }
 
                             @Override
                             public void invokeAfterTracing(
+                                    Integer tracingLineNumber,
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc,
@@ -122,6 +129,7 @@ public class TraceCommand implements Command {
 
                             @Override
                             public void invokeThrowTracing(
+                                    Integer tracingLineNumber,
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc,

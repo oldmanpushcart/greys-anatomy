@@ -247,16 +247,17 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     /**
      * 方法内部调用开始
      *
-     * @param adviceId 通知ID
-     * @param owner    调用类名
-     * @param name     调用方法名
-     * @param desc     调用方法描述
+     * @param adviceId   通知ID
+     * @param lineNumber 代码行号
+     * @param owner      调用类名
+     * @param name       调用方法名
+     * @param desc       调用方法描述
      */
-    public static void methodOnInvokeBeforeTracing(int adviceId, String owner, String name, String desc) {
+    public static void methodOnInvokeBeforeTracing(int adviceId, Integer lineNumber, String owner, String name, String desc) {
         final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
-                listener.invokeBeforeTracing(owner, name, desc);
+                listener.invokeBeforeTracing(lineNumber, owner, name, desc);
             } catch (Throwable t) {
                 logger.warn("advice before tracing failed.", t);
             }
@@ -266,16 +267,17 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     /**
      * 方法内部调用结束(正常返回)
      *
-     * @param adviceId 通知ID
-     * @param owner    调用类名
-     * @param name     调用方法名
-     * @param desc     调用方法描述
+     * @param adviceId   通知ID
+     * @param lineNumber 代码行号
+     * @param owner      调用类名
+     * @param name       调用方法名
+     * @param desc       调用方法描述
      */
-    public static void methodOnInvokeAfterTracing(int adviceId, String owner, String name, String desc) {
+    public static void methodOnInvokeAfterTracing(int adviceId, Integer lineNumber, String owner, String name, String desc) {
         final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
-                listener.invokeAfterTracing(owner, name, desc);
+                listener.invokeAfterTracing(lineNumber, owner, name, desc);
             } catch (Throwable t) {
                 logger.warn("advice after tracing failed.", t);
             }
@@ -286,16 +288,17 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * 方法内部调用结束(异常返回)
      *
      * @param adviceId       通知ID
+     * @param lineNumber     代码行号
      * @param owner          调用类名
      * @param name           调用方法名
      * @param desc           调用方法描述
      * @param throwException 抛出的异常
      */
-    public static void methodOnInvokeThrowTracing(int adviceId, String owner, String name, String desc, String throwException) {
+    public static void methodOnInvokeThrowTracing(int adviceId, Integer lineNumber, String owner, String name, String desc, String throwException) {
         final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
-                listener.invokeThrowTracing(owner, name, desc, throwException);
+                listener.invokeThrowTracing(lineNumber, owner, name, desc, throwException);
             } catch (Throwable t) {
                 logger.warn("advice throw tracing failed.", t);
             }
@@ -512,25 +515,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
             }
-
-//            private void _debug_dup(final String msg) {
-//
-//                if (!isDebugForAsm) {
-//                    return;
-//                }
-//
-//                // print prefix
-//                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-//                visitLdcInsn(msg);
-//                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V", false);
-//
-//                // println msg
-//                dup();
-//                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-//                swap();
-//                visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
-//                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
-//            }
 
             /**
              * 加载通知方法
@@ -867,36 +851,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             /**
              * 加载方法调用跟踪通知所需参数数组(for before/after)
              */
-            private void loadArrayForInvokeTracing(String owner, String name, String desc) {
-                push(4);
-                newArray(ASM_TYPE_OBJECT);
-
-                dup();
-                push(0);
-                push(adviceId);
-                box(ASM_TYPE_INT);
-                arrayStore(ASM_TYPE_INTEGER);
-
-                dup();
-                push(1);
-                push(owner);
-                arrayStore(ASM_TYPE_STRING);
-
-                dup();
-                push(2);
-                push(name);
-                arrayStore(ASM_TYPE_STRING);
-
-                dup();
-                push(3);
-                push(desc);
-                arrayStore(ASM_TYPE_STRING);
-            }
-
-            /**
-             * 加载方法调用跟踪通知所需参数数组(for throw)
-             */
-            private void loadArrayForInvokeThrowTracing(String owner, String name, String desc) {
+            private void loadArrayForInvokeBeforeOrAfterTracing(String owner, String name, String desc) {
                 push(5);
                 newArray(ASM_TYPE_OBJECT);
 
@@ -906,18 +861,64 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 box(ASM_TYPE_INT);
                 arrayStore(ASM_TYPE_INTEGER);
 
+                if( null != currentLineNumber ) {
+                    dup();
+                    push(1);
+                    push(currentLineNumber);
+                    box(ASM_TYPE_INT);
+                    arrayStore(ASM_TYPE_INTEGER);
+                }
+
                 dup();
-                push(1);
+                push(2);
                 push(owner);
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
-                push(2);
+                push(3);
                 push(name);
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
+                push(4);
+                push(desc);
+                arrayStore(ASM_TYPE_STRING);
+            }
+
+            /**
+             * 加载方法调用跟踪通知所需参数数组(for throw)
+             */
+            private void loadArrayForInvokeThrowTracing(String owner, String name, String desc) {
+                push(6);
+                newArray(ASM_TYPE_OBJECT);
+
+                dup();
+                push(0);
+                push(adviceId);
+                box(ASM_TYPE_INT);
+                arrayStore(ASM_TYPE_INTEGER);
+
+
+                if( null != currentLineNumber ) {
+                    dup();
+                    push(1);
+                    push(currentLineNumber);
+                    box(ASM_TYPE_INT);
+                    arrayStore(ASM_TYPE_INTEGER);
+                }
+
+                dup();
+                push(2);
+                push(owner);
+                arrayStore(ASM_TYPE_STRING);
+
+                dup();
                 push(3);
+                push(name);
+                arrayStore(ASM_TYPE_STRING);
+
+                dup();
+                push(4);
                 push(desc);
                 arrayStore(ASM_TYPE_STRING);
 
@@ -927,14 +928,12 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("String getName()"));
 
                 // e,a,a,s
-                push(4); // e,a,a,s,4
+                push(5); // e,a,a,s,4
                 swap();  // e,a,a,4,s
                 arrayStore(ASM_TYPE_STRING);
 
                 // e,a
             }
-
-
 
 
             @Override
@@ -975,10 +974,10 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                         final StringBuilder append = new StringBuilder();
                         _debug(append, "debug:" + label + "()");
 
-                        if(tracingType == KEY_GREYS_ADVICE_THROW_INVOKING_METHOD) {
+                        if (tracingType == KEY_GREYS_ADVICE_THROW_INVOKING_METHOD) {
                             loadArrayForInvokeThrowTracing(owner, name, desc);
                         } else {
-                            loadArrayForInvokeTracing(owner, name, desc);
+                            loadArrayForInvokeBeforeOrAfterTracing(owner, name, desc);
                         }
                         _debug(append, "loadArrayForInvokeTracing()");
 
@@ -989,7 +988,6 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                         pushNull();
                         swap();
 
-
                         invokeVirtual(ASM_TYPE_METHOD, ASM_METHOD_METHOD_INVOKE);
                         pop();
                         _debug(append, "invokeVirtual()");
@@ -997,6 +995,14 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                     }
                 });
 
+            }
+
+            private Integer currentLineNumber;
+
+            @Override
+            public void visitLineNumber(int line, Label start) {
+                super.visitLineNumber(line, start);
+                currentLineNumber = line;
             }
 
             @Override
