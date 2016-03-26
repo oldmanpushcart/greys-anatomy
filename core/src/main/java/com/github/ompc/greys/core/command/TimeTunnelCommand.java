@@ -89,7 +89,8 @@ public class TimeTunnelCommand implements Command {
                     "       returnObj : the returned object of method\n" +
                     "        throwExp : the throw exception of method\n" +
                     "        isReturn : the method ended by return\n" +
-                    "         isThrow : the method ended by throwing exception"
+                    "         isThrow : the method ended by throwing exception\n"+
+                    "           #cost : the cost(ms) of method"
     )
     private String conditionExpress;
 
@@ -158,9 +159,9 @@ public class TimeTunnelCommand implements Command {
                     "        throwExp : the throw exception of method\n" +
                     "        isReturn : the method ended by return\n" +
                     "         isThrow : the method ended by throwing exception\n" +
-                    "           index : the index of time-fragment record\n" +
-                    "       processId : the process ID of time-fragment record\n" +
-                    "            cost : the cost time of time-fragment record"
+                    "          #index : the index of time-fragment record\n" +
+                    "      #processId : the process ID of time-fragment record\n" +
+                    "           #cost : the cost time of time-fragment record"
     )
     private String searchExpress = EMPTY;
 
@@ -249,10 +250,10 @@ public class TimeTunnelCommand implements Command {
                                         && currentTimes >= threshold;
                             }
 
-                            private boolean isInCondition(final Advice advice) {
+                            private boolean isInCondition(final Advice advice, final InnerContext innerContext) {
                                 try {
                                     return isBlank(conditionExpress)
-                                            || newExpress(advice).is(conditionExpress);
+                                            || newExpress(advice).bind("cost", innerContext.getCost()).is(conditionExpress);
                                 } catch (ExpressException e) {
                                     return false;
                                 }
@@ -261,7 +262,7 @@ public class TimeTunnelCommand implements Command {
                             @Override
                             public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) {
 
-                                if (!isInCondition(advice)) {
+                                if (!isInCondition(advice, innerContext)) {
                                     return;
                                 }
 
