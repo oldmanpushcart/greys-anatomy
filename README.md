@@ -30,8 +30,10 @@
 
 ## 最新版本
 
-### **VERSION :** 1.7.5.2
+### **VERSION :** 1.7.5.3
 
+- 修复trace命令在遇到方法完全try...catch异常时堆栈错误的情况
+- 修复tt命令搜索非`Advice`对象提供方法时无法正确找到直接变量(如`cost`,`index`等)的BUG.用`#cost`,`#index`代替
 - 增加`gs.sh`和`ga.sh`两个脚本
 - 增加`js`命令,[支持javascript脚本](https://github.com/oldmanpushcart/greys-anatomy/wiki/JavaScriptSupport)
 - `js`命令支持CommonJS规范(BMD规范实现)
