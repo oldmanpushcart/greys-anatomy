@@ -22,7 +22,7 @@ public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessCont
     };
 
     @Override
-    final public void invokeBeforeTracing(String tracingClassName, String tracingMethodName, String tracingMethodDesc) throws Throwable {
+    final public void invokeBeforeTracing(Integer tracingLineNumber, String tracingClassName, String tracingMethodName, String tracingMethodDesc) throws Throwable {
 
         final ProcessContextBound bound = processContextBoundRef.get();
         final PC processContext = bound.processContext;
@@ -36,7 +36,7 @@ public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessCont
         }
 
         final IC innerContext = innerContextGaStack.peek();
-        invokeBeforeTracing(tracingClassName, tracingMethodName, tracingMethodDesc, processContext, innerContext);
+        invokeBeforeTracing(tracingLineNumber, tracingClassName, tracingMethodName, tracingMethodDesc, processContext, innerContext);
     }
 
 
@@ -52,7 +52,7 @@ public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessCont
     }
 
     @Override
-    final public void invokeThrowTracing(String tracingClassName, String tracingMethodName, String tracingMethodDesc) throws Throwable {
+    final public void invokeThrowTracing(Integer tracingLineNumber, String tracingClassName, String tracingMethodName, String tracingMethodDesc, String throwException) throws Throwable {
 
         if(skipSuperInit()) {
             return;
@@ -62,11 +62,11 @@ public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessCont
         final PC processContext = bound.processContext;
         final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
         final IC innerContext = innerContextGaStack.peek();
-        invokeThrowTracing(tracingClassName, tracingMethodName, tracingMethodDesc, processContext, innerContext);
+        invokeThrowTracing(tracingLineNumber, tracingClassName, tracingMethodName, tracingMethodDesc, throwException, processContext, innerContext);
     }
 
     @Override
-    final public void invokeAfterTracing(String tracingClassName, String tracingMethodName, String tracingMethodDesc) throws Throwable {
+    final public void invokeAfterTracing(Integer tracingLineNumber, String tracingClassName, String tracingMethodName, String tracingMethodDesc) throws Throwable {
 
         if(skipSuperInit()) {
             return;
@@ -76,23 +76,23 @@ public abstract class ReflectAdviceTracingListenerAdapter<PC extends ProcessCont
         final PC processContext = bound.processContext;
         final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
         final IC innerContext = innerContextGaStack.peek();
-        invokeAfterTracing(tracingClassName, tracingMethodName, tracingMethodDesc, processContext, innerContext);
+        invokeAfterTracing(tracingLineNumber, tracingClassName, tracingMethodName, tracingMethodDesc, processContext, innerContext);
     }
 
     public void invokeBeforeTracing(
-            String tracingClassName, String tracingMethodName, String tracingMethodDesc,
+            Integer tracingLineNumber, String tracingClassName, String tracingMethodName, String tracingMethodDesc,
             PC processContext, IC innerContext) throws Throwable {
 
     }
 
     public void invokeAfterTracing(
-            String tracingClassName, String tracingMethodName, String tracingMethodDesc,
+            Integer tracingLineNumber, String tracingClassName, String tracingMethodName, String tracingMethodDesc,
             PC processContext, IC innerContext) throws Throwable {
 
     }
 
     public void invokeThrowTracing(
-            String tracingClassName, String tracingMethodName, String tracingMethodDesc,
+            Integer tracingLineNumber, String tracingClassName, String tracingMethodName, String tracingMethodDesc, String throwException,
             PC processContext, IC innerContext) throws Throwable {
 
     }

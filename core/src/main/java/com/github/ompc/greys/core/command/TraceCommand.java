@@ -101,37 +101,43 @@ public class TraceCommand implements Command {
 
                             @Override
                             public void invokeBeforeTracing(
+                                    Integer tracingLineNumber,
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc,
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
                                 final Entity entity = innerContext.entity;
-                                entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                if (null == tracingLineNumber) {
+                                    entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                } else {
+                                    entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "(@" + tracingLineNumber + ")");
+                                }
+
                             }
 
                             @Override
                             public void invokeAfterTracing(
+                                    Integer tracingLineNumber,
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc,
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
-                                finishTracing(innerContext);
+                                innerContext.entity.tTree.end();
                             }
 
                             @Override
                             public void invokeThrowTracing(
+                                    Integer tracingLineNumber,
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc,
+                                    String throwException,
                                     ProcessContext processContext,
                                     TraceInnerContext innerContext) throws Throwable {
-                                finishTracing(innerContext);
-                            }
-
-                            private void finishTracing(TraceInnerContext innerContext) {
                                 final Entity entity = innerContext.entity;
+                                entity.tTree.set(entity.tTree.get() + "[throw " + throwException + "]");
                                 entity.tTree.end();
                             }
 
