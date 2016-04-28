@@ -115,7 +115,10 @@ public class DefaultReflectManager implements ReflectManager {
                     }
 
                     // 剩下的情况只剩下默认, 默认的范围需要同包才能生效
-                    else if (clazz.getPackage().equals(superClassDeclaredMethod.getDeclaringClass().getPackage())) {
+                    else if (null != clazz
+                            && null != superClassDeclaredMethod
+                            && null != superClassDeclaredMethod.getDeclaringClass()
+                            && GaCheckUtils.isEquals(clazz.getPackage(), superClassDeclaredMethod.getDeclaringClass().getPackage())) {
                         methodSet.add(superClassDeclaredMethod);
                     }
 
