@@ -111,6 +111,14 @@ public class GlobalOptions {
     )
     public static volatile boolean isDisableSubClass = false;
 
+    @Option(
+            level = 2,
+            name = "is-tracing-sub-class",
+            summary = "try to fix #94",
+            description = "try to fix #94"
+    )
+    public static volatile boolean isTracingSubClass = false;
+
     /**
      * 选项
      */

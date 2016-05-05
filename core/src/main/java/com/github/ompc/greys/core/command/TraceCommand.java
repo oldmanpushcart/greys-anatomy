@@ -1,6 +1,7 @@
 package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.Advice;
+import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.advisor.*;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
@@ -88,7 +89,7 @@ public class TraceCommand implements Command {
 
                                 // don't include the sub class when tracing...
                                 // fixed for #94
-                                false
+                                GlobalOptions.isTracingSubClass
                         );
                     }
 
