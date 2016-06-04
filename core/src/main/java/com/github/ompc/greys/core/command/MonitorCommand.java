@@ -252,7 +252,6 @@ public class MonitorCommand implements Command {
                             }
 
                             private final InvokeCost invokeCost = new InvokeCost();
-                            private final ThreadLocal<Long> beforeInvokeTimestampRef = new ThreadLocal<Long>();
 
                             @Override
                             public void before(ClassLoader loader, String className, String methodName, String methodDesc, Object target, Object[] args) throws Throwable {
