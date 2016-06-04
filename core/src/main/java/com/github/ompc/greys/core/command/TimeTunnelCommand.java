@@ -3,9 +3,7 @@ package com.github.ompc.greys.core.command;
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.TimeFragment;
 import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.InnerContext;
-import com.github.ompc.greys.core.advisor.ProcessContext;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter.DefaultReflectAdviceListenerAdapter;
+import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
@@ -16,9 +14,7 @@ import com.github.ompc.greys.core.textui.TTable;
 import com.github.ompc.greys.core.textui.ext.TObject;
 import com.github.ompc.greys.core.textui.ext.TTimeFragmentDetail;
 import com.github.ompc.greys.core.textui.ext.TTimeFragmentTable;
-import com.github.ompc.greys.core.util.GaMethod;
-import com.github.ompc.greys.core.util.PlayIndexHolder;
-import com.github.ompc.greys.core.util.PointCut;
+import com.github.ompc.greys.core.util.*;
 import com.github.ompc.greys.core.util.affect.RowAffect;
 import com.github.ompc.greys.core.util.matcher.ClassMatcher;
 import com.github.ompc.greys.core.util.matcher.GaMethodMatcher;
@@ -89,7 +85,7 @@ public class TimeTunnelCommand implements Command {
                     "       returnObj : the returned object of method\n" +
                     "        throwExp : the throw exception of method\n" +
                     "        isReturn : the method ended by return\n" +
-                    "         isThrow : the method ended by throwing exception\n"+
+                    "         isThrow : the method ended by throwing exception\n" +
                     "           #cost : the cost(ms) of method"
     )
     private String conditionExpress;
@@ -238,31 +234,40 @@ public class TimeTunnelCommand implements Command {
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new DefaultReflectAdviceListenerAdapter() {
+                        return new ReflectAdviceListenerAdapter() {
 
                             /*
                              * 第一次启动标记
                              */
                             private volatile boolean isFirst = true;
 
+                            private final InvokeCost invokeCost = new InvokeCost();
+
                             private boolean isOverThreshold(int currentTimes) {
                                 return null != threshold
                                         && currentTimes >= threshold;
                             }
 
-                            private boolean isInCondition(final Advice advice, final InnerContext innerContext) {
+                            private boolean isInCondition(final Advice advice, long cost) {
                                 try {
                                     return isBlank(conditionExpress)
-                                            || newExpress(advice).bind("cost", innerContext.getCost()).is(conditionExpress);
+                                            || newExpress(advice).bind("cost", cost).is(conditionExpress);
                                 } catch (ExpressException e) {
                                     return false;
                                 }
                             }
 
                             @Override
-                            public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) {
+                            public void before(Advice advice) throws Throwable {
+                                invokeCost.begin();
+                            }
 
-                                if (!isInCondition(advice, innerContext)) {
+                            @Override
+                            public void afterFinishing(Advice advice) {
+
+                                final long cost = invokeCost.cost();
+
+                                if (!isInCondition(advice, cost)) {
                                     return;
                                 }
 
@@ -270,7 +275,7 @@ public class TimeTunnelCommand implements Command {
                                         timeFragmentManager.generateProcessId(),
                                         advice,
                                         new Date(),
-                                        innerContext.getCost(),
+                                        cost,
                                         getStack()
                                 );
 
@@ -432,8 +437,8 @@ public class TimeTunnelCommand implements Command {
                 }
 
                 final Advice advice = timeFragment.advice;
-                final GaMethod method = advice.method;
-                final boolean accessible = advice.method.isAccessible();
+                final GaMethod method = advice.getMethod();
+                final boolean accessible = advice.getMethod().isAccessible();
 
                 final long beginTimestamp = System.currentTimeMillis();
                 final long cost;
@@ -447,8 +452,18 @@ public class TimeTunnelCommand implements Command {
                     final Object returnObj = method.invoke(advice.target, advice.params);
                     reAdvice = newForAfterRetuning(
                             advice.loader,
-                            advice.clazz,
-                            advice.method,
+                            new LazyGet<Class<?>>() {
+                                @Override
+                                protected Class<?> initialValue() throws Throwable {
+                                    return advice.getClazz();
+                                }
+                            },
+                            new LazyGet<GaMethod>() {
+                                @Override
+                                protected GaMethod initialValue() throws Throwable {
+                                    return advice.getMethod();
+                                }
+                            },
                             advice.target,
                             advice.params,
                             returnObj
@@ -465,8 +480,18 @@ public class TimeTunnelCommand implements Command {
 
                     reAdvice = newForAfterThrowing(
                             advice.loader,
-                            advice.clazz,
-                            advice.method,
+                            new LazyGet<Class<?>>() {
+                                @Override
+                                protected Class<?> initialValue() throws Throwable {
+                                    return advice.getClazz();
+                                }
+                            },
+                            new LazyGet<GaMethod>() {
+                                @Override
+                                protected GaMethod initialValue() throws Throwable {
+                                    return advice.getMethod();
+                                }
+                            },
                             advice.target,
                             advice.params,
                             cause

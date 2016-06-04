@@ -2,8 +2,6 @@ package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.InnerContext;
-import com.github.ompc.greys.core.advisor.ProcessContext;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
@@ -128,9 +126,7 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
             classPattern = argument1;
             methodPattern = argument2;
             scriptPath = argument3;
-        }
-
-        else {
+        } else {
             // 没有命中组合方式
             throw new IllegalArgumentException("class-pattern/method-pattern/script-path or script-path is require.");
         }
@@ -271,17 +267,14 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new ReflectAdviceListenerAdapter<ProcessContext, MapInnerContext>() {
+                        return new ReflectAdviceListenerAdapter() {
 
-                            @Override
-                            protected ProcessContext newProcessContext() {
-                                return new ProcessContext();
-                            }
-
-                            @Override
-                            protected MapInnerContext newInnerContext() {
-                                return new MapInnerContext();
-                            }
+                            private final ThreadLocal<ThreadSafeMap> mapRef = new ThreadLocal<ThreadSafeMap>() {
+                                @Override
+                                protected ThreadSafeMap initialValue() {
+                                    return new ThreadSafeMap();
+                                }
+                            };
 
                             @Override
                             public void create() {
@@ -304,9 +297,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             }
 
                             @Override
-                            public void before(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
+                            public void before(Advice advice) throws Throwable {
                                 try {
-                                    invocable.invokeFunction("__greys_module_before", output, advice, innerContext);
+                                    invocable.invokeFunction("__greys_module_before", output, advice, mapRef.get());
                                 } catch (Throwable e) {
                                     output.println("invoke function 'before' failed. because : " + getCauseMessage(e));
                                     logger.warn("invoke function 'before' failed.", e);
@@ -314,9 +307,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             }
 
                             @Override
-                            public void afterReturning(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
+                            public void afterReturning(Advice advice) throws Throwable {
                                 try {
-                                    invocable.invokeFunction("__greys_module_returning", output, advice, innerContext);
+                                    invocable.invokeFunction("__greys_module_returning", output, advice, mapRef.get());
                                 } catch (Throwable e) {
                                     output.println("invoke function 'returning' failed. because : " + getCauseMessage(e));
                                     logger.warn("invoke function 'returning' failed.", e);
@@ -324,9 +317,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
                             }
 
                             @Override
-                            public void afterThrowing(Advice advice, ProcessContext processContext, MapInnerContext innerContext) throws Throwable {
+                            public void afterThrowing(Advice advice) throws Throwable {
                                 try {
-                                    invocable.invokeFunction("__greys_module_throwing", output, advice, innerContext);
+                                    invocable.invokeFunction("__greys_module_throwing", output, advice, mapRef.get());
                                 } catch (Throwable e) {
                                     output.println("invoke function 'throwing' failed. because : " + getCauseMessage(e));
                                     logger.warn("invoke function 'throwing' failed.", e);
@@ -341,9 +334,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
     }
 
     /**
-     * 用于协同JavaScript作业的Context参数
+     * 用于协同JavaScript作业的Map封装
      */
-    public static class MapInnerContext extends InnerContext {
+    public static class ThreadSafeMap {
 
         private ThreadLocal<Map<String, Object>> mapRef = new ThreadLocal<Map<String, Object>>() {
             @Override

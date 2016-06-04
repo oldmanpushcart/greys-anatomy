@@ -1,17 +1,14 @@
 package com.github.ompc.greys.core.command;
 
 
-import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.InnerContext;
-import com.github.ompc.greys.core.advisor.ProcessContext;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter.DefaultReflectAdviceListenerAdapter;
+import com.github.ompc.greys.core.advisor.AdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.textui.TTable;
-import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.InvokeCost;
 import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.SimpleDateFormatHolder;
 import com.github.ompc.greys.core.util.matcher.ClassMatcher;
@@ -28,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
+import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
 
 /**
  * 监控请求命令<br/>
@@ -105,9 +103,9 @@ public class MonitorCommand implements Command {
         private final String className;
         private final String methodName;
 
-        private Key(Class<?> clazz, GaMethod method) {
-            this.className = clazz.getName();
-            this.methodName = method.getName();
+        private Key(String className, String methodName) {
+            this.className = className;
+            this.methodName = methodName;
         }
 
         @Override
@@ -162,7 +160,7 @@ public class MonitorCommand implements Command {
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new DefaultReflectAdviceListenerAdapter() {
+                        return new AdviceListenerAdapter() {
 
                             /*
                              * 输出定时任务
@@ -253,10 +251,27 @@ public class MonitorCommand implements Command {
                                 }
                             }
 
+                            private final InvokeCost invokeCost = new InvokeCost();
+                            private final ThreadLocal<Long> beforeInvokeTimestampRef = new ThreadLocal<Long>();
+
                             @Override
-                            public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
-                                final Key key = new Key(advice.clazz, advice.method);
-                                final long cost = innerContext.getCost();
+                            public void before(ClassLoader loader, String className, String methodName, String methodDesc, Object target, Object[] args) throws Throwable {
+                                invokeCost.begin();
+                            }
+
+                            @Override
+                            public void afterReturning(ClassLoader loader, String className, String methodName, String methodDesc, Object target, Object[] args, Object returnObject) throws Throwable {
+                                finishing(tranClassName(className), methodName, true);
+                            }
+
+                            @Override
+                            public void afterThrowing(ClassLoader loader, String className, String methodName, String methodDesc, Object target, Object[] args, Throwable throwable) throws Throwable {
+                                finishing(tranClassName(className), methodName, false);
+                            }
+
+                            public void finishing(String className, String methodName, boolean isSuccess) throws Throwable {
+                                final Key key = new Key(className, methodName);
+                                final long cost = invokeCost.cost();
 
                                 while (true) {
                                     final AtomicReference<Data> value = monitorData.get(key);
@@ -270,7 +285,7 @@ public class MonitorCommand implements Command {
                                         Data oData = value.get();
                                         Data nData = new Data();
                                         nData.cost = oData.cost + cost;
-                                        if (advice.isThrow) {
+                                        if (!isSuccess) {
                                             nData.failed = oData.failed + 1;
                                             nData.success = oData.success;
                                         } else {

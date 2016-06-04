@@ -2,9 +2,7 @@ package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.InnerContext;
-import com.github.ompc.greys.core.advisor.ProcessContext;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter.DefaultReflectAdviceListenerAdapter;
+import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
@@ -145,31 +143,31 @@ public class WatchCommand implements Command {
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new DefaultReflectAdviceListenerAdapter() {
+                        return new ReflectAdviceListenerAdapter() {
 
                             @Override
-                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void before(Advice advice) throws Throwable {
                                 if (isBefore) {
                                     watching(advice);
                                 }
                             }
 
                             @Override
-                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void afterReturning(Advice advice) throws Throwable {
                                 if (isSuccess) {
                                     watching(advice);
                                 }
                             }
 
                             @Override
-                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void afterThrowing(Advice advice) throws Throwable {
                                 if (isException) {
                                     watching(advice);
                                 }
                             }
 
                             @Override
-                            public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void afterFinishing(Advice advice) throws Throwable {
                                 if (isFinish) {
                                     watching(advice);
                                 }

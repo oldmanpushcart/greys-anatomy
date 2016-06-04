@@ -99,8 +99,8 @@ public class TTimeFragmentTable implements TComponent {
                 advice.isReturn,
                 advice.isThrow,
                 hashCodeToHexString(advice.target),
-                substringAfterLast("." + advice.clazz.getName(), "."),
-                advice.method.getName()
+                substringAfterLast("." + advice.getClazz().getName(), "."),
+                advice.getMethod().getName()
         );
         return this;
     }
