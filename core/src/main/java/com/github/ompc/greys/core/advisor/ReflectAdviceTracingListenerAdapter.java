@@ -3,8 +3,6 @@ package com.github.ompc.greys.core.advisor;
 import com.github.ompc.greys.core.util.collection.GaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * 反射版的方法通知调用通知适配器
  * Created by oldmanpushcart@gmail.com on 15/7/24.
@@ -13,15 +11,8 @@ public abstract class ReflectAdviceTracingListenerAdapter
         extends ReflectAdviceListenerAdapter implements AdviceTracingListener {
 
     // 修复问题 #78
-    // 在当前类的<init>调用之前JVM会先调用super.<init>, 这些步骤只能被跳过
-    // 所以这里需要记录下被掉过的步数
-    private final ThreadLocal<AtomicInteger> skipSuperInitRef = new ThreadLocal<AtomicInteger>() {
-        @Override
-        protected AtomicInteger initialValue() {
-            return new AtomicInteger(0);
-        }
-    };
-
+    // 在当前类的<init>调用之前JVM会先调用super.<init>, 这些步骤只能被暂时跳过
+    // 所以这里需要记录下被掉过的信息
     private final ThreadLocal<GaStack<Tracing>> skipSuperInitStackRef = new ThreadLocal<GaStack<Tracing>>() {
         @Override
         protected GaStack<Tracing> initialValue() {
