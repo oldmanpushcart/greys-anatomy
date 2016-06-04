@@ -45,8 +45,8 @@ public class TTimeFragmentDetail implements TComponent {
     public String rendering() {
 
         final Advice advice = timeFragment.advice;
-        final String className = advice.clazz.getName();
-        final String methodName = advice.method.getName();
+        final String className = advice.getClazz().getName();
+        final String methodName = advice.getMethod().getName();
 
         final TTable tTable = new TTable(
                 new ColumnDefine[]{

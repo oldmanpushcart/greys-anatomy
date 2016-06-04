@@ -1,6 +1,7 @@
 package com.github.ompc.greys.core;
 
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.LazyGet;
 
 /**
  * 通知点
@@ -8,8 +9,8 @@ import com.github.ompc.greys.core.util.GaMethod;
 public final class Advice {
 
     public final ClassLoader loader;
-    public final Class<?> clazz;
-    public final GaMethod method;
+    private final LazyGet<Class<?>> clazzRef;
+    private final LazyGet<GaMethod> methodRef;
     public final Object target;
     public final Object[] params;
     public final Object returnObj;
@@ -33,8 +34,8 @@ public final class Advice {
      * for finish
      *
      * @param loader    类加载器
-     * @param clazz     类
-     * @param method    方法
+     * @param clazzRef  类
+     * @param methodRef 方法
      * @param target    目标类
      * @param params    调用参数
      * @param returnObj 返回值
@@ -43,16 +44,16 @@ public final class Advice {
      */
     private Advice(
             ClassLoader loader,
-            Class<?> clazz,
-            GaMethod method,
+            LazyGet<Class<?>> clazzRef,
+            LazyGet<GaMethod> methodRef,
             Object target,
             Object[] params,
             Object returnObj,
             Throwable throwExp,
             int access) {
         this.loader = loader;
-        this.clazz = clazz;
-        this.method = method;
+        this.clazzRef = clazzRef;
+        this.methodRef = methodRef;
         this.target = target;
         this.params = params;
         this.returnObj = returnObj;
@@ -72,14 +73,14 @@ public final class Advice {
      */
     public static Advice newForBefore(
             ClassLoader loader,
-            Class<?> clazz,
-            GaMethod method,
+            LazyGet<Class<?>> clazzRef,
+            LazyGet<GaMethod> methodRef,
             Object target,
             Object[] params) {
         return new Advice(
                 loader,
-                clazz,
-                method,
+                clazzRef,
+                methodRef,
                 target,
                 params,
                 null, //returnObj
@@ -93,15 +94,15 @@ public final class Advice {
      */
     public static Advice newForAfterRetuning(
             ClassLoader loader,
-            Class<?> clazz,
-            GaMethod method,
+            LazyGet<Class<?>> clazzRef,
+            LazyGet<GaMethod> methodRef,
             Object target,
             Object[] params,
             Object returnObj) {
         return new Advice(
                 loader,
-                clazz,
-                method,
+                clazzRef,
+                methodRef,
                 target,
                 params,
                 returnObj,
@@ -115,21 +116,29 @@ public final class Advice {
      */
     public static Advice newForAfterThrowing(
             ClassLoader loader,
-            Class<?> clazz,
-            GaMethod method,
+            LazyGet<Class<?>> clazzRef,
+            LazyGet<GaMethod> methodRef,
             Object target,
             Object[] params,
             Throwable throwExp) {
         return new Advice(
                 loader,
-                clazz,
-                method,
+                clazzRef,
+                methodRef,
                 target,
                 params,
                 null, //returnObj
                 throwExp,
                 ACCESS_AFTER_THROWING
         );
+    }
+
+    public Class<?> getClazz() {
+        return clazzRef.get();
+    }
+
+    public GaMethod getMethod() {
+        return methodRef.get();
     }
 
 }

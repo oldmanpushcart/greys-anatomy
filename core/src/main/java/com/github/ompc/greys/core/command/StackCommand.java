@@ -2,8 +2,6 @@ package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.InnerContext;
-import com.github.ompc.greys.core.advisor.ProcessContext;
 import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
@@ -94,21 +92,13 @@ public class StackCommand implements Command {
 
                     @Override
                     public AdviceListener getAdviceListener() {
-                        return new ReflectAdviceListenerAdapter<ProcessContext, StackInnerContext>() {
+                        return new ReflectAdviceListenerAdapter() {
+
+                            private final ThreadLocal<String> stackInfoRef = new ThreadLocal<String>();
 
                             @Override
-                            protected ProcessContext newProcessContext() {
-                                return new ProcessContext();
-                            }
-
-                            @Override
-                            protected StackInnerContext newInnerContext() {
-                                return new StackInnerContext();
-                            }
-
-                            @Override
-                            public void before(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
-                                innerContext.stack = getStack();
+                            public void before(Advice advice) throws Throwable {
+                                stackInfoRef.set(getStack());
                             }
 
                             private boolean isInCondition(Advice advice) {
@@ -126,9 +116,9 @@ public class StackCommand implements Command {
                             }
 
                             @Override
-                            public void afterFinishing(Advice advice, ProcessContext processContext, StackInnerContext innerContext) throws Throwable {
+                            public void afterFinishing(Advice advice) throws Throwable {
                                 if (isInCondition(advice)) {
-                                    printer.println(innerContext.stack);
+                                    printer.println(stackInfoRef.get());
                                     if (isOverThreshold(times.incrementAndGet())) {
                                         printer.finish();
                                     }
@@ -141,10 +131,6 @@ public class StackCommand implements Command {
             }
 
         };
-    }
-
-    private class StackInnerContext extends InnerContext {
-        private String stack;
     }
 
 }

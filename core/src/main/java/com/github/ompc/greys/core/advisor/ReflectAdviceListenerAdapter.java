@@ -3,8 +3,10 @@ package com.github.ompc.greys.core.advisor;
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.util.GaCheckUtils;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.LazyGet;
 import com.github.ompc.greys.core.util.collection.GaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
+import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
@@ -18,21 +20,7 @@ import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
  * 通过反射拿到对应的Class/Method类，而不是原始的ClassName/MethodNam
  * 当然性能开销要比普通监听器高许多
  */
-public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC extends InnerContext> implements AdviceListener {
-
-    /**
-     * 构造过程上下文
-     *
-     * @return 返回过程上下文
-     */
-    abstract protected PC newProcessContext();
-
-    /**
-     * 构造方法内部上下文
-     *
-     * @return 返回方法内部上下文
-     */
-    abstract protected IC newInnerContext();
+public abstract class ReflectAdviceListenerAdapter extends AdviceListenerAdapter {
 
     @Override
     public void create() {
@@ -135,33 +123,28 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
     }
 
 
-    /**
-     * ProcessContext的内部封装
-     */
-    class ProcessContextBound {
-
-        final PC processContext;
-        final GaStack<IC> innerContextGaStack = new ThreadUnsafeGaStack<IC>();
-
-        private ProcessContextBound(PC processContext) {
-            this.processContext = processContext;
-        }
-
-        /**
-         * 是否顶层
-         *
-         * @return 是否顶层上下文
-         */
-        private boolean isTop() {
-            return innerContextGaStack.isEmpty();
-        }
-
+    private LazyGet<Class<?>> toClassRef(final ClassLoader loader, final String className) {
+        return new LazyGet<Class<?>>() {
+            @Override
+            protected Class<?> initialValue() throws Throwable {
+                return toClass(loader, className);
+            }
+        };
     }
 
-    protected final ThreadLocal<ProcessContextBound> processContextBoundRef = new ThreadLocal<ProcessContextBound>() {
+    private LazyGet<GaMethod> toMethodRef(final ClassLoader loader, final LazyGet<Class<?>> clazzRef, final String methodName, final String methodDesc) {
+        return new LazyGet<GaMethod>() {
+            @Override
+            protected GaMethod initialValue() throws Throwable {
+                return toMethod(loader, clazzRef.get(), methodName, methodDesc);
+            }
+        };
+    }
+
+    private final ThreadLocal<GaStack<LazyGet<?>>> infoStackRef = new ThreadLocal<GaStack<LazyGet<?>>>() {
         @Override
-        protected ProcessContextBound initialValue() {
-            return new ProcessContextBound(newProcessContext());
+        protected GaStack<LazyGet<?>> initialValue() {
+            return new ThreadUnsafeGaStack<LazyGet<?>>();
         }
     };
 
@@ -169,19 +152,34 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
     final public void before(
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args) throws Throwable {
-        final Class<?> clazz = toClass(loader, className);
-        final ProcessContextBound bound = processContextBoundRef.get();
-        final PC processContext = bound.processContext;
-        final IC innerContext = newInnerContext();
 
-        final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
-        innerContextGaStack.push(innerContext);
+        try {
+            final LazyGet<Class<?>> clazzRef = toClassRef(loader, className);
+            final LazyGet<GaMethod> methodRef = toMethodRef(loader, clazzRef, methodName, methodDesc);
+            final GaStack<LazyGet<?>> infoStack = infoStackRef.get();
+            infoStack.push(clazzRef);
+            infoStack.push(methodRef);
 
-        before(
-                newForBefore(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args),
-                processContext,
-                innerContext
-        );
+            before(newForBefore(loader, clazzRef, methodRef, target, args));
+        } finally {
+            beforeHook();
+        }
+
+    }
+
+    /**
+     * before()回调钩子<br/>
+     * 用来提供给 {@link ReflectAdviceTracingListenerAdapter 修正#78问题}
+     */
+    void beforeHook() {
+
+    }
+
+    /**
+     * finish()回调钩子<br/>
+     * 用来提供给 {@link ReflectAdviceTracingListenerAdapter 修正#78问题}
+     */
+    void finishHook() {
 
     }
 
@@ -190,41 +188,26 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Object returnObject) throws Throwable {
 
-        final ProcessContextBound bound = processContextBoundRef.get();
-        final PC processContext = bound.processContext;
-        final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
-        final IC innerContext = innerContextGaStack.pop();
         try {
-
-            // 关闭上下文
-            innerContext.close();
-
-            final Class<?> clazz = toClass(loader, className);
-            final GaMethod method = toMethod(loader, clazz, methodName, methodDesc);
+            final GaStack<LazyGet<?>> infoStack = infoStackRef.get();
+            final LazyGet<GaMethod> methodRef = (LazyGet<GaMethod>) infoStack.pop();
+            final LazyGet<Class<?>> clazzRef = (LazyGet<Class<?>>) infoStack.pop();
 
             final Advice advice = newForAfterRetuning(
                     loader,
-                    clazz,
-                    method,
+                    clazzRef,
+                    methodRef,
                     target,
                     args,
-
                     // #98 在return的时候,如果目标函数是<init>,会导致return的内容缺失
                     // 初步的想法是用target(this)去代替returnObj
-                    method instanceof GaMethod.ConstructorImpl ? target : returnObject
+                    StringUtils.equals("<init>", methodName) ? target : returnObject
             );
 
-            afterReturning(advice, processContext, innerContext);
-            afterFinishing(advice, processContext, innerContext);
-
+            afterReturning(advice);
+            afterFinishing(advice);
         } finally {
-
-            // 如果过程上下文已经到了顶层则需要清除掉上下文
-            if (bound.isTop()) {
-                processContext.close();
-                processContextBoundRef.remove();
-            }
-
+            finishHook();
         }
 
     }
@@ -234,29 +217,22 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Throwable throwable) throws Throwable {
 
-        final ProcessContextBound bound = processContextBoundRef.get();
-        final PC processContext = bound.processContext;
-        final GaStack<IC> innerContextGaStack = bound.innerContextGaStack;
-        final IC innerContext = innerContextGaStack.pop();
-
         try {
-
-            // 关闭上下文
-            innerContext.close();
-
-            final Class<?> clazz = toClass(loader, className);
-            final Advice advice = newForAfterThrowing(loader, clazz, toMethod(loader, clazz, methodName, methodDesc), target, args, throwable);
-            afterThrowing(advice, processContext, innerContext);
-            afterFinishing(advice, processContext, innerContext);
-
+            final GaStack<LazyGet<?>> infoStack = infoStackRef.get();
+            final LazyGet<GaMethod> methodRef = (LazyGet<GaMethod>) infoStack.pop();
+            final LazyGet<Class<?>> clazzRef = (LazyGet<Class<?>>) infoStack.pop();
+            final Advice advice = newForAfterThrowing(
+                    loader,
+                    clazzRef,
+                    methodRef,
+                    target,
+                    args,
+                    throwable
+            );
+            afterThrowing(advice);
+            afterFinishing(advice);
         } finally {
-
-            // 如果过程上下文已经到了顶层则需要清除掉上下文
-            if (bound.isTop()) {
-                processContext.close();
-                processContextBoundRef.remove();
-            }
-
+            finishHook();
         }
 
     }
@@ -265,66 +241,41 @@ public abstract class ReflectAdviceListenerAdapter<PC extends ProcessContext, IC
     /**
      * 前置通知
      *
-     * @param advice         通知点
-     * @param processContext 处理上下文
-     * @param innerContext   当前方法调用上下文
+     * @param advice 通知点
      * @throws Throwable 通知过程出错
      */
-    public void before(Advice advice, PC processContext, IC innerContext) throws Throwable {
+    public void before(Advice advice) throws Throwable {
 
     }
 
     /**
      * 返回通知
      *
-     * @param advice         通知点
-     * @param processContext 处理上下文
-     * @param innerContext   当前方法调用上下文
+     * @param advice 通知点
      * @throws Throwable 通知过程出错
      */
-    public void afterReturning(Advice advice, PC processContext, IC innerContext) throws Throwable {
+    public void afterReturning(Advice advice) throws Throwable {
 
     }
 
     /**
      * 异常通知
      *
-     * @param advice         通知点
-     * @param processContext 处理上下文
-     * @param innerContext   当前方法调用上下文
+     * @param advice 通知点
      * @throws Throwable 通知过程出错
      */
-    public void afterThrowing(Advice advice, PC processContext, IC innerContext) throws Throwable {
+    public void afterThrowing(Advice advice) throws Throwable {
 
     }
 
     /**
      * 结束通知
      *
-     * @param advice         通知点
-     * @param processContext 处理上下文
-     * @param innerContext   当前方法调用上下文
+     * @param advice 通知点
      * @throws Throwable 通知过程出错
      */
-    public void afterFinishing(Advice advice, PC processContext, IC innerContext) throws Throwable {
+    public void afterFinishing(Advice advice) throws Throwable {
 
-    }
-
-
-    /**
-     * 默认实现
-     */
-    public static class DefaultReflectAdviceListenerAdapter extends ReflectAdviceListenerAdapter<ProcessContext, InnerContext> {
-
-        @Override
-        protected ProcessContext newProcessContext() {
-            return new ProcessContext();
-        }
-
-        @Override
-        protected InnerContext newInnerContext() {
-            return new InnerContext();
-        }
     }
 
 }

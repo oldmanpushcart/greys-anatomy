@@ -142,7 +142,7 @@ class GaTraceClassVisitor extends ClassVisitor {
         eg = {
                 "asm -f java.lang.String",
                 "asm -f *StringUtils",
-                "asm *StringUtils isEmpty"
+                "asm *StringUtils isTop"
         })
 public class AsmCommand implements Command {
 

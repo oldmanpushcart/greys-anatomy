@@ -162,7 +162,7 @@ public class TObject implements TComponent {
                 if (!isExpand(deep, expand)
                         || collection.isEmpty()) {
 
-                    buf.append(format("@%s[isEmpty=%s;size=%d]",
+                    buf.append(format("@%s[isTop=%s;size=%d]",
                             className,
                             collection.isEmpty(),
                             collection.size()));
@@ -193,7 +193,7 @@ public class TObject implements TComponent {
                 if (!isExpand(deep, expand)
                         || map.isEmpty()) {
 
-                    buf.append(format("@%s[isEmpty=%s;size=%d]",
+                    buf.append(format("@%s[isTop=%s;size=%d]",
                             className,
                             map.isEmpty(),
                             map.size()));
@@ -229,7 +229,7 @@ public class TObject implements TComponent {
                     if (!isExpand(deep, expand)
                             || arrays.length == 0) {
 
-                        buf.append(format("@%s[isEmpty=%s;size=%d]",
+                        buf.append(format("@%s[isTop=%s;size=%d]",
                                 typeName,
                                 arrays.length == 0,
                                 arrays.length));
@@ -258,7 +258,7 @@ public class TObject implements TComponent {
                     if (!isExpand(deep, expand)
                             || arrays.length == 0) {
 
-                        buf.append(format("@%s[isEmpty=%s;size=%d]",
+                        buf.append(format("@%s[isTop=%s;size=%d]",
                                 typeName,
                                 arrays.length == 0,
                                 arrays.length));
@@ -287,7 +287,7 @@ public class TObject implements TComponent {
                     if (!isExpand(deep, expand)
                             || arrays.length == 0) {
 
-                        buf.append(format("@%s[isEmpty=%s;size=%d]",
+                        buf.append(format("@%s[isTop=%s;size=%d]",
                                 typeName,
                                 arrays.length == 0,
                                 arrays.length));
@@ -316,7 +316,7 @@ public class TObject implements TComponent {
                     if (!isExpand(deep, expand)
                             || arrays.length == 0) {
 
-                        buf.append(format("@%s[isEmpty=%s;size=%d]",
+                        buf.append(format("@%s[isTop=%s;size=%d]",
                                 typeName,
                                 arrays.length == 0,
                                 arrays.length));
@@ -345,7 +345,7 @@ public class TObject implements TComponent {
                     if (!isExpand(deep, expand)
                             || arrays.length == 0) {
 
-                        buf.append(format("@%s[isEmpty=%s;size=%d]",
+                        buf.append(format("@%s[isTop=%s;size=%d]",
                                 typeName,
                                 arrays.length == 0,
                                 arrays.length));
@@ -374,7 +374,7 @@ public class TObject implements TComponent {
                     if (!isExpand(deep, expand)
                             || arrays.length == 0) {
 
-                        buf.append(format("@%s[isEmpty=%s;size=%d]",
+                        buf.append(format("@%s[isTop=%s;size=%d]",
                                 typeName,
                                 arrays.length == 0,
                                 arrays.length));
@@ -403,7 +403,7 @@ public class TObject implements TComponent {
                     if (!isExpand(deep, expand)
                             || arrays.length == 0) {
 
-                        buf.append(format("@%s[isEmpty=%s;size=%d]",
+                        buf.append(format("@%s[isTop=%s;size=%d]",
                                 typeName,
                                 arrays.length == 0,
                                 arrays.length));
@@ -432,7 +432,7 @@ public class TObject implements TComponent {
                     if (!isExpand(deep, expand)
                             || arrays.length == 0) {
 
-                        buf.append(format("@%s[isEmpty=%s;size=%d]",
+                        buf.append(format("@%s[isTop=%s;size=%d]",
                                 typeName,
                                 arrays.length == 0,
                                 arrays.length));
@@ -460,7 +460,7 @@ public class TObject implements TComponent {
                     if (!isExpand(deep, expand)
                             || arrays.length == 0) {
 
-                        buf.append(format("@%s[isEmpty=%s;size=%d]",
+                        buf.append(format("@%s[isTop=%s;size=%d]",
                                 typeName,
                                 arrays.length == 0,
                                 arrays.length));

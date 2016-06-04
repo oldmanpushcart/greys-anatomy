@@ -113,6 +113,9 @@ public class TTree implements TComponent {
         }
     }
 
+    public boolean isTop() {
+        return current.isRoot();
+    }
 
     /**
      * 创建一个分支节点
