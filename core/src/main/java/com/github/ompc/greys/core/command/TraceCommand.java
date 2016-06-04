@@ -124,7 +124,11 @@ public class TraceCommand implements Command {
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc) throws Throwable {
-                                traceRef.get().tTree.end();
+                                final Trace trace = traceRef.get();
+                                if (!trace.tTree.isTop()) {
+                                    trace.tTree.end();
+                                }
+
                             }
 
                             @Override
@@ -135,7 +139,10 @@ public class TraceCommand implements Command {
                                     String tracingMethodDesc,
                                     String throwException) throws Throwable {
                                 final Trace trace = traceRef.get();
-                                trace.tTree.set(trace.tTree.get() + "[throw " + throwException + "]").end();
+                                if (!trace.tTree.isTop()) {
+                                    trace.tTree.set(trace.tTree.get() + "[throw " + throwException + "]").end();
+                                }
+
                             }
 
                             @Override
@@ -153,13 +160,18 @@ public class TraceCommand implements Command {
                             @Override
                             public void afterReturning(Advice advice) throws Throwable {
                                 final Trace trace = traceRef.get();
-                                trace.tTree.end();
+                                if (!trace.tTree.isTop()) {
+                                    trace.tTree.end();
+                                }
                             }
 
                             @Override
                             public void afterThrowing(Advice advice) throws Throwable {
                                 final Trace trace = traceRef.get();
-                                trace.tTree.begin("throw:" + advice.throwExp.getClass().getName() + "()").end().end();
+                                trace.tTree.begin("throw:" + advice.throwExp.getClass().getName() + "()").end();
+                                if (!trace.tTree.isTop()) {
+                                    trace.tTree.end();
+                                }
 
                                 // 这里将堆栈的end全部补上
                                 //while (entity.tracingDeep-- >= 0) {

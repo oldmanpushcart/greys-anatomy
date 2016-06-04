@@ -152,15 +152,19 @@ public abstract class ReflectAdviceListenerAdapter extends AdviceListenerAdapter
     final public void before(
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args) throws Throwable {
-        final LazyGet<Class<?>> clazzRef = toClassRef(loader, className);
-        final LazyGet<GaMethod> methodRef = toMethodRef(loader, clazzRef, methodName, methodDesc);
-        final GaStack<LazyGet<?>> infoStack = infoStackRef.get();
-        infoStack.push(clazzRef);
-        infoStack.push(methodRef);
 
-        before(newForBefore(loader, clazzRef, methodRef, target, args));
+        try {
+            final LazyGet<Class<?>> clazzRef = toClassRef(loader, className);
+            final LazyGet<GaMethod> methodRef = toMethodRef(loader, clazzRef, methodName, methodDesc);
+            final GaStack<LazyGet<?>> infoStack = infoStackRef.get();
+            infoStack.push(clazzRef);
+            infoStack.push(methodRef);
 
-        beforeHook();
+            before(newForBefore(loader, clazzRef, methodRef, target, args));
+        } finally {
+            beforeHook();
+        }
+
     }
 
     /**
@@ -184,23 +188,27 @@ public abstract class ReflectAdviceListenerAdapter extends AdviceListenerAdapter
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Object returnObject) throws Throwable {
 
-        final GaStack<LazyGet<?>> infoStack = infoStackRef.get();
-        final LazyGet<GaMethod> methodRef = (LazyGet<GaMethod>) infoStack.pop();
-        final LazyGet<Class<?>> clazzRef = (LazyGet<Class<?>>) infoStack.pop();
+        try {
+            final GaStack<LazyGet<?>> infoStack = infoStackRef.get();
+            final LazyGet<GaMethod> methodRef = (LazyGet<GaMethod>) infoStack.pop();
+            final LazyGet<Class<?>> clazzRef = (LazyGet<Class<?>>) infoStack.pop();
 
-        final Advice advice = newForAfterRetuning(
-                loader,
-                clazzRef,
-                methodRef,
-                target,
-                args,
-                // #98 在return的时候,如果目标函数是<init>,会导致return的内容缺失
-                // 初步的想法是用target(this)去代替returnObj
-                StringUtils.equals("<init>", methodName) ? target : returnObject
-        );
+            final Advice advice = newForAfterRetuning(
+                    loader,
+                    clazzRef,
+                    methodRef,
+                    target,
+                    args,
+                    // #98 在return的时候,如果目标函数是<init>,会导致return的内容缺失
+                    // 初步的想法是用target(this)去代替returnObj
+                    StringUtils.equals("<init>", methodName) ? target : returnObject
+            );
 
-        afterReturning(advice);
-        afterFinishing(advice);
+            afterReturning(advice);
+            afterFinishing(advice);
+        } finally {
+            finishHook();
+        }
 
     }
 
@@ -209,19 +217,23 @@ public abstract class ReflectAdviceListenerAdapter extends AdviceListenerAdapter
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args, Throwable throwable) throws Throwable {
 
-        final GaStack<LazyGet<?>> infoStack = infoStackRef.get();
-        final LazyGet<GaMethod> methodRef = (LazyGet<GaMethod>) infoStack.pop();
-        final LazyGet<Class<?>> clazzRef = (LazyGet<Class<?>>) infoStack.pop();
-        final Advice advice = newForAfterThrowing(
-                loader,
-                clazzRef,
-                methodRef,
-                target,
-                args,
-                throwable
-        );
-        afterThrowing(advice);
-        afterFinishing(advice);
+        try {
+            final GaStack<LazyGet<?>> infoStack = infoStackRef.get();
+            final LazyGet<GaMethod> methodRef = (LazyGet<GaMethod>) infoStack.pop();
+            final LazyGet<Class<?>> clazzRef = (LazyGet<Class<?>>) infoStack.pop();
+            final Advice advice = newForAfterThrowing(
+                    loader,
+                    clazzRef,
+                    methodRef,
+                    target,
+                    args,
+                    throwable
+            );
+            afterThrowing(advice);
+            afterFinishing(advice);
+        } finally {
+            finishHook();
+        }
 
     }
 

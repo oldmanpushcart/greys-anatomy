@@ -42,8 +42,8 @@ import static org.apache.commons.lang3.StringUtils.*;
  */
 @Cmd(name = "tt", sort = 5, summary = "Time Tunnel",
         eg = {
-                "tt -t *StringUtils isEmpty",
-                "tt -t *StringUtils isEmpty params[0].length==1",
+                "tt -t *StringUtils isTop",
+                "tt -t *StringUtils isTop params[0].length==1",
                 "tt -l",
                 "tt -D",
                 "tt -i 1000 -w params[0]",

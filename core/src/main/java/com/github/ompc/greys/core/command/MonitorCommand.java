@@ -187,7 +187,7 @@ public class MonitorCommand implements Command {
 
                                     @Override
                                     public void run() {
-//                                        if (monitorData.isEmpty()) {
+//                                        if (monitorData.isTop()) {
 //                                            return;
 //                                        }
 

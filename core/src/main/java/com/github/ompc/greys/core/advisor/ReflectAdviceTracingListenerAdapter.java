@@ -1,5 +1,8 @@
 package com.github.ompc.greys.core.advisor;
 
+import com.github.ompc.greys.core.util.collection.GaStack;
+import com.github.ompc.greys.core.util.collection.ThreadUnsafeGaStack;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -16,6 +19,13 @@ public abstract class ReflectAdviceTracingListenerAdapter
         @Override
         protected AtomicInteger initialValue() {
             return new AtomicInteger(0);
+        }
+    };
+
+    private final ThreadLocal<GaStack<Tracing>> skipSuperInitStackRef = new ThreadLocal<GaStack<Tracing>>() {
+        @Override
+        protected GaStack<Tracing> initialValue() {
+            return new ThreadUnsafeGaStack<Tracing>();
         }
     };
 
@@ -45,7 +55,7 @@ public abstract class ReflectAdviceTracingListenerAdapter
         // 如果before()方法尚未被调用
         // 为 #78 问题所触发的情况
         if (!isBeforeCalledRef.get()) {
-            skipSuperInitRef.get().incrementAndGet();
+            skipSuperInitStackRef.get().push(new Tracing(tracingLineNumber, tracingClassName, tracingMethodName, tracingMethodDesc));
             return;
         }
 
@@ -54,33 +64,30 @@ public abstract class ReflectAdviceTracingListenerAdapter
 
 
     // 校验之前有多少步骤需要被跳过
-    private boolean skipSuperInit() {
-        final AtomicInteger skipSuperInit = skipSuperInitRef.get();
-        if (skipSuperInit.get() > 0) {
-            skipSuperInit.decrementAndGet();
-            return true;
+    private void popSuperInit() throws Throwable {
+
+        final GaStack<Tracing> stack = skipSuperInitStackRef.get();
+        if (!stack.isEmpty()) {
+            final Tracing tracing = stack.pop();
+            tracingInvokeBefore(
+                    tracing.tracingLineNumber,
+                    tracing.tracingClassName,
+                    tracing.tracingMethodName,
+                    tracing.tracingMethodDesc
+            );
         }
 
-        return false;
     }
 
     @Override
     final public void invokeThrowTracing(Integer tracingLineNumber, String tracingClassName, String tracingMethodName, String tracingMethodDesc, String throwException) throws Throwable {
-
-        if (skipSuperInit()) {
-            return;
-        }
-
+        popSuperInit();
         tracingInvokeThrowing(tracingLineNumber, tracingClassName, tracingMethodName, tracingMethodDesc, throwException);
     }
 
     @Override
     final public void invokeAfterTracing(Integer tracingLineNumber, String tracingClassName, String tracingMethodName, String tracingMethodDesc) throws Throwable {
-
-        if (skipSuperInit()) {
-            return;
-        }
-
+        popSuperInit();
         tracingInvokeAfter(tracingLineNumber, tracingClassName, tracingMethodName, tracingMethodDesc);
     }
 
@@ -97,6 +104,22 @@ public abstract class ReflectAdviceTracingListenerAdapter
     public void tracingInvokeThrowing(
             Integer tracingLineNumber, String tracingClassName, String tracingMethodName, String tracingMethodDesc, String throwException) throws Throwable {
 
+    }
+
+
+    static class Tracing {
+
+        private final Integer tracingLineNumber;
+        private final String tracingClassName;
+        private final String tracingMethodName;
+        private final String tracingMethodDesc;
+
+        Tracing(Integer tracingLineNumber, String tracingClassName, String tracingMethodName, String tracingMethodDesc) {
+            this.tracingLineNumber = tracingLineNumber;
+            this.tracingClassName = tracingClassName;
+            this.tracingMethodName = tracingMethodName;
+            this.tracingMethodDesc = tracingMethodDesc;
+        }
     }
 
 }
