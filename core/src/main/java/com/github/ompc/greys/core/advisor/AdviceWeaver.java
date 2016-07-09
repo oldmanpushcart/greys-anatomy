@@ -1,9 +1,6 @@
 package com.github.ompc.greys.core.advisor;
 
-import com.github.ompc.greys.core.util.AsmCodeLock;
-import com.github.ompc.greys.core.util.CodeLock;
-import com.github.ompc.greys.core.util.GaMethod;
-import com.github.ompc.greys.core.util.LogUtil;
+import com.github.ompc.greys.core.util.*;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.collection.GaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeFixGaStack;
@@ -23,7 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.ompc.greys.core.GlobalOptions.isDebugForAsm;
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
-import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
 import static java.lang.Thread.currentThread;
 
 
@@ -570,9 +566,15 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private void loadClassLoader() {
 
                 if (this.isStaticMethod()) {
-                    visitLdcInsn(tranClassName(className));
-                    invokeStatic(ASM_TYPE_CLASS, Method.getMethod("Class forName(String)"));
-                    invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
+
+                    //mv.visitLdcInsn(Type.getType("Lcom/github/ompc/greys/core/TestUtils;"));
+                    //mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
+
+//                    visitLdcInsn(tranClassName(className));
+//                    invokeStatic(ASM_TYPE_CLASS, Method.getMethod("Class forName(String)"));
+//                    invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
+                    visitLdcInsn(Type.getType(String.format("L%s;", className)));
+                    visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
 
                 } else {
                     loadThis();
@@ -602,7 +604,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 dup();
                 push(2);
-                push(className);
+                push(GaStringUtils.tranClassName(className));
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
@@ -861,7 +863,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 box(ASM_TYPE_INT);
                 arrayStore(ASM_TYPE_INTEGER);
 
-                if( null != currentLineNumber ) {
+                if (null != currentLineNumber) {
                     dup();
                     push(1);
                     push(currentLineNumber);
@@ -899,7 +901,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 arrayStore(ASM_TYPE_INTEGER);
 
 
-                if( null != currentLineNumber ) {
+                if (null != currentLineNumber) {
                     dup();
                     push(1);
                     push(currentLineNumber);

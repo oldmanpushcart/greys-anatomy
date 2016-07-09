@@ -62,20 +62,17 @@ public class ThreadTopCommand implements Command {
 
                 final ArrayList<ThreadInfoData> threadInfoDatas = new ArrayList<ThreadInfoData>();
 
-                long totalCpuTime = 0L;
-                long totalUserTime = 0L;
+                long totalCpuTime = threadMXBean.getCurrentThreadCpuTime();
                 for (ThreadInfo tInfo : threadMXBean.getThreadInfo(threadMXBean.getAllThreadIds(), Integer.MAX_VALUE)) {
                     final long tId = tInfo.getThreadId();
                     final String tName = tInfo.getThreadName();
                     final long cpuTime = threadMXBean.getThreadCpuTime(tId);
-                    final long userTime = threadMXBean.getThreadUserTime(tId);
                     final String tStateStr = tInfo.getThreadState().toString();
                     final String tStackStr = isDetail
                             ? stackToString(tInfo.getStackTrace())
                             : StringUtils.EMPTY;
                     totalCpuTime += cpuTime;
-                    totalUserTime += userTime;
-                    threadInfoDatas.add(new ThreadInfoData(tId, cpuTime, userTime, tName, tStateStr, tStackStr));
+                    threadInfoDatas.add(new ThreadInfoData(tId, cpuTime, tName, tStateStr, tStackStr));
                 }
 
 
@@ -88,7 +85,6 @@ public class ThreadTopCommand implements Command {
                                 new TTable.ColumnDefine[]{
                                         new TTable.ColumnDefine(TTable.Align.LEFT),
                                         new TTable.ColumnDefine(TTable.Align.MIDDLE),
-                                        new TTable.ColumnDefine(TTable.Align.MIDDLE),
                                         new TTable.ColumnDefine(),
                                         new TTable.ColumnDefine(20),
                                         new TTable.ColumnDefine(),
@@ -96,7 +92,6 @@ public class ThreadTopCommand implements Command {
                                 :
                                 new TTable.ColumnDefine[]{
                                         new TTable.ColumnDefine(TTable.Align.LEFT),
-                                        new TTable.ColumnDefine(TTable.Align.MIDDLE),
                                         new TTable.ColumnDefine(TTable.Align.MIDDLE),
                                         new TTable.ColumnDefine(),
                                         new TTable.ColumnDefine(50)
@@ -116,8 +111,7 @@ public class ThreadTopCommand implements Command {
                         }
                     }
                     final String cpuTimeRateStr = (totalCpuTime > 0 ? df.format(data.cpuTime * 100d / totalCpuTime) : "00.00") + "%";
-                    final String userTimeRateStr = (totalUserTime > 0 ? df.format(data.userTime * 100d / totalUserTime) : "00.00") + "%";
-                    tTable.addRow("#" + data.tId, cpuTimeRateStr, userTimeRateStr, data.tStateStr, data.tName, data.stackStr);
+                    tTable.addRow("#" + data.tId, cpuTimeRateStr, data.tStateStr, data.tName, data.stackStr);
                 }
 
                 printer.println(tTable.rendering()).finish();
@@ -131,15 +125,13 @@ public class ThreadTopCommand implements Command {
 
         private final long tId;
         private final long cpuTime;
-        private final long userTime;
         private final String tName;
         private final String tStateStr;
         private final String stackStr;
 
-        private ThreadInfoData(long tId, long cpuTime, long userTime, String tName, String tStateStr, String stackStr) {
+        private ThreadInfoData(long tId, long cpuTime, String tName, String tStateStr, String stackStr) {
             this.tId = tId;
             this.cpuTime = cpuTime;
-            this.userTime = userTime;
             this.tName = tName;
             this.tStateStr = tStateStr;
             this.stackStr = stackStr;
