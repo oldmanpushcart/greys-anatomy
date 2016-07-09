@@ -218,7 +218,7 @@ public class MonitorCommand implements Command {
 
                                             if (null != data) {
 
-                                                final DecimalFormat df = new DecimalFormat("0.00");
+                                                final DecimalFormat df = new DecimalFormat("00.00");
 
                                                 tTable.addRow(
                                                         SimpleDateFormatHolder.getInstance().format(new Date()),
