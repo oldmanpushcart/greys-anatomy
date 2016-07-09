@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
-import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
 
 /**
  * 监控请求命令<br/>
@@ -218,7 +217,7 @@ public class MonitorCommand implements Command {
 
                                             if (null != data) {
 
-                                                final DecimalFormat df = new DecimalFormat("0.00");
+                                                final DecimalFormat df = new DecimalFormat("00.00");
 
                                                 tTable.addRow(
                                                         SimpleDateFormatHolder.getInstance().format(new Date()),
@@ -260,12 +259,12 @@ public class MonitorCommand implements Command {
 
                             @Override
                             public void afterReturning(ClassLoader loader, String className, String methodName, String methodDesc, Object target, Object[] args, Object returnObject) throws Throwable {
-                                finishing(tranClassName(className), methodName, true);
+                                finishing(className, methodName, true);
                             }
 
                             @Override
                             public void afterThrowing(ClassLoader loader, String className, String methodName, String methodDesc, Object target, Object[] args, Throwable throwable) throws Throwable {
-                                finishing(tranClassName(className), methodName, false);
+                                finishing(className, methodName, false);
                             }
 
                             public void finishing(String className, String methodName, boolean isSuccess) throws Throwable {

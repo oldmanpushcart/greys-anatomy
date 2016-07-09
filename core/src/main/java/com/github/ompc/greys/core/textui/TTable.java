@@ -322,6 +322,14 @@ public class TTable implements TComponent {
             this(0, true, align);
         }
 
+        public ColumnDefine(int width) {
+            this(width, false, Align.LEFT);
+        }
+
+        public ColumnDefine(int width, Align align) {
+            this(width, false, align);
+        }
+
         public ColumnDefine() {
             this(Align.LEFT);
         }

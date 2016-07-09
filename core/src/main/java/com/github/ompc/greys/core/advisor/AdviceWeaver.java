@@ -1,9 +1,6 @@
 package com.github.ompc.greys.core.advisor;
 
-import com.github.ompc.greys.core.util.AsmCodeLock;
-import com.github.ompc.greys.core.util.CodeLock;
-import com.github.ompc.greys.core.util.GaMethod;
-import com.github.ompc.greys.core.util.LogUtil;
+import com.github.ompc.greys.core.util.*;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.collection.GaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeFixGaStack;
@@ -23,7 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.ompc.greys.core.GlobalOptions.isDebugForAsm;
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
-import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
 import static java.lang.Thread.currentThread;
 
 
@@ -32,7 +28,7 @@ import static java.lang.Thread.currentThread;
  */
 class TracingAsmCodeLock extends AsmCodeLock {
 
-    public TracingAsmCodeLock(AdviceAdapter aa) {
+    TracingAsmCodeLock(AdviceAdapter aa) {
         super(
                 aa,
                 new int[]{
@@ -150,6 +146,10 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args) {
 
+        if (!advices.containsKey(adviceId)) {
+            return;
+        }
+
         if (isSelfCallRef.get()) {
             return;
         } else {
@@ -188,8 +188,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * @param returnObject 返回对象
      *                     若目标为静态方法,则为null
      */
-    public static void methodOnReturnEnd(Object returnObject) {
-        methodOnEnd(false, returnObject);
+    public static void methodOnReturnEnd(Object returnObject, int adviceId) {
+        methodOnEnd(adviceId, false, returnObject);
     }
 
     /**
@@ -198,8 +198,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      *
      * @param throwable 抛出异常
      */
-    public static void methodOnThrowingEnd(Throwable throwable) {
-        methodOnEnd(true, throwable);
+    public static void methodOnThrowingEnd(Throwable throwable, int adviceId) {
+        methodOnEnd(adviceId, true, throwable);
     }
 
     /**
@@ -208,7 +208,11 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * @param isThrowing        标记正常返回结束还是抛出异常结束
      * @param returnOrThrowable 正常返回或者抛出异常对象
      */
-    private static void methodOnEnd(boolean isThrowing, Object returnOrThrowable) {
+    private static void methodOnEnd(int adviceId, boolean isThrowing, Object returnOrThrowable) {
+
+        if (!advices.containsKey(adviceId)) {
+            return;
+        }
 
         if (isSelfCallRef.get()) {
             return;
@@ -219,6 +223,12 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         try {
             // 弹射线程帧栈,恢复Begin所保护的执行帧栈
             final GaStack<Object> frameStack = threadFrameStackPop();
+
+            // 用于保护reg和before执行并发的情况
+            // 如果before没有注入,则不对end做任何处理
+            if (null == frameStack) {
+                return;
+            }
 
             // 弹射执行帧栈,恢复Begin所保护的现场
             final AdviceListener listener = (AdviceListener) frameStack.pop();
@@ -254,6 +264,9 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * @param desc       调用方法描述
      */
     public static void methodOnInvokeBeforeTracing(int adviceId, Integer lineNumber, String owner, String name, String desc) {
+        if (!advices.containsKey(adviceId)) {
+            return;
+        }
         final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
@@ -274,6 +287,9 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * @param desc       调用方法描述
      */
     public static void methodOnInvokeAfterTracing(int adviceId, Integer lineNumber, String owner, String name, String desc) {
+        if (!advices.containsKey(adviceId)) {
+            return;
+        }
         final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
@@ -295,6 +311,9 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * @param throwException 抛出的异常
      */
     public static void methodOnInvokeThrowTracing(int adviceId, Integer lineNumber, String owner, String name, String desc, String throwException) {
+        if (!advices.containsKey(adviceId)) {
+            return;
+        }
         final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
@@ -320,7 +339,14 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     }
 
     private static GaStack<Object> threadFrameStackPop() {
-        return threadBoundContexts.get(currentThread()).pop();
+        final GaStack<GaStack<Object>> stackGaStack = threadBoundContexts.get(currentThread());
+
+        // 用于保护reg和before并发导致before/end乱序的场景
+        if (null == stackGaStack
+                || stackGaStack.isEmpty()) {
+            return null;
+        }
+        return stackGaStack.pop();
     }
 
     private static AdviceListener getListener(int adviceId) {
@@ -341,6 +367,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         // 注册监听器
         advices.put(adviceId, listener);
+
+        logger.info("reg adviceId={};listener={}", adviceId, listener);
     }
 
     /**
@@ -357,6 +385,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         if (null != listener) {
             listener.destroy();
         }
+
+        logger.info("unReg adviceId={};listener={}", adviceId, listener);
 
     }
 
@@ -570,9 +600,15 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private void loadClassLoader() {
 
                 if (this.isStaticMethod()) {
-                    visitLdcInsn(tranClassName(className));
-                    invokeStatic(ASM_TYPE_CLASS, Method.getMethod("Class forName(String)"));
-                    invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
+
+                    //mv.visitLdcInsn(Type.getType("Lcom/github/ompc/greys/core/TestUtils;"));
+                    //mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
+
+//                    visitLdcInsn(tranClassName(className));
+//                    invokeStatic(ASM_TYPE_CLASS, Method.getMethod("Class forName(String)"));
+//                    invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
+                    visitLdcInsn(Type.getType(String.format("L%s;", className)));
+                    visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
 
                 } else {
                     loadThis();
@@ -602,7 +638,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 dup();
                 push(2);
-                push(className);
+                push(GaStringUtils.tranClassName(className));
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
@@ -667,7 +703,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private void loadReturnArgs() {
                 dup2X1();
                 pop2();
-                push(1);
+                push(2);
                 newArray(ASM_TYPE_OBJECT);
                 dup();
                 dup2X1();
@@ -675,6 +711,12 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 push(0);
                 swap();
                 arrayStore(ASM_TYPE_OBJECT);
+
+                dup();
+                push(1);
+                push(adviceId);
+                box(ASM_TYPE_INT);
+                arrayStore(ASM_TYPE_INTEGER);
             }
 
             @Override
@@ -720,7 +762,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private void loadThrowArgs() {
                 dup2X1();
                 pop2();
-                push(1);
+                push(2);
                 newArray(ASM_TYPE_OBJECT);
                 dup();
                 dup2X1();
@@ -728,6 +770,12 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 push(0);
                 swap();
                 arrayStore(ASM_TYPE_THROWABLE);
+
+                dup();
+                push(1);
+                push(adviceId);
+                box(ASM_TYPE_INT);
+                arrayStore(ASM_TYPE_INTEGER);
             }
 
             @Override
@@ -861,7 +909,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 box(ASM_TYPE_INT);
                 arrayStore(ASM_TYPE_INTEGER);
 
-                if( null != currentLineNumber ) {
+                if (null != currentLineNumber) {
                     dup();
                     push(1);
                     push(currentLineNumber);
@@ -899,7 +947,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 arrayStore(ASM_TYPE_INTEGER);
 
 
-                if( null != currentLineNumber ) {
+                if (null != currentLineNumber) {
                     dup();
                     push(1);
                     push(currentLineNumber);

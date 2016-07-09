@@ -43,7 +43,7 @@ class GaAttachment {
     private ByteBuffer lineByteBuffer;
 
 
-    public GaAttachment(int bufferSize, Session session) {
+    GaAttachment(int bufferSize, Session session) {
         this.lineByteBuffer = ByteBuffer.allocate(bufferSize);
         this.bufferSize = bufferSize;
         this.lineDecodeState = READ_CHAR;
@@ -312,7 +312,11 @@ public class GaServer {
             // 若读到EOF，则说明SocketChannel已经关闭
             if (EOF == socketChannel.read(byteBuffer)) {
                 logger.info("client={}@session[{}] was closed.", socketChannel, session.getSessionId());
-                closeSocketChannel(key, socketChannel);
+                // closeSocketChannel(key, socketChannel);
+                session.destroy();
+                if(session.isLocked()) {
+                    session.unLock();
+                }
                 return;
             }
 
