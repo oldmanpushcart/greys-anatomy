@@ -61,8 +61,8 @@ public class SearchMethodCommand implements Command {
 
                 final ClassMatcher classMatcher = new ClassMatcher(new PatternMatcher(isRegEx, classPattern));
                 final TTable tTable = new TTable(new TTable.ColumnDefine[]{
-                        new TTable.ColumnDefine(TTable.Align.LEFT),
-                        new TTable.ColumnDefine(TTable.Align.LEFT),
+                        new TTable.ColumnDefine(30, TTable.Align.LEFT),
+                        new TTable.ColumnDefine(100, TTable.Align.LEFT),
                 })
                         .addRow("DECLARED-CLASS", "VISIBLE-METHOD")
                         .padding(1);
