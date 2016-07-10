@@ -47,7 +47,7 @@ public class TClassInfo implements TComponent {
 
         final TTable tTable = new TTable(new TTable.ColumnDefine[]{
                 new TTable.ColumnDefine(20, TTable.Align.RIGHT),
-                new TTable.ColumnDefine(100, TTable.Align.LEFT)
+                new TTable.ColumnDefine(80, TTable.Align.LEFT)
         })
                 .addRow("class-info", tranClassName(clazz))
                 .addRow("code-source", getCodeSource(cs))
