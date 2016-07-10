@@ -112,6 +112,14 @@ public class GlobalOptions {
     public static volatile boolean isDisableSubClass = false;
 
 //    @Option(
+//            level = 0,
+//            name = "is-enable-fast-enhance",
+//            summary = "Option to control enable fast enhance class",
+//            description = "This option enable fast enhance class, maybe some class will enhance failed."
+//    )
+//    public static volatile boolean isEnableFastEnhance = false;
+
+//    @Option(
 //            level = 2,
 //            name = "is-tracing-sub-class",
 //            summary = "try to fix #94",

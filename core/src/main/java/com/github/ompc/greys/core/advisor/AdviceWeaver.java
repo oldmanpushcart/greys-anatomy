@@ -1,6 +1,9 @@
 package com.github.ompc.greys.core.advisor;
 
-import com.github.ompc.greys.core.util.*;
+import com.github.ompc.greys.core.util.AsmCodeLock;
+import com.github.ompc.greys.core.util.CodeLock;
+import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.affect.EnhancerAffect;
 import com.github.ompc.greys.core.util.collection.GaStack;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeFixGaStack;
@@ -20,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.ompc.greys.core.GlobalOptions.isDebugForAsm;
 import static com.github.ompc.greys.core.util.GaCheckUtils.isEquals;
+import static com.github.ompc.greys.core.util.GaStringUtils.tranClassName;
 import static java.lang.Thread.currentThread;
 
 
@@ -431,7 +435,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
     private final int adviceId;
     private final boolean isTracing;
-    private final String className;
+    private final String internalClassName;
+    private final String javaClassName;
     private final Matcher<AsmMethod> asmMethodMatcher;
     private final EnhancerAffect affect;
 
@@ -439,25 +444,26 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     /**
      * 构建通知编织器
      *
-     * @param adviceId         通知ID
-     * @param isTracing        可跟踪方法调用
-     * @param className        类名称(透传)
-     * @param asmMethodMatcher asm方法匹配
-     *                         只有匹配上的方法才会被织入通知器
-     * @param affect           影响计数
-     * @param cv               ClassVisitor for ASM
+     * @param adviceId          通知ID
+     * @param isTracing         可跟踪方法调用
+     * @param internalClassName 类名称(透传)
+     * @param asmMethodMatcher  asm方法匹配
+     *                          只有匹配上的方法才会被织入通知器
+     * @param affect            影响计数
+     * @param cv                ClassVisitor for ASM
      */
     public AdviceWeaver(
             final int adviceId,
             final boolean isTracing,
-            final String className,
+            final String internalClassName,
             final Matcher<AsmMethod> asmMethodMatcher,
             final EnhancerAffect affect,
             final ClassVisitor cv) {
         super(ASM5, cv);
         this.adviceId = adviceId;
         this.isTracing = isTracing;
-        this.className = className;
+        this.internalClassName = internalClassName;
+        this.javaClassName = tranClassName(internalClassName);
         this.asmMethodMatcher = asmMethodMatcher;
         this.affect = affect;
     }
@@ -601,14 +607,22 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 if (this.isStaticMethod()) {
 
-                    //mv.visitLdcInsn(Type.getType("Lcom/github/ompc/greys/core/TestUtils;"));
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
+//                    // fast enhance
+//                    if (GlobalOptions.isEnableFastEnhance) {
+//                        visitLdcInsn(Type.getType(String.format("L%s;", internalClassName)));
+//                        visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
+//                    }
 
-//                    visitLdcInsn(tranClassName(className));
-//                    invokeStatic(ASM_TYPE_CLASS, Method.getMethod("Class forName(String)"));
-//                    invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
-                    visitLdcInsn(Type.getType(String.format("L%s;", className)));
-                    visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
+                    // normal enhance
+//                    else {
+
+                    // 这里不得不用性能极差的Class.forName()来完成类的获取,因为有可能当前这个静态方法在执行的时候
+                    // 当前类并没有完成实例化,会引起JVM对class文件的合法性校验失败
+                    // 未来我可能会在这一块考虑性能优化,但对于当前而言,功能远远重要于性能,也就不打算折腾这么复杂了
+                    visitLdcInsn(javaClassName);
+                    invokeStatic(ASM_TYPE_CLASS, Method.getMethod("Class forName(String)"));
+                    invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
+//                    }
 
                 } else {
                     loadThis();
@@ -638,7 +652,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 dup();
                 push(2);
-                push(GaStringUtils.tranClassName(className));
+                push(tranClassName(javaClassName));
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
