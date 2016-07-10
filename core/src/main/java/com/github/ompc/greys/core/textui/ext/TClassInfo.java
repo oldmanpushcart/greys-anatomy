@@ -46,7 +46,7 @@ public class TClassInfo implements TComponent {
         final CodeSource cs = clazz.getProtectionDomain().getCodeSource();
 
         final TTable tTable = new TTable(new TTable.ColumnDefine[]{
-                new TTable.ColumnDefine(20, TTable.Align.RIGHT),
+                new TTable.ColumnDefine(50, TTable.Align.RIGHT),
                 new TTable.ColumnDefine(80, TTable.Align.LEFT)
         })
                 .addRow("class-info", tranClassName(clazz))

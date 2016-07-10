@@ -1,6 +1,5 @@
 package com.github.ompc.greys.core.advisor;
 
-import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.util.AsmCodeLock;
 import com.github.ompc.greys.core.util.CodeLock;
 import com.github.ompc.greys.core.util.GaMethod;
@@ -608,18 +607,22 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 if (this.isStaticMethod()) {
 
-                    // fast enhance
-                    if (GlobalOptions.isEnableFastEnhance) {
-                        visitLdcInsn(Type.getType(String.format("L%s;", internalClassName)));
-                        visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
-                    }
+//                    // fast enhance
+//                    if (GlobalOptions.isEnableFastEnhance) {
+//                        visitLdcInsn(Type.getType(String.format("L%s;", internalClassName)));
+//                        visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
+//                    }
 
                     // normal enhance
-                    else {
-                        visitLdcInsn(javaClassName);
-                        invokeStatic(ASM_TYPE_CLASS, Method.getMethod("Class forName(String)"));
-                        invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
-                    }
+//                    else {
+
+                    // 这里不得不用性能极差的Class.forName()来完成类的获取,因为有可能当前这个静态方法在执行的时候
+                    // 当前类并没有完成实例化,会引起JVM对class文件的合法性校验失败
+                    // 未来我可能会在这一块考虑性能优化,但对于当前而言,功能远远重要于性能,也就不打算折腾这么复杂了
+                    visitLdcInsn(javaClassName);
+                    invokeStatic(ASM_TYPE_CLASS, Method.getMethod("Class forName(String)"));
+                    invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
+//                    }
 
                 } else {
                     loadThis();
