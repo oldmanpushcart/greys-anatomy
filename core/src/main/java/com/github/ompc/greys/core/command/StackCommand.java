@@ -8,6 +8,7 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.util.InvokeCost;
 import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.matcher.ClassMatcher;
 import com.github.ompc.greys.core.util.matcher.GaMethodMatcher;
@@ -31,7 +32,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
                 "stack -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
                 "stack org.apache.commons.lang.StringUtils isBlank",
                 "stack *StringUtils isBlank",
-                "stack *StringUtils isBlank params[0].length==1"
+                "stack *StringUtils isBlank 'params[0].length==1'",
+                "stack *StringUtils isBlank '#cost>100'"
         })
 public class StackCommand implements Command {
 
@@ -61,7 +63,8 @@ public class StackCommand implements Command {
                     "       returnObj : the returned object of method\n" +
                     "        throwExp : the throw exception of method\n" +
                     "        isReturn : the method ended by return\n" +
-                    "         isThrow : the method ended by throwing exception"
+                    "         isThrow : the method ended by throwing exception\n" +
+                    "           #cost : the cost of method"
     )
     private String conditionExpress;
 
@@ -95,16 +98,18 @@ public class StackCommand implements Command {
                         return new ReflectAdviceListenerAdapter() {
 
                             private final ThreadLocal<String> stackInfoRef = new ThreadLocal<String>();
+                            private final InvokeCost invokeCost = new InvokeCost();
 
                             @Override
                             public void before(Advice advice) throws Throwable {
                                 stackInfoRef.set(getStack());
+                                invokeCost.begin();
                             }
 
-                            private boolean isInCondition(Advice advice) {
+                            private boolean isInCondition(Advice advice, long cost) {
                                 try {
                                     return isBlank(conditionExpress)
-                                            || newExpress(advice).is(conditionExpress);
+                                            || newExpress(advice).bind("cost", cost).is(conditionExpress);
                                 } catch (ExpressException e) {
                                     return false;
                                 }
@@ -117,7 +122,7 @@ public class StackCommand implements Command {
 
                             @Override
                             public void afterFinishing(Advice advice) throws Throwable {
-                                if (isInCondition(advice)) {
+                                if (isInCondition(advice, invokeCost.cost())) {
                                     printer.println(stackInfoRef.get());
                                     if (isOverThreshold(times.incrementAndGet())) {
                                         printer.finish();
