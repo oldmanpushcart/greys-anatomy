@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
+import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -99,9 +100,17 @@ public class StackCommand implements Command {
                             private final ThreadLocal<String> stackInfoRef = new ThreadLocal<String>();
                             private final InvokeCost invokeCost = new InvokeCost();
 
+                            private String getTitle(final Advice advice) {
+                                final StringBuilder titleSB = new StringBuilder(getThreadInfo());
+                                if (advice.isTraceSupport()) {
+                                    titleSB.append(";traceId=").append(advice.getTraceId()).append(";");
+                                }
+                                return titleSB.toString();
+                            }
+
                             @Override
                             public void before(Advice advice) throws Throwable {
-                                stackInfoRef.set(getStack());
+                                stackInfoRef.set(getStack(getTitle(advice)));
                                 invokeCost.begin();
                             }
 

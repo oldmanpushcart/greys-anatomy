@@ -304,7 +304,7 @@ public class GaStringUtils {
      *
      * @return 方法堆栈信息
      */
-    public static String getStack() {
+    public static String getStack(final String title) {
 
         final Thread currentThread = Thread.currentThread();
         final StackTraceElement[] stackTraceElementArray = currentThread.getStackTrace();
@@ -335,7 +335,7 @@ public class GaStringUtils {
         }//if
 
 
-        final String title = getThreadInfo();
+        // final String title = getThreadInfo();
 
 
         final StackTraceElement locationStackTraceElement = elementStack.pop();

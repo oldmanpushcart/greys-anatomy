@@ -64,6 +64,11 @@ public class TTimeFragmentDetail implements TComponent {
                 .addRow("IS-RETURN", advice.isReturn)
                 .addRow("IS-EXCEPTION", advice.isThrow);
 
+        if (advice.isTraceSupport()) {
+            tTable.addRow("TRACE-ID", advice.getTraceId());
+        }
+
+
         // fill the parameters
         if (null != advice.params) {
 

@@ -41,7 +41,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
                 "ptrace -E .*\\.StringUtils isBlank org\\.apache\\.commons\\.(lang|lang3)\\..*",
                 "ptrace org.apache.commons.lang.StringUtils isBlank org.apache.commons.lang.*",
                 "ptrace *StringUtils isBlank org.apache.commons.lang.*",
-                "ptrace *StringUtils isBlank org.apache.commons.lang.* params[0].length==1"
+                "ptrace *StringUtils isBlank org.apache.commons.lang.* 'params[0].length==1'",
+                "ptrace *StringUtils isBlank org.apache.commons.lang.* '#cost>100'"
         })
 public class PathTraceCommand implements Command {
 
@@ -158,7 +159,7 @@ public class PathTraceCommand implements Command {
 
                             private final InvokeCost invokeCost = new InvokeCost();
 
-                            private final ThreadLocal<PathTrace> pathTraceRef = new ThreadLocal<PathTrace>(){
+                            private final ThreadLocal<PathTrace> pathTraceRef = new ThreadLocal<PathTrace>() {
                                 @Override
                                 protected PathTrace initialValue() {
                                     return new PathTrace();
@@ -188,7 +189,7 @@ public class PathTraceCommand implements Command {
                             }
 
                             @Override
-                            public void before(Advice advice) throws Throwable {
+                            public void before(final Advice advice) throws Throwable {
 
                                 if (!isInit) {
                                     return;
@@ -208,7 +209,7 @@ public class PathTraceCommand implements Command {
                                 final Entity entity = pathTrace.getEntity(new InitCallback<Entity>() {
                                     @Override
                                     public Entity init() {
-                                        return new Entity(timeFragmentManager.generateProcessId());
+                                        return new Entity(advice, timeFragmentManager.generateProcessId());
                                     }
                                 });
 
@@ -307,11 +308,21 @@ public class PathTraceCommand implements Command {
      */
     private class Entity {
 
-        private Entity(int processId) {
+        private Entity(final Advice advice, final int processId) {
             this.processId = processId;
             this.tfTable = new TTimeFragmentTable(true);
-            this.tTree = new TTree(true, "pTracing for : " + getThreadInfo() + "process=" + processId + ";");
+            this.tTree = new TTree(true, getTitle(advice, processId));
             this.deep = 0;
+        }
+
+        private String getTitle(final Advice advice, final int processId) {
+            final StringBuilder titleSB = new StringBuilder()
+                    .append("pTracing for : ").append(getThreadInfo())
+                    .append("process=").append(processId).append(";");
+            if (advice.isTraceSupport()) {
+                titleSB.append("traceId=").append(advice.getTraceId()).append(";");
+            }
+            return titleSB.toString();
         }
 
         TTimeFragmentTable tfTable;
