@@ -9,6 +9,7 @@ import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.textui.ext.TObject;
+import com.github.ompc.greys.core.util.InvokeCost;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.matcher.ClassMatcher;
@@ -145,8 +146,11 @@ public class WatchCommand implements Command {
 
                         return new ReflectAdviceListenerAdapter() {
 
+                            private final InvokeCost invokeCost = new InvokeCost();
+
                             @Override
                             public void before(Advice advice) throws Throwable {
+                                invokeCost.begin();
                                 if (isBefore) {
                                     watching(advice);
                                 }
@@ -181,7 +185,7 @@ public class WatchCommand implements Command {
                             private boolean isInCondition(Advice advice) {
                                 try {
                                     return isBlank(conditionExpress)
-                                            || newExpress(advice).is(conditionExpress);
+                                            || newExpress(advice).bind("cost", invokeCost.cost()).is(conditionExpress);
                                 } catch (ExpressException e) {
                                     return false;
                                 }
