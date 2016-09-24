@@ -33,6 +33,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
                 "trace org.apache.commons.lang.StringUtils isBlank",
                 "trace *StringUtils isBlank",
                 "trace *StringUtils isBlank params[0].length==1",
+                "trace *StringUtils isBlank '#cost>100'",
                 "trace -n 2 *StringUtils isBlank",
         })
 public class TraceCommand implements Command {

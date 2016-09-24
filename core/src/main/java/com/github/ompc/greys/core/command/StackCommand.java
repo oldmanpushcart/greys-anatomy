@@ -63,8 +63,7 @@ public class StackCommand implements Command {
                     "       returnObj : the returned object of method\n" +
                     "        throwExp : the throw exception of method\n" +
                     "        isReturn : the method ended by return\n" +
-                    "         isThrow : the method ended by throwing exception\n" +
-                    "           #cost : the cost of method"
+                    "         isThrow : the method ended by throwing exception"
     )
     private String conditionExpress;
 

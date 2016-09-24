@@ -31,7 +31,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
                 "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
                 "watch -bf *StringUtils isBlank params[0]",
                 "watch *StringUtils isBlank params[0]",
-                "watch *StringUtils isBlank params[0] params[0].length==1"
+                "watch *StringUtils isBlank params[0] 'params[0].length==1'",
+                "watch *StringUtils isBlank params[0] '#cost>100'",
         })
 public class WatchCommand implements Command {
 
