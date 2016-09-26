@@ -76,8 +76,7 @@ public final class Advice {
         return new LazyGet<String>() {
             @Override
             protected String initialValue() throws Throwable {
-                AliEagleEyeUtils.getTraceId(loader);
-                return null;
+                return AliEagleEyeUtils.getTraceId(loader);
             }
         };
     }
@@ -194,7 +193,7 @@ public final class Advice {
      * @return true:支持被跟踪;false:不支持
      */
     public boolean isTraceSupport() {
-        return GlobalOptions.isEnableEagleEye
+        return GlobalOptions.isEnableTraceId
                 && isAliEagleEyeSupport();
     }
 

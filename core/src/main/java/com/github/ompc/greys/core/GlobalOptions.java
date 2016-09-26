@@ -129,11 +129,11 @@ public class GlobalOptions {
 
     @Option(
             level = 1,
-            name = "is-enable-eagle-eye",
-            summary = "Option to control enable EagleEye traceId display.",
-            description = "This option enable to control EagleEye traceId display."
+            name = "is-enable-trace-id",
+            summary = "Option to control enable traceId display.",
+            description = "This option enable to control traceId display."
     )
-    public static volatile boolean isEnableEagleEye = false;
+    public static volatile boolean isEnableTraceId = true;
 
     /**
      * 选项

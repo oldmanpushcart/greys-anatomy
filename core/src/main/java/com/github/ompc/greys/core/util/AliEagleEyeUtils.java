@@ -22,7 +22,7 @@ public class AliEagleEyeUtils {
      * @return EagleEyeId
      */
     public static String getTraceId(final ClassLoader loader) {
-        if (GlobalOptions.isEnableEagleEye) {
+        if (!GlobalOptions.isEnableTraceId) {
             return ILLEGAL_EAGLE_EYE_TRACE_ID;
         }
         final Thread currentThread = Thread.currentThread();

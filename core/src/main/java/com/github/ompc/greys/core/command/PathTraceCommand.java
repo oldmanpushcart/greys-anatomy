@@ -245,7 +245,7 @@ public class PathTraceCommand implements Command {
                                             advice,
                                             new Date(),
                                             cost,
-                                            getStack()
+                                            getStack(getThreadInfo())
                                     );
                                     entity.tfTable.add(timeFragment);
                                     entity.tTree.set(entity.tTree.get() + "; index=" + timeFragment.id + ";");
