@@ -8,6 +8,7 @@ import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
+import com.github.ompc.greys.core.util.InvokeCost;
 import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.matcher.ClassMatcher;
 import com.github.ompc.greys.core.util.matcher.GaMethodMatcher;
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.ompc.greys.core.util.Express.ExpressFactory.newExpress;
 import static com.github.ompc.greys.core.util.GaStringUtils.getStack;
+import static com.github.ompc.greys.core.util.GaStringUtils.getThreadInfo;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -31,7 +33,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
                 "stack -E org\\.apache\\.commons\\.lang\\.StringUtils isBlank",
                 "stack org.apache.commons.lang.StringUtils isBlank",
                 "stack *StringUtils isBlank",
-                "stack *StringUtils isBlank params[0].length==1"
+                "stack *StringUtils isBlank 'params[0].length==1'",
+                "stack *StringUtils isBlank '#cost>100'"
         })
 public class StackCommand implements Command {
 
@@ -95,16 +98,26 @@ public class StackCommand implements Command {
                         return new ReflectAdviceListenerAdapter() {
 
                             private final ThreadLocal<String> stackInfoRef = new ThreadLocal<String>();
+                            private final InvokeCost invokeCost = new InvokeCost();
+
+                            private String getTitle(final Advice advice) {
+                                final StringBuilder titleSB = new StringBuilder(getThreadInfo());
+                                if (advice.isTraceSupport()) {
+                                    titleSB.append(";traceId=").append(advice.getTraceId()).append(";");
+                                }
+                                return titleSB.toString();
+                            }
 
                             @Override
                             public void before(Advice advice) throws Throwable {
-                                stackInfoRef.set(getStack());
+                                stackInfoRef.set(getStack(getTitle(advice)));
+                                invokeCost.begin();
                             }
 
-                            private boolean isInCondition(Advice advice) {
+                            private boolean isInCondition(Advice advice, long cost) {
                                 try {
                                     return isBlank(conditionExpress)
-                                            || newExpress(advice).is(conditionExpress);
+                                            || newExpress(advice).bind("cost", cost).is(conditionExpress);
                                 } catch (ExpressException e) {
                                     return false;
                                 }
@@ -117,7 +130,7 @@ public class StackCommand implements Command {
 
                             @Override
                             public void afterFinishing(Advice advice) throws Throwable {
-                                if (isInCondition(advice)) {
+                                if (isInCondition(advice, invokeCost.cost())) {
                                     printer.println(stackInfoRef.get());
                                     if (isOverThreshold(times.incrementAndGet())) {
                                         printer.finish();

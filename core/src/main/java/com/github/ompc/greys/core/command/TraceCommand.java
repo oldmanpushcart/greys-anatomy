@@ -33,6 +33,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
                 "trace org.apache.commons.lang.StringUtils isBlank",
                 "trace *StringUtils isBlank",
                 "trace *StringUtils isBlank params[0].length==1",
+                "trace *StringUtils isBlank '#cost>100'",
                 "trace -n 2 *StringUtils isBlank",
         })
 public class TraceCommand implements Command {
@@ -147,13 +148,22 @@ public class TraceCommand implements Command {
 
                             }
 
+                            private String getTitle(final Advice advice) {
+                                final StringBuilder titleSB = new StringBuilder("Tracing for : ")
+                                        .append(getThreadInfo());
+                                if (advice.isTraceSupport()) {
+                                    titleSB.append(";traceId=").append(advice.getTraceId()).append(";");
+                                }
+                                return titleSB.toString();
+                            }
+
                             @Override
                             public void before(Advice advice) throws Throwable {
 
                                 invokeCost.begin();
                                 traceRef.set(
                                         new Trace(
-                                                new TTree(true, "Tracing for : " + getThreadInfo())
+                                                new TTree(true, getTitle(advice))
                                                         .begin(advice.getClazz().getName() + ":" + advice.getMethod().getName() + "()")
                                         )
                                 );

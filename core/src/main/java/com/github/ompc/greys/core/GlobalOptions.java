@@ -127,6 +127,14 @@ public class GlobalOptions {
 //    )
 //    public static volatile boolean isTracingSubClass = false;
 
+    @Option(
+            level = 1,
+            name = "is-enable-trace-id",
+            summary = "Option to control enable traceId display.",
+            description = "This option enable to control traceId display."
+    )
+    public static volatile boolean isEnableTraceId = true;
+
     /**
      * 选项
      */
