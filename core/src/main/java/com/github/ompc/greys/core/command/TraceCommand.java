@@ -1,14 +1,15 @@
 package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.Advice;
-import com.github.ompc.greys.core.GlobalOptions;
-import com.github.ompc.greys.core.advisor.*;
+import com.github.ompc.greys.core.advisor.AdviceListener;
+import com.github.ompc.greys.core.advisor.ReflectAdviceTracingListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.textui.TTree;
+import com.github.ompc.greys.core.util.InvokeCost;
 import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.matcher.ClassMatcher;
 import com.github.ompc.greys.core.util.matcher.GaMethodMatcher;
@@ -32,6 +33,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
                 "trace org.apache.commons.lang.StringUtils isBlank",
                 "trace *StringUtils isBlank",
                 "trace *StringUtils isBlank params[0].length==1",
+                "trace *StringUtils isBlank '#cost>100'",
                 "trace -n 2 *StringUtils isBlank",
         })
 public class TraceCommand implements Command {
@@ -89,94 +91,99 @@ public class TraceCommand implements Command {
 
                                 // don't include the sub class when tracing...
                                 // fixed for #94
-                                GlobalOptions.isTracingSubClass
+                                // GlobalOptions.isTracingSubClass
+
+                                // include sub class when tracing now
+                                true
                         );
                     }
 
-                    // 访问计数器
-                    private final AtomicInteger timesRef = new AtomicInteger();
-
                     @Override
                     public AdviceListener getAdviceListener() {
-                        return new ReflectAdviceTracingListenerAdapter<ProcessContext, TraceInnerContext>() {
+                        return new ReflectAdviceTracingListenerAdapter() {
+
+                            private final AtomicInteger timesRef = new AtomicInteger();
+                            private final InvokeCost invokeCost = new InvokeCost();
+                            private final ThreadLocal<Trace> traceRef = new ThreadLocal<Trace>();
 
                             @Override
-                            public void invokeBeforeTracing(
+                            public void tracingInvokeBefore(
                                     Integer tracingLineNumber,
                                     String tracingClassName,
                                     String tracingMethodName,
-                                    String tracingMethodDesc,
-                                    ProcessContext processContext,
-                                    TraceInnerContext innerContext) throws Throwable {
-                                final Entity entity = innerContext.entity;
+                                    String tracingMethodDesc) throws Throwable {
+                                final Trace trace = traceRef.get();
                                 if (null == tracingLineNumber) {
-                                    entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
+                                    trace.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "()");
                                 } else {
-                                    entity.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "(@" + tracingLineNumber + ")");
+                                    trace.tTree.begin(tranClassName(tracingClassName) + ":" + tracingMethodName + "(@" + tracingLineNumber + ")");
                                 }
 
                             }
 
                             @Override
-                            public void invokeAfterTracing(
+                            public void tracingInvokeAfter(
+                                    Integer tracingLineNumber,
+                                    String tracingClassName,
+                                    String tracingMethodName,
+                                    String tracingMethodDesc) throws Throwable {
+                                final Trace trace = traceRef.get();
+                                if (!trace.tTree.isTop()) {
+                                    trace.tTree.end();
+                                }
+
+                            }
+
+                            @Override
+                            public void tracingInvokeThrowing(
                                     Integer tracingLineNumber,
                                     String tracingClassName,
                                     String tracingMethodName,
                                     String tracingMethodDesc,
-                                    ProcessContext processContext,
-                                    TraceInnerContext innerContext) throws Throwable {
-                                innerContext.entity.tTree.end();
-                            }
-
-                            @Override
-                            public void invokeThrowTracing(
-                                    Integer tracingLineNumber,
-                                    String tracingClassName,
-                                    String tracingMethodName,
-                                    String tracingMethodDesc,
-                                    String throwException,
-                                    ProcessContext processContext,
-                                    TraceInnerContext innerContext) throws Throwable {
-                                final Entity entity = innerContext.entity;
-                                entity.tTree.set(entity.tTree.get() + "[throw " + throwException + "]");
-                                entity.tTree.end();
-                            }
-
-                            @Override
-                            public void before(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
-
-                                final Entity entity = innerContext.getEntity(new InitCallback<Entity>() {
-                                    @Override
-                                    public Entity init() {
-                                        return new Entity();
-                                    }
-                                });
-
-                                entity.tTree = new TTree(true, "Tracing for : " + getThreadInfo())
-                                        .begin(advice.clazz.getName() + ":" + advice.method.getName() + "()");
+                                    String throwException) throws Throwable {
+                                final Trace trace = traceRef.get();
+                                if (!trace.tTree.isTop()) {
+                                    trace.tTree.set(trace.tTree.get() + "[throw " + throwException + "]").end();
+                                }
 
                             }
 
-                            @Override
-                            protected ProcessContext newProcessContext() {
-                                return new ProcessContext();
+                            private String getTitle(final Advice advice) {
+                                final StringBuilder titleSB = new StringBuilder("Tracing for : ")
+                                        .append(getThreadInfo());
+                                if (advice.isTraceSupport()) {
+                                    titleSB.append(";traceId=").append(advice.getTraceId()).append(";");
+                                }
+                                return titleSB.toString();
                             }
 
                             @Override
-                            protected TraceInnerContext newInnerContext() {
-                                return new TraceInnerContext();
+                            public void before(Advice advice) throws Throwable {
+
+                                invokeCost.begin();
+                                traceRef.set(
+                                        new Trace(
+                                                new TTree(true, getTitle(advice))
+                                                        .begin(advice.getClazz().getName() + ":" + advice.getMethod().getName() + "()")
+                                        )
+                                );
                             }
 
                             @Override
-                            public void afterReturning(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
-                                final Entity entity = innerContext.entity;
-                                entity.tTree.end();
+                            public void afterReturning(Advice advice) throws Throwable {
+                                final Trace trace = traceRef.get();
+                                if (!trace.tTree.isTop()) {
+                                    trace.tTree.end();
+                                }
                             }
 
                             @Override
-                            public void afterThrowing(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
-                                final Entity entity = innerContext.entity;
-                                entity.tTree.begin("throw:" + advice.throwExp.getClass().getName() + "()").end().end();
+                            public void afterThrowing(Advice advice) throws Throwable {
+                                final Trace trace = traceRef.get();
+                                trace.tTree.begin("throw:" + advice.throwExp.getClass().getName() + "()").end();
+                                if (!trace.tTree.isTop()) {
+                                    trace.tTree.end();
+                                }
 
                                 // 这里将堆栈的end全部补上
                                 //while (entity.tracingDeep-- >= 0) {
@@ -200,11 +207,11 @@ public class TraceCommand implements Command {
                             }
 
                             @Override
-                            public void afterFinishing(Advice advice, ProcessContext processContext, TraceInnerContext innerContext) throws Throwable {
-                                final long cost = innerContext.getCost();
+                            public void afterFinishing(Advice advice) throws Throwable {
+                                final long cost = invokeCost.cost();
                                 if (isInCondition(advice, cost)) {
-                                    final Entity entity = innerContext.entity;
-                                    printer.println(entity.tTree.rendering());
+                                    final Trace trace = traceRef.get();
+                                    printer.println(trace.tTree.rendering());
                                     if (isOverThreshold(timesRef.incrementAndGet())) {
                                         printer.finish();
                                     }
@@ -220,22 +227,12 @@ public class TraceCommand implements Command {
 
     }
 
-    private class Entity {
-        TTree tTree;
-    }
+    private class Trace {
+        private final TTree tTree;
 
-    private class TraceInnerContext extends InnerContext {
-
-        Entity entity;
-
-        Entity getEntity(InitCallback<Entity> initCallback) {
-            if (null == entity) {
-                return entity = initCallback.init();
-            } else {
-                return entity;
-            }
+        private Trace(TTree tTree) {
+            this.tTree = tTree;
         }
-
     }
 
 }

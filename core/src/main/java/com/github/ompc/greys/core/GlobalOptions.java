@@ -111,13 +111,29 @@ public class GlobalOptions {
     )
     public static volatile boolean isDisableSubClass = false;
 
+//    @Option(
+//            level = 0,
+//            name = "is-enable-fast-enhance",
+//            summary = "Option to control enable fast enhance class",
+//            description = "This option enable fast enhance class, maybe some class will enhance failed."
+//    )
+//    public static volatile boolean isEnableFastEnhance = false;
+
+//    @Option(
+//            level = 2,
+//            name = "is-tracing-sub-class",
+//            summary = "try to fix #94",
+//            description = "try to fix #94"
+//    )
+//    public static volatile boolean isTracingSubClass = false;
+
     @Option(
-            level = 2,
-            name = "is-tracing-sub-class",
-            summary = "try to fix #94",
-            description = "try to fix #94"
+            level = 1,
+            name = "is-enable-trace-id",
+            summary = "Option to control enable traceId display.",
+            description = "This option enable to control traceId display."
     )
-    public static volatile boolean isTracingSubClass = false;
+    public static volatile boolean isEnableTraceId = true;
 
     /**
      * 选项

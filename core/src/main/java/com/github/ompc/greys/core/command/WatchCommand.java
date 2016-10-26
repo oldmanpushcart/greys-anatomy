@@ -2,15 +2,14 @@ package com.github.ompc.greys.core.command;
 
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.advisor.AdviceListener;
-import com.github.ompc.greys.core.advisor.InnerContext;
-import com.github.ompc.greys.core.advisor.ProcessContext;
-import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter.DefaultReflectAdviceListenerAdapter;
+import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
 import com.github.ompc.greys.core.exception.ExpressException;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.textui.ext.TObject;
+import com.github.ompc.greys.core.util.InvokeCost;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.matcher.ClassMatcher;
@@ -32,7 +31,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
                 "watch -f org.apache.commons.lang.StringUtils isBlank returnObj",
                 "watch -bf *StringUtils isBlank params[0]",
                 "watch *StringUtils isBlank params[0]",
-                "watch *StringUtils isBlank params[0] params[0].length==1"
+                "watch *StringUtils isBlank params[0] 'params[0].length==1'",
+                "watch *StringUtils isBlank params[0] '#cost>100'",
         })
 public class WatchCommand implements Command {
 
@@ -145,31 +145,34 @@ public class WatchCommand implements Command {
                     @Override
                     public AdviceListener getAdviceListener() {
 
-                        return new DefaultReflectAdviceListenerAdapter() {
+                        return new ReflectAdviceListenerAdapter() {
+
+                            private final InvokeCost invokeCost = new InvokeCost();
 
                             @Override
-                            public void before(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void before(Advice advice) throws Throwable {
+                                invokeCost.begin();
                                 if (isBefore) {
                                     watching(advice);
                                 }
                             }
 
                             @Override
-                            public void afterReturning(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void afterReturning(Advice advice) throws Throwable {
                                 if (isSuccess) {
                                     watching(advice);
                                 }
                             }
 
                             @Override
-                            public void afterThrowing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void afterThrowing(Advice advice) throws Throwable {
                                 if (isException) {
                                     watching(advice);
                                 }
                             }
 
                             @Override
-                            public void afterFinishing(Advice advice, ProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void afterFinishing(Advice advice) throws Throwable {
                                 if (isFinish) {
                                     watching(advice);
                                 }
@@ -183,7 +186,7 @@ public class WatchCommand implements Command {
                             private boolean isInCondition(Advice advice) {
                                 try {
                                     return isBlank(conditionExpress)
-                                            || newExpress(advice).is(conditionExpress);
+                                            || newExpress(advice).bind("cost", invokeCost.cost()).is(conditionExpress);
                                 } catch (ExpressException e) {
                                     return false;
                                 }

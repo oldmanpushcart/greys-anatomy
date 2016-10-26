@@ -45,8 +45,8 @@ public class TTimeFragmentDetail implements TComponent {
     public String rendering() {
 
         final Advice advice = timeFragment.advice;
-        final String className = advice.clazz.getName();
-        final String methodName = advice.method.getName();
+        final String className = advice.getClazz().getName();
+        final String methodName = advice.getMethod().getName();
 
         final TTable tTable = new TTable(
                 new ColumnDefine[]{
@@ -63,6 +63,11 @@ public class TTimeFragmentDetail implements TComponent {
                 .addRow("METHOD", methodName)
                 .addRow("IS-RETURN", advice.isReturn)
                 .addRow("IS-EXCEPTION", advice.isThrow);
+
+        if (advice.isTraceSupport()) {
+            tTable.addRow("TRACE-ID", advice.getTraceId());
+        }
+
 
         // fill the parameters
         if (null != advice.params) {

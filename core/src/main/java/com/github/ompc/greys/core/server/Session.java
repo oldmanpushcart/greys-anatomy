@@ -65,7 +65,7 @@ public class Session {
      * @param socketChannel   socket
      * @param charset         会话字符集
      */
-    public Session(int javaPid, int sessionId, long sessionDuration, SocketChannel socketChannel, Charset charset) {
+    Session(int javaPid, int sessionId, long sessionDuration, SocketChannel socketChannel, Charset charset) {
         this.javaPid = javaPid;
         this.sessionId = sessionId;
         this.sessionDuration = sessionDuration;
@@ -118,6 +118,11 @@ public class Session {
     public void unLock() {
 
         final int currentLockTx = lockTx.get();
+
+        // 如果当前锁已经是LOCK_TX_EMPTY,则没有必要继续执行
+        if (LOCK_TX_EMPTY == currentLockTx) {
+            return;
+        }
         if (!lockTx.compareAndSet(currentLockTx, LOCK_TX_EMPTY)) {
             // 能到这一步说明是lock()/unLock()编写出错，需要开发排查
             throw new IllegalStateException();

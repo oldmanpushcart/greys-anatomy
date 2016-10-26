@@ -24,7 +24,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
         eg = {
                 "sc -E org\\.apache\\.commons\\.lang\\.StringUtils",
                 "sc -d org.apache.commons.lang.StringUtils",
-                "sc -Sd *StringUtils"
         })
 public class SearchClassCommand implements Command {
 

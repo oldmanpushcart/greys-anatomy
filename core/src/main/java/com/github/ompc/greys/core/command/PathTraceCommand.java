@@ -3,7 +3,9 @@ package com.github.ompc.greys.core.command;
 import com.github.ompc.greys.core.Advice;
 import com.github.ompc.greys.core.GlobalOptions;
 import com.github.ompc.greys.core.TimeFragment;
-import com.github.ompc.greys.core.advisor.*;
+import com.github.ompc.greys.core.advisor.AdviceListener;
+import com.github.ompc.greys.core.advisor.InitCallback;
+import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
@@ -13,6 +15,7 @@ import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.textui.TTree;
 import com.github.ompc.greys.core.textui.ext.TTimeFragmentTable;
 import com.github.ompc.greys.core.util.GaMethod;
+import com.github.ompc.greys.core.util.InvokeCost;
 import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.collection.ThreadUnsafeLRUHashMap;
 import com.github.ompc.greys.core.util.matcher.*;
@@ -38,7 +41,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
                 "ptrace -E .*\\.StringUtils isBlank org\\.apache\\.commons\\.(lang|lang3)\\..*",
                 "ptrace org.apache.commons.lang.StringUtils isBlank org.apache.commons.lang.*",
                 "ptrace *StringUtils isBlank org.apache.commons.lang.*",
-                "ptrace *StringUtils isBlank org.apache.commons.lang.* params[0].length==1"
+                "ptrace *StringUtils isBlank org.apache.commons.lang.* 'params[0].length==1'",
+                "ptrace *StringUtils isBlank org.apache.commons.lang.* '#cost>100'"
         })
 public class PathTraceCommand implements Command {
 
@@ -151,22 +155,21 @@ public class PathTraceCommand implements Command {
 
                     @Override
                     public AdviceListener getAdviceListener() {
-                        return new ReflectAdviceListenerAdapter<PathTraceProcessContext, InnerContext>() {
+                        return new ReflectAdviceListenerAdapter() {
+
+                            private final InvokeCost invokeCost = new InvokeCost();
+
+                            private final ThreadLocal<PathTrace> pathTraceRef = new ThreadLocal<PathTrace>() {
+                                @Override
+                                protected PathTrace initialValue() {
+                                    return new PathTrace();
+                                }
+                            };
 
                             private volatile boolean isInit = false;
 
                             // 执行计数器
                             private final AtomicInteger timesRef = new AtomicInteger();
-
-                            @Override
-                            protected PathTraceProcessContext newProcessContext() {
-                                return new PathTraceProcessContext();
-                            }
-
-                            @Override
-                            protected InnerContext newInnerContext() {
-                                return new InnerContext();
-                            }
 
                             @Override
                             public void create() {
@@ -186,41 +189,45 @@ public class PathTraceCommand implements Command {
                             }
 
                             @Override
-                            public void before(Advice advice, PathTraceProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void before(final Advice advice) throws Throwable {
 
                                 if (!isInit) {
                                     return;
                                 }
 
-                                if (!processContext.isTracing) {
-                                    if (isTracingEnter(advice.clazz, advice.method)) {
-                                        processContext.isTracing = true;
+                                invokeCost.begin();
+
+                                final PathTrace pathTrace = pathTraceRef.get();
+                                if (!pathTrace.isTracing) {
+                                    if (isTracingEnter(advice.getClazz(), advice.getMethod())) {
+                                        pathTrace.isTracing = true;
                                     } else {
                                         return;
                                     }
                                 }
 
-                                final Entity entity = processContext.getEntity(new InitCallback<Entity>() {
+                                final Entity entity = pathTrace.getEntity(new InitCallback<Entity>() {
                                     @Override
                                     public Entity init() {
-                                        return new Entity(timeFragmentManager.generateProcessId());
+                                        return new Entity(advice, timeFragmentManager.generateProcessId());
                                     }
                                 });
 
-                                entity.tTree.begin(advice.clazz.getCanonicalName() + ":" + advice.method.getName() + "()");
+                                entity.tTree.begin(advice.getClazz().getCanonicalName() + ":" + advice.getMethod().getName() + "()");
                                 entity.deep++;
                             }
 
                             @Override
-                            public void afterFinishing(Advice advice, PathTraceProcessContext processContext, InnerContext innerContext) throws Throwable {
+                            public void afterFinishing(Advice advice) throws Throwable {
+                                final PathTrace pathTrace = pathTraceRef.get();
                                 if (!isInit
-                                        || !processContext.isTracing) {
+                                        || !pathTrace.isTracing) {
                                     return;
                                 }
 
-                                final long cost = innerContext.getCost();
+                                final long cost = invokeCost.cost();
 
-                                final Entity entity = processContext.getEntity();
+                                final Entity entity = pathTrace.getEntity();
                                 entity.deep--;
 
                                 // add throw exception
@@ -238,7 +245,7 @@ public class PathTraceCommand implements Command {
                                             advice,
                                             new Date(),
                                             cost,
-                                            getStack()
+                                            getStack(getThreadInfo())
                                     );
                                     entity.tfTable.add(timeFragment);
                                     entity.tTree.set(entity.tTree.get() + "; index=" + timeFragment.id + ";");
@@ -264,8 +271,8 @@ public class PathTraceCommand implements Command {
                                         }
                                     }
 
-                                    processContext.isTracing = false;
-                                    processContext.removeEntity();
+                                    pathTrace.isTracing = false;
+                                    pathTrace.removeEntity();
                                 }
 
                             }
@@ -301,11 +308,21 @@ public class PathTraceCommand implements Command {
      */
     private class Entity {
 
-        private Entity(int processId) {
+        private Entity(final Advice advice, final int processId) {
             this.processId = processId;
             this.tfTable = new TTimeFragmentTable(true);
-            this.tTree = new TTree(true, "pTracing for : " + getThreadInfo() + "process=" + processId + ";");
+            this.tTree = new TTree(true, getTitle(advice, processId));
             this.deep = 0;
+        }
+
+        private String getTitle(final Advice advice, final int processId) {
+            final StringBuilder titleSB = new StringBuilder()
+                    .append("pTracing for : ").append(getThreadInfo())
+                    .append("process=").append(processId).append(";");
+            if (advice.isTraceSupport()) {
+                titleSB.append("traceId=").append(advice.getTraceId()).append(";");
+            }
+            return titleSB.toString();
         }
 
         TTimeFragmentTable tfTable;
@@ -315,7 +332,7 @@ public class PathTraceCommand implements Command {
 
     }
 
-    private class PathTraceProcessContext extends ProcessContext {
+    private class PathTrace {
         boolean isTracing;
         Entity entity;
 

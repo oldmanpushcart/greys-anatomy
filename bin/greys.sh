@@ -193,14 +193,15 @@ example:
 parse_arguments()
 {
 
-     TARGET_PID=$(echo ${1}|awk -F "@"   '{print $1}');
-      TARGET_IP=$(echo ${1}|awk -F "@|:" '{print $2}');
-    TARGET_PORT=$(echo ${1}|awk -F ":"   '{print $2}');
+     TARGET_PID=$(echo ${1}|awk '/^[0-9]*@/;/^[^@]+:/{print "@"$1};/^[0-9]+$/'|awk -F "@"   '{print $1}');
+      TARGET_IP=$(echo ${1}|awk '/^[0-9]*@/;/^[^@]+:/{print "@"$1};/^[0-9]+$/'|awk -F "@|:" '{print $2}');
+    TARGET_PORT=$(echo ${1}|awk '/^[0-9]*@/;/^[^@]+:/{print "@"$1};/^[0-9]+$/'|awk -F ":"   '{print $2}');
 
     # check pid
     if [ -z ${TARGET_PID} ];then
-        echo "illegal arguments, the <PID> is required." 1>&2
-        return 1
+        # echo "illegal arguments, the <PID> is required." 1>&2
+        # return 1
+        OPTION_ATTACH_JVM=0
     fi
 
     # reset ${ip} to default if empty
@@ -220,7 +221,8 @@ attach_jvm()
 {
     local greys_lib_dir=${GREYS_LIB_DIR}/${1}/greys
 
-    if [ ${TARGET_IP} = ${DEFAULT_TARGET_IP} ]; then
+    # if [ ${TARGET_IP} = ${DEFAULT_TARGET_IP} ]; then
+    if [ ! -z ${TARGET_PID} ]; then
         ${JAVA_HOME}/bin/java \
             ${BOOT_CLASSPATH} ${JVM_OPTS} \
             -jar ${greys_lib_dir}/greys-core.jar \

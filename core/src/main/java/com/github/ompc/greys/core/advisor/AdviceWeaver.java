@@ -32,7 +32,7 @@ import static java.lang.Thread.currentThread;
  */
 class TracingAsmCodeLock extends AsmCodeLock {
 
-    public TracingAsmCodeLock(AdviceAdapter aa) {
+    TracingAsmCodeLock(AdviceAdapter aa) {
         super(
                 aa,
                 new int[]{
@@ -150,6 +150,10 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             ClassLoader loader, String className, String methodName, String methodDesc,
             Object target, Object[] args) {
 
+        if (!advices.containsKey(adviceId)) {
+            return;
+        }
+
         if (isSelfCallRef.get()) {
             return;
         } else {
@@ -188,8 +192,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * @param returnObject 返回对象
      *                     若目标为静态方法,则为null
      */
-    public static void methodOnReturnEnd(Object returnObject) {
-        methodOnEnd(false, returnObject);
+    public static void methodOnReturnEnd(Object returnObject, int adviceId) {
+        methodOnEnd(adviceId, false, returnObject);
     }
 
     /**
@@ -198,8 +202,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      *
      * @param throwable 抛出异常
      */
-    public static void methodOnThrowingEnd(Throwable throwable) {
-        methodOnEnd(true, throwable);
+    public static void methodOnThrowingEnd(Throwable throwable, int adviceId) {
+        methodOnEnd(adviceId, true, throwable);
     }
 
     /**
@@ -208,7 +212,11 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * @param isThrowing        标记正常返回结束还是抛出异常结束
      * @param returnOrThrowable 正常返回或者抛出异常对象
      */
-    private static void methodOnEnd(boolean isThrowing, Object returnOrThrowable) {
+    private static void methodOnEnd(int adviceId, boolean isThrowing, Object returnOrThrowable) {
+
+        if (!advices.containsKey(adviceId)) {
+            return;
+        }
 
         if (isSelfCallRef.get()) {
             return;
@@ -219,6 +227,12 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         try {
             // 弹射线程帧栈,恢复Begin所保护的执行帧栈
             final GaStack<Object> frameStack = threadFrameStackPop();
+
+            // 用于保护reg和before执行并发的情况
+            // 如果before没有注入,则不对end做任何处理
+            if (null == frameStack) {
+                return;
+            }
 
             // 弹射执行帧栈,恢复Begin所保护的现场
             final AdviceListener listener = (AdviceListener) frameStack.pop();
@@ -254,6 +268,9 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * @param desc       调用方法描述
      */
     public static void methodOnInvokeBeforeTracing(int adviceId, Integer lineNumber, String owner, String name, String desc) {
+        if (!advices.containsKey(adviceId)) {
+            return;
+        }
         final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
@@ -274,6 +291,9 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * @param desc       调用方法描述
      */
     public static void methodOnInvokeAfterTracing(int adviceId, Integer lineNumber, String owner, String name, String desc) {
+        if (!advices.containsKey(adviceId)) {
+            return;
+        }
         final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
@@ -295,6 +315,9 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
      * @param throwException 抛出的异常
      */
     public static void methodOnInvokeThrowTracing(int adviceId, Integer lineNumber, String owner, String name, String desc, String throwException) {
+        if (!advices.containsKey(adviceId)) {
+            return;
+        }
         final InvokeTraceable listener = (InvokeTraceable) getListener(adviceId);
         if (null != listener) {
             try {
@@ -320,7 +343,14 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     }
 
     private static GaStack<Object> threadFrameStackPop() {
-        return threadBoundContexts.get(currentThread()).pop();
+        final GaStack<GaStack<Object>> stackGaStack = threadBoundContexts.get(currentThread());
+
+        // 用于保护reg和before并发导致before/end乱序的场景
+        if (null == stackGaStack
+                || stackGaStack.isEmpty()) {
+            return null;
+        }
+        return stackGaStack.pop();
     }
 
     private static AdviceListener getListener(int adviceId) {
@@ -341,6 +371,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
         // 注册监听器
         advices.put(adviceId, listener);
+
+        logger.info("reg adviceId={};listener={}", adviceId, listener);
     }
 
     /**
@@ -357,6 +389,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
         if (null != listener) {
             listener.destroy();
         }
+
+        logger.info("unReg adviceId={};listener={}", adviceId, listener);
 
     }
 
@@ -401,7 +435,8 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
     private final int adviceId;
     private final boolean isTracing;
-    private final String className;
+    private final String internalClassName;
+    private final String javaClassName;
     private final Matcher<AsmMethod> asmMethodMatcher;
     private final EnhancerAffect affect;
 
@@ -409,25 +444,26 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
     /**
      * 构建通知编织器
      *
-     * @param adviceId         通知ID
-     * @param isTracing        可跟踪方法调用
-     * @param className        类名称(透传)
-     * @param asmMethodMatcher asm方法匹配
-     *                         只有匹配上的方法才会被织入通知器
-     * @param affect           影响计数
-     * @param cv               ClassVisitor for ASM
+     * @param adviceId          通知ID
+     * @param isTracing         可跟踪方法调用
+     * @param internalClassName 类名称(透传)
+     * @param asmMethodMatcher  asm方法匹配
+     *                          只有匹配上的方法才会被织入通知器
+     * @param affect            影响计数
+     * @param cv                ClassVisitor for ASM
      */
     public AdviceWeaver(
             final int adviceId,
             final boolean isTracing,
-            final String className,
+            final String internalClassName,
             final Matcher<AsmMethod> asmMethodMatcher,
             final EnhancerAffect affect,
             final ClassVisitor cv) {
         super(ASM5, cv);
         this.adviceId = adviceId;
         this.isTracing = isTracing;
-        this.className = className;
+        this.internalClassName = internalClassName;
+        this.javaClassName = tranClassName(internalClassName);
         this.asmMethodMatcher = asmMethodMatcher;
         this.affect = affect;
     }
@@ -570,9 +606,23 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private void loadClassLoader() {
 
                 if (this.isStaticMethod()) {
-                    visitLdcInsn(tranClassName(className));
+
+//                    // fast enhance
+//                    if (GlobalOptions.isEnableFastEnhance) {
+//                        visitLdcInsn(Type.getType(String.format("L%s;", internalClassName)));
+//                        visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
+//                    }
+
+                    // normal enhance
+//                    else {
+
+                    // 这里不得不用性能极差的Class.forName()来完成类的获取,因为有可能当前这个静态方法在执行的时候
+                    // 当前类并没有完成实例化,会引起JVM对class文件的合法性校验失败
+                    // 未来我可能会在这一块考虑性能优化,但对于当前而言,功能远远重要于性能,也就不打算折腾这么复杂了
+                    visitLdcInsn(javaClassName);
                     invokeStatic(ASM_TYPE_CLASS, Method.getMethod("Class forName(String)"));
                     invokeVirtual(ASM_TYPE_CLASS, Method.getMethod("ClassLoader getClassLoader()"));
+//                    }
 
                 } else {
                     loadThis();
@@ -602,7 +652,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
 
                 dup();
                 push(2);
-                push(className);
+                push(tranClassName(javaClassName));
                 arrayStore(ASM_TYPE_STRING);
 
                 dup();
@@ -667,7 +717,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private void loadReturnArgs() {
                 dup2X1();
                 pop2();
-                push(1);
+                push(2);
                 newArray(ASM_TYPE_OBJECT);
                 dup();
                 dup2X1();
@@ -675,6 +725,12 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 push(0);
                 swap();
                 arrayStore(ASM_TYPE_OBJECT);
+
+                dup();
+                push(1);
+                push(adviceId);
+                box(ASM_TYPE_INT);
+                arrayStore(ASM_TYPE_INTEGER);
             }
 
             @Override
@@ -720,7 +776,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
             private void loadThrowArgs() {
                 dup2X1();
                 pop2();
-                push(1);
+                push(2);
                 newArray(ASM_TYPE_OBJECT);
                 dup();
                 dup2X1();
@@ -728,6 +784,12 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 push(0);
                 swap();
                 arrayStore(ASM_TYPE_THROWABLE);
+
+                dup();
+                push(1);
+                push(adviceId);
+                box(ASM_TYPE_INT);
+                arrayStore(ASM_TYPE_INTEGER);
             }
 
             @Override
@@ -861,7 +923,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 box(ASM_TYPE_INT);
                 arrayStore(ASM_TYPE_INTEGER);
 
-                if( null != currentLineNumber ) {
+                if (null != currentLineNumber) {
                     dup();
                     push(1);
                     push(currentLineNumber);
@@ -899,7 +961,7 @@ public class AdviceWeaver extends ClassVisitor implements Opcodes {
                 arrayStore(ASM_TYPE_INTEGER);
 
 
-                if( null != currentLineNumber ) {
+                if (null != currentLineNumber) {
                     dup();
                     push(1);
                     push(currentLineNumber);
