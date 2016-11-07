@@ -1,8 +1,6 @@
 package com.github.ompc.greys.agent;
 
 import java.lang.instrument.Instrumentation;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.jar.JarFile;
 
 /**
@@ -42,27 +40,7 @@ public class AgentLauncher {
 
         // 如果未启动则重新加载
         else {
-            classLoader = new URLClassLoader(new URL[]{new URL("file:" + agentJar)}) {
-
-                @Override
-                protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-                    final Class<?> loadedClass = findLoadedClass(name);
-                    if (loadedClass != null) {
-                        return loadedClass;
-                    }
-
-                    try {
-                        Class<?> aClass = findClass(name);
-                        if (resolve) {
-                            resolveClass(aClass);
-                        }
-                        return aClass;
-                    } catch (Exception e) {
-                        return super.loadClass(name, resolve);
-                    }
-                }
-
-            };
+            classLoader = new AgentClassLoader(agentJar);
 
             // 获取各种Hook
             final Class<?> adviceWeaverClass = classLoader.loadClass("com.github.ompc.greys.core.advisor.AdviceWeaver");
@@ -151,7 +129,7 @@ public class AgentLauncher {
             if (!isBind) {
                 try {
                     classOfGaServer.getMethod("bind", classOfConfigure).invoke(objectOfGaServer, objectOfConfigure);
-                } catch(Throwable t) {
+                } catch (Throwable t) {
                     classOfGaServer.getMethod("destroy").invoke(objectOfGaServer);
                     throw t;
                 }

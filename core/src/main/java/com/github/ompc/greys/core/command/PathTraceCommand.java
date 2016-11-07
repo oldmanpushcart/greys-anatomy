@@ -157,6 +157,7 @@ public class PathTraceCommand implements Command {
                     public AdviceListener getAdviceListener() {
                         return new ReflectAdviceListenerAdapter() {
 
+                            private final InvokeCost topInvokeCost = new InvokeCost();
                             private final InvokeCost invokeCost = new InvokeCost();
 
                             private final ThreadLocal<PathTrace> pathTraceRef = new ThreadLocal<PathTrace>() {
@@ -213,6 +214,11 @@ public class PathTraceCommand implements Command {
                                     }
                                 });
 
+                                // top invoke
+                                if(entity.deep <= 0) {
+                                    topInvokeCost.begin();
+                                }
+
                                 entity.tTree.begin(advice.getClazz().getCanonicalName() + ":" + advice.getMethod().getName() + "()");
                                 entity.deep++;
                             }
@@ -255,9 +261,12 @@ public class PathTraceCommand implements Command {
 
                                 if (entity.deep <= 0) {
 
+                                    // top invoke cost
+                                    final long topCost = topInvokeCost.cost();
+
                                     // 是否有匹配到条件
                                     // 之所以在这里主要是需要照顾到上下文参数对齐
-                                    if (isInCondition(advice, cost)) {
+                                    if (isInCondition(advice, topCost)) {
                                         // 输出打印内容
                                         if (isTimeTunnel) {
                                             printer.println(entity.tTree.rendering() + entity.tfTable.rendering());
