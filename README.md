@@ -30,7 +30,7 @@
 
 ## 最新版本
 
-### **VERSION :** 1.7.6.3
+### **VERSION :** 1.7.6.4
 
 1. contation-express增加`#cost`变量，影响命令`stack`、`watch`
 
