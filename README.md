@@ -1,7 +1,7 @@
 ![LOGO icon](https://raw.githubusercontent.com/oldmanpushcart/images/master/greys/greys-logo-readme.png)
 
 >
-线上系统为何经常出错？数据库为何屡遭黑手？业务调用为何频频失败？连环异常堆栈案，究竟是那次调用所为？
+线上系统为何经常出错？数据库为何屡遭黑手？业务调用为何频频失败？连环异常堆栈案，究竟是哪次调用所为？
 数百台服务器意外雪崩背后又隐藏着什么？是软件的扭曲还是硬件的沦丧？
 走进科学带你了解Greys, Java线上问题诊断工具。
 
