@@ -13,6 +13,7 @@
 * [常见问题](https://github.com/oldmanpushcart/greys-anatomy/wiki/FAQ)
 * [更新记事](https://github.com/oldmanpushcart/greys-anatomy/wiki/Chronicle)
 * [详细文档](https://github.com/oldmanpushcart/greys-anatomy/wiki/greys-pdf)
+* [ENGLISH-README](https://github.com/oldmanpushcart/greys-anatomy/blob/master/Greys_en.md)
 
 # 程序安装
 
