@@ -126,7 +126,7 @@ public class Enhancer implements ClassFileTransformer {
         // 看来间谍不存在啊
         catch (ClassNotFoundException cnfe) {
 
-            try {// 在目标类加载起中混入间谍
+            try {// 在目标类加载器中混入间谍
                 spyClassFromTargetClassLoader = defineClass(
                         targetClassLoader,
                         spyClassName,

@@ -38,29 +38,11 @@ public abstract class ReflectMatcher<T> implements Matcher<T> {
 
     @Override
     final public boolean matching(T target) {
-
-        // 推空保护
-        if (null == target) {
-            return false;
-        }
-
-        // 匹配mod
-        if (!matchingModifier(getTargetModifiers(target))) {
-            return false;
-        }
-
-        // 匹配名称
-        if (!matchingName(getTargetName(target))) {
-            return false;
-        }
-
-        // 匹配Annotation
-        if (!matchingAnnotation(getTargetAnnotationArray(target))) {
-            return false;
-        }
-
-        // 执行目标实现类的比对
-        return reflectMatching(target);
+        return (null != target && // 推空保护
+                matchingModifier(getTargetModifiers(target)) && // 匹配mod
+                matchingName(getTargetName(target)) && // 匹配名称
+                matchingAnnotation(getTargetAnnotationArray(target)) && // 匹配Annotation
+                reflectMatching(target)); // 执行目标实现类的比对
     }
 
     /**
