@@ -5,11 +5,7 @@
 ( (_| | |   | ____| |_| |___ |     / ___ | | | / ___ | | || |_| | | | | |_| |
  \___ |_|   |_____)\__  (___/      \_____|_| |_\_____|  \__)___/|_|_|_|\__  |
 (_____|           (____/                                              (____/
-                                                  +-+-+-+-+-+-+-+-+-+-+-+-+-+
-                                                  |v|e|r|s|i|o|n|:|1|.|5|.|3|
-                                                  +-+-+-+-+-+-+-+-+-+-+-+-+-+
-```
-[greys介绍](https://github.com/chengtongda/greys-anatomy/wiki/Greys-Anatomy)
 
-程序安装：
-curl -sLk http://ompc.oss.aliyuncs.com/greys/install.sh|ksh
+```
+[项目主干转移至此维护](https://github.com/oldmanpushcart/greys-anatomy)
+
