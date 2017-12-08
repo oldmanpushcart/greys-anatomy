@@ -40,9 +40,10 @@ cp ${BASEDIR}/ga.sh ${GREYS_TARGET_DIR}/ga.sh
 cp ${BASEDIR}/gs.sh ${GREYS_TARGET_DIR}/gs.sh
 chmod +x ${GREYS_TARGET_DIR}/*.sh
 
-# zip the greys
+# zip/tar the greys
 cd ${BASEDIR}/../target/
 zip -r greys-${GREYS_VERSION}-bin.zip greys/
+tar -cvf ./greys-${GREYS_VERSION}-bin.tar ./greys
 cd -
 
 # install to local

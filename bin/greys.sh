@@ -4,7 +4,7 @@
 #  author : oldmanpushcart@gmail.com
 #    date : 2015-05-04
 #    desc : write for july
-# version : 1.7.4.0
+# version : 1.7.6.5
 
 # define greys's home
 GREYS_HOME=${HOME}/.greys
@@ -42,6 +42,14 @@ OPTION_ATTACH_JVM=1
 
 # the option to control greys.sh active greys-console
 OPTION_ACTIVE_CONSOLE=1
+
+
+# switch unzip or tar, default is unzip
+OPTION_TAR_ENABLE=0
+command -v unzip >/dev/null 2>&1 || OPTION_TAR_ENABLE=1
+[[ ${OPTION_TAR_ENABLE} -eq 0 ]] \
+    && LIB_FILE_SUFFIX="zip" \
+    || LIB_FILE_SUFFIX="tar"
 
 # exit shell with err_code
 # $1 : err_code
@@ -140,8 +148,10 @@ update_if_necessary()
 
         echo "new version(${remote_version}) detection, update now..."
 
+        [[ -z ${OPTION_TAR_ENABLE} ]] && lib_suffix="zip" || lib_suffix="tar"
+
         local temp_target_lib_dir="${GREYS_LIB_DIR}/temp_${remote_version}_$$"
-        local temp_target_lib_zip="${temp_target_lib_dir}/greys-${remote_version}-bin.zip"
+        local temp_target_lib_suffix="${temp_target_lib_dir}/greys-${remote_version}-bin.${LIB_FILE_SUFFIX}"
         local target_lib_dir="${GREYS_LIB_DIR}/${remote_version}"
 
         # clean
@@ -155,12 +165,15 @@ update_if_necessary()
         curl \
             -#Lk \
             --connect-timeout ${SO_TIMEOUT} \
-            -o ${temp_target_lib_zip} \
-            "${GREYS_REMOTE_URL}/release/greys-${remote_version}-bin.zip" \
+            -o ${temp_target_lib_suffix} \
+            "${GREYS_REMOTE_URL}/release/greys-${remote_version}-bin.${LIB_FILE_SUFFIX}" \
         || return 1
 
-        # unzip greys lib
-        unzip ${temp_target_lib_zip} -d ${temp_target_lib_dir} || return 1
+        if [[ -z ${OPTION_TAR_ENABLE} ]]; then
+            unzip ${temp_target_lib_suffix} -d ${temp_target_lib_dir} || return 1
+        else
+            tar -xvf ${temp_target_lib_suffix} -C ${temp_target_lib_dir} || return 1
+        fi
 
         # rename
         mv ${temp_target_lib_dir} ${target_lib_dir} || return 1
