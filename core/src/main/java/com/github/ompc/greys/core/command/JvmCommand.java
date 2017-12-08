@@ -115,7 +115,10 @@ public class JvmCommand implements Command {
                 .add("VM-VERSION", runtimeMXBean.getVmVersion())
                 .add("INPUT-ARGUMENTS", toCol(runtimeMXBean.getInputArguments()))
                 .add("CLASS-PATH", runtimeMXBean.getClassPath())
-                .add("BOOT-CLASS-PATH", runtimeMXBean.getBootClassPath())
+                .add("BOOT-CLASS-PATH", runtimeMXBean.isBootClassPathSupported() ?
+                        runtimeMXBean.getBootClassPath() :
+                        "This JVM does not support boot class path.")
+                //TODO: add "MODULE-PATH" for JDK 9
                 .add("LIBRARY-PATH", runtimeMXBean.getLibraryPath());
 
         return view.rendering();

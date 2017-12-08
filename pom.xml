@@ -71,12 +71,12 @@
             <dependency>
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm</artifactId>
-                <version>5.0.3</version>
+                <version>6.0</version>
             </dependency>
             <dependency>
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-commons</artifactId>
-                <version>5.0.3</version>
+                <version>6.0</version>
                 <!--<exclusions>-->
                 <!--<exclusion>-->
                 <!--<groupId>org.ow2.asm</groupId>-->
@@ -87,7 +87,7 @@
             <dependency>
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-util</artifactId>
-                <version>5.0.3</version>
+                <version>6.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
