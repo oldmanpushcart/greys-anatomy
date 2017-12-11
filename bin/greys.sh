@@ -4,7 +4,7 @@
 #  author : oldmanpushcart@gmail.com
 #    date : 2015-05-04
 #    desc : write for july
-# version : 1.7.6.5
+# version : 1.7.6.6
 
 # define greys's home
 GREYS_HOME=${HOME}/.greys
