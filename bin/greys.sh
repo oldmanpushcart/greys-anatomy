@@ -148,7 +148,7 @@ update_if_necessary()
 
         echo "new version(${remote_version}) detection, update now..."
 
-        [[ -z ${OPTION_TAR_ENABLE} ]] && lib_suffix="zip" || lib_suffix="tar"
+        [[ ${OPTION_TAR_ENABLE} -eq 0 ]] && lib_suffix="zip" || lib_suffix="tar"
 
         local temp_target_lib_dir="${GREYS_LIB_DIR}/temp_${remote_version}_$$"
         local temp_target_lib_suffix="${temp_target_lib_dir}/greys-${remote_version}-bin.${LIB_FILE_SUFFIX}"
@@ -169,7 +169,7 @@ update_if_necessary()
             "${GREYS_REMOTE_URL}/release/greys-${remote_version}-bin.${LIB_FILE_SUFFIX}" \
         || return 1
 
-        if [[ -z ${OPTION_TAR_ENABLE} ]]; then
+        if [[ ${OPTION_TAR_ENABLE} -eq 0 ]]; then
             unzip ${temp_target_lib_suffix} -d ${temp_target_lib_dir} || return 1
         else
             tar -xvf ${temp_target_lib_suffix} -C ${temp_target_lib_dir} || return 1
