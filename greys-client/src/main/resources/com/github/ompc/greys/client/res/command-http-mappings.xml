@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapping>
+
+    <template id="desc-expression"><![CDATA[
+Expression by OGNL
+
+FOR EXAMPLE
+    params[0]
+    params[0]+params[1]
+    returnObj
+    throwExp
+    target
+    clazz
+    method
+
+THE STRUCTURE
+          target : the object
+           clazz : the object's class
+          method : the constructor or method
+    params[0..n] : the parameters of method
+       returnObj : the returned object of method
+        throwExp : the throw exception of method
+        isReturn : the method ended by return
+         isThrow : the method ended by throwing exception
+]]>
+    </template>
+
+    <template id="desc-condition-expression"><![CDATA[
+Conditional expression by OGNL
+
+FOR EXAMPLE
+     TRUE : 1==1
+     TRUE : true
+    FALSE : false
+     TRUE : params.length>=0
+    FALSE : 1==2
+
+THE STRUCTURE
+          target : the object
+           clazz : the object's class
+          method : the constructor or method
+    params[0..n] : the parameters of method
+       returnObj : the returned object of method
+        throwExp : the throw exception of method
+        isReturn : the method ended by return
+         isThrow : the method ended by throwing exception
+]]>
+    </template>
+
+    <template id="desc-class-pattern"><![CDATA[
+Path and classname of Pattern Matching
+]]>
+    </template>
+
+    <template id="desc-method-pattern"><![CDATA[
+Method of Pattern Matching
+]]>
+    </template>
+
+    <template id="desc-expand"><![CDATA[
+Expand level of object (0 by default)
+]]>
+    </template>
+
+    <template id="desc-threshold"><![CDATA[
+Threshold of execution times
+]]>
+    </template>
+
+    <import src="mapping/info-mapping.xml"/>
+    <import src="mapping/watch-mapping.xml"/>
+</mapping>

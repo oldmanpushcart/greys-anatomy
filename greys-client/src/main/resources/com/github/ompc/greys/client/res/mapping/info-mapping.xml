@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapping>
+
+    <command
+            name="version" summary="Display Greys version"
+            http-path="/info/version">
+        <example>version</example>
+    </command>
+
+    <command
+            name="logo" summary="Display Greys LOGO"
+            http-path="/info/logo">
+        <example>logo</example>
+    </command>
+
+    <command
+            name="thanks" summary="Display Greys contributors"
+            http-path="/info/thanks">
+        <example>thanks</example>
+    </command>
+
+</mapping>

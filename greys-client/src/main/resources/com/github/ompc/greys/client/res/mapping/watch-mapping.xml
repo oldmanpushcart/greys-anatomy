@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapping>
+
+    <!--
+    watch -b *Test printAddress '"params[0]="+params[0]'
+    -->
+    <command
+            name="watch"
+            http-path="/watch">
+        <index-param
+                name="class-pattern" required="true" desc-ref="desc-class-pattern"
+                http-name="class-name-pattern"/>
+        <index-param
+                name="method-pattern" required="true" desc-ref="desc-method-pattern"
+                http-name="method-name-pattern"/>
+        <index-param
+                name="watch-express" required="true" desc-ref="desc-expression"
+                http-name="express"/>
+        <index-param
+                name="condition-express" required="true" desc-ref="desc-condition-expression"
+                http-name="condition-express"/>
+        <named-param
+                required="false" name="x" has-value="true" desc-ref="desc-expand"
+                http-name="expand"/>
+        <named-param
+                name="n" has-value="true" required="false" desc-ref="desc-threshold"
+                http-name="threshold"/>
+        <named-param
+                name="b" has-value="false" required="false" desc="Watch before invocation"
+                http-name="position" http-value="before"/>
+        <named-param
+                name="s" has-value="false" required="false" desc="Watch after successful invocation"
+                http-name="position" http-value="success"/>
+        <named-param
+                name="f" has-value="false" required="false" desc="Watch after invocation"
+                http-name="position" http-value="finish"/>
+        <named-param
+                name="e" has-value="false" required="false" desc="Watch after error exception"
+                http-name="position" http-value="error"/>
+        <example><![CDATA[
+watch -Eb org\.apache\.commons\.lang\.StringUtils isBlank params[0]
+watch -b org.apache.commons.lang.StringUtils isBlank params[0]
+watch -f org.apache.commons.lang.StringUtils isBlank returnObj
+watch -bf *StringUtils isBlank params[0]
+watch *StringUtils isBlank params[0]
+watch *StringUtils isBlank params[0] params[0].length==1
+]]>
+        </example>
+    </command>
+
+</mapping>
