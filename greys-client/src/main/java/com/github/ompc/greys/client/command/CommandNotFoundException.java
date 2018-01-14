@@ -1,4 +1,4 @@
-package com.github.ompc.greys.client;
+package com.github.ompc.greys.client.command;
 
 /**
  * 命令不存在
@@ -8,7 +8,6 @@ public class CommandNotFoundException extends Exception {
     private final String command;
 
     public CommandNotFoundException(String command) {
-        super("command " + command + " not found.");
         this.command = command;
     }
 

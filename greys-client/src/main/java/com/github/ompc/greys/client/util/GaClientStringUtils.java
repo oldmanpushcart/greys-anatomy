@@ -2,7 +2,12 @@ package com.github.ompc.greys.client.util;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * GaClient端用于字符串解析的工具类
@@ -119,6 +124,24 @@ public class GaClientStringUtils {
 
         return stringList.toArray(new String[stringList.size()]);
 
+    }
+
+
+    public static String toQueryString(final Map<String, List<String>> params,
+                                       final String enc) throws UnsupportedEncodingException {
+        final StringBuilder queryStringSB = new StringBuilder();
+        for (final Map.Entry<String, List<String>> entry : params.entrySet()) {
+            for (final String value : entry.getValue()) {
+                if (queryStringSB.length() > 0) {
+                    queryStringSB.append('&');
+                }
+                queryStringSB
+                        .append(URLEncoder.encode(entry.getKey(), enc))
+                        .append('=')
+                        .append(URLEncoder.encode(value, enc));
+            }
+        }
+        return (queryStringSB.length() > 0 ? "?" : "") + queryStringSB.toString();
     }
 
 }

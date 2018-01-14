@@ -4,39 +4,82 @@
     <!--
     watch -b *Test printAddress '"params[0]="+params[0]'
     -->
-    <command
-            name="watch"
-            http-path="/watch">
-        <index-param
-                name="class-pattern" required="true" desc-ref="desc-class-pattern"
-                http-name="class-name-pattern"/>
-        <index-param
-                name="method-pattern" required="true" desc-ref="desc-method-pattern"
-                http-name="method-name-pattern"/>
-        <index-param
-                name="watch-express" required="true" desc-ref="desc-expression"
-                http-name="express"/>
-        <index-param
-                name="condition-express" required="true" desc-ref="desc-condition-expression"
-                http-name="condition-express"/>
-        <named-param
-                required="false" name="x" has-value="true" desc-ref="desc-expand"
-                http-name="expand"/>
-        <named-param
-                name="n" has-value="true" required="false" desc-ref="desc-threshold"
-                http-name="threshold"/>
-        <named-param
-                name="b" has-value="false" required="false" desc="Watch before invocation"
-                http-name="position" http-value="before"/>
-        <named-param
-                name="s" has-value="false" required="false" desc="Watch after successful invocation"
-                http-name="position" http-value="success"/>
-        <named-param
-                name="f" has-value="false" required="false" desc="Watch after invocation"
-                http-name="position" http-value="finish"/>
-        <named-param
-                name="e" has-value="false" required="false" desc="Watch after error exception"
-                http-name="position" http-value="error"/>
+    <command name="watch" summary="Display the details of specified class and method"
+             http-path="/watch">
+
+        <param type="index"
+               required="true"
+               name="class-pattern"
+               summary-ref="template-class-pattern"
+               http-name="cnp"/>
+
+        <param type="index"
+               required="true"
+               name="method-pattern"
+               summary-ref="template-method-pattern"
+               http-name="mnp"/>
+
+        <param type="index"
+               required="true"
+               name="watch-express"
+               summary-ref="template-summary-expression"
+               desc-ref="template-expression"
+               http-name="exp"/>
+
+        <param type="index"
+               required="false"
+               name="condition-express"
+               summary-ref="template-summary-condition-expression"
+               desc-ref="template-condition-expression"
+               http-name="cexp"/>
+
+        <param type="named"
+               required="false"
+               has-value="true"
+               name="x"
+               summary-ref="template-expand"
+               http-name="expand"/>
+
+        <param type="named"
+               has-value="true"
+               required="false"
+               name="n"
+               summary-ref="template-threshold"
+               http-name="limit"/>
+
+        <param type="named"
+               has-value="false"
+               required="false"
+               name="b"
+               summary="Watch before invocation"
+               http-name="pos"
+               http-value="before"/>
+
+        <param type="named"
+               has-value="false"
+               required="false"
+               name="s"
+               summary="Watch after successful invocation"
+               http-name="pos"
+               http-value="success"/>
+
+        <param type="named"
+               has-value="false"
+               required="false"
+               name="f"
+               summary="Watch after invocation"
+               http-name="pos"
+               http-value="finish"/>
+
+        <param type="named"
+               has-value="false"
+               required="false"
+               name="e"
+               summary="Watch after error exception"
+               http-name="pos"
+               http-value="error"/>
+
+
         <example><![CDATA[
 watch -Eb org\.apache\.commons\.lang\.StringUtils isBlank params[0]
 watch -b org.apache.commons.lang.StringUtils isBlank params[0]
@@ -46,6 +89,7 @@ watch *StringUtils isBlank params[0]
 watch *StringUtils isBlank params[0] params[0].length==1
 ]]>
         </example>
+
     </command>
 
 </mapping>

@@ -1,19 +1,34 @@
 package com.github.ompc.greys.client.command;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+/**
+ * 命令对象
+ */
 public final class Command {
 
+    // 命令名称
     private String name;
+
+    // 命令简介
     private String summary;
+
+    // 简单例子
     private String example;
+
+    // 对应HTTP路径
     private String httpPath;
 
+    // 顺序参数列表
     private final List<Param> indexParams = new ArrayList<Param>();
-    private final Map<String,Param> namedParams = new HashMap<String,Param>();
+
+    // 命名参数列表
+    private final Map<String, Param> namedParams = new HashMap<String, Param>();
+
+
+
+
+    // GETTER & SETTER
 
     public String getName() {
         return name;
@@ -54,4 +69,5 @@ public final class Command {
     public Map<String, Param> getNamedParams() {
         return namedParams;
     }
+
 }

@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mapping>
 
-    <template id="desc-expression"><![CDATA[
-Expression by OGNL
-
+    <template id="template-desc-expression"><![CDATA[
 FOR EXAMPLE
     params[0]
     params[0]+params[1]
@@ -25,9 +23,7 @@ THE STRUCTURE
 ]]>
     </template>
 
-    <template id="desc-condition-expression"><![CDATA[
-Conditional expression by OGNL
-
+    <template id="template-desc-condition-expression"><![CDATA[
 FOR EXAMPLE
      TRUE : 1==1
      TRUE : true
@@ -47,26 +43,16 @@ THE STRUCTURE
 ]]>
     </template>
 
-    <template id="desc-class-pattern"><![CDATA[
-Path and classname of Pattern Matching
-]]>
-    </template>
 
-    <template id="desc-method-pattern"><![CDATA[
-Method of Pattern Matching
-]]>
-    </template>
+    <template id="template-summary-expression">Path and classname of Pattern Matching</template>
+    <template id="template-summary-condition-expression">Method of Pattern Matching</template>
 
-    <template id="desc-expand"><![CDATA[
-Expand level of object (0 by default)
-]]>
-    </template>
+    <template id="template-class-pattern">Path and classname of Pattern Matching</template>
+    <template id="template-method-pattern">Method of Pattern Matching</template>
+    <template id="template-expand">Expand level of object (0 by default)</template>
+    <template id="template-threshold">Threshold of execution times</template>
 
-    <template id="desc-threshold"><![CDATA[
-Threshold of execution times
-]]>
-    </template>
+    <import path="/com/github/ompc/greys/client/res/mapping/info-mapping.xml"/>
+    <import path="/com/github/ompc/greys/client/res/mapping/watch-mapping.xml"/>
 
-    <import src="mapping/info-mapping.xml"/>
-    <import src="mapping/watch-mapping.xml"/>
 </mapping>
