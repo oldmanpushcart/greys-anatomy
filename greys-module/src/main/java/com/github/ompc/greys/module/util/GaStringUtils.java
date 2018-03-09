@@ -1,4 +1,4 @@
-package com.github.ompc.greys.core.util;
+package com.github.ompc.greys.module.util;
 
 import org.apache.commons.io.IOUtils;
 
@@ -16,7 +16,7 @@ public class GaStringUtils {
      */
     public static String getVersion() {
         try {
-            return IOUtils.toString(CLAZZ.getResourceAsStream("/com/github/ompc/greys/core/res/version"));
+            return IOUtils.toString(CLAZZ.getResourceAsStream("/com/github/ompc/greys/module/res/version"));
         } catch (Throwable cause) {
             throw new UnCaughtException(cause);
         }
@@ -29,7 +29,7 @@ public class GaStringUtils {
      */
     public static String getLogo() {
         try {
-            return IOUtils.toString(CLAZZ.getResourceAsStream("/com/github/ompc/greys/core/res/logo.txt"));
+            return IOUtils.toString(CLAZZ.getResourceAsStream("/com/github/ompc/greys/module/res/logo.txt"));
         } catch (Throwable cause) {
             throw new UnCaughtException(cause);
         }
@@ -42,7 +42,7 @@ public class GaStringUtils {
      */
     public static String getThanks() {
         try {
-            return IOUtils.toString(CLAZZ.getResourceAsStream("/com/github/ompc/greys/core/res/thanks.json"));
+            return IOUtils.toString(CLAZZ.getResourceAsStream("/com/github/ompc/greys/module/res/thanks.json"));
         } catch (Throwable cause) {
             throw new UnCaughtException(cause);
         }

@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "type": "THANKS",
+  "content": {
+    "collaborators": [
+      {
+        "name": "vlinux",
+        "email": "oldmanpushcart@gmail.com",
+        "website": "http://github.com/oldmanpushcart"
+      },
+      {
+        "name": "dukun",
+        "email": "dukun@taobao.com"
+      }
+    ]
+  }
+}

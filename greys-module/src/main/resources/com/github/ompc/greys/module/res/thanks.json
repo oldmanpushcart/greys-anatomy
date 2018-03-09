@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "type": "THANKS",
+  "content": {
+    "collaborators": [
+      {
+        "name"    : "vlinux",
+        "email"   : "oldmanpushcart@gmail.com",
+        "website" : "http://weibo.com/vlinux"
+      },
+      {
+        "name"    : "chengtd",
+        "email"   : "chengtongda@163.com",
+        "website" : "http://weibo.com/chengtd"
+      },
+      {
+        "name"    : "JieChenCN",
+        "website" : "http://weibo.com/471760204"
+      },
+      {
+        "name"    : "JamesPan",
+        "email"   : "panjiabang@gmail.com",
+        "website" : "http://blog.jamespan.me"
+      },
+      {
+        "name"    : "jotcmd",
+        "website" : "https://github.com/jotcmd"
+      },
+      {
+        "name"    : "hengyunabc",
+        "website" : "https://github.com/hengyunabc"
+      },
+      {
+        "name"    : "huxing.zhang",
+        "email"   : "huxing.zhang@gmail.com"
+      },
+      {
+        "name"    : "diecui1202",
+        "email"   : "diecui1202@gmail.com"
+      },
+      {
+        "name"    : "YuhuiFeng",
+        "email"   : "felixfeng.yuhui@hotmail.com",
+        "website" : "https://github.com/YuhuiFeng"
+      }
+    ]
+  }
+}

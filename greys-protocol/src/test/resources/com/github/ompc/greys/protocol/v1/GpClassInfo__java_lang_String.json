@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "type": "CLASS_INFO",
+  "content": {
+    "name": "java.lang.String",
+    "codeSource": "",
+    "classType": 0,
+    "modifier": 17,
+    "annotationTypes": [],
+    "interfaceTypes": [
+      "java.io.Serializable",
+      "java.lang.Comparable",
+      "java.lang.CharSequence"
+    ],
+    "familyTypes": [
+      "java.lang.Object"
+    ],
+    "classLoaders": []
+  }
+}

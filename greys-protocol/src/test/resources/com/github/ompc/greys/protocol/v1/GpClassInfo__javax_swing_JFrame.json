@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "type": "CLASS_INFO",
+  "content": {
+    "name": "javax.swing.JFrame",
+    "codeSource": "",
+    "classType": 0,
+    "modifier": 1,
+    "annotationTypes": [
+      "java.beans.JavaBean",
+      "javax.swing.SwingContainer"
+    ],
+    "interfaceTypes": [
+      "javax.swing.WindowConstants",
+      "javax.accessibility.Accessible",
+      "javax.swing.RootPaneContainer",
+      "javax.swing.TransferHandler$HasGetTransferHandler"
+    ],
+    "familyTypes": [
+      "java.awt.Frame",
+      "java.awt.Window",
+      "java.awt.Container",
+      "java.awt.Component",
+      "java.lang.Object"
+    ],
+    "classLoaders": []
+  }
+}

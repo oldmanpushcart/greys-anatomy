@@ -1,9 +1,10 @@
-package com.github.ompc.greys.core.util;
+package com.github.ompc.greys.module.util;
 
 /**
  * 未捕获异常<br/>
  * 用来封装不希望抛出的异常
- * Created by vlinux on 16/5/21.
+ *
+ * @author oldmanpushcart@gmail.com
  */
 public class UnCaughtException extends RuntimeException {
 
