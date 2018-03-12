@@ -15,7 +15,7 @@ public class GpSerializer {
     private static Map<GpType, Class<?>> gpTypeClassMapV100 = new HashMapBuilder<GpType, Class<?>>()
             .building(BEHAVIOR_INFO, BehaviorInfo.class)
             .building(CLASS_INFO, ClassInfo.class)
-            .building(PROGRESS, Process.class)
+            .building(PROGRESS, Progress.class)
             .building(TERMINATE, Terminate.class)
             .building(TEXT, Text.class)
             .building(THANKS, Thanks.class)

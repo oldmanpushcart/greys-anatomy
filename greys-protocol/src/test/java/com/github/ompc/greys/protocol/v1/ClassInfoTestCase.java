@@ -12,7 +12,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.swing.*;
 import java.util.Arrays;
 import java.util.List;
 

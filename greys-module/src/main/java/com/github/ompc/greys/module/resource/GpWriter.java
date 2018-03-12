@@ -1,7 +1,6 @@
 package com.github.ompc.greys.module.resource;
 
 import com.alibaba.jvm.sandbox.api.http.websocket.WebSocketConnection;
-import com.github.ompc.greys.module.util.HttpParameterBinder;
 import com.github.ompc.greys.protocol.GpConstants;
 import com.github.ompc.greys.protocol.GpSerializer;
 import com.github.ompc.greys.protocol.GpType;

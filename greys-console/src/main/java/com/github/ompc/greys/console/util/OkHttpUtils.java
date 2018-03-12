@@ -1,46 +1,70 @@
 package com.github.ompc.greys.console.util;
 
-import okhttp3.OkHttpClient;
+import com.github.ompc.greys.protocol.GpSerializer;
+import com.github.ompc.greys.protocol.GreysProtocol;
+import com.github.ompc.greys.protocol.impl.v1.Text;
+import okhttp3.*;
 
-import java.util.concurrent.TimeUnit;
+import java.nio.charset.Charset;
+
+import static java.lang.String.format;
 
 public class OkHttpUtils {
 
-    private static volatile OkHttpClient httpClient;
+    public static void main(String... args) {
 
-    /**
-     * 初始化HttpClient
-     *
-     * @param ip                服务器IP
-     * @param port              服务器端口
-     * @param connectTimeoutSec 连接超时
-     * @param timeoutSec        访问超时
-     */
-    public synchronized void init(final String ip,
-                                  final int port,
-                                  final int connectTimeoutSec,
-                                  final int timeoutSec) {
 
-        if (null != httpClient) {
-            throw new IllegalStateException("already init.");
-        }
+        final OkHttpClient httpClient = new OkHttpClient();
+        final Request request = new Request.Builder().url(
+                new GaURLBuilder(
+                        format("ws://%s:%s/sandbox/%s/module/websocket/greys/%s",
+                                "127.0.0.1",
+                                "50647",
+                                "default",
+                                "watch"
+                        ),
+                        Charset.forName("utf-8")
+                )
+                        .withParameter("class", "*Controller")
+                        .withParameter("method", "dash*")
+                        .withParameter("at", "RETURN")
+                        .withParameter("watch", "returnObj")
+                        .withParameter("expand", "4")
+                        .withParameter("when", "returnObj != null")
+                        .build()
+        ).build();
 
-        httpClient = new OkHttpClient.Builder()
-                .connectTimeout(connectTimeoutSec, TimeUnit.SECONDS)
-                .readTimeout(timeoutSec, TimeUnit.SECONDS)
-                .writeTimeout(timeoutSec, TimeUnit.SECONDS)
-                .pingInterval(10, TimeUnit.SECONDS)
-                .build();
+        System.out.println(request.toString());
 
+        final WebSocket webSocket = httpClient.newWebSocket(request, new WebSocketListener() {
+            @Override
+            public void onMessage(WebSocket webSocket, String text) {
+                super.onMessage(webSocket, text);
+                final GreysProtocol<?> gp = GpSerializer.deserialize(text);
+                switch (gp.getType()) {
+                    case TEXT:
+                        System.out.println(((Text) gp.getContent()).getText());
+                        break;
+                    default:
+                        System.out.println(text);
+                }
+            }
+
+            @Override
+            public void onClosed(WebSocket webSocket, int code, String reason) {
+                super.onClosed(webSocket, code, reason);
+                System.out.println("onClosed:code=" + code + ";reason=" + reason);
+            }
+
+            @Override
+            public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+                super.onFailure(webSocket, t, response);
+                System.out.println("onFailure:cause=" + t.getMessage());
+                t.printStackTrace();
+            }
+        });
 
     }
-
-    private static void checkHttpClient() {
-        if (null == httpClient) {
-            throw new IllegalStateException("not init yet!");
-        }
-    }
-
 
 
 }

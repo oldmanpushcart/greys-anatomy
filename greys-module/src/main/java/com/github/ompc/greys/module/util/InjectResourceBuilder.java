@@ -1,7 +1,5 @@
 package com.github.ompc.greys.module.util;
 
-import org.slf4j.LoggerFactory;
-
 import javax.annotation.Resource;
 import java.lang.reflect.Field;
 import java.util.HashSet;

@@ -1,12 +1,11 @@
 package com.github.ompc.greys.console;
 
-import com.github.ompc.greys.console.command.GaCommand;
+import com.github.ompc.greys.console.command.GaCommands;
 import jline.console.ConsoleReader;
 import jline.console.completer.Completer;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.MemoryHistory;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +26,8 @@ public class GaConsole {
 
     private static final Logger logger = LoggerFactory.getLogger(GaConsole.class);
 
+    private static final String PROMPT = "ga?>";
+
     private final ConsoleReader consoleReader;
     private final ConsoleWriter consoleWriter;
     private State state = State.WAITING_INPUT;
@@ -35,11 +36,16 @@ public class GaConsole {
         this.consoleReader = new ConsoleReader(System.in, System.out);
         this.consoleWriter = new ConsoleWriter(consoleReader.getOutput());
 
+        bindPrompt();
         bindInterrupt(interruptCb);
         bindAutoCompleter();
         bindHistory();
         turnOffExpand();
 
+    }
+
+    private void bindPrompt() {
+        consoleReader.setPrompt(PROMPT);
     }
 
     private void bindInterrupt(final InterruptCallback interruptCb) {
@@ -55,7 +61,7 @@ public class GaConsole {
         consoleReader.addCompleter(new Completer() {
 
             final SortedSet<String> commands = new TreeSet<String>(
-                    GaCommand.GaCommands.instance.names()
+                    GaCommands.instance.names()
             );
 
             @Override
@@ -172,11 +178,20 @@ public class GaConsole {
         this.state = state;
         switch (state) {
             case WAITING_INPUT:
-                consoleReader.setPrompt(EMPTY);
+                consoleReader.setPrompt(PROMPT);
+                resetPromptLineQuietly();
                 break;
             case WAITING_COMMAND:
-                consoleReader.setPrompt("ga?>");
+                consoleReader.setPrompt(EMPTY);
                 break;
+        }
+    }
+
+    private void resetPromptLineQuietly() {
+        try {
+            consoleReader.resetPromptLine(consoleReader.getPrompt(), EMPTY, 0);
+        } catch (IOException e) {
+            // ignore...
         }
     }
 

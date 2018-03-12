@@ -1,12 +1,7 @@
 package com.github.ompc.greys.module;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.joran.JoranConfigurator;
-import ch.qos.logback.core.joran.spi.JoranException;
 import com.alibaba.jvm.sandbox.api.Information;
-import com.alibaba.jvm.sandbox.api.LoadCompleted;
 import com.alibaba.jvm.sandbox.api.Module;
-import com.alibaba.jvm.sandbox.api.http.websocket.TextMessageListener;
 import com.alibaba.jvm.sandbox.api.http.websocket.WebSocketAcceptor;
 import com.alibaba.jvm.sandbox.api.http.websocket.WebSocketConnection;
 import com.alibaba.jvm.sandbox.api.http.websocket.WebSocketConnectionListener;
@@ -21,14 +16,12 @@ import com.github.ompc.greys.module.util.HttpHandlerBuilder.PathNotMappedExcepti
 import com.github.ompc.greys.module.util.HttpParameterBinder.BindingRequiredException;
 import com.github.ompc.greys.module.util.InjectResourceBuilder;
 import com.github.ompc.greys.protocol.GreysProtocol;
-import org.apache.commons.io.IOUtils;
 import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.InputStream;
 
 import static java.lang.String.format;
 
@@ -61,7 +54,7 @@ class ErrorHandler implements HttpHandler {
 
 @MetaInfServices(Module.class)
 @Information(id = "greys", version = "2.0.0.0", author = "oldmanpushcart@gmail.com")
-public final class GreysModule implements Module, LoadCompleted, WebSocketAcceptor {
+public final class GreysModule implements Module, WebSocketAcceptor {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -70,11 +63,6 @@ public final class GreysModule implements Module, LoadCompleted, WebSocketAccept
 
     @Resource
     private LoadedClassDataSource loadedClassDataSource;
-
-    @Override
-    public void loadCompleted() {
-        initLogback();
-    }
 
     private String handleToString(final HttpServletRequest req,
                                   final HttpHandler handler) {
@@ -191,27 +179,6 @@ public final class GreysModule implements Module, LoadCompleted, WebSocketAccept
             }
 
         };
-    }
-
-
-    /*
-     * 初始化Logback日志
-     */
-    private void initLogback() {
-        final LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-        final JoranConfigurator configurator = new JoranConfigurator();
-        configurator.setContext(loggerContext);
-        loggerContext.reset();
-        final InputStream logbackConfigIs = GreysModule.class.getResourceAsStream("/com/github/ompc/greys/module/res/greys-logback.xml");
-        try {
-            configurator.doConfigure(logbackConfigIs);
-        } catch (JoranException e) {
-            throw new RuntimeException("load logback config failed, you need restart greys", e);
-        } finally {
-            IOUtils.closeQuietly(logbackConfigIs);
-        }
-
-        logger.info("init logback success");
     }
 
 }

@@ -2,9 +2,7 @@ package com.github.ompc.greys.module.util;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.ompc.greys.module.util.TryAccess.TryState.ACCESS;
-import static com.github.ompc.greys.module.util.TryAccess.TryState.DENIED;
-import static com.github.ompc.greys.module.util.TryAccess.TryState.ACCESS_LIMITED;
+import static com.github.ompc.greys.module.util.TryAccess.TryState.*;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**

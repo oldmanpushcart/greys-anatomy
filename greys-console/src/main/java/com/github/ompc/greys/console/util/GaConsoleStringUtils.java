@@ -2,12 +2,7 @@ package com.github.ompc.greys.console.util;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * GaConsole端用于字符串解析的工具类
