@@ -1,6 +1,7 @@
 package com.github.ompc.greys.console;
 
 import com.github.ompc.greys.console.command.GaCommands;
+import com.github.ompc.greys.console.command.GaCommands.GaCommand;
 import com.github.ompc.greys.console.command.GaCommands.GaCommandInitializationException;
 import com.github.ompc.greys.console.command.GaCommands.GaCommandNotFoundException;
 import okhttp3.OkHttpClient;
@@ -37,8 +38,8 @@ public class GaLauncher {
     private final ExecutorService commandExecutor;
 
     // 当前正在进行的命令
-    private final AtomicReference<GaCommands.GaCommand> currentGaCommand
-            = new AtomicReference<GaCommands.GaCommand>();
+    private final AtomicReference<GaCommand> currentGaCommand
+            = new AtomicReference<GaCommand>();
 
     public GaLauncher(final GaConsoleConfig cfg) throws IOException {
         this.gaConsoleCfg = cfg;
@@ -67,7 +68,7 @@ public class GaLauncher {
             public void interrupt() {
                 // spin to got current GaCommand
                 while (true) {
-                    final GaCommands.GaCommand oriGaCommand = currentGaCommand.get();
+                    final GaCommand oriGaCommand = currentGaCommand.get();
                     if (switchCurrentGaCommand(oriGaCommand, null)) {
                         terminateCurrentGaCommand(oriGaCommand);
                         break;
@@ -76,7 +77,6 @@ public class GaLauncher {
             }
         });
 
-        // 阻塞主线程，等待终端结束
         loopForRead();
     }
 
@@ -120,7 +120,7 @@ public class GaLauncher {
                 logger.debug("input {};", line);
 
                 try {
-                    final GaCommands.GaCommand gaCommand = GaCommands.instance.parseGaCommand(splitForLine(line));
+                    final GaCommand gaCommand = GaCommands.instance.parseGaCommand(splitForLine(line));
                     logger.debug("parse cmd: {} -> {};", line, gaCommand);
                     if (!switchCurrentGaCommand(null, gaCommand)) {
                         logger.warn("there is now an ongoing command:{} that is not over, ignore this time.", currentGaCommand.get());
@@ -190,7 +190,7 @@ public class GaLauncher {
     /*
      * 结束当前命令
      */
-    private void terminateCurrentGaCommand(GaCommands.GaCommand gaCommand) {
+    private void terminateCurrentGaCommand(GaCommand gaCommand) {
         if (null == gaCommand) {
             return;
         }
@@ -201,8 +201,8 @@ public class GaLauncher {
     /**
      * 切换当前命令
      */
-    private boolean switchCurrentGaCommand(final GaCommands.GaCommand expected,
-                                           final GaCommands.GaCommand current) {
+    private boolean switchCurrentGaCommand(final GaCommand expected,
+                                           final GaCommand current) {
         final boolean isSwitched;
         if (isSwitched = currentGaCommand.compareAndSet(expected, current)) {
             gaConsole.changeState(
@@ -257,17 +257,6 @@ public class GaLauncher {
                 gaConsoleCfg.getNamespace(),
                 gaConsoleCfg.getConnectTimeoutSec(),
                 gaConsoleCfg.getTimeoutSec()
-        );
-
-        out(format(
-                "GaConsole startup." +
-                        " URL:{ws://%s:%s/sandbox/%s/module/websocket/greys/*}" +
-                        " with:{connect-timeout=%s;timeout=%s;}",
-                gaConsoleCfg.getIp(),
-                gaConsoleCfg.getPort(),
-                gaConsoleCfg.getNamespace(),
-                gaConsoleCfg.getConnectTimeoutSec(),
-                gaConsoleCfg.getTimeoutSec())
         );
         new GaLauncher(gaConsoleCfg);
 

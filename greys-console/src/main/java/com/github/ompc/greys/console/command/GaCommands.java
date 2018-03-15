@@ -1,8 +1,9 @@
 package com.github.ompc.greys.console.command;
 
 import com.github.ompc.greys.console.GaConsoleConfig;
-import com.github.ompc.greys.console.command.impl.LogoGaCommand;
-import com.github.ompc.greys.console.command.impl.VersionGaCommand;
+import com.github.ompc.greys.console.command.impl.QuitGaCommand;
+import com.github.ompc.greys.console.command.impl.ShutdownGaCommand;
+import com.github.ompc.greys.console.command.impl.ThanksGaCommand;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -132,8 +133,9 @@ public class GaCommands {
     }
 
     public static final GaCommands instance = new GaCommands(
-            VersionGaCommand.class,
-            LogoGaCommand.class
+            ThanksGaCommand.class,
+            QuitGaCommand.class,
+            ShutdownGaCommand.class
     );
 
 

@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
 
-    <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <Encoding>UTF-8</Encoding>
+    <logger name="ch.qos.logback" level="WARN"/>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${user.home}/logs/greys/greys-console.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>${user.home}/logs/greys/greys-console.log.%d{yyyy-MM-dd}</FileNamePattern>
             <MaxHistory>30</MaxHistory>
         </rollingPolicy>
-        <encoder>
+        <encoder charset="UTF-8">
             <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %msg%n</pattern>
+
         </encoder>
     </appender>
 
-    <root level="DEBUG">
-        <appender-ref ref="LOGFILE" />
+    <root level="INFO">
+        <appender-ref ref="FILE"/>
     </root>
 </configuration>

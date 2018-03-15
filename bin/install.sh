@@ -1,5 +1,11 @@
 #! /bin/bash
 
+# program : install.sh
+#           install greys by online
+#  author : oldmanpushcart@gmail.com
+#    date : 2018-03-12
+# version : 2.0.0.0
+
 # temp file of greys.sh
 TEMP_GREYS_FILE="./greys.sh.$$"
 
@@ -7,8 +13,7 @@ TEMP_GREYS_FILE="./greys.sh.$$"
 TARGET_GREYS_FILE="./greys.sh"
 
 # update timeout(sec)
-SO_TIMEOUT=60
-
+SO_TIMEOUT_SEC=60
 
 # exit shell with err_code
 # $1 : err_code
@@ -20,25 +25,17 @@ exit_on_err()
 }
 
 # check permission to download && install
-[ ! -w ./ ] && exit_on_err 1 "permission denied, target directory ./ was not writable."
+[ ! -w ./ ] \
+    && exit_on_err 1 "permission denied. directory ./ is not writable."
 
-# download from aliyunos
-echo "downloading... ${TEMP_GREYS_FILE}";
-curl \
-    -sLk \
-    --connect-timeout ${SO_TIMEOUT} \
-    "http://ompc.oss.aliyuncs.com/greys/greys.sh" \
-    -o ${TEMP_GREYS_FILE} \
-|| exit_on_err 1 "download failed!"
+# download greys.sh from server
+curl -#Lk --connect-timeout ${SO_TIMEOUT_SEC} \
+        "http://ompc.oss.aliyuncs.com/greys2/greys.sh" \
+        -o ${TEMP_GREYS_FILE} \
+    && rm -rf greys.sh \
+    && mv ${TEMP_GREYS_FILE} ${TARGET_GREYS_FILE} \
+    && chmod +x ${TARGET_GREYS_FILE} \
+    && echo "install greys by online success." \
+    || exit_on_err 1 "install greys by online fail!"
 
-# check download file format
-[[ -z $(grep "desc : write for july" ${TEMP_GREYS_FILE}) ]] \
-&& exit_on_err 1 "download failed!"
 
-# wirte or overwrite local file
-rm -rf greys.sh
-mv ${TEMP_GREYS_FILE} ${TARGET_GREYS_FILE}
-chmod +x ${TARGET_GREYS_FILE}
-
-# done
-echo "greys install successed."

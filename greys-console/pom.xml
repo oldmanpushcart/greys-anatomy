@@ -75,5 +75,9 @@
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.crashub</groupId>
+            <artifactId>crash.shell</artifactId>
+        </dependency>
     </dependencies>
 </project>

@@ -2,14 +2,17 @@ package com.github.ompc.greys.module;
 
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
+import com.alibaba.jvm.sandbox.api.http.Http;
 import com.alibaba.jvm.sandbox.api.http.websocket.WebSocketAcceptor;
 import com.alibaba.jvm.sandbox.api.http.websocket.WebSocketConnection;
 import com.alibaba.jvm.sandbox.api.http.websocket.WebSocketConnectionListener;
+import com.alibaba.jvm.sandbox.api.resource.ConfigInfo;
 import com.alibaba.jvm.sandbox.api.resource.LoadedClassDataSource;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.github.ompc.greys.module.handler.HttpHandler;
 import com.github.ompc.greys.module.resource.AutoReleaseWatcher;
 import com.github.ompc.greys.module.resource.GpWriter;
+import com.github.ompc.greys.module.util.GaStringUtils;
 import com.github.ompc.greys.module.util.HttpHandlerBuilder;
 import com.github.ompc.greys.module.util.HttpHandlerBuilder.InitHttpHandlerException;
 import com.github.ompc.greys.module.util.HttpHandlerBuilder.PathNotMappedException;
@@ -22,8 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
  * 错误请求处理
@@ -57,6 +63,9 @@ class ErrorHandler implements HttpHandler {
 public final class GreysModule implements Module, WebSocketAcceptor {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    @Resource
+    private ConfigInfo cfg;
 
     @Resource
     private ModuleEventWatcher moduleEventWatcher;
@@ -179,6 +188,31 @@ public final class GreysModule implements Module, WebSocketAcceptor {
             }
 
         };
+    }
+
+
+    @Http("/banner")
+    public void banner(final HttpServletRequest req,
+                       final HttpServletResponse resp) throws IOException {
+        final StringBuilder buffer = new StringBuilder()
+                .append(GaStringUtils.getLogo()).append("\n")
+                .append(format(
+                        EMPTY +
+                                "\nVERSION : %s" +
+                                "\n    PID : %s" +
+                                "\n    URI : ws://%s/sandbox/%s/module/websocket/greys/*" +
+                                "\n UNSAFE : %s" +
+                                "\n AUTHOR : oldmanpushcart@gmail.com" +
+                                "\nPOWER BY JVM-SANDBOX(Alibaba OpenSource) %s LGPL-3.0" +
+                                "\n",
+                        GaStringUtils.getVersion(),
+                        req.getParameter("pid"),
+                        cfg.getServerAddress(),
+                        cfg.getNamespace(),
+                        cfg.isEnableUnsafe() ? "ENABLE" : "DISABLE",
+                        cfg.getVersion()
+                ));
+        resp.getWriter().println(buffer.toString());
     }
 
 }
