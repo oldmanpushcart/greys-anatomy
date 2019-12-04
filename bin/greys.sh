@@ -7,7 +7,9 @@
 # version : 1.7.6.6
 
 # define greys's home
-GREYS_HOME=${HOME}/.greys
+[[ "${HOME}" == */ ]] \
+  && GREYS_HOME=${HOME}.greys \
+  || GREYS_HOME=${HOME}/.greys
 
 # define greys's lib
 GREYS_LIB_DIR=${GREYS_HOME}/lib
