@@ -12,12 +12,11 @@ import com.github.ompc.greys.core.util.GaStringUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpecBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Commands {
 
@@ -65,6 +64,8 @@ public class Commands {
 
         try {
             final OptionSet opt = getOptionParser(clazz).parse(splitOfLine);
+
+            List<String> nonOptionArguments = opt.nonOptionArguments();
 
             for (final Field field : clazz.getDeclaredFields()) {
 
@@ -133,14 +134,26 @@ public class Commands {
                 else if (field.isAnnotationPresent(IndexArg.class)) {
                     final IndexArg arg = field.getAnnotation(IndexArg.class);
                     final int index = arg.index() + 1;
+
+                    if ("classPattern".equals(field.getName()) && nonOptionArguments.size() > index) {
+                        String classPattern = nonOptionArguments.get(index);
+                        int sharpIndex = StringUtils.indexOf(classPattern, '#');
+                        if (sharpIndex > 0) {
+                            List<String> args = new ArrayList<String>(nonOptionArguments);
+                            args.set(index, classPattern.substring(0, sharpIndex));
+                            args.add(index + 1, classPattern.substring(sharpIndex + 1));
+                            nonOptionArguments = Collections.unmodifiableList(args);
+                        }
+                    }
+
                     if (arg.isRequired()
-                            && opt.nonOptionArguments().size() <= index) {
+                            && nonOptionArguments.size() <= index) {
                         throw new IllegalArgumentException(arg.name() + " argument was missing.");
                     }
 
-                    if (opt.nonOptionArguments().size() > index) {
+                    if (nonOptionArguments.size() > index) {
                         try {
-                            GaReflectUtils.setValue(field, opt.nonOptionArguments().get(index), command);
+                            GaReflectUtils.setValue(field, nonOptionArguments.get(index), command);
                         } catch (IllegalArgumentException e) {
                             throw new CommandInitializationException(cmdName, e);
                         } catch (IllegalAccessException e) {
