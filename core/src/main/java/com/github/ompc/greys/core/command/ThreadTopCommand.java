@@ -26,6 +26,7 @@ import java.util.Collections;
         eg = {
                 "top",
                 "top -t 5",
+                "top -r",
                 "top -d"
         })
 public class ThreadTopCommand implements Command {
@@ -38,6 +39,10 @@ public class ThreadTopCommand implements Command {
 
     @NamedArg(name = "d", summary = "Display the thread stack detail")
     private boolean isDetail = false;
+
+
+    @NamedArg(name = "r", summary = "Only consider runnable thread")
+    private boolean onlyRunnable = false;
 
     private final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 
@@ -72,7 +77,15 @@ public class ThreadTopCommand implements Command {
                             ? stackToString(tInfo.getStackTrace())
                             : StringUtils.EMPTY;
                     totalCpuTime += cpuTime;
-                    threadInfoDatas.add(new ThreadInfoData(tId, cpuTime, tName, tStateStr, tStackStr));
+                    if (onlyRunnable) {
+                        if (tInfo.getThreadState().toString().equals("RUNNABLE")) { // only consider runnable
+                            threadInfoDatas.add(new ThreadInfoData(tId, cpuTime, tName, tStateStr, tStackStr));
+                        } else {
+                            // skip not runnable threads
+                        }
+                    } else {
+                        threadInfoDatas.add(new ThreadInfoData(tId, cpuTime, tName, tStateStr, tStackStr));
+                    }
                 }
 
 
