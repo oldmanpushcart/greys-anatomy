@@ -6,12 +6,15 @@ import com.github.ompc.greys.core.advisor.ReflectAdviceListenerAdapter;
 import com.github.ompc.greys.core.command.annotation.Cmd;
 import com.github.ompc.greys.core.command.annotation.IndexArg;
 import com.github.ompc.greys.core.command.annotation.NamedArg;
+import com.github.ompc.greys.core.manager.ReflectManager;
 import com.github.ompc.greys.core.server.Session;
 import com.github.ompc.greys.core.util.GaMethod;
 import com.github.ompc.greys.core.util.GaStringUtils;
 import com.github.ompc.greys.core.util.LogUtil;
 import com.github.ompc.greys.core.util.PointCut;
 import com.github.ompc.greys.core.util.matcher.*;
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import jline.internal.Nullable;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -21,6 +24,7 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,6 +64,9 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
 
     @NamedArg(name = "E", summary = "Enable regular expression to match (wildcard matching by default)")
     private boolean isRegEx = false;
+
+    @NamedArg(name = "l", hasValue = true, summary = "The class pattern of the class whose classloader will be used for the ScriptEngine")
+    private String jsEngineClassLoader;
 
     /*
      * 获取指定字符集
@@ -133,6 +140,15 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
 
     }
 
+    private ClassLoader getJSEngineClassLoader() {
+        final ClassMatcher classMatcher = new ClassMatcher(new PatternMatcher(isRegEx, jsEngineClassLoader));
+        final Collection<Class<?>> matchedClassSet = ReflectManager.Factory.getInstance().searchClassWithSubClass(classMatcher);
+        if (matchedClassSet.isEmpty()) {
+            throw new IllegalArgumentException("Can't find class for classLoader: " + jsEngineClassLoader);
+        }
+        return matchedClassSet.iterator().next().getClassLoader();
+    }
+
     @Override
     public Action getAction() {
 
@@ -159,7 +175,21 @@ public class JavaScriptCommand implements ScriptSupportCommand, Command {
          *
          */
         final ScriptEngineManager mgr = new ScriptEngineManager();
-        final ScriptEngine jsEngine = mgr.getEngineByMimeType("application/javascript");
+        ScriptEngine jsEngine = mgr.getEngineByMimeType("application/javascript");
+
+        if (!StringUtils.isEmpty(jsEngineClassLoader)) {
+            try {
+                // Only NashornScriptEngineFactory can support custom class loader, we have to hardcode it here
+                jsEngine = new NashornScriptEngineFactory().getScriptEngine(getJSEngineClassLoader());
+            }catch (final IllegalArgumentException e) {
+                return new SilentAction() {
+                    @Override
+                    public void action(Session session, Instrumentation inst, Printer printer) {
+                        printer.println("Error create ScriptEngine with class loader: " + getCauseMessage(e)).finish();
+                    }
+                };
+            }
+        }
 
         final Compilable compilable = (Compilable) jsEngine;
         final Invocable invocable = (Invocable) jsEngine;
